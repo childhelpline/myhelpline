@@ -1,0 +1,192 @@
+{% extends "helpline/base.html" %}
+{% load staticfiles %}
+{% block content %}
+<link rel="stylesheet" href="{% static "css/jquery.idealforms.css" %}">
+<link rel="stylesheet" href="{% static "css/overlaypopup.css" %}">
+<style>
+
+  body {
+    max-width:100%;
+    margin: 2em;
+    font: normal 15px/1.5 Arial, sans-serif;
+    color: #353535;
+    overflow-y: scroll;
+  }
+  textarea{
+      max-width:300px;
+      background-color:#0CF;}
+  .content {
+    margin: 0 30px;
+    border-radius:10px;
+    background-color:#9C9;
+    padding:10px;callerGender
+  }
+
+  .field.buttons button {
+    margin-right: .5em;
+  }
+
+  #invalid {
+    display: none;
+    float: left;
+    width: 290px;
+    margin-left: 120px;
+    margin-top: .5em;
+    color: #CC2A18;
+    font-size: 130%;
+    font-weight: bold;
+  }
+
+  .idealforms.adaptive #invalid {
+    margin-left: 0 !important;
+  }
+
+  .idealforms.adaptive .field.buttons label {
+    height: 0;
+  }
+    section{
+        background-color:#FFC;
+        border:#F90 solid thin;
+        padding:20px;
+        padding-right:40px;
+        box-shadow:#000 inset;
+        background-position:-30px 0;
+        float:left;
+        border-bottom-left-radius:10px;
+        }
+        
+    .div1{
+        width:66%;
+        background-color:#F90;
+        color:#FFF;
+        }
+    .nav-head{
+        background-color:#CCF;
+        border-top-left-radius:10px;
+        border-top-right-radius:10px;
+        min-height:50px;
+        margin-bottom:10px;
+        font:monospace, fantasy, Aparajita;
+        font-size:24px;
+        color:#F30;
+        text-align:center;
+        background-image:url(img/top-ban.png);
+        background-repeat:repeat-x;
+        font-weight:bolder;
+        border:thin #999 solid;
+        right:150px;
+        float:right;
+        min-width:322px;
+        }
+    #selDispose{border-top-right:10px; color:#444;background:#eee;background:-webkit-linear-gradient(#fff, #ddd);background:-moz-linear-gradient(#fff, #ddd);background:-o-linear-gradient(#fff, #ddd);background:-ms-linear-gradient(#fff, #ddd);background:linear-gradient(#fff, #ddd);border:0;-webkit-box-shadow:0 1px 2px rgba(0,0,0,0.15);box-shadow:0 1px 2px rgba(0,0,0,0.15);-webkit-border-radius:3.01px;border-radius:3.01px;padding:.55em 1.5em;cursor:pointer;float:right;min-height:48px;
+        }
+    #heads{padding-top:5px;}
+    #caseNumber{
+        color:#096;
+        float:right;
+        margin-right:10px;
+        padding:10 5;
+        }
+        #confer{
+            color:#009;
+            cursor:default;
+            float:right;
+            margin-right:10px;}
+    #idealsteps-nav{
+        /*padding:0px 0px 0px 10px;
+        background-image:url(img/top-ban.png);
+        padding-left:-40px;*/
+        background-color:#999;
+        border:#F90 solid thin;
+        height:62px;
+        margin:0;
+        padding:0;
+        margin-bottom:10px;
+        }
+    #idealsteps-nav ul{
+        min-height:60px;
+        min-width:150px;
+        list-style:none;
+        margin:0px;
+        margin-left:-40px;}
+    #idealsteps-nav ul li{
+        min-height:60px;
+        width:100px;
+        float:left;
+        cursor:default;
+        font-size:16px;
+        padding:5px;
+        
+        }
+    .men{
+        background:#999;}
+    .active{
+        background:#EBEBEB;}
+    .active l{
+        background:#F00;}
+    #idealsteps-nav ul l{
+    width: 0; 
+    height: 0; 
+    border-top:30px solid transparent;
+    border-bottom: 30px solid transparent;
+    float:left;
+    margin-right:2px;
+        }
+    .arr{
+    border-left:#999 30px solid;
+        }
+    .arrA{
+    border-left:#EBEBEB 30px solid;
+        }
+    .arrow-right{
+    width: 0; 
+    height: 0; 
+    border-top: 64px solid transparent;
+    border-bottom: 64px solid transparent;
+    border-left: 64px solid green;
+}
+ k{
+     width:137px;}
+     #tim{
+         font-size:24px;
+         position:fixed;
+         bottom:10px;
+         right:70px;
+         background: rgba(193,191,234,0.48);
+background: -moz-linear-gradient(left, rgba(193,191,234,0.48) 0%, rgba(193,191,234,0.81) 100%);
+background: -webkit-gradient(left top, right top, color-stop(0%, rgba(193,191,234,0.48)), color-stop(100%, rgba(193,191,234,0.81)));
+background: -webkit-linear-gradient(left, rgba(193,191,234,0.48) 0%, rgba(193,191,234,0.81) 100%);
+background: -o-linear-gradient(left, rgba(193,191,234,0.48) 0%, rgba(193,191,234,0.81) 100%);
+background: -ms-linear-gradient(left, rgba(193,191,234,0.48) 0%, rgba(193,191,234,0.81) 100%);
+background: linear-gradient(to right, rgba(193,191,234,0.48) 0%, rgba(193,191,234,0.81) 100%);
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#c1bfea', endColorstr='#c1bfea', GradientType=1 );
+border-radius:5px;}
+
+</style>
+<script type="text/javascript">
+    function fillAdd(param){
+        var v = document.getElementById(param.id).value;                                                                                    
+        //$('#id_district').html('');
+        if(v!=''){
+            var add = $("#" +param.id + " option:selected").text()
+            $.post('{% url 'get_districts' %}',{add:add},function(data){
+           // alert("Is" + data)
+            if(param.id == "id_region"){
+            $("#options").val(data);
+            }
+            });
+        }
+        else
+            {
+                $("#id_district").append()
+            }
+        }
+
+</script>
+<form action="" method="POST" novalidate autocomplete="off" class="idealforms" id="caseDet" name="caseDet">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" />
+</form>
+<input type="text" value="" id="options" />
+{% endblock content %}

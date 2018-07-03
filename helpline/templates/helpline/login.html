@@ -1,0 +1,60 @@
+{% extends "helpline/helpline_base.html" %}
+{% load staticfiles %}
+{% load crispy_forms_tags %}
+
+
+
+{% block content %}
+{% if form.errors %}
+<div class="alert alert-danger alert-dismissible">
+    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+    <h4><i class="icon fa fa-ban"></i> Error</h4>
+   Your username and password didn't match. Please try again.
+</div>
+{% endif %}
+
+{% if next %}
+
+{% if user.is_authenticated %}
+<p>Your account doesn't have access to this page. To proceed,
+    please login with an account that has access.</p>
+{% else %}
+<p>Please login to see this page.</p>
+{% endif %}
+{% endif %}
+    <form method="post" action="{% url 'login' %}">
+    {% csrf_token %}
+      <div class="form-group has-feedback">
+      {{ form.username.label_tag }}
+        <input autofocus="" id="id_username" maxlength="254" name="username" type="text" required=""  class="form-control" placeholder="Username">
+        <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
+      </div>
+      <div class="form-group has-feedback">
+      {{ form.password.label_tag }}
+        <input id="id_password" name="password" type="password" required="" class="form-control" placeholder="Password">
+        <span class="glyphicon glyphicon-lock form-control-feedback"></span>
+      </div>
+      <div class="row">
+        
+        <!-- /.col -->
+        <div class="col-xs-4">
+         <input type="hidden" name="next" value="{{ next }}" />
+          <button type="submit" class="btn btn-primary btn-block btn-flat">Sign In</button>
+        </div>
+        <!-- /.col -->
+      </div>
+    </form>
+    
+
+{% endblock %}
+
+{% block javascript %}
+
+
+<script>
+{% if not user.is_authenticated %}
+$("ul.nav.navbar-nav.navbar-right").css("display","none");
+{% endif %}
+</script>
+
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends 'helpline/base.html' %}
+{% load staticfiles %}
+{% block navbar_nav %}
+{% endblock navbar_nav %}
+{% block box %}
+{% endblock box %}
+{% block content %}
+                {% load django_tables2 %}
+                {% render_table connected_agents_table %}
+{% endblock content %}

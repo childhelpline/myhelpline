@@ -1,0 +1,26 @@
+{% load i18n %}
+<li>
+    <div class="pull-left">
+    </div>
+    <h4>
+        <i class="fa fa-clock-o"></i>
+        {% trans "Login Duration" %}
+    </h4>
+    <p style="display:inline-block;font-size:38px;font-family:"OpenSans-Light",sans-serif;height:63px;line-height:59px;position:relative;vertical-align:middle;z-index:5">
+    {{ ld.hours }}:{{ ld.min }}:{{ ld.seconds }}
+    </p>
+</li>
+
+{% if ready %}
+<li>
+    <div class="pull-left">
+    </div>
+    <h4>
+        <i class="fa fa-clock-o"></i>
+        {% trans "Ready Duration" %}
+    </h4>
+    <p style="display:inline-block;font-size:38px;font-family:"OpenSans-Light",sans-serif;height:63px;line-height:59px;position:relative;vertical-align:middle;z-index:5">
+    {{ ready.hours }}:{{ ready.min }}:{{ ready.seconds }}
+    </p>
+</li>
+{% endif %}

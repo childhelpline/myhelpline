@@ -1,0 +1,125 @@
+@import url(https://fonts.googleapis.com/css?family=Lato:100,400);
+/* Load animation */
+@-webkit-keyframes load{0%{stroke-dashoffset:0}}
+@keyframes load{0%{stroke-dashoffset:0}}
+/* Container */
+.progress {
+    position: relative;
+    display: inline-block;
+    padding: 0;
+    text-align: center;
+}
+/* Item */
+.progress>li {
+    display: inline-block;
+    position: relative;
+    text-align: center;
+    color: #93A2AC;
+    font-family: Lato;
+    font-weight:100;
+    margin: 2rem;
+}
+.progress>li:before {
+    content: attr(data-name);
+    position: absolute;
+    width: 100%;
+    bottom: -2rem;
+    font-weight:400;
+}
+.progress>li:after {
+    content: attr(data-percent);
+    position: absolute;
+    width: 100%;
+    top: 3.7rem;
+    left: 0;
+    font-size: 2rem;
+    text-align: center;
+}
+.progress svg {
+    width: 10rem;
+    height: 10rem;
+}
+.progress svg:nth-child(2) {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform: rotate(-90deg);
+    -webkit-transform: rotate(-90deg);
+    -moz-transform: rotate(-90deg);
+    -ms-transform: rotate(-90deg);
+}
+.progress svg:nth-child(2) path {
+    fill: none;
+    stroke-width: 25;
+    stroke-dasharray: 629;
+    stroke: #fff;
+    opacity:.9;
+    -webkit-animation: load 10s;
+    -moz-animation: load 10s;
+    -o-animation: load 10s;
+    animation: load 10s;
+}
+
+#rate{
+    //clear:both;
+    color: white;
+    float: left;
+    width: 17%;
+    height: auto;
+    background: rgba(0, 0, 0, 0.5);
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    margin-left: 10px;
+    margin-top: 10px;
+    font-size: 43px;
+    text-align: center;
+
+}
+
+#rat{
+    //clear:both;
+    color: white;
+    float: left;
+    width: 99%;
+    height: 230px;
+    background: rgba(255, 255, 255, 0.7);
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    margin-left: 10px;
+    margin-top: 10px;
+    text-align: left;
+    overflow-y:scroll;
+    overflow-x:scroll;
+}
+
+#saa{
+    color: white;
+    font-size: 45px;
+    //text-align: right;
+    vertical-align: center;
+}
+
+b{
+    border-radius: 5px;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.close{
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 20px;
+    font-weight: bold;
+    line-height: 18px;
+    color: white;
+    text-shadow: 0 1px 0 #ffffff;
+    opacity: 0.2;
+    background: rgba(0, 0, 0, 0.9);
+}
+
+
+.close:hover{
+    color: #000000;
+    text-decoration: none;
+    opacity: 0.4;
+    filter: alpha(opacity=40);
+    cursor: pointer;
+}

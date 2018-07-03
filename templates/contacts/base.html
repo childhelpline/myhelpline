@@ -1,0 +1,101 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"> 
+    <title>DashBoard</title>
+    <meta http-equiv = 'Content-Type' content = 'text/html;charset=utf-8'>
+    <link rel="stylesheet" type="text/css" href="{% static "css/ratem/style.css" %}">
+    <link rel="stylesheet" type="text/css" href="{% static "css/style.css" %}">
+    <link rel="stylesheet" href="FlipClock-master/compiled/flipclock.css">
+    <link href="novus-nvd3-7ebd54c/src/nv.d3.css" rel="stylesheet" type="text/css">
+    <link href="{% static "css/bootstrap.min.css" %}" rel="stylesheet" media="screen">
+            <link rel="stylesheet" type="text/css" href="../home/css/animated.css">
+    <link rel = 'shortcut icon' href = ''>
+    <!--[if lt IE 8]> 
+        <script src ="http://ie7-js.googlecode.com/svn/version/2.1(beta2)/IE8.js"></script> 
+    <![endif]-->
+    <script type="text/javascript" src = '{% static "js/caseForm/custom.js" %}'></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
+    <script type="text/javascript" src = '{% static "js/script.js" %}'> </script>
+    <script src="FlipClock-master/compiled/flipclock.js"></script>  
+    <style>
+/*
+body {
+  overflow-y:scroll;
+}*/
+
+text {
+  font: 12px sans-serif;
+  color: white;
+}
+
+svg {
+  display: block;
+}
+
+#chart1 svg {
+  height: 500px;
+  min-width: 100px;
+  min-height: 100px;
+/*
+  margin: 50px;
+  Minimum height and width is a good idea to prevent negative SVG dimensions...
+  For example width should be =< margin.left + margin.right + 1,
+  of course 1 pixel for the entire chart would not be very useful, BUT should not have errors
+*/
+}
+
+</style>        
+  </head>
+  <body> 
+    <script>var lock = 'off';</script>   <nav>     
+     <ul id = 'css3menu'>
+         <li><button onclick = 'window.location = "/helpline/"'><img src = '{% static "images/dashboard.png" %}'></button></li>
+         <li><button onclick = 'window.location.href = "forms/walkin/"'><img src = '{% static "images/walkin.png" %}'></button></li>
+         <li><button onClick="window.open('faq/', '_blank')"><img src = '{% static "images/faq.png" %}'></button></li>
+      <li><button onclick = 'window.location.href = "adminreports/callsummaryreport";'><img src = '{% static "images/reporting.png" %}'></button>
+                </li>
+            
+       
+                <li><button><img src={% static "images/notavailable.jpg" %} /></button>
+          <ul>
+             <li><button onclick = 'window.location.href= "myaccount/"'>My Account</button></li>
+             <!--li><button onclick = 'window.location = "main.php?win=9"'>Conference</button></li-->
+           <li><button onclick = 'window.location.href = "qulog"'>Join Queue</button></li>       <li><button onclick = 'window.location.href = "CHLForms/manageUser.php"'>Manage Users</button></li>
+                 <li><button onclick = 'window.location = "logout/"'>LogOut</button></li>            
+          </ul>
+      </li>
+       <li>
+       <font style = 'vertical-align: bottom; text-align: right; margin-top:40px;'>{{request.user}}<br>{{reqeust.user.is_staff}}Supervisor</font></li>      
+     </ul>
+   </nav>
+    {% block content %}
+    {% endblock content %}
+    <footer style="background-color:#79A341">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12 col-lg-12">
+                    <div class="wow shake" data-wow-delay="0.4s">
+                    <div class="page-scroll marginbot-30">
+                        <img src="{% static "tblogo.png" %}" height="130" width="130">
+                    </div>
+                    </div>
+                    <p>&copy;Copyright 2015 -Techno Brain BPO/ITES. All rights reserved.</p>
+                </div>
+            </div>  
+        </div>
+    </footer>
+  <!-- <div class = 'overlay' id = 'ov' style = 'Visibility:hidden'>
+
+    <div id = 'overlay'>
+        <button class = 'close' align = 'right' style = 'vertical-align: center;' onclick = 'window.location = "main.php?close=1"'><b>Close</b></button><br>      
+      <iframe src = ''></iframe>
+     </div>
+   </div>-->
+
+   <script type = "text/javascript">
+      
+   </script>
+   </body>
+   </html> 

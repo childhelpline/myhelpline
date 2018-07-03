@@ -1,0 +1,10 @@
+Required directory for django-bower.
+    https://github.com/nvbn/django-bower
+
+Download bower packages with the management command:
+
+.. code-block:: bash
+
+    ./manage.py bower install
+
+https://github.com/areski/django-nvd3

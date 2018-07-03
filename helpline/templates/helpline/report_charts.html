@@ -1,0 +1,135 @@
+{% extends "helpline/base.html" %}
+{% load staticfiles %}
+{% load nvd3_tags %}
+{% block navbar_nav %}
+{% endblock navbar_nav %}
+{% block box %}
+{% endblock box %}
+{% block head %}
+    {% include_chart_jscss %}
+		<script type="text/javascript">
+		function sendtoReportFactory(){
+            var datetimerange = document.getElementById("datetimerange").value;
+            var queueid = document.getElementById("id_queueid").value;
+            var agent = document.getElementById("agent").value;
+            var interval = document.getElementById("interval").value;
+            var category = document.getElementById("category").value;
+            var c = document.getElementById("showustheresultsnow");
+            var query = document.getElementById("navbar-search-input").value;
+            //c.innerHTML = '<div align="center">Loading Report.. ';
+            $("#showustheresultsnow").fadeIn("slow");
+            $("#showustheresultsnow").load("{% url 'report_charts' 'ajax' casetype %}?datetime_range="+ encodeURIComponent(datetimerange) +'&sevc='+ encodeURIComponent(queueid) +'&agent='+ encodeURIComponent(agent)+'&q='+ encodeURIComponent(query)+'&interval='+ encodeURIComponent(interval)+'&category='+ encodeURIComponent(category)+'&y_axis='+ encodeURIComponent('{{ y_axis }}'));  }
+		</script>
+{% endblock head %}
+
+{% block content %}
+                            <div id="form_collapse" class="in" style="height: auto;">
+{% block filterform %}
+                              <div class="col-md-12">
+                              <div class="box box-default collapsed-box">
+								<div class="box-header with-border">
+									  <h3 class="box-title">Filter Parameters:</h3>
+
+									  <div class="box-tools pull-right">
+										<button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+									  </div>
+								 </div>
+
+								 <div class="box-body" style="display: none;">
+                      <!-- Filter Form -->
+<form action="#">
+                                                          <!-- Date and time range -->
+                 <section style="border: 2px solid #dddddd; padding: 10px 40px; background: #dddddd;    border-radius: 8px;">
+              <table><tbody><tr><td width="350px">                   <div class="form-group">
+                                        <label>Choose Date and time Range:</label>
+                                        <div class="input-group">
+                                            <div class="input-group-addon">
+                                            </div>
+{{ form.datetime_range }}
+                                        </div><!-- /.input group -->
+                                    </div><!-- /.form group -->
+                         </td>
+                          <td><strong> &nbsp; &nbsp; </strong></td>
+                         <td width="350px">                  <div class="form-group">
+                                        <label>Enumerator:</label>
+                                        <div class="input-group">
+                                            <div class="input-group-addon">
+
+                                            </div>
+{{ form.agent }}
+                                        </div><!-- /.input group -->
+                                    </div><!-- /.form group -->
+                         </td>
+                         <td width="350px">                  <div class="form-group">
+                                        <label>Category:</label>
+                                        <div class="input-group">
+                                            <div class="input-group-addon">
+
+                                            </div>
+{{ form.category }}
+                                        </div><!-- /.input group -->
+                                    </div><!-- /.form group -->
+                         </td>
+                         <td width="350px">                  <div class="form-group">
+                                        <label>Interval:</label>
+                                        <div class="input-group">
+                                            <div class="input-group-addon">
+
+                                            </div>
+{{ form.interval }}
+                                        </div><!-- /.input group -->
+                                    </div><!-- /.form group -->
+                         </td>
+                         {{ form.queueid }}
+                            <td>
+                            &nbsp; &nbsp;
+                            </td>
+                            <td>
+                            <br>
+                            <input type="button" value="Fetch Reports" id="total-calls-search-btn" class="btn btn-success btn-sm" onclick="sendtoReportFactory();">
+                            </td>
+                            </tr> </tbody></table></section>
+
+                                    <!-- Date and time range -->
+
+
+                    </form>
+
+                      <!-- End Filter Form -->
+                                 </div>
+                              </div>
+{% endblock filterform %}
+                            </div>
+
+
+        <div id="showustheresultsnow">
+    {% load_chart charttype chartdata chartcontainer extra %}
+    {% include_container chartcontainer 400 1020 %}
+    <p></p>
+    Total Calls: <b>{{ total_calls }}</b>
+    Number of records: <b>{{ datetime_ranges_number }}</b>
+        {% load django_tables2 %}
+        {% if summary_table %}
+        {% render_table summary_table %}
+        {% for format in summary_table.export_formats %}
+        <a class="btn btn-app"  href="{% querystring '_export'=format %}">
+        <i class="fa fa-save"></i> <strong>Export {{ format }}</strong>
+        </a>               
+        {% endfor %}
+        {% endif %}
+        </div>
+<script>
+$(function() {
+  $('#datetimerange').daterangepicker({
+	opens: 'left',
+      timePicker: true,
+      locale: {
+          format: 'MM/DD/YYYY h:mm A'
+    }
+
+  }, function(start, end, label) {
+	console.log("A new date selection was made: " + start.format('M/DD hh:mm A') + ' to ' + end.format('M/DD hh:mm A'));
+  });
+});
+</script>
+{% endblock content %}

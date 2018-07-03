@@ -1,0 +1,20 @@
+{% extends "helpline/base.html" %}
+
+{% block title %}{{ block.super }}: Topics{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-4"></div>
+            <div class="sol-sm-8">
+                <button class="btn btn-success pull-right" onclick = 'window.location.href = "{% url 'faq_submit' %}"'>Add New FAQ</button>
+                <h1>Topics</h1>
+                <ul class="list-group">
+                  {% for topic in topics %}
+                    <li class="list-group-item"><a href="{{ topic.get_absolute_url }}">{{ topic }}</a></li>
+                  {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+{% endblock %}

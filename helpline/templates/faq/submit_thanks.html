@@ -1,0 +1,9 @@
+{% extends "helpline/base.html" %}
+
+{% block title %}{{ block.super }}: Thanks{% endblock %}
+{% block content %}
+<br/>
+<button class="btn btn-success pull-right" onclick = 'window.location.href = "{% url 'faq_submit' %}"'>Submit Question</button>
+<h3>Thanks!</h3>
+<a href="{% url 'faq_topic_list' %}">Topic List</a>
+{% endblock %}

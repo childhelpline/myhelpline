@@ -1,0 +1,137 @@
+{% extends 'helpline/base.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load humanize %}
+
+{% block content %}
+      <div class="row">
+        <!-- Left col -->
+        <!-- /.col -->
+		
+        <div class="col-md-9">
+            <div class="box box-success">
+                <div class="box-header with-border">
+                    <h3 class="box-title">{% trans "Consolidated View" %}</h3>
+                    <div class="box-tools pull-right">
+                        <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
+                        </button>
+                        <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+                    </div>
+                </div>
+            <!-- /.box-header -->
+                <div class="box-body">
+                    <div class="content-panel">
+                        <h4><i class="fa fa-angle-right"></i> {% trans "Agents" %}: <span id="total_agent" class="label label-default">0</span></h4><hr><table class="table table-striped table-advance table-hover" id="agents">
+
+
+                              <thead>
+                              <tr>
+                                  <th><i class="fa fa-user"></i> {% trans "Queue" %}</th>
+                                  <th><i class="fa fa-user"></i> {% trans "Name" %}</th>
+                                  <th><i class="fa fa-plug"></i> {% trans "Interface" %}</th>
+                                  <th><i class=" fa fa-question-circle "></i> {% trans "Status" %}</th>
+                                  <th><i class="fa fa-bookmark"></i> <span data-toggle="tooltip" data-placement="left" title="Attend calls"> {% trans "Calls" %}</span></th>
+                                  <th><i class="fa fa-clock-o"></i> {% trans "Last call at" %}</th>
+                              </tr>
+                              </thead>
+                              <tbody>
+
+
+                          </table>
+                      </div>
+               </div>
+            </div>
+        </div>
+        <!-- /col-md-9 -->
+        <div class="col-md-3">
+          <!-- Info Boxes Style 2 -->
+          <div class="info-box bg-green">
+            <span class="info-box-icon"><i class="ion ion-checkmark"></i></span>
+
+            <div class="info-box-content">
+                <span class="info-box-text">{% trans "Closed Cases" %}</span>
+              <span class="info-box-number">{{ dashboard_stats.closed_cases|intcomma }}</span>
+
+              <div class="progress">
+                <div class="progress-bar" style="width: {% widthratio dashboard_stats.closed_cases dashboard_stats.total_cases 100 %}%"></div>
+              </div>
+                  <span class="progress-description">
+                      {% widthratio dashboard_stats.closed_cases dashboard_stats.total_cases 100 %}% {% trans "Closed Cases" %}
+                  </span>
+            </div>
+            <!-- /.info-box-content -->
+          </div>
+          <!-- /.info-box -->
+          <div class="info-box bg-yellow">
+            <span class="info-box-icon"><i class="ion ion-ios-flag" md="md-flag"></i></span>
+
+            <div class="info-box-content">
+                <span class="info-box-text">{% trans "Escalated Cases" %}</span>
+              <span class="info-box-number">{{ dashboard_stats.closed_cases|intcomma }}</span>
+
+              <div class="progress">
+                <div class="progress-bar" style="width: {% widthratio dashboard_stats.referred_cases dashboard_stats.total_cases 100 %}%"></div>
+              </div>
+                  <span class="progress-description">
+                      {% widthratio dashboard_stats.referred_cases dashboard_stats.total_cases 100 %}% {% trans "Escalated Cases" %}
+                  </span>
+            </div>
+            <!-- /.info-box-content -->
+          </div>
+          <!-- /.info-box -->
+          <div class="info-box bg-aqua">
+            <span class="info-box-icon"><i class="ion-ios-clock-outline"></i></span>
+
+            <div class="info-box-content">
+                <span class="info-box-text">{% trans "Pending Cases" %}</span>
+              <span class="info-box-number">{{ dashboard_stats.open_cases|intcomma }}</span>
+
+              <div class="progress">
+                <div class="progress-bar" style="width: {% widthratio dashboard_stats.open_cases dashboard_stats.total_cases 100 %}%"></div>
+              </div>
+                  <span class="progress-description">
+                      {% widthratio dashboard_stats.open_cases dashboard_stats.total_cases 100 %}% {% trans "Pending Cases" %}
+                  </span>
+            </div>
+            <!-- /.info-box-content -->
+          </div>
+          <!-- /.info-box -->
+
+        </div>
+        <!-- /.col -->
+        <!-- /.col -->
+        <div class="col-md-9">
+            <div class="box box-success">
+                <div class="box-header with-border">
+                    <h3 class="box-title">{% trans "Consolidated View" %}</h3>
+                    <div class="box-tools pull-right">
+                        <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
+                        </button>
+                        <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+                    </div>
+                </div>
+            <!-- /.box-header -->
+                <div class="box-body">
+                    <div class="content-panel">
+                        <div class="content-panel">
+                            <h4><i class="fa fa-angle-right"></i> {% trans "Callers" %}: <span id="total_callers" class="label label-default">1</span></h4><hr><table class="table table-striped table-advance table-hover" id="callers">
+
+                              <thead>
+                              <tr>
+                                  <th><i class="fa fa-user"></i> {% trans "Id Name" %}</th>
+                                  <th class="hidden-phone"><i class="fa fa-phone"></i> {% trans "Id Number" %}</th>
+                                  <th><i class="fa fa-sort-numeric-asc"></i> {% trans "Position" %}</th>
+                                  <th><i class="fa fa-clock-o"></i> {% trans "Wait" %}</th>
+                              </tr>
+                              </thead>
+                              <tbody>
+
+                          </table>
+                      </div><!-- /content-panel -->
+                      </div>
+               </div>
+            </div>
+        </div>
+        <!-- /col-md-9 -->
+      </div>
+{% endblock content %}

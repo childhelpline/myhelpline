@@ -1,0 +1,72 @@
+.DS_Store
+.installed.cfg
+bin
+develop-eggs
+dist
+downloads
+eggs
+parts
+src/*.egg-info
+lib
+lib64
+*.pyc
+db.sqlite3
+*.swp
+error_log.txt
+myhelpline/localsettings.py
+components/bower_components/*
+config.ini
+error.log
+tmp/*
+
+# folder to hold csv files
+csvs
+
+# pip build dir
+build
+
+.~lock.*
+.idea
+.odk
+*.iml
+.project
+.pydevproject
+.sass-cache
+
+*.bak
+*.gz
+*.pyc
+*.sql
+*.sqlite3
+*~
+*orig
+celerybeat-schedule
+celerybeat.pid
+*.swp
+.venv
+.virtualenv
+*.ropeproject
+.noseids
+
+# ignore vagrant folder and files
+.vagrant
+Vagrantfile
+ansible
+
+# compile documentation
+docs/_build
+dev_https
+stunnel.pem
+
+# profiling temp files
+profile
+bob
+*.db
+*.egg-info
+
+# visual studio code
+.vscode/
+tags
+
+.bash_history
+.inputrc

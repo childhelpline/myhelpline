@@ -1,0 +1,243 @@
+{% extends 'messaging/base.html' %}
+{% load staticfiles %}
+{% block content %}
+    <style>
+    .reply{
+        width:60px;
+        height:30px;
+        background:#CCC;
+        border:thin solid #999;}
+   .createC,.createD,.createR{
+                width:60px;
+                height:30px;
+                background:#CCC;
+                border:thin solid #999;}
+    .modal-backdrop{
+        z-index:0;
+    }
+    </style>
+    <script>
+$(document).ready(function(){
+        function clearMessage() {
+            $("#txtNewMessage textarea").val("");
+            $("#counter").text("140");
+        }
+        function clearRecipients() {
+            $("#txtRecipient").val("");
+        }
+
+            // It's too easy for the user to hit "Enter" before they intend to send the message.
+            // We'll handle the submission manually.
+            $("#frmNewMessage").submit(function(event) {
+                return false;
+            });
+            $("#btnSendMessage").click(function(event) {
+                clearNotifications();
+
+
+        function addNotification(type, message) {
+            var cls = type === null ? "alert" : "alert alert-" + type;
+            var dismiss = $("<button>").attr("data-dismiss", "alert").addClass("close").html("&times;");
+            var notif = $("<div>").addClass(cls).html(message).prepend(dismiss);
+            $("#notifications").append(notif);
+        }
+        function clearNotifications() {
+            $("#notifications").children().alert("close");
+        }
+
+        function clearMessage() {
+            $("#txtMessageField textarea").val("");
+            $("#counter").text("140");
+        }
+
+
+
+                // Check for basic error conditions.
+                var valid = true;
+                var recipent = $("#txtRecipient").val();
+                if ($("#txtNewMessage textarea").val() === "") {
+                    addNotification("error", "You have to write a message.");
+                    valid = false;
+                }
+                if ($("#txtRecipient").val() === "") {
+                    addNotification("error", "Please enter a recipent.");
+                    valid = false;
+                }
+                if (!valid) { return; }
+
+                // Send the form to the server for processing.
+                //
+                //
+             var ee = $("#txtNewMessage").val()
+             if('' == ee){
+                 return false
+                 }
+             $.post("{% url 'messaging:sms_actions' %}",{sendSMS:'sendSMS',message:ee,name:'admin','number':recipent},function(data){
+             if(data.success == 1){
+
+                        addNotification("success", data.message);
+                        clearRecipients();
+                        clearMessage();
+                 }else{
+                     alert(data);
+                        addNotification("error", "A problem occurred while trying to send your message. " +
+                                                 "Please contact your administrator if this keeps happening.");
+                     }
+             });
+                //
+                //
+                // Send the form to the server for processing. End.
+    });
+
+});
+     </script>
+     <div class="pull-right"><a href="{% url 'messaging:sms_new' %}"><button class="btn btn-primary">New</button></a></div>
+        {% load django_tables2 %}
+        <div id="showustheresultsnow">
+        {% if table %}
+        {% render_table table %}
+        {% endif %}
+</div>
+
+
+<!-- SMS Action Code -->
+    <!-- HTML --> 
+     <div id="dialog-1" title="SMS Reply">
+        <label>Type Message:</label>
+        <textarea id="txtMessage" cols="30" rows="7" name="txtMessage"></textarea>
+        <button id="cancel" name="cancel">Cancel</button> <button id="send" name="send">Send</button>
+     </div>
+
+  <!--Dialog-->
+  <link href="{% static 'helpline/css/ui/1.10.4/themes/ui-lightness/jquery-ui.css' %}" rel="stylesheet">
+  <script src="{% static 'helpline/js/ui/1.10.4/jquery-ui.js' %}"></script>
+      <!-- CSS -->
+      <style>
+         .ui-widget-header,.ui-state-default, ui-button{
+            background:#b9cd6d;
+            border: 1px solid #b9cd6d;
+            color: #FFFFFF;
+            font-weight: bold;
+         }
+      </style>
+      <!-- Javascript -->
+      <script>
+        var smsKey = 0;
+        var key = 0;
+        //var serviceKey;
+        $(".reply").click(function(){
+               smsKey = $(this).val();
+             // var smKey = 'Text' + smsKey;
+               //serviceKey = document.getElementById(smKey).val()
+               $( "#dialog-1" ).dialog( "open" );
+               var r =document.getElementById("dialog-1");
+              // alert("We are: " + r.getAttribute('title'))
+        });
+
+        $(".createC").click(function(){
+            var param = $(this).val();
+            //alert("Yes: "  + param)
+            var par = 3
+            $.post("{% url 'messaging:sms_actions' %}",{create:'create',exist:par,caller:param},function(data){
+        //alert(data)
+    })
+        });
+
+    $(".createD").click(function(){
+                        var param = $(this).val();
+                        $.post("{% url 'messaging:sms_actions' %}",{junk:'junk',id:param},function(data){
+                if(data == 1){
+        alert("Message successfully set to junk");
+            window.location.reload();
+}
+
+
+        })
+    });
+
+    // Mark as read
+        $(".createR").click(function(){
+            var param = $(this).val();
+            $.post("{% url 'messaging:sms_actions' %}",{read:'read',id:param},function(data){
+            if(data.success == 1){
+                alert("Message successfully marked as read.");
+                window.location.reload();
+             }
+         })
+    });
+
+        $("#cancel").click(function(){
+            $("#dialog-1").dialog('close');
+            document.getElementById('txtMessage').value = null
+            })
+        $("#send").click(function(){
+            var ee = $("#txtMessage").val()
+            if('' == ee){
+                return false
+                }
+            $("#dialog-1").dialog('close');
+            document.getElementById('txtMessage').value = null
+            $.post("{% url 'messaging:sms_actions' %}",{sendSMS:'sendSMS',message:ee,id:smsKey},function(data){
+            if(data.success == 1){
+                alert("SMS saved successfully");
+                smsKey = 0;
+                }else{
+                    alert(data.message);
+                    }
+            });
+                });
+         $(function() {
+            $( "#dialog-1" ).dialog({
+               autoOpen: false,  
+            });
+            $( "#opener" ).click(function() {
+            });
+         });
+
+
+         function closeDialog(param){
+             if('' == param.value){
+                 $( "#opener" ).click(function() {
+            });
+                 }else{
+                     $( "#opener" ).dialog( "close" );
+                    // alert("The value is: " + param.value);
+                     }
+             }
+      </script>
+
+
+<!-- Modal -->
+<div id="new-message" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">New Message</h4>
+      </div>
+      <div class="modal-body">
+<div id="notifications"></div>
+
+
+<form name="frmNewMessage" id="frmNewMessage">
+{{ sms_form.as_p }}
+<fieldset class="form-group">
+            <div class="count pull-right">
+                <span id="counter"></span> characters remaining
+            </div>
+
+</fieldset>
+      </div>
+      <div class="modal-footer">
+    <button type="button" name="btnSendMessage" id="btnSendMessage" class="btn btn-primary">Send</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+</form>
+    </div>
+    <!-- End Modal Content -->
+  </div>
+</div>
+<!-- End SMS Action Code -->
+{% endblock content %}

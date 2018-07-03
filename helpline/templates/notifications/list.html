@@ -1,0 +1,15 @@
+{% extends "helpline/base.html" %}
+{% load notifications_tags %}
+{% block navbar_nav %}
+{% endblock navbar_nav %}
+{% block box %}
+{% endblock box %}
+{% block content %}
+{% notifications_unread as unread_count %}
+<a class="btn btn-block btn-primary" href="{% url 'notifications:mark_all_as_read' %}">Mark All As Read</a>
+<ul class="notifications">
+  {% for notice in notifications|slice:":100" %}
+    {% include 'notifications/notice.html' %}
+  {% endfor %}
+</ul>
+{% endblock content %}

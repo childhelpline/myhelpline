@@ -1,0 +1,61 @@
+# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+import os
+
+# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = 'CHANGE_ME!!'
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = True
+
+ALLOWED_HOSTS = ['*']
+
+
+# Database
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'helpline',
+        'USER': '',
+        'PASSWORD': '',
+        'HOST': 'localhost'
+        'PORT': '',
+    }
+}
+# Static files (CSS, JavaScript, Images)
+
+STATIC_URL = '/static/'
+STATIC_ROOT = '/var/www/html/static/'
+
+# -----------------------------------------------------------------------------------
+# Debug Toolbar
+# -----------------------------------------------------------------------------------
+INTERNAL_IPS = ['127.0.0.1']
+
+SHORT_DATETIME_FORMAT = 'Y N j, H:i:s.u'
+DATETIME_FORMAT = 'Y N j, H:i:s.u'
+
+ADMIN_SITE_HEADER = "Administration"
+LOGIN_URL = "/accounts/login/"
+
+CORS_ORIGIN_ALLOW_ALL = True
+
+SERVER_EMAIL = ''
+ADMINS = []
+LOGIN_URL = "/accounts/login/"
+MAILER_LIST = []
+EMAIL_USE_TLS = True
+EMAIL_HOST = ''
+EMAIL_PORT = 587
+EMAIL_HOST_USER = ''
+EMAIL_HOST_PASSWORD = ''
+EMAIL_SUBJECT_PREFIX = ''
+DEFAULT_FROM_EMAIL = ''
+
+AFRICASTALKING_API_KEY = ''
+AFRICASTALKING_API_USERNAME = ''
+
+HELPLINE_SPOOL_DIR = '/opt/asterisk/helpline/spool/cron/'

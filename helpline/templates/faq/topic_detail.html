@@ -1,0 +1,53 @@
+{% extends "helpline/base.html" %}
+{% load staticfiles %}
+
+{% block title %}{{ block.super }}: {{ topic }}{% endblock %}
+
+{% block content %}
+
+
+<div class="container" style="padding: 8px 0;">
+    <div class="row">
+        <div class="col-sm-1"></div>
+        <div id="faq" class="col-sm-8">
+<br/>
+<button class="btn btn-success pull-right" onclick = 'window.location.href = "{% url 'faq_submit' %}"'>Submit Question</button>
+<h3>{{ topic }}</h3>
+<dl>
+{% for question in questions %}
+{% if question.topic == topic %}
+<dt>{{ question.text }}</dt>
+<!-- Target -->
+<button type="button" id="questionlink" data-clipboard-text="{% url 'faq_question_detail' topic.slug question.slug %}" data-text="[{{ question.text }}]({% url 'faq_question_detail' topic.slug question.slug %})">
+    <img src="{% static 'helpline/images/clippy.svg' %}" alt="Copy to clipboard">
+</button>
+
+  <dd class="answer">{{ question.answer }}</dd>
+  {% endif %}
+{% endfor %}
+</dl>
+        </div>
+    </div>
+</div>
+    <script>
+    var btns = document.querySelectorAll('button'); 
+    var clipboard = new Clipboard(btns);
+    clipboard.on('success', function(e) {
+        console.log(e);
+    });
+    clipboard.on('error', function(e) {
+        console.log(e);
+    });
+
+    // Send Question link to Parent window if possible.
+    var btn = document.querySelectorAll('button#questionlink');
+    for (var i = 0; i < btn.length; i++) {
+        btn[i].addEventListener('click', function () {
+            var comment = 'txtComment';
+            window.opener.document.getElementById(comment).value = window.opener.document.getElementById(comment).value + this.dataset.text;
+            window.close();
+    });
+    }
+    </script>
+<a href="javascript:history.go(-1)">&lt;&lt; Back</a>
+{% endblock %}

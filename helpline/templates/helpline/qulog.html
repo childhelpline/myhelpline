@@ -1,0 +1,27 @@
+{% extends 'helpline/base.html' %}
+{% block content %}
+<div id ='log'>
+  {{ message }}
+  <table align = 'center' id = 'logt'>
+    <form name = 'queue' method = 'POST' action = '{% url 'queue_log' %}'>
+        {% csrf_token %}
+      <tr>
+          <td>{{ form.softphone }}</td>
+        </tr>
+        {% for service in services %}
+
+        <tr><td align=left>{{ forloop.counter }}.<u>{{ service.chlservice }}</u></td></tr>
+        
+        {% endfor %} 
+
+        <td><input id = 'b' type = 'submit' value = 'LogIn'></td>
+        </tr>
+        <tr>
+         <td><input id = 'b' type = 'reset' value = 'Clear'></td>
+        </tr>
+    </form>
+   </table>
+</div>
+
+{% endblock content %}
+

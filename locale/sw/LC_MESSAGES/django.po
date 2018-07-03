@@ -1,0 +1,1197 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the Helpline package.
+# Patrick Mithamo <patrickmithamo@gmail.com>, 2018.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2018-06-18 10:27+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: custom_admin_tools/dashboard.py:28
+msgid "Quick links"
+msgstr "Viungo haraka"
+
+#: custom_admin_tools/dashboard.py:34
+msgid "Return to site"
+msgstr "Rudi kwenye tovuti"
+
+#: custom_admin_tools/dashboard.py:43 custom_admin_tools/menu.py:25
+msgid "Applications"
+msgstr "Programu tumizi"
+
+#: custom_admin_tools/dashboard.py:49 custom_admin_tools/menu.py:29
+msgid "Administration"
+msgstr "Utawala"
+
+#: custom_admin_tools/dashboard.py:54 custom_admin_tools/dashboard.py:84
+msgid "Recent Actions"
+msgstr "Vitendo vya hivi karibuni"
+
+#: custom_admin_tools/dashboard.py:58
+msgid "Support"
+msgstr "Msaada"
+
+#: custom_admin_tools/dashboard.py:61
+msgid "Helpline documentation"
+msgstr "Nyaraka za usaidizi"
+
+#: custom_admin_tools/menu.py:22 helpline/templates/helpdesk/navigation.html:20
+#: helpline/templates/helpdesk/navigation.html:94
+#: helpline/templates/helpline/base.html:323
+#: helpline/templates/helpline/helpline/home.html:375
+msgid "Dashboard"
+msgstr "Dashibodi"
+
+#: helpline/qpanel/app.py:156 helpline/qpanel/templates/fs/index.html:181
+#: helpline/qpanel/templates/i18n_js.html:15
+#: helpline/qpanel/templates/i18n_js.html:27
+#: helpline/qpanel/templates/index.html:185
+#: helpline/templates/helpline/helpline/index.html:185 panel/qpanel/app.py:156
+#: panel/qpanel/templates/fs/index.html:181
+#: panel/qpanel/templates/i18n_js.html:15
+#: panel/qpanel/templates/i18n_js.html:27 panel/qpanel/templates/index.html:185
+#: panel/templates/fs/index.html:181 panel/templates/i18n_js.html:15
+#: panel/templates/i18n_js.html:27 panel/templates/index.html:185
+msgid "unavailable"
+msgstr "hapatikani"
+
+#: helpline/qpanel/app.py:158 helpline/qpanel/templates/fs/index.html:174
+#: helpline/qpanel/templates/i18n_js.html:11
+#: helpline/qpanel/templates/i18n_js.html:25
+#: helpline/qpanel/templates/index.html:178
+#: helpline/templates/helpline/helpline/index.html:178 panel/qpanel/app.py:158
+#: panel/qpanel/templates/fs/index.html:174
+#: panel/qpanel/templates/i18n_js.html:11
+#: panel/qpanel/templates/i18n_js.html:25 panel/qpanel/templates/index.html:178
+#: panel/templates/fs/index.html:174 panel/templates/i18n_js.html:11
+#: panel/templates/i18n_js.html:25 panel/templates/index.html:178
+msgid "free"
+msgstr "huru"
+
+#: helpline/qpanel/app.py:160 helpline/qpanel/templates/i18n_js.html:13
+#: panel/qpanel/app.py:160 panel/qpanel/templates/i18n_js.html:13
+#: panel/templates/i18n_js.html:13
+msgid "in call"
+msgstr "kwa simu"
+
+#: helpline/qpanel/app.py:162 helpline/qpanel/templates/fs/index.html:177
+#: helpline/qpanel/templates/i18n_js.html:17
+#: helpline/qpanel/templates/index.html:181
+#: helpline/templates/helpline/helpline/index.html:181 panel/qpanel/app.py:162
+#: panel/qpanel/templates/fs/index.html:177
+#: panel/qpanel/templates/i18n_js.html:17 panel/qpanel/templates/index.html:181
+#: panel/templates/fs/index.html:177 panel/templates/i18n_js.html:17
+#: panel/templates/index.html:181
+msgid "busy"
+msgstr "shughulini"
+
+#: helpline/qpanel/templates/404.html:2 panel/qpanel/templates/404.html:2
+#: panel/templates/404.html:2
+msgid "Not found"
+msgstr "Haikupatikana"
+
+#: helpline/qpanel/templates/404.html:7 panel/qpanel/templates/404.html:7
+#: panel/templates/404.html:7
+msgid "404 Not Found"
+msgstr "404 Haikupatikana"
+
+#: helpline/qpanel/templates/404.html:10 panel/qpanel/templates/404.html:10
+#: panel/templates/404.html:10
+msgid "The request the was not found on this server."
+msgstr "Ombi la haikupatikana kwenye seva hii."
+
+#: helpline/qpanel/templates/all_queues.html:5
+#: panel/qpanel/templates/all_queues.html:5 panel/templates/all_queues.html:5
+msgid "Consolidated view"
+msgstr "Mwoneko pamoja"
+
+#: helpline/qpanel/templates/all_queues.html:14
+#: helpline/qpanel/templates/header.html:12
+#: panel/qpanel/templates/all_queues.html:14
+#: panel/qpanel/templates/header.html:12 panel/templates/all_queues.html:14
+#: panel/templates/header.html:12
+msgid "Consolidate view"
+msgstr "Kuimarisha Mwoneko"
+
+#: helpline/qpanel/templates/all_queues.html:29
+#: helpline/qpanel/templates/fs/queue.html:27
+#: helpline/qpanel/templates/queue.html:25
+#: helpline/templates/helpline/helpline/home.html:603
+#: helpline/templates/helpline/home.html:24
+#: panel/qpanel/templates/all_queues.html:29
+#: panel/qpanel/templates/fs/queue.html:27 panel/qpanel/templates/queue.html:25
+#: panel/templates/all_queues.html:29 panel/templates/fs/queue.html:27
+#: panel/templates/queue.html:25
+msgid "Agents"
+msgstr "Wakala"
+
+#: helpline/qpanel/templates/all_queues.html:33
+#: helpline/qpanel/templates/all_queues.html:71
+#: helpline/templates/helpline/helpline/home.html:608
+#: helpline/templates/helpline/home.html:29
+#: panel/qpanel/templates/all_queues.html:33
+#: panel/qpanel/templates/all_queues.html:71 panel/templates/all_queues.html:33
+#: panel/templates/all_queues.html:71
+msgid "Queue"
+msgstr "Foleni"
+
+#: helpline/qpanel/templates/all_queues.html:34
+#: helpline/qpanel/templates/fs/queue.html:31
+#: helpline/qpanel/templates/queue.html:29
+#: helpline/templates/helpline/helpline/home.html:609
+#: helpline/templates/helpline/home.html:30
+#: helpline/templates/helpline/profile.html:30
+#: helpline/templates/helpline/wall.html:196
+#: panel/qpanel/templates/all_queues.html:34
+#: panel/qpanel/templates/fs/queue.html:31 panel/qpanel/templates/queue.html:29
+#: panel/templates/all_queues.html:34 panel/templates/fs/queue.html:31
+#: panel/templates/queue.html:29
+msgid "Name"
+msgstr "Jina"
+
+#: helpline/qpanel/templates/all_queues.html:35
+#: helpline/qpanel/templates/queue.html:30
+#: helpline/templates/helpline/helpline/home.html:610
+#: helpline/templates/helpline/home.html:31
+#: helpline/templates/helpline/wall.html:199
+#: panel/qpanel/templates/all_queues.html:35
+#: panel/qpanel/templates/queue.html:30 panel/templates/all_queues.html:35
+#: panel/templates/queue.html:30
+msgid "Interface"
+msgstr "Muunganisho"
+
+#: helpline/qpanel/templates/all_queues.html:36
+#: helpline/qpanel/templates/fs/queue.html:33
+#: helpline/qpanel/templates/queue.html:31
+#: helpline/templates/helpline/helpline/home.html:611
+#: helpline/templates/helpline/home.html:32
+#: helpline/templates/helpline/wall.html:197
+#: panel/qpanel/templates/all_queues.html:36
+#: panel/qpanel/templates/fs/queue.html:33 panel/qpanel/templates/queue.html:31
+#: panel/templates/all_queues.html:36 panel/templates/fs/queue.html:33
+#: panel/templates/queue.html:31
+msgid "Status"
+msgstr "Takwimu"
+
+#: helpline/qpanel/templates/all_queues.html:37
+#: helpline/qpanel/templates/fs/queue.html:35
+#: helpline/qpanel/templates/queue.html:32
+#: panel/qpanel/templates/all_queues.html:37
+#: panel/qpanel/templates/fs/queue.html:35 panel/qpanel/templates/queue.html:32
+#: panel/templates/all_queues.html:37 panel/templates/fs/queue.html:35
+#: panel/templates/queue.html:32
+msgid "Attend calls"
+msgstr "Simu Zilizoshikwa"
+
+#: helpline/qpanel/templates/all_queues.html:37
+#: helpline/qpanel/templates/fs/queue.html:35
+#: helpline/qpanel/templates/queue.html:32
+#: helpline/templates/helpline/helpline/home.html:612
+#: helpline/templates/helpline/home.html:33
+#: helpline/templates/helpline/wall.html:198
+#: panel/qpanel/templates/all_queues.html:37
+#: panel/qpanel/templates/fs/queue.html:35 panel/qpanel/templates/queue.html:32
+#: panel/templates/all_queues.html:37 panel/templates/fs/queue.html:35
+#: panel/templates/queue.html:32
+msgid "Calls"
+msgstr "Simu"
+
+#: helpline/qpanel/templates/all_queues.html:38
+#: helpline/qpanel/templates/fs/queue.html:36
+#: helpline/qpanel/templates/queue.html:33
+#: helpline/templates/helpline/helpline/home.html:613
+#: helpline/templates/helpline/home.html:34
+#: helpline/templates/helpline/wall.html:200
+#: panel/qpanel/templates/all_queues.html:38
+#: panel/qpanel/templates/fs/queue.html:36 panel/qpanel/templates/queue.html:33
+#: panel/templates/all_queues.html:38 panel/templates/fs/queue.html:36
+#: panel/templates/queue.html:33
+msgid "Last call at"
+msgstr "Simu ya mwisho"
+
+#: helpline/qpanel/templates/all_queues.html:67
+#: helpline/qpanel/templates/fs/queue.html:67
+#: helpline/qpanel/templates/queue.html:66
+#: helpline/templates/helpline/helpline/home.html:696
+#: helpline/templates/helpline/home.html:117
+#: panel/qpanel/templates/all_queues.html:67
+#: panel/qpanel/templates/fs/queue.html:67 panel/qpanel/templates/queue.html:66
+#: panel/templates/all_queues.html:67 panel/templates/fs/queue.html:67
+#: panel/templates/queue.html:66
+msgid "Callers"
+msgstr "Wapiga simu"
+
+#: helpline/qpanel/templates/all_queues.html:72
+#: helpline/qpanel/templates/fs/queue.html:71
+#: helpline/qpanel/templates/queue.html:70
+#: helpline/templates/helpline/helpline/home.html:700
+#: helpline/templates/helpline/home.html:121
+#: panel/qpanel/templates/all_queues.html:72
+#: panel/qpanel/templates/fs/queue.html:71 panel/qpanel/templates/queue.html:70
+#: panel/templates/all_queues.html:72 panel/templates/fs/queue.html:71
+#: panel/templates/queue.html:70
+msgid "Id Name"
+msgstr "Jina"
+
+#: helpline/qpanel/templates/all_queues.html:73
+#: helpline/qpanel/templates/fs/queue.html:72
+#: helpline/qpanel/templates/queue.html:71
+#: helpline/templates/helpline/helpline/home.html:701
+#: helpline/templates/helpline/home.html:122
+#: panel/qpanel/templates/all_queues.html:73
+#: panel/qpanel/templates/fs/queue.html:72 panel/qpanel/templates/queue.html:71
+#: panel/templates/all_queues.html:73 panel/templates/fs/queue.html:72
+#: panel/templates/queue.html:71
+msgid "Id Number"
+msgstr "Id Namba"
+
+#: helpline/qpanel/templates/all_queues.html:74
+#: helpline/qpanel/templates/queue.html:72
+#: helpline/templates/helpline/helpline/home.html:702
+#: helpline/templates/helpline/home.html:123
+#: panel/qpanel/templates/all_queues.html:74
+#: panel/qpanel/templates/queue.html:72 panel/templates/all_queues.html:74
+#: panel/templates/queue.html:72
+msgid "Position"
+msgstr "Nafasi"
+
+#: helpline/qpanel/templates/all_queues.html:75
+#: helpline/qpanel/templates/fs/queue.html:73
+#: helpline/qpanel/templates/queue.html:73
+#: helpline/templates/helpline/helpline/home.html:703
+#: helpline/templates/helpline/home.html:124
+#: panel/qpanel/templates/all_queues.html:75
+#: panel/qpanel/templates/fs/queue.html:73 panel/qpanel/templates/queue.html:73
+#: panel/templates/all_queues.html:75 panel/templates/fs/queue.html:73
+#: panel/templates/queue.html:73
+msgid "Wait"
+msgstr "Subiri"
+
+#: helpline/qpanel/templates/all_queues.html:168
+#: helpline/qpanel/templates/queue.html:173
+#: panel/qpanel/templates/all_queues.html:168
+#: panel/qpanel/templates/queue.html:173 panel/templates/all_queues.html:168
+#: panel/templates/queue.html:173
+msgid "was"
+msgstr "ni"
+
+#: helpline/qpanel/templates/all_queues.html:168
+#: helpline/qpanel/templates/queue.html:173
+#: helpline/templates/helpline/base.html:569
+#: helpline/templates/helpline/helpline/home.html:146
+#: panel/qpanel/templates/all_queues.html:168
+#: panel/qpanel/templates/queue.html:173 panel/templates/all_queues.html:168
+#: panel/templates/queue.html:173
+msgid "ago"
+msgstr "uliopita"
+
+#: helpline/qpanel/templates/all_queues.html:173
+#: helpline/qpanel/templates/queue.html:178
+#: panel/qpanel/templates/all_queues.html:173
+#: panel/qpanel/templates/queue.html:178 panel/templates/all_queues.html:173
+#: panel/templates/queue.html:178
+msgid "paused"
+msgstr "imesimamishwa"
+
+#: helpline/qpanel/templates/footer.html:4
+#: helpline/templates/helpline/base.html:543
+#: helpline/templates/helpline/helpline/home.html:725
+#: panel/qpanel/templates/footer.html:4 panel/templates/footer.html:6
+msgid "Version"
+msgstr "Toleo"
+
+#: helpline/qpanel/templates/footer.html:42
+#: panel/qpanel/templates/footer.html:42 panel/templates/footer.html:45
+msgid "New version available"
+msgstr ""
+
+#: helpline/qpanel/templates/footer.html:43
+#: panel/qpanel/templates/footer.html:43 panel/templates/footer.html:46
+msgid "Exist a new version stable: "
+msgstr ""
+
+#: helpline/qpanel/templates/footer.html:43
+#: panel/qpanel/templates/footer.html:43 panel/templates/footer.html:46
+msgid ""
+". Visit and update your QPanel <a href=\"https://github.com/roramirez/qpanel"
+"\" target=\"_blank\" style=\"color:#ffd777\">from GitHub</a>."
+msgstr ""
+
+#: helpline/qpanel/templates/fs/index.html:34
+#: helpline/qpanel/templates/index.html:23
+#: helpline/templates/helpline/helpline/index.html:23
+#: panel/qpanel/templates/fs/index.html:34 panel/qpanel/templates/index.html:23
+#: panel/templates/fs/index.html:34 panel/templates/index.html:23
+msgid "Queues"
+msgstr "Foleni"
+
+#: helpline/qpanel/templates/fs/index.html:53
+#: helpline/qpanel/templates/fs/index.html:121
+#: helpline/qpanel/templates/index.html:42
+#: helpline/qpanel/templates/index.html:113
+#: helpline/qpanel/templates/row_general_data.html:7
+#: helpline/qpanel/templates/stats.html:47
+#: helpline/templates/helpline/helpline/index.html:42
+#: helpline/templates/helpline/helpline/index.html:113
+#: panel/qpanel/templates/fs/index.html:53
+#: panel/qpanel/templates/fs/index.html:121
+#: panel/qpanel/templates/index.html:42 panel/qpanel/templates/index.html:113
+#: panel/qpanel/templates/row_general_data.html:7
+#: panel/qpanel/templates/stats.html:47 panel/templates/fs/index.html:53
+#: panel/templates/fs/index.html:121 panel/templates/index.html:42
+#: panel/templates/index.html:113 panel/templates/row_general_data.html:7
+#: panel/templates/stats.html:47
+msgid "Answered"
+msgstr "Imejibu"
+
+#: helpline/qpanel/templates/fs/index.html:54
+#: helpline/qpanel/templates/fs/index.html:116
+#: helpline/qpanel/templates/index.html:43
+#: helpline/qpanel/templates/index.html:108
+#: helpline/qpanel/templates/row_general_data.html:14
+#: helpline/qpanel/templates/stats.html:55
+#: helpline/templates/helpline/helpline/index.html:43
+#: helpline/templates/helpline/helpline/index.html:108
+#: panel/qpanel/templates/fs/index.html:54
+#: panel/qpanel/templates/fs/index.html:116
+#: panel/qpanel/templates/index.html:43 panel/qpanel/templates/index.html:108
+#: panel/qpanel/templates/row_general_data.html:14
+#: panel/qpanel/templates/stats.html:55 panel/templates/fs/index.html:54
+#: panel/templates/fs/index.html:116 panel/templates/index.html:43
+#: panel/templates/index.html:108 panel/templates/row_general_data.html:14
+#: panel/templates/stats.html:55
+msgid "Abandoned"
+msgstr "Kutelekezwa"
+
+#: helpline/qpanel/templates/fs/index.html:55
+#: helpline/qpanel/templates/index.html:44
+#: helpline/qpanel/templates/row_general_data.html:30
+#: helpline/templates/helpline/helpline/index.html:44
+#: panel/qpanel/templates/fs/index.html:55 panel/qpanel/templates/index.html:44
+#: panel/qpanel/templates/row_general_data.html:30
+#: panel/templates/fs/index.html:55 panel/templates/index.html:44
+#: panel/templates/row_general_data.html:30
+msgid "Incoming"
+msgstr "Yanayoingia"
+
+#: helpline/qpanel/templates/fs/index.html:57
+#: helpline/qpanel/templates/index.html:46
+#: helpline/templates/helpline/helpline/index.html:46
+#: panel/qpanel/templates/fs/index.html:57 panel/qpanel/templates/index.html:46
+#: panel/templates/fs/index.html:57 panel/templates/index.html:46
+msgid "Service Level"
+msgstr "Kiwango cha huduma"
+
+#: helpline/qpanel/templates/fs/index.html:71
+#: helpline/qpanel/templates/index.html:60
+#: helpline/templates/helpline/helpline/index.html:60
+#: panel/qpanel/templates/fs/index.html:71 panel/qpanel/templates/index.html:60
+#: panel/templates/fs/index.html:71 panel/templates/index.html:60
+msgid "Abandoned:"
+msgstr "Kutelekezwa"
+
+#: helpline/qpanel/templates/fs/queue.html:32
+#: panel/qpanel/templates/fs/queue.html:32 panel/templates/fs/queue.html:32
+msgid "Contact"
+msgstr "Mwasiliani"
+
+#: helpline/qpanel/templates/fs/queue.html:34
+#: panel/qpanel/templates/fs/queue.html:34 panel/templates/fs/queue.html:34
+msgid "State"
+msgstr "Hali"
+
+#: helpline/qpanel/templates/header.html:16
+#: helpline/qpanel/templates/stats.html:6
+#: helpline/qpanel/templates/stats.html:28
+#: helpline/templates/helpdesk/navigation.html:29
+#: panel/qpanel/templates/header.html:16 panel/qpanel/templates/stats.html:6
+#: panel/qpanel/templates/stats.html:28 panel/templates/header.html:16
+#: panel/templates/stats.html:6 panel/templates/stats.html:28
+msgid "Stats"
+msgstr "Takwimu"
+
+#: helpline/qpanel/templates/i18n_js.html:30
+#: panel/qpanel/templates/i18n_js.html:30 panel/templates/i18n_js.html:30
+msgid "Logged Out"
+msgstr "Umefungua"
+
+#: helpline/qpanel/templates/i18n_js.html:32
+#: panel/qpanel/templates/i18n_js.html:32 panel/templates/i18n_js.html:32
+msgid "Available"
+msgstr "Yupo"
+
+#: helpline/qpanel/templates/i18n_js.html:34
+#: panel/qpanel/templates/i18n_js.html:34 panel/templates/i18n_js.html:34
+msgid "Available (On Demand)"
+msgstr "Yupo (Juu ya mahitaji)"
+
+#: helpline/qpanel/templates/i18n_js.html:36
+#: panel/qpanel/templates/i18n_js.html:36 panel/templates/i18n_js.html:36
+msgid "On Break"
+msgstr "Kwenye mapumziko"
+
+#: helpline/qpanel/templates/i18n_js.html:38
+#: helpline/templates/helpline/base.html:96
+#: helpline/templates/helpline/base.html:299
+#: helpline/templates/helpline/dashboardreports.html:31
+#: helpline/templates/helpline/helpline/home.html:130
+#: helpline/templates/helpline/helpline/home.html:351
+#: panel/qpanel/templates/i18n_js.html:38 panel/templates/i18n_js.html:38
+msgid "Idle"
+msgstr "Bila kazi"
+
+#: helpline/qpanel/templates/i18n_js.html:40
+#: panel/qpanel/templates/i18n_js.html:40 panel/templates/i18n_js.html:40
+msgid "Waiting"
+msgstr ""
+
+#: helpline/qpanel/templates/i18n_js.html:42
+#: panel/qpanel/templates/i18n_js.html:42 panel/templates/i18n_js.html:42
+msgid "Receiving"
+msgstr "Kusubiri"
+
+#: helpline/qpanel/templates/i18n_js.html:44
+#: panel/qpanel/templates/i18n_js.html:44 panel/templates/i18n_js.html:44
+msgid "In a queue call"
+msgstr "Katika wito wa foleni"
+
+#: helpline/qpanel/templates/language_selector.html:3
+#: panel/qpanel/templates/language_selector.html:3
+#: panel/templates/language_selector.html:3
+msgid "English"
+msgstr ""
+
+#: helpline/qpanel/templates/language_selector.html:4
+#: panel/qpanel/templates/language_selector.html:4
+#: panel/templates/language_selector.html:4
+msgid "Spanish"
+msgstr ""
+
+#: helpline/qpanel/templates/language_selector.html:5
+#: panel/qpanel/templates/language_selector.html:5
+#: panel/templates/language_selector.html:5
+msgid "German"
+msgstr ""
+
+#: helpline/qpanel/templates/language_selector.html:6
+#: panel/qpanel/templates/language_selector.html:6
+#: panel/templates/language_selector.html:6
+msgid "Russian"
+msgstr ""
+
+#: helpline/qpanel/templates/language_selector.html:7
+#: panel/qpanel/templates/language_selector.html:7
+#: panel/templates/language_selector.html:7
+msgid "Portuguese"
+msgstr ""
+
+#: helpline/qpanel/templates/login.html:2 panel/qpanel/templates/login.html:2
+#: panel/templates/login.html:2
+msgid "Login"
+msgstr "Ingia"
+
+#: helpline/qpanel/templates/login.html:10
+#: helpline/qpanel/templates/login.html:19 panel/qpanel/templates/login.html:10
+#: panel/qpanel/templates/login.html:19 panel/templates/login.html:10
+#: panel/templates/login.html:19
+msgid "Sign in"
+msgstr "Ingia ndani"
+
+#: helpline/qpanel/templates/login.html:12 panel/qpanel/templates/login.html:12
+#: panel/templates/login.html:12
+msgid "User id"
+msgstr "ID ya mtumiaji"
+
+#: helpline/qpanel/templates/login.html:14 panel/qpanel/templates/login.html:14
+#: panel/templates/login.html:14
+msgid "Password"
+msgstr "Nywila"
+
+#: helpline/qpanel/templates/logout_button.html:2
+#: helpline/templates/helpdesk/navigation.html:82
+#: helpline/templates/helpdesk/navigation.html:103
+#: panel/qpanel/templates/logout_button.html:2
+#: panel/templates/logout_button.html:2
+msgid "Logout"
+msgstr "Kutoka"
+
+#: helpline/qpanel/templates/queue.html:35 panel/qpanel/templates/queue.html:35
+#: panel/templates/queue.html:35
+msgid "Actions"
+msgstr "Vitendo"
+
+#: helpline/qpanel/templates/queue.html:51
+#: helpline/qpanel/templates/queue.html:195
+#: panel/qpanel/templates/queue.html:51 panel/qpanel/templates/queue.html:195
+#: panel/templates/queue.html:51 panel/templates/queue.html:195
+msgid "Spy"
+msgstr "Kupeleleza"
+
+#: helpline/qpanel/templates/queue.html:52
+#: helpline/qpanel/templates/queue.html:196
+#: panel/qpanel/templates/queue.html:52 panel/qpanel/templates/queue.html:196
+#: panel/templates/queue.html:52 panel/templates/queue.html:196
+msgid "Whisper"
+msgstr ""
+
+#: helpline/qpanel/templates/queue.html:53
+#: helpline/qpanel/templates/queue.html:197
+#: panel/qpanel/templates/queue.html:53 panel/qpanel/templates/queue.html:197
+#: panel/templates/queue.html:53 panel/templates/queue.html:197
+msgid "Barge"
+msgstr ""
+
+#: helpline/qpanel/templates/queue.html:54
+#: helpline/qpanel/templates/queue.html:198
+#: panel/qpanel/templates/queue.html:54 panel/qpanel/templates/queue.html:198
+#: panel/templates/queue.html:54 panel/templates/queue.html:198
+msgid "Remove from queue"
+msgstr ""
+
+#: helpline/qpanel/templates/queue.html:109
+#: panel/qpanel/templates/queue.html:109 panel/templates/queue.html:109
+msgid "Insert where  you listen the call, example: <i>SIP/1001</i>"
+msgstr ""
+
+#: helpline/qpanel/templates/queue.html:113
+#: panel/qpanel/templates/queue.html:113 panel/templates/queue.html:113
+msgid "Listen "
+msgstr "Kunong'oneza"
+
+#: helpline/qpanel/templates/queue.html:291
+#: panel/qpanel/templates/queue.html:291 panel/templates/queue.html:291
+msgid "Execute a "
+msgstr "Kutekeleza na"
+
+#: helpline/qpanel/templates/queue.html:298
+#: panel/qpanel/templates/queue.html:298 panel/templates/queue.html:298
+msgid "Insert where do need listen"
+msgstr "Chomeka ambapo haja ya kusikiliza"
+
+#: helpline/qpanel/templates/queue.html:304
+#: panel/qpanel/templates/queue.html:304 panel/templates/queue.html:304
+msgid "Try..."
+msgstr "Jaribu..."
+
+#: helpline/qpanel/templates/row_general_data.html:10
+#: helpline/qpanel/templates/stats.html:51
+#: panel/qpanel/templates/row_general_data.html:10
+#: panel/qpanel/templates/stats.html:51
+#: panel/templates/row_general_data.html:10 panel/templates/stats.html:51
+msgid "Attended calls."
+msgstr "Wito wa walihudhuria."
+
+#: helpline/qpanel/templates/row_general_data.html:17
+#: helpline/qpanel/templates/stats.html:59
+#: panel/qpanel/templates/row_general_data.html:17
+#: panel/qpanel/templates/stats.html:59
+#: panel/templates/row_general_data.html:17 panel/templates/stats.html:59
+msgid "Calls not attended by agents."
+msgstr ""
+
+#: helpline/qpanel/templates/row_general_data.html:22
+#: panel/qpanel/templates/row_general_data.html:22
+#: panel/templates/row_general_data.html:22
+msgid "SL"
+msgstr ""
+
+#: helpline/qpanel/templates/row_general_data.html:25
+#: panel/qpanel/templates/row_general_data.html:25
+#: panel/templates/row_general_data.html:25
+msgid "Service Level."
+msgstr ""
+
+#: helpline/qpanel/templates/row_general_data.html:33
+#: panel/qpanel/templates/row_general_data.html:33
+#: panel/templates/row_general_data.html:33
+msgid "Call on line."
+msgstr ""
+
+#: helpline/qpanel/templates/row_general_data.html:39
+#: helpline/qpanel/templates/stats.html:63
+#: panel/qpanel/templates/row_general_data.html:39
+#: panel/qpanel/templates/stats.html:63
+#: panel/templates/row_general_data.html:39 panel/templates/stats.html:63
+msgid "Av. time"
+msgstr ""
+
+#: helpline/qpanel/templates/row_general_data.html:42
+#: helpline/qpanel/templates/stats.html:66
+#: panel/qpanel/templates/row_general_data.html:42
+#: panel/qpanel/templates/stats.html:66
+#: panel/templates/row_general_data.html:42 panel/templates/stats.html:66
+msgid "Average time for answered calls."
+msgstr ""
+
+#: helpline/qpanel/templates/row_general_data.html:46
+#: helpline/qpanel/templates/stats.html:70
+#: panel/qpanel/templates/row_general_data.html:46
+#: panel/qpanel/templates/stats.html:70
+#: panel/templates/row_general_data.html:46 panel/templates/stats.html:70
+msgid "Av. Wait"
+msgstr ""
+
+#: helpline/qpanel/templates/row_general_data.html:49
+#: helpline/qpanel/templates/stats.html:73
+#: panel/qpanel/templates/row_general_data.html:49
+#: panel/qpanel/templates/stats.html:73
+#: panel/templates/row_general_data.html:49 panel/templates/stats.html:73
+msgid "Average time waiting for calls."
+msgstr ""
+
+#: helpline/qpanel/templates/stats.html:19 panel/qpanel/templates/stats.html:19
+#: panel/templates/stats.html:19
+msgid "From:"
+msgstr ""
+
+#: helpline/qpanel/templates/stats.html:20 panel/qpanel/templates/stats.html:20
+#: panel/templates/stats.html:20
+msgid "To:"
+msgstr "Kwa:"
+
+#: helpline/qpanel/templates/stats.html:38 panel/qpanel/templates/stats.html:38
+#: panel/templates/stats.html:38
+msgid "Inbound"
+msgstr "Inbound"
+
+#: helpline/qpanel/templates/stats.html:41 panel/qpanel/templates/stats.html:41
+#: panel/templates/stats.html:41
+msgid "Total incomming calls"
+msgstr "Simu kwa jumla"
+
+#: helpline/templates/avatar/add.html:5 helpline/templates/avatar/change.html:8
+msgid "Your current avatar: "
+msgstr "Avatar yako ya sasa: "
+
+#: helpline/templates/avatar/add.html:8
+#: helpline/templates/avatar/change.html:11
+msgid "You haven't uploaded an avatar yet. Please upload one now."
+msgstr "Huja pakia avatar bado. Tafadhali weka moja sasa."
+
+#: helpline/templates/avatar/add.html:12
+#: helpline/templates/avatar/change.html:22
+msgid "Upload New Image"
+msgstr "Pakia picha mpya"
+
+#: helpline/templates/avatar/change.html:17
+msgid "Choose new Default"
+msgstr "Chagua chaguo-msingi mpya"
+
+#: helpline/templates/avatar/confirm_delete.html:5
+msgid "Please select the avatars that you would like to delete."
+msgstr "Tafadhali chagua avatari ambazo ungependa kufuta."
+
+#: helpline/templates/avatar/confirm_delete.html:8
+msgid "You have no avatars to delete."
+msgstr ""
+
+#: helpline/templates/avatar/confirm_delete.html:14
+msgid "Delete These"
+msgstr "Futa Hizi"
+
+#: helpline/templates/helpdesk/base.html:75
+msgid "My Open Tickets"
+msgstr "Tiketi Zangu za Ufunguzi"
+
+#: helpline/templates/helpdesk/base.html:76
+msgid "All Recent Activity"
+msgstr "Shughuli Yote ya Hivi karibuni"
+
+#: helpline/templates/helpdesk/base.html:77
+msgid "Unassigned Tickets"
+msgstr "Tiketi zisizopangwa"
+
+#: helpline/templates/helpdesk/base.html:117
+msgid "Helpdesk"
+msgstr "Deski la msaada"
+
+#: helpline/templates/helpdesk/navigation.html:7
+msgid "Toggle navigation"
+msgstr "Badilisha ubadilishaji"
+
+#: helpline/templates/helpdesk/navigation.html:12
+msgid "Helpline"
+msgstr "Helpline"
+
+#: helpline/templates/helpdesk/navigation.html:23
+msgid "Tickets"
+msgstr "Tiketi"
+
+#: helpline/templates/helpdesk/navigation.html:26
+msgid "New Ticket"
+msgstr "Tiketi Mpya"
+
+#: helpline/templates/helpdesk/navigation.html:33
+#: helpline/templates/helpdesk/navigation.html:101
+msgid "Knowledgebase"
+msgstr "Maarifa"
+
+#: helpline/templates/helpdesk/navigation.html:38
+msgid "Saved Query"
+msgstr "Swala iliyohifadhiwa"
+
+#: helpline/templates/helpdesk/navigation.html:53
+msgid "Search..."
+msgstr "Tafuta..."
+
+#: helpline/templates/helpdesk/navigation.html:53
+msgid "Enter a keyword, or a ticket number to jump straight to that ticket."
+msgstr ""
+"Ingiza Nenomsingi, au namba ya tiketi kuruka moja kwa moja kwa tiketi hiyo."
+
+#: helpline/templates/helpdesk/navigation.html:57
+msgid "Go"
+msgstr "Enda"
+
+#: helpline/templates/helpdesk/navigation.html:71
+msgid "User Settings"
+msgstr "Vipimo vya mtumiaji"
+
+#: helpline/templates/helpdesk/navigation.html:73
+msgid "RSS Feeds"
+msgstr "Milisho ya RSS"
+
+#: helpline/templates/helpdesk/navigation.html:75
+msgid "Change password"
+msgstr "Badilisha nywila"
+
+#: helpline/templates/helpdesk/navigation.html:79
+msgid "System Settings"
+msgstr "Vipimo vya mfumo"
+
+#: helpline/templates/helpdesk/navigation.html:95
+#: helpline/templates/helpdesk/navigation.html:98
+msgid "Submit a Ticket"
+msgstr "Kuwasilisha tiketi"
+
+#: helpline/templates/helpdesk/navigation.html:103
+msgid "Log In"
+msgstr "Ingia ndani"
+
+#: helpline/templates/helpline/base.html:76
+#: helpline/templates/helpline/dashboardreports.html:11
+#: helpline/templates/helpline/helpline/home.html:110 helpline/views.py:951
+msgid "Average Talk Time"
+msgstr "Wastani wa kuzungumza wakati"
+
+#: helpline/templates/helpline/base.html:82
+#: helpline/templates/helpline/dashboardreports.html:17
+#: helpline/templates/helpline/helpline/home.html:116
+msgid "Average Wait Time"
+msgstr "Wastani wa Kusubiri Muda"
+
+#: helpline/templates/helpline/base.html:94
+#: helpline/templates/helpline/base.html:297
+#: helpline/templates/helpline/dashboardreports.html:29
+#: helpline/templates/helpline/helpline/home.html:128
+#: helpline/templates/helpline/helpline/home.html:349
+msgid "Busy"
+msgstr "Kwenye Shughuli"
+
+#: helpline/templates/helpline/base.html:98
+#: helpline/templates/helpline/base.html:301
+#: helpline/templates/helpline/dashboardreports.html:33
+#: helpline/templates/helpline/helpline/home.html:132
+#: helpline/templates/helpline/helpline/home.html:353
+msgid "Online"
+msgstr "Kwenye laini"
+
+#: helpline/templates/helpline/base.html:100
+#: helpline/templates/helpline/base.html:303
+#: helpline/templates/helpline/dashboardreports.html:35
+#: helpline/templates/helpline/helpline/home.html:134
+#: helpline/templates/helpline/helpline/home.html:355
+msgid "OnCall"
+msgstr "Kwenye Simu"
+
+#: helpline/templates/helpline/base.html:113
+#: helpline/templates/helpline/base.html:118
+#: helpline/templates/helpline/helpline/home.html:163
+#: helpline/templates/helpline/helpline/home.html:168
+msgid "Leave Queue"
+msgstr "Toka Foleni"
+
+#: helpline/templates/helpline/base.html:123
+#: helpline/templates/helpline/helpline/home.html:173
+msgid "Join Queue"
+msgstr "Jiunge Foleni"
+
+#: helpline/templates/helpline/base.html:141
+#: helpline/templates/helpline/helpline/home.html:191
+#, fuzzy
+#| msgid "On Break"
+msgid "Break"
+msgstr "Kwenye mapumziko"
+
+#: helpline/templates/helpline/base.html:154
+#: helpline/templates/helpline/helpline/home.html:204
+msgid "Continue"
+msgstr ""
+
+#: helpline/templates/helpline/base.html:165
+#: helpline/templates/helpline/helpline/home.html:215
+msgid "New Walk In"
+msgstr "Kuingia Mpya"
+
+#: helpline/templates/helpline/base.html:174
+#: helpline/templates/helpline/helpline/home.html:224
+msgid "You have"
+msgstr "Uko na"
+
+#: helpline/templates/helpline/base.html:195
+#: helpline/templates/helpline/helpline/home.html:245
+msgid "See All Messages"
+msgstr "Angalia Ujumbe Wote"
+
+#: helpline/templates/helpline/base.html:205
+#: helpline/templates/helpline/helpline/home.html:255
+#, python-format
+msgid "You have %(unread_count)s notification%(unread_count|pluralize)s"
+msgstr "Uko na %(unread_count)s taarifa%(unread_count|pluralize)s"
+
+#: helpline/templates/helpline/base.html:251
+#: helpline/templates/helpline/helpline/home.html:301
+msgid "Member Since"
+msgstr "Mwanachama Tangu"
+
+#: helpline/templates/helpline/base.html:310
+#: helpline/templates/helpline/helpline/home.html:362
+msgid "Search"
+msgstr "Tafuta"
+
+#: helpline/templates/helpline/base.html:320
+#: helpline/templates/helpline/helpline/home.html:372
+msgid "MAIN NAVIGATION"
+msgstr "URAMBAZAJI KUU"
+
+#: helpline/templates/helpline/base.html:329
+#: helpline/templates/helpline/helpline/home.html:381
+msgid "Cases"
+msgstr "Kesi"
+
+#: helpline/templates/helpline/base.html:335
+#: helpline/templates/helpline/helpline/home.html:387
+msgid "Today's Cases"
+msgstr "Kesi za leo"
+
+#: helpline/templates/helpline/base.html:340
+#: helpline/templates/helpline/helpline/home.html:392
+msgid "Progressive Cases"
+msgstr "Kesi zinazoendelea"
+
+#: helpline/templates/helpline/base.html:345
+#: helpline/templates/helpline/helpline/home.html:397
+msgid "All Cases"
+msgstr "Kesi zote"
+
+#: helpline/templates/helpline/base.html:354
+#: helpline/templates/helpline/base.html:473
+#: helpline/templates/helpline/helpline/home.html:406
+#: helpline/templates/helpline/helpline/home.html:525
+msgid "Mails"
+msgstr "Barua pepe"
+
+#: helpline/templates/helpline/base.html:364
+#: helpline/templates/helpline/helpline/home.html:416
+msgid "SMS"
+msgstr "SMS"
+
+#: helpline/templates/helpline/base.html:372
+#: helpline/templates/helpline/helpline/home.html:424
+msgid "Users"
+msgstr "Watumiaji"
+
+#: helpline/templates/helpline/base.html:381
+#: helpline/templates/helpline/helpline/home.html:433
+msgid "Reports"
+msgstr "Ripoti"
+
+#: helpline/templates/helpline/base.html:387
+#: helpline/templates/helpline/base.html:436
+#: helpline/templates/helpline/helpline/home.html:439
+#: helpline/templates/helpline/helpline/home.html:488
+msgid "Total Calls"
+msgstr "Wito wa jumla"
+
+#: helpline/templates/helpline/base.html:389
+#: helpline/templates/helpline/helpline/home.html:441
+#, fuzzy
+#| msgid "Answered"
+msgid "Answered Calls"
+msgstr "Imejibu"
+
+#: helpline/templates/helpline/base.html:391
+#: helpline/templates/helpline/base.html:453
+#: helpline/templates/helpline/helpline/home.html:443
+#: helpline/templates/helpline/helpline/home.html:505
+#, fuzzy
+#| msgid "Abandoned"
+msgid "Abandoned Calls"
+msgstr "Kutelekezwa"
+
+#: helpline/templates/helpline/base.html:393
+#: helpline/templates/helpline/helpline/home.html:445
+#, fuzzy
+#| msgid "Voice Mails"
+msgid "Voice Mail"
+msgstr "Sauti Pepe"
+
+#: helpline/templates/helpline/base.html:395
+#: helpline/templates/helpline/helpline/home.html:447
+msgid "Call Summary Report"
+msgstr "Ripoti ya Muhtasari ya Wito"
+
+#: helpline/templates/helpline/base.html:397
+#: helpline/templates/helpline/helpline/home.html:449
+msgid "Charts Inbound"
+msgstr "Chati ya ndani"
+
+#: helpline/templates/helpline/base.html:399
+#: helpline/templates/helpline/helpline/home.html:451
+msgid "Agent Session Report"
+msgstr ""
+
+#: helpline/templates/helpline/base.html:405
+#: helpline/templates/helpline/helpline/home.html:457
+msgid "Wall Board"
+msgstr ""
+
+#: helpline/templates/helpline/base.html:444
+#: helpline/templates/helpline/helpline/home.html:496
+msgid "Received Calls"
+msgstr "Wito Zilizopokeawa"
+
+#: helpline/templates/helpline/base.html:455
+#: helpline/templates/helpline/helpline/home.html:507
+msgid "Missed Calls"
+msgstr "Wito Zilizopitwa"
+
+#: helpline/templates/helpline/base.html:465
+#: helpline/templates/helpline/helpline/home.html:517
+msgid "Voice Mails"
+msgstr "Sauti Pepe"
+
+#: helpline/templates/helpline/base.html:546
+#: helpline/templates/helpline/helpline/home.html:728
+msgid "Copyright"
+msgstr "Hati miliki"
+
+#: helpline/templates/helpline/base.html:546
+#: helpline/templates/helpline/helpline/home.html:728
+msgid "All rights reserved."
+msgstr "Haki zote zimehifadhiwa."
+
+#: helpline/templates/helpline/dashboardreports.html:55
+msgid "REPORT"
+msgstr ""
+
+#: helpline/templates/helpline/dashboardreports.html:154
+#: helpline/templates/helpline/report_charts_factory.html:17
+#: helpline/templates/helpline/report_factory.html:9
+#, fuzzy
+#| msgid "Support"
+msgid "Export"
+msgstr "Msaada"
+
+#: helpline/templates/helpline/helpline/home.html:593
+#: helpline/templates/helpline/helpline/home.html:685
+#: helpline/templates/helpline/home.html:14
+#: helpline/templates/helpline/home.html:106
+msgid "Consolidated View"
+msgstr "Mwoneko Pamoja"
+
+#: helpline/templates/helpline/helpline/home.html:631
+#: helpline/templates/helpline/helpline/home.html:638
+#: helpline/templates/helpline/home.html:52
+#: helpline/templates/helpline/home.html:59
+#: helpline/templates/helpline/wall.html:226
+msgid "Closed Cases"
+msgstr "Kesi zilizofungwa"
+
+#: helpline/templates/helpline/helpline/home.html:648
+#: helpline/templates/helpline/helpline/home.html:655
+#: helpline/templates/helpline/home.html:69
+#: helpline/templates/helpline/home.html:76
+#: helpline/templates/helpline/wall.html:232
+msgid "Escalated Cases"
+msgstr "Kesi zilizoongezeka"
+
+#: helpline/templates/helpline/helpline/home.html:665
+#: helpline/templates/helpline/helpline/home.html:672
+#: helpline/templates/helpline/home.html:86
+#: helpline/templates/helpline/home.html:93
+#: helpline/templates/helpline/wall.html:220
+msgid "Pending Cases"
+msgstr "Kesi Zasubiri"
+
+#: helpline/templates/helpline/helpline/presence.html:18
+#: helpline/templates/helpline/wall.html:190
+#, fuzzy
+#| msgid "Online"
+msgid "Agents Online"
+msgstr "Kwenye laini"
+
+#: helpline/templates/helpline/leta.html:7
+msgid "Login Duration"
+msgstr "Muda wa kuingia"
+
+#: helpline/templates/helpline/leta.html:20
+msgid "Ready Duration"
+msgstr "Muda wa Kuwa tayari"
+
+#: helpline/templates/helpline/profile.html:19
+msgid "Change your avatar"
+msgstr "Badilisha avatar yako"
+
+#: helpline/templates/helpline/profile.html:24
+msgid "Edit Details"
+msgstr "Hariri mafafanuzi"
+
+#: helpline/templates/helpline/profile.html:29
+msgid "Profile"
+msgstr "Profaili"
+
+#: helpline/templates/helpline/profile.html:31
+#: helpline/templates/helpline/profile.html:63
+msgid "Email"
+msgstr "Barua pepe"
+
+#: helpline/templates/helpline/profile.html:32
+msgid "Auth ID"
+msgstr "Kitambulisho cha uhalalishaji"
+
+#: helpline/templates/helpline/profile.html:33
+msgid "Role"
+msgstr "Jukumu"
+
+#: helpline/templates/helpline/profile.html:34
+msgid "Branch"
+msgstr "Chipukizi"
+
+#: helpline/templates/helpline/profile.html:45
+msgid "Update"
+msgstr "Sasisha"
+
+#: helpline/templates/helpline/profile.html:51
+msgid "First Name"
+msgstr "Jina la kwanza"
+
+#: helpline/templates/helpline/profile.html:57
+msgid "Last Name"
+msgstr "Jina la mwisho"
+
+#: helpline/templates/helpline/profile.html:71
+msgid "Discard"
+msgstr "Tupa"
+
+#: helpline/templates/helpline/profile.html:73
+msgid "Save"
+msgstr "Hifadhi"
+
+#: helpline/templates/helpline/wall.html:214
+#, fuzzy
+#| msgid "Total Calls"
+msgid "Total Cases"
+msgstr "Wito wa jumla"
+
+#: helpline/templates/helpline/wall.html:238
+#, fuzzy
+#| msgid "Total Calls"
+msgid "Total Emails"
+msgstr "Wito wa jumla"
+
+#: helpline/templates/helpline/wall.html:246
+#, fuzzy
+#| msgid "Total Calls"
+msgid "Total SMS"
+msgstr "Wito wa jumla"
+
+#: helpline/templates/polls/poll_detail.html:27
+msgid "Vote"
+msgstr "Kura"
+
+#: helpline/templates/polls/poll_list.html:7
+msgid "Polls"
+msgstr "Vituo vya kupigia kura"
+
+#: helpline/templates/polls/poll_list.html:27
+msgid "There are no polls available."
+msgstr "Hakuna kura inapatikana."
+
+#: helpline/views.py:328
+#, fuzzy
+#| msgid "Answered Percentage"
+msgid "Answered Calls Report"
+msgstr "Akajibu Asilimia"
+
+#: helpline/views.py:329
+#, fuzzy
+#| msgid "Abandoned Percentage"
+msgid "Abandoned Calls Report"
+msgstr "Kutelekezwa Asilimia"
+
+#: helpline/views.py:330
+msgid "Voicemail Report"
+msgstr ""
+
+#: helpline/views.py:942
+msgid "Category"
+msgstr "Kategoria"
+
+#: helpline/views.py:952
+msgid "Average Hold Time"
+msgstr "Wastani wa kuzungumza wakati"
+
+#: helpline/views.py:954
+msgid "SLA Breached"
+msgstr "SLA Waliingia"
+
+#: helpline/views.py:956
+msgid "SLA Percentage"
+msgstr "SLA Asilimia"
+
+#: helpline/views.py:958
+msgid "Answered Percentage"
+msgstr "Akajibu Asilimia"
+
+#: helpline/views.py:960
+msgid "Abandoned Percentage"
+msgstr "Kutelekezwa Asilimia"
+
+#~ msgid "Supervisor"
+#~ msgstr "Msimamizi"
+
+#~ msgid "Average SLA"
+#~ msgstr "Wastani wa SLA"
+
+#~ msgid ""
+#~ "You have %(tickets.count)s messag%(tickets.count|pluralize:\"e,es\")s"
+#~ msgstr "Uko na ujumbe %(tickets.count)s"
+
+#~ msgid "Social Media"
+#~ msgstr "Mtandao wa kijamii"
+
+#~ msgid "Web Registered Cases"
+#~ msgstr "Kesi za mtandao"
+
+#~ msgid "Search Case"
+#~ msgstr "Tafuta Kesi"
+
+#~ msgid "Select Creteria"
+#~ msgstr "Chagua Vigezo"
+
+#~ msgid ""
+#~ "You have no avatars to delete. Please <a href=\"%(avatar_change_url)s"
+#~ "\">upload one</a> now."
+#~ msgstr "Huna avatari za kufuta. Tafadhali weka moja sasa."

@@ -1,0 +1,39 @@
+{% extends 'helpline/helpline/home.html' %}
+{% load staticfiles %}
+{% load i18n %}
+{% block navbar_nav %}
+{% endblock navbar_nav %}
+{% block box %}
+{% endblock box %}
+{% block content %}
+<section class="content" style="border:solid thin #0BE3F4; background:#EAFAFD; margin:5px;">
+      <!-- Info boxes -->
+      <!-- /.row -->
+
+          <div class="box box-info" style="border-radius:0px; padding-right:5px;">
+            <!-- /.box-header -->
+            <div class="box-body">
+              <div class="row">
+                <div class="col-md-12">
+                    <h3 class="box-title">{% trans "Agents Online" %}</h3>
+
+                  <div class="table-responsive">
+                    {% load django_tables2 %}
+                    {% render_table connected_agents_table %}
+                  </div>
+              <!-- /.table-responsive -->
+             </div>
+            </div>
+            <!-- /.box-body -->
+
+            <!-- /.box-footer -->
+          </div>
+          <!-- /.box -->
+        </div>
+        <!-- /.col -->
+
+        <!-- /.col -->
+
+      <!-- /.row -->
+    </section>
+{% endblock content %}

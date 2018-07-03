@@ -1,0 +1,38 @@
+{% extends "helpline/base.html" %}
+
+{% load i18n %}
+
+{% block content %}
+<h1>{{poll.question}}</h1>
+{% if poll.votable %}
+<form action="{% url 'polls:vote' poll.id %}" method="post">
+    {% csrf_token %}
+    <div class="control-group">
+        <div class="control">
+            {% for choice in poll.choice_set.all %}
+            <input type="radio" name="choice_pk" value="{{choice.id}}"> {{choice.choice}}
+            {% endfor %}
+            <input type="hidden" value="{{ contact }}" name="contact"/>
+        </div>
+    </div>
+    <div class="control-group">
+        <label for="comment" class="control-label">
+            Comment:
+        </label>
+        <div class="controls">
+            <textarea class="form-control textarea" col="30" cols="40" name="comment" row="7"/></textarea>
+        </div>
+    </div>
+
+    <input type="submit" class="btn btn-primary" value="{% trans "Vote" %}">
+
+</form>
+{% else %}
+<ul>
+{% for choice in poll.choice_set.all %}
+    <li>{{choice.choice}} - {{choice.count_votes}}</li>
+{% endfor %}
+</ul>
+{% endif %}
+<a href="javascript:history.go(-1)">&lt;&lt; Back</a>
+{% endblock %}

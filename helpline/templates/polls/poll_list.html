@@ -1,0 +1,31 @@
+{% extends "helpline/base.html" %}
+
+{% load i18n %}
+
+{% block content %}
+<div class="container">
+<h1>{% trans "Polls" %}</h1>
+{% if poll_list %}
+<div class="row">
+<table class="table table-bordered table-striped dataTable">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Question</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for poll in poll_list.all %}
+    <tr>
+        <td>{{ forloop.counter }}</td>
+        <td><a href="{% url 'polls:detail' poll.id %}?contact={{contact}}">{{poll.question}}</a></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+{% trans "There are no polls available." %}
+</div>
+{% endif %}
+</div>
+{% endblock %}

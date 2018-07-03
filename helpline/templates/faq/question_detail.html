@@ -1,0 +1,21 @@
+{% extends "helpline/base.html" %}
+{% load staticfiles %}
+
+{% block title %}{{ block.super }}: Question - {{ question.text|truncatewords:30}}{% endblock %}
+<!-- Target -->
+<input id="foo" value="{% url 'faq_question_detail' topic.slug question.slug %}">
+
+<!-- Trigger -->
+<button class="btn" data-clipboard-target="#foo">
+    <img src="{% static 'clipboard/assets/clippy.svg' %}" alt="Copy to clipboard">
+    </button>
+
+{% block content %}
+
+{{ question.text }}
+
+<br/>
+
+{{ question.answer }}
+
+{% endblock %}

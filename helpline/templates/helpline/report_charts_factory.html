@@ -1,0 +1,21 @@
+{% load i18n %}
+{% load staticfiles %}
+{% load nvd3_tags %}
+
+{% block content %}
+    {% load_chart charttype chartdata chartcontainer extra %}
+    {% include_container chartcontainer 400 1020 %}
+    <p></p>
+    Total Calls: <b>{{ total_calls }}</b>
+    Number of records: <b>{{ datetime_ranges_number }}</b>
+        {% load django_tables2 %}
+        {% if summary_table %}
+        {% render_table summary_table %}
+        {% endif %}
+                              {% for format in summary_table.export_formats %}
+                            <a class="btn btn-app"  href="{% querystring '_export'=format %}">
+                             <i class="fa fa-save"></i> <strong>{% trans "Export" %} .{{ format }}</strong>
+                            </a>
+                            {% endfor %}
+
+{% endblock content %}
