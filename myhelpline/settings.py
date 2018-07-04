@@ -58,7 +58,6 @@ INSTALLED_APPS = (
     'genericadmin',
     'mailer',
     'helpline',
-    'panel',
     'djangobower',
     'django_nvd3',
     'notifications',
