@@ -86,6 +86,11 @@ class Case(models.Model):
     hl_priority = models.CharField(max_length=250, blank=True, null=True)
     hl_disposition = models.CharField(max_length=250, blank=True, null=True)
     hl_creator = models.IntegerField(blank=True, null=True)
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        blank=True, null=True
+    )
     hl_counsellor = models.IntegerField(blank=True, null=True)
     hl_supervisor = models.IntegerField(blank=True, null=True)
     hl_escalateto = models.CharField(max_length=10, blank=True, null=True)
@@ -205,11 +210,6 @@ class Hotdesk(models.Model):
         max_length=6,
         choices=EXTENSION_TYPE_CHOICES,
         default=SIP
-    )
-
-    jabber = models.CharField(
-        max_length=100,
-        blank=True, null=True
     )
     status = models.CharField(
         max_length=11,
@@ -629,6 +629,11 @@ class HelplineUser(models.Model):
     user = models.OneToOneField(
         User, on_delete=models.CASCADE,
         related_name='HelplineUser'
+    )
+    case = models.ForeignKey(
+        Case,
+        on_delete=models.CASCADE,
+        blank=True, null=True
     )
     hl_key = models.IntegerField(
         unique=True, primary_key=True,
