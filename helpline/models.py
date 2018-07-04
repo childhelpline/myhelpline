@@ -614,11 +614,6 @@ class SMSCDR(models.Model):
     link_id = models.CharField(max_length=300)
 
 
-class System(models.Model):
-    hl_system = models.CharField(unique=True, max_length=100)
-    hl_data = models.CharField(max_length=100)
-
-
 class HelplineUser(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE,
                                 related_name='HelplineUser')
@@ -730,39 +725,3 @@ class HelplineUser(models.Model):
         """Get recent actions A.K.A Clocks
         We return only 5 at this time."""
         return Clock.objects.filter(hl_key=self.hl_key).order_by('-id')[:5]
-
-
-class WorkForce(models.Model):
-    hl_key = models.IntegerField()
-    clockdate = models.DateField()
-    weblogin = models.IntegerField()
-    clockbreak = models.IntegerField()
-    weblogout = models.IntegerField()
-    callsanswered = models.IntegerField()
-    missedcalls = models.IntegerField()
-    casescreated = models.IntegerField()
-    talktime = models.IntegerField()
-    occupancy = models.IntegerField()
-    queuebreaks = models.IntegerField()
-    queuelogin = models.IntegerField()
-    queuelogout = models.IntegerField()
-    hl_time = models.IntegerField()
-    hl_access = models.DateTimeField()
-
-
-class WorkForce2(models.Model):
-    hl_key = models.IntegerField()
-    clockdate = models.DateField()
-    weblogin = models.IntegerField()
-    clockbreak = models.IntegerField()
-    weblogout = models.IntegerField()
-    callsanswered = models.IntegerField()
-    missedcalls = models.IntegerField()
-    casescreated = models.IntegerField()
-    talktime = models.IntegerField()
-    occupancy = models.IntegerField()
-    queuebreaks = models.IntegerField()
-    queuelogin = models.IntegerField()
-    queuelogout = models.IntegerField()
-    hl_time = models.IntegerField()
-    hl_access = models.DateTimeField()
