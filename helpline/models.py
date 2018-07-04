@@ -18,7 +18,6 @@ from helpdesk.models import Ticket
 
 
 class Address(models.Model):
-    hl_key = models.IntegerField(unique=True, primary_key=True)
     hl_title = models.CharField(max_length=25, blank=True, null=True)
     hl_type = models.CharField(max_length=9, blank=True, null=True)
     hl_names = models.CharField(max_length=500, blank=True, null=True)
@@ -74,7 +73,6 @@ class Address(models.Model):
 class Case(models.Model):
     """Case management model"""
     hl_case = models.AutoField(primary_key=True)
-    hl_key = models.IntegerField()
     hl_callerkey = models.IntegerField(blank=True, null=True)
     hl_victimkey = models.IntegerField(blank=True, null=True)
     hl_unique = models.CharField(unique=True, max_length=20,
@@ -121,6 +119,9 @@ class Case(models.Model):
                                 blank=True, null=True)
     hl_registry = models.IntegerField(blank=True, null=True)
     hl_time = models.IntegerField(blank=True, null=True)
+
+    def __unicode__(self):
+        return str(self.hl_case)
 
 
 class CaseTrail(models.Model):
@@ -434,9 +435,10 @@ class Registry(models.Model):
 
 class Report(models.Model):
     """Main report table."""
-    hl_case = models.ForeignKey(Case, on_delete=models.CASCADE)
-    caseid = models.IntegerField(unique=True, primary_key=True,
-                                 verbose_name='Case ID')
+    case = models.OneToOneField(
+        Case, on_delete=models.CASCADE,
+        related_name='Report'
+    )
     calldate = models.CharField(max_length=250, verbose_name='Call Date',
                                 blank=True, null=True)
     queuename = models.TextField(verbose_name='Queue Name',
@@ -476,36 +478,7 @@ class Report(models.Model):
                           blank=True, null=True)
 
     def __unicode__(self):
-        return str(self.caseid)
-
-    def get_disposition(self):
-        return Case.objects.get(hl_case=self.caseid).hl_disposition
-
-    def get_notes(self):
-        return Case.objects.get(hl_case=self.caseid).hl_notes
-
-    def get_details(self):
-        return Case.objects.get(hl_case=self.caseid).hl_details
-
-    def get_category(self):
-        """ Get case type related to a report"""
-        return Case.objects.get(hl_case=self.caseid).hl_type
-
-    def get_sub_category(self):
-        """ Get case type sub-category related to a report"""
-        return Case.objects.get(hl_case=self.caseid).hl_subcategory
-
-    def get_sub_sub_category(self):
-        """ Get case type sub sub-category related to a report"""
-        return Case.objects.get(hl_case=self.caseid).hl_subsubcat
-
-    def get_referred_from(self):
-        """ Get referred from."""
-        return Case.objects.get(hl_case=self.caseid).isrefferedfrom
-
-    def get_case_type(self):
-        """ Get casetype."""
-        return Case.objects.get(hl_case=self.caseid).hl_type
+        return str(self.case)
 
     def get_call_type(self):
         """ Get casetype."""
@@ -515,22 +488,6 @@ class Report(models.Model):
             return "Voicemail"
         else:
             return "Outbound"
-
-    def get_case_category(self):
-        """ Get case category."""
-        return Case.objects.get(hl_case=self.caseid).hl_acategory
-
-    def get_case_subcategory(self):
-        """ Get case subcategory."""
-        return Case.objects.get(hl_case=self.caseid).hl_subcategory
-
-    def get_business_portfolio(self):
-        """ Get case subcategory."""
-        return Case.objects.get(hl_case=self.caseid).business_portfolio
-
-    def get_case_key(self):
-        """ Get case key."""
-        return Case.objects.get(hl_case=self.caseid).hl_key
 
     def get_case_address(self):
         """ Get case Address."""
@@ -566,7 +523,7 @@ class Report(models.Model):
 
     def get_ticket(self):
         """ Get date of birth."""
-        ticket = Ticket.objects.filter(title__icontains="case %s." % (self.caseid))
+        ticket = Ticket.objects.filter(title__icontains="case %s." % (self.case.hl_case))
         return ticket.order_by("modified")[0] if ticket else None
 
     def get_absolute_url(self):
@@ -577,7 +534,7 @@ class Report(models.Model):
         except Exception as e:
             from django.core.urlresolvers import reverse
 
-        return reverse('my_forms', args=[self.casetype.lower() if self.casetype else "call"]) + "?case=%s" % str(self.caseid)
+        return reverse('my_forms', args=[self.casetype.lower() if self.casetype else "call"]) + "?case=%s" % str(self.case.hl_case)
 
 
 class Role(models.Model):
@@ -810,3 +767,32 @@ class HelplineUser(models.Model):
         """Get recent actions A.K.A Clocks
         We return only 5 at this time."""
         return Clock.objects.filter(hl_key=self.hl_key).order_by('-id')[:5]
+
+
+class Cdr(models.Model):
+    """A CDR consists of a unique identifier and several
+    fields of information about a call"""
+    accountcode = models.IntegerField(blank=True, null=True)
+    calldate = models.DateTimeField(auto_now_add=True, blank=True)
+    clid = models.CharField(max_length=80, blank=True, null=True)
+    src = models.CharField(max_length=80, blank=True, null=True)
+    dst = models.CharField(max_length=80, blank=True, null=True)
+    dcontext = models.CharField(max_length=80, blank=True, null=True)
+    channel = models.CharField(max_length=80, blank=True, null=True)
+    dstchannel = models.CharField(max_length=80, blank=True, null=True)
+    lastapp = models.CharField(max_length=80, blank=True, null=True)
+
+    lastdata = models.CharField(max_length=80, blank=True, null=True)
+    duration = models.IntegerField(blank=True, null=True)
+    billsec = models.IntegerField(blank=True, null=True)
+    disposition = models.CharField(max_length=45, blank=True, null=True)
+    amaflags = models.IntegerField(blank=True, null=True)
+    accountcode = models.CharField(max_length=20, blank=True, null=True)
+    uniqueid = models.CharField(max_length=32, blank=True, null=True)
+    userfield = models.CharField(max_length=255, blank=True, null=True)
+    peeraccount = models.CharField(max_length=20, blank=True, null=True)
+    linkedid = models.CharField(max_length=20, blank=True, null=True)
+    sequence = models.CharField(max_length=20, blank=True, null=True)
+
+    def __unicode__(self):
+        return "%s -> %s" % (self.src, self.dst)

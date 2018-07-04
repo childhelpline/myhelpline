@@ -117,21 +117,20 @@ def check(request):
 @login_required
 def check_call(request):
     """Check if there is a call for request user"""
-    case_id = request.user.HelplineUser.hl_case
-    if case_id:
-        my_case = Case.objects.get(hl_case=case_id)
+    my_case = request.user.HelplineUser.case
+    if my_case:
         my_case.hl_popup = 'Done'
         my_case.save()
-        request.user.HelplineUser.hl_case = 0
+        request.user.HelplineUser.case = None
         request.user.HelplineUser.save()
-        report = Report.objects.get(caseid=case_id)
+        report = Report.objects.get(case=my_case)
         telephone = report.telephone
 
     else:
         telephone = None
         my_case = None
 
-    response = JsonResponse({'my_case': case_id,
+    response = JsonResponse({'my_case': my_case,
                              'telephone': telephone,
                              'type': my_case.hl_data if my_case else 0})
     return response
@@ -1442,43 +1441,6 @@ def helpline_home(request):
     return redirect("/helpline/")
 
 
-def report_save_handler(sender, instance, created, **kwargs):
-    """Notify supervisors when a report is saved."""
-
-    case = Case.objects.get(hl_case=instance.caseid)
-    address = Address.objects.get(hl_key=case.hl_key)
-
-
-    # Only notify if report is marked as open
-    if instance.casestatus != "Close":
-        case = Case.objects.get(hl_case=instance.caseid)
-        supervisors = HelplineUser.objects.filter(hl_role='Supervisor')
-        user = HelplineUser.objects.get(hl_nick=instance.counsellorname).user
-        verb = "saved case %s. Telephone number: %s Status: %s" % (
-            instance.caseid, instance.telephone, instance.casestatus)
-
-        description = """
-        Customer Details
-        Name: %s
-        Phone Number: %s
-        Email: %s
-        DC Number/ Policy Number: %s
-        Case ID: %s
-
-        Remarks: %s
-        """ % (instance.callernames,
-               instance.telephone,
-               address.hl_email,
-               case.hl_notes,
-               instance.caseid,
-               case.hl_details
-              )
-
-        for supervisor in supervisors:
-            notify.send(user, recipient=supervisor.user,
-                        verb=verb, level=level, description=description)
-
-
 @json_view
 def asterisk_alert(request, auth, dialstatus, caseid):
     """Accept user alerts from Asterisk"""
@@ -1551,5 +1513,3 @@ def queues(request):
 def queue(request, name=None):
     data = get_data_queues(name)
     return {'data': data}
-
-post_save.connect(report_save_handler, sender=Report)
