@@ -72,16 +72,20 @@ class Address(models.Model):
 
 
 class Case(models.Model):
+    """Case management model"""
     hl_case = models.AutoField(primary_key=True)
     hl_key = models.IntegerField()
     hl_callerkey = models.IntegerField(blank=True, null=True)
     hl_victimkey = models.IntegerField(blank=True, null=True)
-    hl_unique = models.CharField(unique=True, max_length=20, blank=True, null=True)
+    hl_unique = models.CharField(unique=True, max_length=20,
+                                 blank=True, null=True)
     hl_type = models.CharField(max_length=250, blank=True, null=True)
-    hl_subcategory = models.CharField(max_length=250,blank=True,null=True)
-    hl_subsubcat = models.CharField(max_length=100, verbose_name='Sub-subcategory', blank=True, null=True)
+    hl_subcategory = models.CharField(max_length=250, blank=True, null=True)
+    hl_subsubcat = models.CharField(max_length=100,
+                                    verbose_name='Sub-subcategory',
+                                    blank=True, null=True)
     hl_victim = models.CharField(max_length=3, blank=True, null=True)
-    hl_culprit = models.IntegerField(blank=True,null=True)
+    hl_culprit = models.IntegerField(blank=True, null=True)
     hl_status = models.CharField(max_length=250, blank=True, null=True)
     hl_priority = models.CharField(max_length=250, blank=True, null=True)
     hl_disposition = models.CharField(max_length=250, blank=True, null=True)
@@ -94,19 +98,28 @@ class Case(models.Model):
     hl_counsellor = models.IntegerField(blank=True, null=True)
     hl_supervisor = models.IntegerField(blank=True, null=True)
     hl_escalateto = models.CharField(max_length=10, blank=True, null=True)
-    hl_caseworker = models.IntegerField(blank=True,null=True)
-    hl_justice = models.CharField(max_length=13,blank=True,null=True)
-    hl_victimassessment = models.CharField(max_length=13,blank=True,null=True)
+    hl_caseworker = models.IntegerField(blank=True, null=True)
+    hl_justice = models.CharField(max_length=13,
+                                  blank=True, null=True)
+    hl_victimassessment = models.CharField(max_length=13,
+                                           blank=True, null=True)
     hl_data = models.CharField(max_length=9, blank=True, null=True)
-    hl_notes = models.CharField(max_length=50, blank=True,null=True)
-    hl_abused = models.CharField(max_length=5,blank=True,null=True)
-    hl_anotes = models.TextField(blank=True,null=True)
-    hl_acategory = models.CharField(max_length=50,blank=True,null=True)
-    hl_hiv = models.CharField(max_length=7,blank=True,null=True)
-    isrefferedfrom = models.CharField(max_length=250,blank=True,null=True)
-    hl_details = models.TextField(blank=True,null=True)
-    hl_popup = models.CharField(max_length=6,blank=True,null=True)
-    hl_registry = models.IntegerField(blank=True,null=True)
+    hl_notes = models.CharField(max_length=50,
+                                blank=True, null=True)
+    hl_abused = models.CharField(max_length=5,
+                                 blank=True, null=True)
+    hl_anotes = models.TextField(blank=True, null=True)
+    hl_acategory = models.CharField(max_length=50,
+                                    blank=True, null=True)
+    hl_hiv = models.CharField(max_length=7,
+                              blank=True, null=True)
+    isrefferedfrom = models.CharField(max_length=250,
+                                      blank=True, null=True)
+    hl_details = models.TextField(blank=True,
+                                  null=True)
+    hl_popup = models.CharField(max_length=6,
+                                blank=True, null=True)
+    hl_registry = models.IntegerField(blank=True, null=True)
     hl_time = models.IntegerField(blank=True, null=True)
 
 
