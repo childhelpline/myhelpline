@@ -21,7 +21,7 @@ DATABASES = {
         'NAME': 'helpline',
         'USER': '',
         'PASSWORD': '',
-        'HOST': 'localhost'
+        'HOST': 'localhost',
         'PORT': '',
     }
 }
