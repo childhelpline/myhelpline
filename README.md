@@ -1,7 +1,5 @@
 # MyHelpline
 
-[![Build Status](http://ci.helpline.co.ke/buildStatus/icon?job=myhelpline)](http://ci.helpline.co.ke/job/myhelpline/)
-
 MyHelpline is a communication framework for support call centers.
 The goal is simple, to help users easily communicate to support agents.
 
@@ -13,11 +11,21 @@ The name is as random as it can get. "MyPBX" might have inspired some of the nam
 
 ## Requirements
 
- * Python 2.6, 2.7, 3.4
+ * Python 2.7
  * [Django](http://djangoproject.com/) 1.10+
- * [Asterisk](http://www.asterisk.org) 1.4+ and enabled manager or [FreeSWITCH](http://www.freeswitch.org) and connection permission to Event Socket Library.
+ * [Asterisk](http://www.asterisk.org) 1.4+ and enabled manager
+ * Redis >= 2.6.0
+ * RabbitMQ
+ * Nginx
+ * PostgreSQL
 
-  The feature to scheduler reset stats a queue is required Redis Redis >= 2.6.0
+## Technology Platform
+ * Nginx
+ * Python
+ * Linux (Ubuntu)
+ * PostgreSQL
+ * Asterisk with AMI enabled.
+ * RapidPRO
 
 ## Installation
 
