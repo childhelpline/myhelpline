@@ -12,7 +12,7 @@ from django.contrib.auth.models import User
 from django.db.models import Avg
 from django.utils import timezone
 from django.apps import apps
-from django.utils.translation import ugettext_lazy
+from django.utils.translation import ugettext_lazy as _
 
 from helpdesk.models import Ticket
 
@@ -72,36 +72,54 @@ class Address(models.Model):
 
 
 class Case(models.Model):
+    """Case management model"""
     hl_case = models.AutoField(primary_key=True)
     hl_key = models.IntegerField()
     hl_callerkey = models.IntegerField(blank=True, null=True)
     hl_victimkey = models.IntegerField(blank=True, null=True)
-    hl_unique = models.CharField(unique=True, max_length=20, blank=True, null=True)
+    hl_unique = models.CharField(unique=True, max_length=20,
+                                 blank=True, null=True)
     hl_type = models.CharField(max_length=250, blank=True, null=True)
-    hl_subcategory = models.CharField(max_length=250,blank=True,null=True)
-    hl_subsubcat = models.CharField(max_length=100, verbose_name='Sub-subcategory', blank=True, null=True)
+    hl_subcategory = models.CharField(max_length=250, blank=True, null=True)
+    hl_subsubcat = models.CharField(max_length=100,
+                                    verbose_name='Sub-subcategory',
+                                    blank=True, null=True)
     hl_victim = models.CharField(max_length=3, blank=True, null=True)
-    hl_culprit = models.IntegerField(blank=True,null=True)
+    hl_culprit = models.IntegerField(blank=True, null=True)
     hl_status = models.CharField(max_length=250, blank=True, null=True)
     hl_priority = models.CharField(max_length=250, blank=True, null=True)
     hl_disposition = models.CharField(max_length=250, blank=True, null=True)
     hl_creator = models.IntegerField(blank=True, null=True)
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        blank=True, null=True
+    )
     hl_counsellor = models.IntegerField(blank=True, null=True)
     hl_supervisor = models.IntegerField(blank=True, null=True)
     hl_escalateto = models.CharField(max_length=10, blank=True, null=True)
-    hl_caseworker = models.IntegerField(blank=True,null=True)
-    hl_justice = models.CharField(max_length=13,blank=True,null=True)
-    hl_victimassessment = models.CharField(max_length=13,blank=True,null=True)
+    hl_caseworker = models.IntegerField(blank=True, null=True)
+    hl_justice = models.CharField(max_length=13,
+                                  blank=True, null=True)
+    hl_victimassessment = models.CharField(max_length=13,
+                                           blank=True, null=True)
     hl_data = models.CharField(max_length=9, blank=True, null=True)
-    hl_notes = models.CharField(max_length=50, blank=True,null=True)
-    hl_abused = models.CharField(max_length=5,blank=True,null=True)
-    hl_anotes = models.TextField(blank=True,null=True)
-    hl_acategory = models.CharField(max_length=50,blank=True,null=True)
-    hl_hiv = models.CharField(max_length=7,blank=True,null=True)
-    isrefferedfrom = models.CharField(max_length=250,blank=True,null=True)
-    hl_details = models.TextField(blank=True,null=True)
-    hl_popup = models.CharField(max_length=6,blank=True,null=True)
-    hl_registry = models.IntegerField(blank=True,null=True)
+    hl_notes = models.CharField(max_length=50,
+                                blank=True, null=True)
+    hl_abused = models.CharField(max_length=5,
+                                 blank=True, null=True)
+    hl_anotes = models.TextField(blank=True, null=True)
+    hl_acategory = models.CharField(max_length=50,
+                                    blank=True, null=True)
+    hl_hiv = models.CharField(max_length=7,
+                              blank=True, null=True)
+    isrefferedfrom = models.CharField(max_length=250,
+                                      blank=True, null=True)
+    hl_details = models.TextField(blank=True,
+                                  null=True)
+    hl_popup = models.CharField(max_length=6,
+                                blank=True, null=True)
+    hl_registry = models.IntegerField(blank=True, null=True)
     hl_time = models.IntegerField(blank=True, null=True)
 
 
@@ -205,11 +223,6 @@ class Hotdesk(models.Model):
         max_length=6,
         choices=EXTENSION_TYPE_CHOICES,
         default=SIP
-    )
-
-    jabber = models.CharField(
-        max_length=100,
-        blank=True, null=True
     )
     status = models.CharField(
         max_length=11,
@@ -593,9 +606,20 @@ class Search(models.Model):
 
 class Service(models.Model):
     """Identifies a queue that agents can be assigned"""
-    extension = models.CharField(unique=True, max_length=100)
-    name = models.CharField(max_length=255)
-    queue = models.CharField(max_length=255, blank=True, null=True)
+    extension = models.CharField(
+        unique=True,
+        max_length=100,
+        help_text=_('Extension callers will dial e.g 116.'),
+    )
+    name = models.CharField(
+        max_length=255,
+        help_text=_('Service name')
+    )
+    queue = models.CharField(
+        max_length=255,
+        blank=True, null=True,
+        help_text=_('Corresponding Asterisk Queue name')
+    )
 
     def __unicode__(self):
         return self.name
@@ -615,31 +639,92 @@ class SMSCDR(models.Model):
 
 
 class HelplineUser(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE,
-                                related_name='HelplineUser')
-    hl_key = models.IntegerField(unique=True, primary_key=True,
-                                 verbose_name='Key', help_text='Autogenerated')
-    hl_auth = models.IntegerField(verbose_name='Auth',
-                                  help_text='Autogenerated Four digit numeric number e.g. 1973.')
-    hl_pass = models.CharField(max_length=500,
-                               verbose_name='PIN', help_text='Four digit numeric PIN')
-    hl_exten = models.CharField(max_length=55,
-                                blank=True, null=True, verbose_name='Exten', help_text='Agent Softphone extension.')
-    hl_jabber = models.CharField(max_length=500,
-                                 blank=True, null=True, verbose_name='Jabber', help_text='IM username.')
-    hl_status = models.CharField(max_length=11, blank=True, null=True,verbose_name='Status')
-    hl_calls = models.IntegerField(blank=True, null=True,verbose_name='Total Calls')
-    hl_email = models.CharField(max_length=500, blank=True, null=True,verbose_name='Email')
-    hl_names = models.CharField(max_length=250, blank=True, null=True,verbose_name='Names')
-    hl_nick = models.CharField(max_length=100, blank=True, null=True,verbose_name='Nick')
-    hl_avatar = models.CharField(max_length=100, blank=True, null=True,verbose_name='Avatar')
-    hl_role = models.CharField(max_length=10, blank=True, null=True,verbose_name='Role')
-    hl_area = models.CharField(max_length=100, blank=True, null=True, verbose_name="Area")
-    hl_phone = models.CharField(max_length=25, blank=True, null=True,verbose_name='Phone')
-    hl_branch = models.CharField(max_length=13, blank=True, null=True,verbose_name='Branch')
-    hl_case = models.IntegerField(blank=True, null=True,verbose_name='Case')
-    hl_clock = models.IntegerField(blank=True, null=True,verbose_name='Clock')
-    hl_time = models.IntegerField(blank=True, null=True,verbose_name='Time')
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE,
+        related_name='HelplineUser'
+    )
+    case = models.ForeignKey(
+        Case,
+        on_delete=models.CASCADE,
+        blank=True, null=True
+    )
+    hl_key = models.IntegerField(
+        unique=True, primary_key=True,
+        verbose_name=_('Key'),
+        help_text=_('Autogenerated')
+    )
+    hl_auth = models.IntegerField(
+        verbose_name=_('Auth'),
+        help_text=_('Autogenerated Four digit numeric number e.g. 1973.')
+    )
+    hl_pass = models.CharField(
+        max_length=500,
+        verbose_name=_('PIN'), help_text=_('Four digit numeric PIN')
+    )
+    hl_exten = models.CharField(
+        max_length=55,
+        blank=True, null=True,
+        verbose_name=_('Exten'), help_text=_('Agent Softphone extension.')
+    )
+    hl_status = models.CharField(
+        max_length=11, blank=True,
+        null=True,
+        verbose_name=_('Status')
+    )
+    hl_calls = models.IntegerField(
+        blank=True, null=True,
+        verbose_name=_('Total Calls')
+    )
+    hl_email = models.CharField(
+        max_length=500, blank=True,
+        null=True,
+        verbose_name=_('Email')
+    )
+    hl_names = models.CharField(
+        max_length=250,
+        blank=True,
+        null=True,
+        verbose_name=_('Names'))
+    hl_nick = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name=_('Nick')
+    )
+    hl_avatar = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name=_('Avatar'))
+    hl_role = models.CharField(
+        max_length=10,
+        blank=True, null=True,
+        verbose_name=_('Role')
+    )
+    hl_area = models.CharField(
+        max_length=100,
+        blank=True, null=True,
+        verbose_name=_("Area")
+    )
+    hl_phone = models.CharField(
+        max_length=25,
+        blank=True, null=True,
+        verbose_name=_('Phone'))
+    hl_branch = models.CharField(
+        max_length=13,
+        blank=True, null=True,
+        verbose_name=_('Branch'))
+    hl_case = models.IntegerField(
+        blank=True, null=True,
+        verbose_name=_('Case'))
+    hl_clock = models.IntegerField(
+        blank=True, null=True,
+        verbose_name=_('Clock')
+    )
+    hl_time = models.IntegerField(
+        blank=True, null=True,
+        verbose_name=_('Time')
+    )
 
     def get_schedule(self):
         """Returns the users schedule in the helpline"""
