@@ -12,7 +12,7 @@ from django.contrib.auth.models import User
 from django.db.models import Avg
 from django.utils import timezone
 from django.apps import apps
-from django.utils.translation import ugettext_lazy
+from django.utils.translation import ugettext_lazy as _
 
 from helpdesk.models import Ticket
 
@@ -593,9 +593,20 @@ class Search(models.Model):
 
 class Service(models.Model):
     """Identifies a queue that agents can be assigned"""
-    extension = models.CharField(unique=True, max_length=100)
-    name = models.CharField(max_length=255)
-    queue = models.CharField(max_length=255, blank=True, null=True)
+    extension = models.CharField(
+        unique=True,
+        max_length=100,
+        help_text='Extension callers will dial to reach the service e.g 116.',
+    )
+    name = models.CharField(
+        max_length=255,
+        help_text='Service name'
+    )
+    queue = models.CharField(
+        max_length=255,
+        blank=True, null=True,
+        help_text='Corresponding Asterisk Queue name'
+    )
 
     def __unicode__(self):
         return self.name
