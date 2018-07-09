@@ -631,7 +631,7 @@ def my_forms(request, form_name):
             my_case = None
 
             # Case history table will display all records when initialized.
-            case_history = Report.objects.all().order_by('-caseid')
+            case_history = Report.objects.all().order_by('-case_id')
             report, contact, address = (None, None, None)
             case_history_table = CaseHistoryTable(case_history)
             case_history_table.paginate(page=request.GET.get('page', 1), per_page=10)
@@ -693,7 +693,7 @@ def my_forms(request, form_name):
                 now = datetime.now()
                 callstart = "%s:%s:%s" % (now.hour, now.minute, now.second)
                 notime = "00:00:00"
-                report = Report(caseid=my_case.hl_case,
+                report = Report(case_id=my_case.hl_case,
                                 callstart=callstart,
                                 callend=callstart,
                                 talktime=notime,
@@ -702,7 +702,7 @@ def my_forms(request, form_name):
                                 hl_time=int(time.time()),
                                 calldate=time.strftime('%d-%b-%y'))
                 case_number = my_case.hl_case
-                case_history = Report.objects.filter(telephone=contact.hl_contact).order_by('-caseid')
+                case_history = Report.objects.filter(telephone=contact.hl_contact).order_by('-case_id')
                 case_history_table = CaseHistoryTable(case_history)
                 try:
                     case_history_table.paginate(
@@ -754,11 +754,11 @@ def my_forms(request, form_name):
             if case_number:
                 report, contact, address = get_case_info(case_number)
                 case_history = Report.objects.filter(
-                    telephone=contact.hl_contact).order_by('-caseid')
+                    telephone=contact.hl_contact).order_by('-case_id')
                 case_history_table = CaseHistoryTable(case_history)
             else:
                 report, contact, address = (None, None, None)
-                case_history = Report.objects.all().order_by('-caseid')
+                case_history = Report.objects.all().order_by('-case_id')
                 case_history_table = CaseHistoryTable(case_history)
 
     request.user.HelplineUser.hl_case = 0
@@ -780,7 +780,7 @@ class DashboardTable(tables.Table):
     """Where most of the dashboard reporting happens"""
     casetype = tables.TemplateColumn("<b>{{ record.get_call_type }}</b>",
                                      verbose_name="Call Type")
-    caseid = tables.TemplateColumn(
+    case_id = tables.TemplateColumn(
         '<a href="{{ record.get_absolute_url }}">{{record.case }}</a>')
     telephone = tables.TemplateColumn(
         '<a href="sip:{{record.telephone}}">{{record.telephone}}</a>')
@@ -794,12 +794,12 @@ class DashboardTable(tables.Table):
         attrs = {'class': 'table table-bordered table-striped dataTable',
                  'id': 'report_table'}
         unlocalise = ('holdtime', 'walkintime', 'talktime', 'callstart')
-        fields = {'casetype', 'caseid', 'telephone', 'calldate',
+        fields = {'casetype', 'case_id', 'telephone', 'calldate',
                   'queuename', 'callernames', 'counsellorname',
                   'calldate', 'callstart', 'callend', 'talktime', 'holdtime',
                   'calltype', 'disposition', 'casestatus'}
 
-        sequence = ('casetype', 'caseid', 'calldate', 'callstart',
+        sequence = ('casetype', 'case_id', 'calldate', 'callstart',
                     'callend', 'counsellorname', 'callernames', 'telephone',
                     'queuename', 'talktime', 'holdtime', 'calltype',
                     'disposition', 'casestatus')
@@ -1244,7 +1244,7 @@ def report_factory(report='callsummary', datetime_range=None, agent=None,
     if category:
         Case = Case.objects.filter(hl_acategory=category)
         filter_query['category'] = category
-        reports = reports.filter(caseid__in=cases)
+        reports = reports.filter(case_id__in=cases)
 
     # Search report data
     if query:
@@ -1258,7 +1258,7 @@ def report_factory(report='callsummary', datetime_range=None, agent=None,
         # Ask for forgiveness if it's not.
         try:
             val = int(query)
-            qset |= (Q(caseid__exact=query))
+            qset |= (Q(case_id__exact=query))
         except ValueError:
             # Ask for forgiveness.
             pass
@@ -1392,18 +1392,18 @@ def helpline_home(request):
 
 
 @json_view
-def asterisk_alert(request, auth, dialstatus, caseid):
+def asterisk_alert(request, auth, dialstatus, case_id):
     """Accept user alerts from Asterisk"""
     agent = HelplineUser.objects.get(hl_auth=auth)
     user = agent.user
-    case = Case.objects.get(hl_case=caseid)
+    case = Case.objects.get(hl_case=case_id)
 
     alert = {'CHANUNAVAIL': 'unavailable',
              'NOANSWER': 'missed',
              'BUSY': 'busy'}
 
     verb = "%s" % (alert[dialstatus])
-    description = "Dial status is %s for case %s" % (alert[dialstatus], caseid)
+    description = "Dial status is %s for case %s" % (alert[dialstatus], case_id)
     channel = agent.hl_exten.split('/')[1]
     notify.send(user, recipient=user, verb=verb,
                 description=description, level="warning")
