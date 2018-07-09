@@ -67,9 +67,6 @@ REFERRED_FROM_CHOICES = (
 CASE_TYPE_CHOICES = (
     ('--', '--'),
     ('Claims', 'Claims'),
-    ('Underwriting', 'Underwriting'),
-    ('HealthCare- Case management', 'HealthCare- Case management'),
-    ('Lead', 'Lead'),
     ('Other', 'Other'),
 )
 

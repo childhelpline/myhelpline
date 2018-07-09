@@ -611,7 +611,6 @@ def my_forms(request, form_name):
                 'referred_from': my_case.isrefferedfrom if my_case else '',
                 'sub_category': my_case.hl_subcategory if my_case else '',
                 'sub_sub_category': my_case.hl_subsubcat if my_case else '',
-                'business_portfolio': my_case.business_portfolio if my_case else '',
                 'case_status': report.casestatus if report else '',
                 'case_type': my_case.hl_type if my_case else '',
                 'escalate_to': my_case.hl_escalateto if my_case else '',
@@ -620,7 +619,7 @@ def my_forms(request, form_name):
                 'physical_address': address.hl_address4 if address else '',
 
             }
-            case_history = Report.objects.filter(telephone=contact.hl_contact).order_by('-caseid')
+            case_history = Report.objects.filter(telephone=contact.hl_contact).order_by('-case')
             case_history_table = CaseHistoryTable(case_history)
             try:
                 case_history_table.paginate(page=request.GET.get('page', 1), per_page=10)
@@ -659,7 +658,7 @@ def my_forms(request, form_name):
                 my_case = Case.objects.get(hl_case=case_number)
                 report, contact, address = get_case_info(case_number)
                 case_history = Report.objects.filter(
-                    telephone=contact.hl_contact).order_by('-caseid')
+                    telephone=contact.hl_contact).order_by('-case')
                 case_history_table = CaseHistoryTable(case_history)
                 try:
                     case_history_table.paginate(page=request.GET.get('page', 1), per_page=10)
@@ -668,8 +667,6 @@ def my_forms(request, form_name):
                     pass
             else:
                 my_case = Case()
-                my_case.hl_key = randint(123456789, 999999999)
-                my_case.hl_callerkey = my_case.hl_key
                 my_case.hl_data = form_name
                 my_case.hl_counsellor = request.user.HelplineUser.hl_key
                 my_case.popup = 'Done'
@@ -680,7 +677,6 @@ def my_forms(request, form_name):
                 my_case.hl_type = form.cleaned_data.get('case_type')
                 my_case.hl_subcategory = form.cleaned_data.get('sub_category')
                 my_case.hl_subsubcat = form.cleaned_data.get('sub_sub_category')
-                my_case.business_portfolio = form.cleaned_data.get('business_portfolio')
                 my_case.isrefferedfrom = form.cleaned_data.get('referred_from')
                 my_case.hl_details = form.cleaned_data.get('comment')
 
@@ -742,7 +738,6 @@ def my_forms(request, form_name):
             my_case.hl_type = form.cleaned_data.get('case_type')
             my_case.hl_subcategory = form.cleaned_data.get('sub_category')
             my_case.hl_subsubcat = form.cleaned_data.get('sub_sub_category')
-            my_case.hl_callerkey = my_case.hl_key
             my_case.hl_escalateto = form.cleaned_data.get('escalate_to')
 
             my_case.save()
@@ -769,13 +764,16 @@ def my_forms(request, form_name):
     request.user.HelplineUser.hl_case = 0
     request.user.HelplineUser.save()
 
-    return render(request, 'helpline/my_form.html', {'form': form,
-                                                   'contact': contact.hl_key if contact else None,
-                                                   'initial': initial,
-                                                   'disposition_form': disposition_form,
-                                                   'case_history_table': case_history_table,
-                                                   'form_name': form_name,
-                                                   'message': message})
+    return render(
+        request, 'helpline/my_form.html', {
+            'form': form,
+            'contact': contact if contact else None,
+            'initial': initial,
+            'disposition_form': disposition_form,
+            'case_history_table': case_history_table,
+            'form_name': form_name,
+            'message': message}
+    )
 
 
 class DashboardTable(tables.Table):
@@ -783,7 +781,7 @@ class DashboardTable(tables.Table):
     casetype = tables.TemplateColumn("<b>{{ record.get_call_type }}</b>",
                                      verbose_name="Call Type")
     caseid = tables.TemplateColumn(
-        '<a href="{{ record.get_absolute_url }}">{{record.caseid }}</a>')
+        '<a href="{{ record.get_absolute_url }}">{{record.case }}</a>')
     telephone = tables.TemplateColumn(
         '<a href="sip:{{record.telephone}}">{{record.telephone}}</a>')
     address = tables.TemplateColumn(
@@ -808,8 +806,6 @@ class DashboardTable(tables.Table):
     sub_subcategory = tables.TemplateColumn(
         '{{ record.get_sub_sub_category }}',
         orderable=False)
-    business_portfolio = tables.TemplateColumn(
-        '{{ record.get_business_portfolio }}', orderable=False)
     email = tables.TemplateColumn(
         '{{ record.get_email_address }}', orderable=False)
     physical_address = tables.TemplateColumn(
@@ -848,12 +844,12 @@ class WebPresenceTable(tables.Table):
 
 class CaseHistoryTable(tables.Table):
     """Show related Case form contact"""
-    caseid = tables.TemplateColumn('<a href="{{ record.get_absolute_url }}">{{record.caseid }}</a>')
+    case = tables.TemplateColumn('<a href="{{ record.get_absolute_url }}">{{record.case }}</a>')
     class Meta:
         model = Report
         attrs = {'class': 'table table-bordered table-striped dataTable'}
-        fields = {'caseid', 'counsellorname', 'calldate', 'calltype'}
-        sequence = ('caseid', 'counsellorname', 'calldate', 'calltype')
+        fields = {'case', 'counsellorname', 'calldate', 'calltype'}
+        sequence = ('case', 'counsellorname', 'calldate', 'calltype')
 
         unlocalise = ('holdtime', 'walkintime', 'talktime', 'callstart')
 
@@ -982,9 +978,9 @@ class DaySummaryTable(tables.Table):
 def get_case_info(case_number):
     """ Get related case information from a case number"""
     my_case = get_object_or_404(Case, hl_case=case_number)
-    report = Report.objects.get(caseid=case_number)
-    address, address_created = Address.objects.get_or_create(hl_key=my_case.hl_key)
-    contact, contact_created = Contact.objects.get_or_create(hl_key=my_case.hl_key)
+    report = Report.objects.get(case_id=case_number)
+    address, address_created = Address.objects.get_or_create(case=my_case)
+    contact, contact_created = Contact.objects.get_or_create(address=address)
     return report, contact, address
 
 

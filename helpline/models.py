@@ -17,59 +17,6 @@ from django.utils.translation import ugettext_lazy as _
 from helpdesk.models import Ticket
 
 
-class Address(models.Model):
-    hl_title = models.CharField(max_length=25, blank=True, null=True)
-    hl_type = models.CharField(max_length=9, blank=True, null=True)
-    hl_names = models.CharField(max_length=500, blank=True, null=True)
-    hl_gender = models.CharField(max_length=7, blank=True, null=True)
-    hl_ageclass = models.CharField(max_length=7, blank=True, null=True)
-    hl_age = models.IntegerField(blank=True, null=True)
-    hl_dob = models.DateField(blank=True, null=True)
-    hl_yeardob = models.TextField(blank=True, null=True)
-    hl_monthdob = models.SmallIntegerField(blank=True, null=True)
-    hl_datedob = models.SmallIntegerField(blank=True, null=True)
-    hl_language = models.CharField(max_length=250, blank=True, null=True)
-    hl_relation = models.CharField(max_length=100, blank=True, null=True)
-    hl_address1 = models.CharField(max_length=250, blank=True, null=True)
-    hl_address2 = models.CharField(max_length=250, blank=True, null=True)
-    hl_address3 = models.CharField(max_length=100, blank=True, null=True)
-    hl_address4 = models.CharField(max_length=100, blank=True, null=True)
-    hl_country = models.CharField(max_length=250, blank=True, null=True)
-    hl_email = models.CharField(max_length=100, blank=True, null=True)
-    hl_householdtype = models.CharField(max_length=13)
-    hl_childrenumber = models.IntegerField(blank=True, null=True)
-    hl_adultnumber = models.IntegerField(blank=True, null=True)
-    hl_headoccupation = models.CharField(max_length=100, blank=True, null=True)
-    hl_school = models.CharField(max_length=250, blank=True, null=True)
-    hl_company = models.CharField(max_length=250, blank=True, null=True)
-    hl_schooltype = models.CharField(max_length=100, blank=True, null=True)
-    hl_class = models.CharField(max_length=50, blank=True, null=True)
-    hl_attendance = models.CharField(max_length=12, blank=True, null=True)
-    hl_attendancereason = models.TextField(blank=True, null=True)
-    hl_schaddr = models.CharField(max_length=250, blank=True, null=True)
-    hl_homerole = models.CharField(max_length=7, blank=True, null=True)
-    hl_latitude = models.FloatField(blank=True, null=True)
-    hl_longitude = models.FloatField(blank=True, null=True)
-    hl_religion = models.CharField(max_length=100, blank=True, null=True)
-    hl_career = models.CharField(max_length=13, blank=True, null=True)
-    hl_shl_evel = models.CharField(max_length=11, blank=True, null=True)
-    hl_health = models.CharField(max_length=12, blank=True, null=True)
-    hl_disabled = models.CharField(max_length=3, blank=True, null=True)
-    hl_notes = models.TextField(blank=True, null=True)
-    hl_created = models.IntegerField(blank=True, null=True)
-    hl_creator = models.IntegerField(blank=True, null=True)
-    hl_deletedate = models.IntegerField(blank=True, null=True)
-    hl_deleteby = models.IntegerField(blank=True, null=True)
-    hl_deleted = models.IntegerField(blank=True, null=True)
-    hl_current = models.SmallIntegerField(blank=True, null=True)
-    hl_contact = models.IntegerField(blank=True, null=True)
-    hl_time = models.IntegerField(blank=True, null=True)
-    hl_hiv = models.CharField(max_length=8, blank=True, null=True)
-
-    def __unicode__(self):
-        return self.hl_names or u''
-
-
 class Case(models.Model):
     """Case management model"""
     hl_case = models.AutoField(primary_key=True)
@@ -169,24 +116,6 @@ class ClockBit(models.Model):
     hl_time = models.IntegerField()
 
 
-class Contact(models.Model):
-    hl_key = models.IntegerField(primary_key=True)
-    hl_contact = models.CharField(max_length=250)
-    hl_parent = models.IntegerField(blank=True, null=True)
-    hl_type = models.CharField(max_length=12, blank=True, null=True)
-    hl_calls = models.IntegerField(blank=True, null=True)
-    hl_status = models.CharField(max_length=10, blank=True, null=True)
-    hl_time = models.IntegerField(blank=True, null=True)
-
-    class Meta:
-        unique_together = (('hl_key', 'hl_contact'),)
-
-    def __unicode__(self):
-        return self.hl_contact
-
-    def get_name(self):
-        return Address.objects.get(hl_key=self.hl_key).hl_names
-
 class Country(models.Model):
     hl_category = models.CharField(max_length=100)
     hl_code = models.CharField(max_length=2)
@@ -254,7 +183,6 @@ class IMregistry(models.Model):
 
 class MainCDR(models.Model):
     hl_unique = models.CharField(unique=True, max_length=32)
-    hl_key = models.IntegerField()
     hl_start = models.BigIntegerField()
     hl_end = models.IntegerField()
     hl_duration = models.IntegerField()
@@ -433,8 +361,84 @@ class Registry(models.Model):
     hl_hivrelated = models.IntegerField()
 
 
+class Address(models.Model):
+    """Gives details about parties in a report"""
+    case = models.ForeignKey(Case, on_delete=models.CASCADE)
+    hl_title = models.CharField(max_length=25, blank=True, null=True)
+    hl_type = models.CharField(max_length=9, blank=True, null=True)
+    hl_names = models.CharField(max_length=500, blank=True, null=True)
+    hl_gender = models.CharField(max_length=7, blank=True, null=True)
+    hl_ageclass = models.CharField(max_length=7, blank=True, null=True)
+    hl_age = models.IntegerField(blank=True, null=True)
+    hl_dob = models.DateField(blank=True, null=True)
+    hl_yeardob = models.TextField(blank=True, null=True)
+    hl_monthdob = models.SmallIntegerField(blank=True, null=True)
+    hl_datedob = models.SmallIntegerField(blank=True, null=True)
+    hl_language = models.CharField(max_length=250, blank=True, null=True)
+    hl_relation = models.CharField(max_length=100, blank=True, null=True)
+    hl_address1 = models.CharField(max_length=250, blank=True, null=True)
+    hl_address2 = models.CharField(max_length=250, blank=True, null=True)
+    hl_address3 = models.CharField(max_length=100, blank=True, null=True)
+    hl_address4 = models.CharField(max_length=100, blank=True, null=True)
+    hl_country = models.CharField(max_length=250, blank=True, null=True)
+    hl_email = models.CharField(max_length=100, blank=True, null=True)
+    hl_householdtype = models.CharField(max_length=13)
+    hl_childrenumber = models.IntegerField(blank=True, null=True)
+    hl_adultnumber = models.IntegerField(blank=True, null=True)
+    hl_headoccupation = models.CharField(max_length=100, blank=True, null=True)
+    hl_school = models.CharField(max_length=250, blank=True, null=True)
+    hl_company = models.CharField(max_length=250, blank=True, null=True)
+    hl_schooltype = models.CharField(max_length=100, blank=True, null=True)
+    hl_class = models.CharField(max_length=50, blank=True, null=True)
+    hl_attendance = models.CharField(max_length=12, blank=True, null=True)
+    hl_attendancereason = models.TextField(blank=True, null=True)
+    hl_schaddr = models.CharField(max_length=250, blank=True, null=True)
+    hl_homerole = models.CharField(max_length=7, blank=True, null=True)
+    hl_latitude = models.FloatField(blank=True, null=True)
+    hl_longitude = models.FloatField(blank=True, null=True)
+    hl_religion = models.CharField(max_length=100, blank=True, null=True)
+    hl_career = models.CharField(max_length=13, blank=True, null=True)
+    hl_shl_evel = models.CharField(max_length=11, blank=True, null=True)
+    hl_health = models.CharField(max_length=12, blank=True, null=True)
+    hl_disabled = models.CharField(max_length=3, blank=True, null=True)
+    hl_notes = models.TextField(blank=True, null=True)
+    hl_created = models.IntegerField(blank=True, null=True)
+    hl_creator = models.IntegerField(blank=True, null=True)
+    hl_deletedate = models.IntegerField(blank=True, null=True)
+    hl_deleteby = models.IntegerField(blank=True, null=True)
+    hl_deleted = models.IntegerField(blank=True, null=True)
+    hl_current = models.SmallIntegerField(blank=True, null=True)
+    hl_contact = models.IntegerField(blank=True, null=True)
+    hl_time = models.IntegerField(blank=True, null=True)
+    hl_hiv = models.CharField(max_length=8, blank=True, null=True)
+
+    def __unicode__(self):
+        return self.hl_names or u''
+
+
+class Contact(models.Model):
+    """Contact information for an address"""
+    address = models.ForeignKey(Address, on_delete=models.CASCADE)
+    hl_contact = models.CharField(max_length=250)
+    hl_parent = models.IntegerField(blank=True, null=True)
+    hl_type = models.CharField(max_length=12, blank=True, null=True)
+    hl_calls = models.IntegerField(blank=True, null=True)
+    hl_status = models.CharField(max_length=10, blank=True, null=True)
+    hl_time = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        unique_together = (('address', 'hl_contact'),)
+
+    def __unicode__(self):
+        return self.hl_contact
+
+    def get_name(self):
+        return self.address.hl_names
+
+
 class Report(models.Model):
     """Main report table."""
+    address = models.ForeignKey(Address, on_delete=models.CASCADE)
     case = models.OneToOneField(
         Case, on_delete=models.CASCADE,
         related_name='Report'
@@ -491,40 +495,23 @@ class Report(models.Model):
 
     def get_case_address(self):
         """ Get case Address."""
-        return Address.objects.get(hl_key=self.get_case_key())
+        return self.address
 
     def get_case_gender(self):
         """ Get case gender."""
-        return Address.objects.get(hl_key=self.get_case_key()).hl_gender
+        return self.address.hl_gender
 
     def get_adultnumber(self):
         """ Get nrc."""
-        return str(Address.objects.get(hl_key=self.get_case_key()).hl_adultnumber)
+        return str(self.address.hl_adultnumber)
 
     def get_email_address(self):
         """ Get email address."""
-        return Address.objects.get(hl_key=self.get_case_key()).hl_email
+        return self.address.hl_email
 
     def get_dob(self):
         """ Get date of birth."""
-        return Address.objects.get(hl_key=self.get_case_key()).hl_dob
-
-    def get_csat_comment(self):
-        """ Get poll results."""
-        csat_vote = apps.get_model('polls', 'Vote')
-        csat = csat_vote.objects.get(contact=self.get_case_key())
-        return csat.comment
-
-    def get_csat(self):
-        """ Get poll results."""
-        csat_vote = apps.get_model('polls', 'Vote')
-        csat = csat_vote.objects.get(contact=self.get_case_key())
-        return csat.choice
-
-    def get_ticket(self):
-        """ Get date of birth."""
-        ticket = Ticket.objects.filter(title__icontains="case %s." % (self.case.hl_case))
-        return ticket.order_by("modified")[0] if ticket else None
+        return self.address.hl_dob
 
     def get_absolute_url(self):
         """Calculate the canonical URL for Report."""
