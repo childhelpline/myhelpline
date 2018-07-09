@@ -784,39 +784,9 @@ class DashboardTable(tables.Table):
         '<a href="{{ record.get_absolute_url }}">{{record.case }}</a>')
     telephone = tables.TemplateColumn(
         '<a href="sip:{{record.telephone}}">{{record.telephone}}</a>')
-    address = tables.TemplateColumn(
-        '{{ record.get_case_address.address1 }}', orderable=False)
-    gender = tables.TemplateColumn(
-        '{{ record.get_case_gender }}', orderable=False)
-    referred_from = tables.TemplateColumn(
-        '{{ record.get_referred_from }}',
-        orderable=False)
 
-    notes = tables.TemplateColumn('{{ record.get_notes }}',
-                                  orderable=False,
-                                  verbose_name="Account Number")
     escalate_to = tables.TemplateColumn('{{ record.escalatename }}',
                                         orderable=False)
-    call_comment = tables.TemplateColumn('{{ record.get_details }}',
-                                         orderable=False)
-    category = tables.TemplateColumn('{{ record.get_case_category }}',
-                                     orderable=False)
-    subcategory = tables.TemplateColumn('{{ record.get_sub_category }}',
-                                        orderable=False)
-    sub_subcategory = tables.TemplateColumn(
-        '{{ record.get_sub_sub_category }}',
-        orderable=False)
-    email = tables.TemplateColumn(
-        '{{ record.get_email_address }}', orderable=False)
-    physical_address = tables.TemplateColumn(
-        '{{ record.get_case_address.address4 }}', orderable=False)
-    escalation = tables.TemplateColumn(
-        '{{ record.esclatename|yesno:"Yes,No"}}', orderable=False)
-    current_status = tables.TemplateColumn(
-        '{{ record.get_ticket.created }}', orderable=False)
-    disposition = tables.TemplateColumn(
-        '{{ record.get_disposition }}', orderable=False)
-
     export_formats = ['csv', 'xls']
 
     class Meta:
@@ -945,10 +915,6 @@ class CallSummaryTable(tables.Table):
     total_talktime = tables.Column(orderable=False)
     att = tables.Column(orderable=False, verbose_name=_('Average Talk Time'))
     aht = tables.Column(orderable=False, verbose_name=_('Average Hold Time'))
-    sla_breached = tables.Column(orderable=False,
-                                 verbose_name=_('SLA Breached'))
-    sla_percentage = tables.Column(orderable=False,
-                                   verbose_name=_('SLA Percentage'))
     answered_percentage = tables.Column(orderable=False,
                                         verbose_name=_('Answered Percentage'))
     abandoned_percentage = tables.Column(orderable=False,
@@ -1326,22 +1292,12 @@ def report_factory(report='callsummary', datetime_range=None, agent=None,
     total_voicemail = reports.filter(queuename__exact=service,
                                       calltype__exact='Voicemail').count()
 
-    # Count calls that breach the SLA.
-    # Time in seconds that calls should be on hold. Greater than that SLA is breached.
-    SLA = 30
-    sla_breached = reports.filter(queuename__exact=service, holdtime__second__gt=SLA).count()
-
-    # SLA Breached percentage is Total of SLA Breaching calls over total offered.
     if total_offered.get('count'):
-        sla_percentage = "{0:.2f}%".format(100.0 * (
-            float(total_offered.get('count')-sla_breached)/float(
-                total_offered.get('count'))))
         answered_percentage = "{0:.2f}%".format(
             100.0 * (float(total_answered)/float(total_offered.get('count'))))
         abandoned_percentage = "{0:.2f}%".format(
             100.0 * (float(total_abandoned)/float(total_offered.get('count'))))
     else:
-        sla_percentage = "NA"
         answered_percentage = "NA"
         abandoned_percentage = "NA"
 
@@ -1359,8 +1315,6 @@ def report_factory(report='callsummary', datetime_range=None, agent=None,
                         'att': att,
                         'aht': aht,
                         'category': category,
-                        'sla_breached': sla_breached,
-                        'sla_percentage': sla_percentage,
                         'total_voicemail': total_voicemail}
 
     if report == 'callsummaryreport':
