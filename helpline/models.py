@@ -438,7 +438,11 @@ class Contact(models.Model):
 
 class Report(models.Model):
     """Main report table."""
-    address = models.ForeignKey(Address, on_delete=models.CASCADE)
+    address = models.ForeignKey(
+        Address,
+        on_delete=models.CASCADE,
+        blank=True, null=True
+    )
     case = models.OneToOneField(
         Case, on_delete=models.CASCADE,
         related_name='Report'
@@ -462,10 +466,10 @@ class Report(models.Model):
                                  blank=True, null=True)
     callend = models.TimeField(verbose_name='Call End',
                                blank=True, null=True)
-    talktime = models.TimeField(verbose_name='Talk Time',
-                                blank=True, null=True)
-    holdtime = models.TimeField(verbose_name='Hold Time',
-                                blank=True, null=True)
+    talktime = models.DurationField(verbose_name='Talk Time',
+                                    blank=True, null=True)
+    holdtime = models.DurationField(verbose_name='Hold Time',
+                                    blank=True, null=True)
     walkintime = models.TimeField(verbose_name='Walkin Time',
                                   blank=True, null=True)
     calltype = models.CharField(max_length=11, verbose_name='Call Type',
@@ -492,26 +496,6 @@ class Report(models.Model):
             return "Voicemail"
         else:
             return "Outbound"
-
-    def get_case_address(self):
-        """ Get case Address."""
-        return self.address
-
-    def get_case_gender(self):
-        """ Get case gender."""
-        return self.address.hl_gender
-
-    def get_adultnumber(self):
-        """ Get nrc."""
-        return str(self.address.hl_adultnumber)
-
-    def get_email_address(self):
-        """ Get email address."""
-        return self.address.hl_email
-
-    def get_dob(self):
-        """ Get date of birth."""
-        return self.address.hl_dob
 
     def get_absolute_url(self):
         """Calculate the canonical URL for Report."""
