@@ -224,21 +224,6 @@ class MenuLog(models.Model):
     hl_time = models.IntegerField()
 
 
-class Messaging(models.Model):
-    hl_service = models.CharField(max_length=100, verbose_name='Service')
-    hl_contact = models.CharField(max_length=25, verbose_name='Contact')
-    hl_key = models.IntegerField(verbose_name='Key')
-    hl_type = models.CharField(max_length=6, verbose_name='Type')
-    hl_status = models.CharField(max_length=7, verbose_name='Status')
-    hl_staff = models.IntegerField(verbose_name='Staff', blank=True, null=True)
-    hl_content = models.TextField(verbose_name='Content')
-    hl_time = models.IntegerField(verbose_name='Time')
-
-    def get_formatted_time(self):
-        return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(self.hl_time))
-
-    def __unicode__(self):
-        return str(self.hl_contact)
 
 class Offered(models.Model):
     hl_case = models.IntegerField(unique=True)
@@ -507,6 +492,25 @@ class Report(models.Model):
 
         return reverse('my_forms', args=[self.casetype.lower() if self.casetype else "call"]) + "?case=%s" % str(self.case.hl_case)
 
+
+class Messaging(models.Model):
+    """Inbuilt messaging model"""
+    contact = models.ForeignKey(Contact, on_delete=models.CASCADE)
+    hl_service = models.CharField(max_length=100, verbose_name='Service')
+    hl_contact = models.CharField(max_length=25, verbose_name='Contact')
+    hl_key = models.IntegerField(verbose_name='Key')
+    hl_type = models.CharField(max_length=6, verbose_name='Type')
+    hl_status = models.CharField(max_length=7, verbose_name='Status')
+    hl_staff = models.IntegerField(verbose_name='Staff', blank=True, null=True)
+    hl_content = models.TextField(verbose_name='Content')
+    hl_time = models.IntegerField(verbose_name='Time')
+
+    def get_formatted_time(self):
+        """Get ISO formated time from time stamp"""
+        return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(self.hl_time))
+
+    def __unicode__(self):
+        return str(self.hl_contact)
 
 class Role(models.Model):
     hl_role = models.CharField(max_length=100)
