@@ -32,10 +32,6 @@ class ServiceAdmin(admin.ModelAdmin):
     list_display = ('name', 'extension', 'queue')
     exclude = ('id')
 
-class ServiceAdmin(admin.ModelAdmin):
-    list_display = ('name', 'extension', 'queue')
-    exclude = ('id')
-
 
 class HotdeskAdmin(admin.ModelAdmin):
     """Admin list for Hotdesk model"""
