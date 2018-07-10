@@ -33,16 +33,9 @@ Install package dependencies.
 
 ```
     sudo apt install python-dev
-    sudo apt install libmysqlclient-dev
     sudo apt install npm
     sudo apt install virtualenv
     sudo npm install -g bower
-```
-
-Install MySQL Server:
-
-```
-    sudo apt install mysql-server
 ```
 
 Set password for MySQL root user as "root".
