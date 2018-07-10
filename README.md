@@ -103,8 +103,12 @@ Install requirements:
   python manage.py compilemessages
  ```
 
-
-## 5.- Run and relax
+## 5.- Migrations 
+```
+python manage.py makemigrations
+   ```
+      
+## 6.- Run and relax
  ```
     python manage.py runserver 0.0.0.0:8000
  ```
