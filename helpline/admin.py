@@ -24,12 +24,15 @@ class DialectAdmin(admin.ModelAdmin):
     list_display = ('id', 'hl_dialect')
     exclude = ('id', 'hl_category', 'hl_status')
 
+class ServiceAdmin(admin.ModelAdmin):
+    list_display = ('name', 'extension', 'queue')
+    exclude = ('id')
 
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
 admin.site.register(Schedule)
 admin.site.register(HelplineUser)
-admin.site.register(Service)
+admin.site.register(Service, ServiceAdmin)
 admin.site.register(Hotdesk)
 admin.site.register(Report)
 admin.site.register(Clock)
