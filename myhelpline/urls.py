@@ -29,8 +29,6 @@ from helpline import views as helpline_views
 from faq import urls as faq_urls
 
 from messaging import urls as messaging_urls
-from panel import urls as panel_urls
-
 
 admin.site.site_header = 'Helpline'
 admin.site.site_title = 'Helpline'
@@ -43,7 +41,6 @@ urlpatterns = [
     url(r'^faq/', include(faq_urls)),
     url(r'^helpdesk/', include('helpdesk.urls', namespace='helpdesk')),
     url(r'^messaging/', include(messaging_urls, namespace='messaging')),
-    url(r'^panel/', include(panel_urls, namespace='panel')),
     url(r'^avatar/', include('avatar.urls')),
     url('^accounts/login/$', login, {
         'template_name': 'helpline/login.html'}, name='login'),

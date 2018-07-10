@@ -117,21 +117,20 @@ def check(request):
 @login_required
 def check_call(request):
     """Check if there is a call for request user"""
-    case_id = request.user.HelplineUser.hl_case
-    if case_id:
-        my_case = Case.objects.get(hl_case=case_id)
+    my_case = request.user.HelplineUser.case
+    if my_case:
         my_case.hl_popup = 'Done'
         my_case.save()
-        request.user.HelplineUser.hl_case = 0
+        request.user.HelplineUser.case = None
         request.user.HelplineUser.save()
-        report = Report.objects.get(caseid=case_id)
+        report = Report.objects.get(case=my_case)
         telephone = report.telephone
 
     else:
         telephone = None
         my_case = None
 
-    response = JsonResponse({'my_case': case_id,
+    response = JsonResponse({'my_case': my_case,
                              'telephone': telephone,
                              'type': my_case.hl_data if my_case else 0})
     return response
@@ -612,7 +611,6 @@ def my_forms(request, form_name):
                 'referred_from': my_case.isrefferedfrom if my_case else '',
                 'sub_category': my_case.hl_subcategory if my_case else '',
                 'sub_sub_category': my_case.hl_subsubcat if my_case else '',
-                'business_portfolio': my_case.business_portfolio if my_case else '',
                 'case_status': report.casestatus if report else '',
                 'case_type': my_case.hl_type if my_case else '',
                 'escalate_to': my_case.hl_escalateto if my_case else '',
@@ -621,7 +619,7 @@ def my_forms(request, form_name):
                 'physical_address': address.hl_address4 if address else '',
 
             }
-            case_history = Report.objects.filter(telephone=contact.hl_contact).order_by('-caseid')
+            case_history = Report.objects.filter(telephone=contact.hl_contact).order_by('-case')
             case_history_table = CaseHistoryTable(case_history)
             try:
                 case_history_table.paginate(page=request.GET.get('page', 1), per_page=10)
@@ -633,7 +631,7 @@ def my_forms(request, form_name):
             my_case = None
 
             # Case history table will display all records when initialized.
-            case_history = Report.objects.all().order_by('-caseid')
+            case_history = Report.objects.all().order_by('-case_id')
             report, contact, address = (None, None, None)
             case_history_table = CaseHistoryTable(case_history)
             case_history_table.paginate(page=request.GET.get('page', 1), per_page=10)
@@ -660,7 +658,7 @@ def my_forms(request, form_name):
                 my_case = Case.objects.get(hl_case=case_number)
                 report, contact, address = get_case_info(case_number)
                 case_history = Report.objects.filter(
-                    telephone=contact.hl_contact).order_by('-caseid')
+                    telephone=contact.hl_contact).order_by('-case')
                 case_history_table = CaseHistoryTable(case_history)
                 try:
                     case_history_table.paginate(page=request.GET.get('page', 1), per_page=10)
@@ -669,8 +667,6 @@ def my_forms(request, form_name):
                     pass
             else:
                 my_case = Case()
-                my_case.hl_key = randint(123456789, 999999999)
-                my_case.hl_callerkey = my_case.hl_key
                 my_case.hl_data = form_name
                 my_case.hl_counsellor = request.user.HelplineUser.hl_key
                 my_case.popup = 'Done'
@@ -681,7 +677,6 @@ def my_forms(request, form_name):
                 my_case.hl_type = form.cleaned_data.get('case_type')
                 my_case.hl_subcategory = form.cleaned_data.get('sub_category')
                 my_case.hl_subsubcat = form.cleaned_data.get('sub_sub_category')
-                my_case.business_portfolio = form.cleaned_data.get('business_portfolio')
                 my_case.isrefferedfrom = form.cleaned_data.get('referred_from')
                 my_case.hl_details = form.cleaned_data.get('comment')
 
@@ -698,7 +693,7 @@ def my_forms(request, form_name):
                 now = datetime.now()
                 callstart = "%s:%s:%s" % (now.hour, now.minute, now.second)
                 notime = "00:00:00"
-                report = Report(caseid=my_case.hl_case,
+                report = Report(case_id=my_case.hl_case,
                                 callstart=callstart,
                                 callend=callstart,
                                 talktime=notime,
@@ -707,7 +702,7 @@ def my_forms(request, form_name):
                                 hl_time=int(time.time()),
                                 calldate=time.strftime('%d-%b-%y'))
                 case_number = my_case.hl_case
-                case_history = Report.objects.filter(telephone=contact.hl_contact).order_by('-caseid')
+                case_history = Report.objects.filter(telephone=contact.hl_contact).order_by('-case_id')
                 case_history_table = CaseHistoryTable(case_history)
                 try:
                     case_history_table.paginate(
@@ -743,7 +738,6 @@ def my_forms(request, form_name):
             my_case.hl_type = form.cleaned_data.get('case_type')
             my_case.hl_subcategory = form.cleaned_data.get('sub_category')
             my_case.hl_subsubcat = form.cleaned_data.get('sub_sub_category')
-            my_case.hl_callerkey = my_case.hl_key
             my_case.hl_escalateto = form.cleaned_data.get('escalate_to')
 
             my_case.save()
@@ -760,68 +754,39 @@ def my_forms(request, form_name):
             if case_number:
                 report, contact, address = get_case_info(case_number)
                 case_history = Report.objects.filter(
-                    telephone=contact.hl_contact).order_by('-caseid')
+                    telephone=contact.hl_contact).order_by('-case_id')
                 case_history_table = CaseHistoryTable(case_history)
             else:
                 report, contact, address = (None, None, None)
-                case_history = Report.objects.all().order_by('-caseid')
+                case_history = Report.objects.all().order_by('-case_id')
                 case_history_table = CaseHistoryTable(case_history)
 
     request.user.HelplineUser.hl_case = 0
     request.user.HelplineUser.save()
 
-    return render(request, 'helpline/my_form.html', {'form': form,
-                                                   'contact': contact.hl_key if contact else None,
-                                                   'initial': initial,
-                                                   'disposition_form': disposition_form,
-                                                   'case_history_table': case_history_table,
-                                                   'form_name': form_name,
-                                                   'message': message})
+    return render(
+        request, 'helpline/my_form.html', {
+            'form': form,
+            'contact': contact if contact else None,
+            'initial': initial,
+            'disposition_form': disposition_form,
+            'case_history_table': case_history_table,
+            'form_name': form_name,
+            'message': message}
+    )
 
 
 class DashboardTable(tables.Table):
     """Where most of the dashboard reporting happens"""
     casetype = tables.TemplateColumn("<b>{{ record.get_call_type }}</b>",
                                      verbose_name="Call Type")
-    caseid = tables.TemplateColumn(
-        '<a href="{{ record.get_absolute_url }}">{{record.caseid }}</a>')
+    case_id = tables.TemplateColumn(
+        '<a href="{{ record.get_absolute_url }}">{{record.case }}</a>')
     telephone = tables.TemplateColumn(
         '<a href="sip:{{record.telephone}}">{{record.telephone}}</a>')
-    address = tables.TemplateColumn(
-        '{{ record.get_case_address.address1 }}', orderable=False)
-    gender = tables.TemplateColumn(
-        '{{ record.get_case_gender }}', orderable=False)
-    referred_from = tables.TemplateColumn(
-        '{{ record.get_referred_from }}',
-        orderable=False)
 
-    notes = tables.TemplateColumn('{{ record.get_notes }}',
-                                  orderable=False,
-                                  verbose_name="Account Number")
     escalate_to = tables.TemplateColumn('{{ record.escalatename }}',
                                         orderable=False)
-    call_comment = tables.TemplateColumn('{{ record.get_details }}',
-                                         orderable=False)
-    category = tables.TemplateColumn('{{ record.get_case_category }}',
-                                     orderable=False)
-    subcategory = tables.TemplateColumn('{{ record.get_sub_category }}',
-                                        orderable=False)
-    sub_subcategory = tables.TemplateColumn(
-        '{{ record.get_sub_sub_category }}',
-        orderable=False)
-    business_portfolio = tables.TemplateColumn(
-        '{{ record.get_business_portfolio }}', orderable=False)
-    email = tables.TemplateColumn(
-        '{{ record.get_email_address }}', orderable=False)
-    physical_address = tables.TemplateColumn(
-        '{{ record.get_case_address.address4 }}', orderable=False)
-    escalation = tables.TemplateColumn(
-        '{{ record.esclatename|yesno:"Yes,No"}}', orderable=False)
-    current_status = tables.TemplateColumn(
-        '{{ record.get_ticket.created }}', orderable=False)
-    disposition = tables.TemplateColumn(
-        '{{ record.get_disposition }}', orderable=False)
-
     export_formats = ['csv', 'xls']
 
     class Meta:
@@ -829,12 +794,12 @@ class DashboardTable(tables.Table):
         attrs = {'class': 'table table-bordered table-striped dataTable',
                  'id': 'report_table'}
         unlocalise = ('holdtime', 'walkintime', 'talktime', 'callstart')
-        fields = {'casetype', 'caseid', 'telephone', 'calldate',
+        fields = {'casetype', 'case_id', 'telephone', 'calldate',
                   'queuename', 'callernames', 'counsellorname',
                   'calldate', 'callstart', 'callend', 'talktime', 'holdtime',
                   'calltype', 'disposition', 'casestatus'}
 
-        sequence = ('casetype', 'caseid', 'calldate', 'callstart',
+        sequence = ('casetype', 'case_id', 'calldate', 'callstart',
                     'callend', 'counsellorname', 'callernames', 'telephone',
                     'queuename', 'talktime', 'holdtime', 'calltype',
                     'disposition', 'casestatus')
@@ -849,12 +814,12 @@ class WebPresenceTable(tables.Table):
 
 class CaseHistoryTable(tables.Table):
     """Show related Case form contact"""
-    caseid = tables.TemplateColumn('<a href="{{ record.get_absolute_url }}">{{record.caseid }}</a>')
+    case = tables.TemplateColumn('<a href="{{ record.get_absolute_url }}">{{record.case }}</a>')
     class Meta:
         model = Report
         attrs = {'class': 'table table-bordered table-striped dataTable'}
-        fields = {'caseid', 'counsellorname', 'calldate', 'calltype'}
-        sequence = ('caseid', 'counsellorname', 'calldate', 'calltype')
+        fields = {'case', 'counsellorname', 'calldate', 'calltype'}
+        sequence = ('case', 'counsellorname', 'calldate', 'calltype')
 
         unlocalise = ('holdtime', 'walkintime', 'talktime', 'callstart')
 
@@ -950,10 +915,6 @@ class CallSummaryTable(tables.Table):
     total_talktime = tables.Column(orderable=False)
     att = tables.Column(orderable=False, verbose_name=_('Average Talk Time'))
     aht = tables.Column(orderable=False, verbose_name=_('Average Hold Time'))
-    sla_breached = tables.Column(orderable=False,
-                                 verbose_name=_('SLA Breached'))
-    sla_percentage = tables.Column(orderable=False,
-                                   verbose_name=_('SLA Percentage'))
     answered_percentage = tables.Column(orderable=False,
                                         verbose_name=_('Answered Percentage'))
     abandoned_percentage = tables.Column(orderable=False,
@@ -983,9 +944,9 @@ class DaySummaryTable(tables.Table):
 def get_case_info(case_number):
     """ Get related case information from a case number"""
     my_case = get_object_or_404(Case, hl_case=case_number)
-    report = Report.objects.get(caseid=case_number)
-    address, address_created = Address.objects.get_or_create(hl_key=my_case.hl_key)
-    contact, contact_created = Contact.objects.get_or_create(hl_key=my_case.hl_key)
+    report = Report.objects.get(case_id=case_number)
+    address, address_created = Address.objects.get_or_create(case=my_case)
+    contact, contact_created = Contact.objects.get_or_create(address=address)
     return report, contact, address
 
 
@@ -1283,7 +1244,7 @@ def report_factory(report='callsummary', datetime_range=None, agent=None,
     if category:
         Case = Case.objects.filter(hl_acategory=category)
         filter_query['category'] = category
-        reports = reports.filter(caseid__in=cases)
+        reports = reports.filter(case_id__in=cases)
 
     # Search report data
     if query:
@@ -1297,7 +1258,7 @@ def report_factory(report='callsummary', datetime_range=None, agent=None,
         # Ask for forgiveness if it's not.
         try:
             val = int(query)
-            qset |= (Q(caseid__exact=query))
+            qset |= (Q(case_id__exact=query))
         except ValueError:
             # Ask for forgiveness.
             pass
@@ -1331,22 +1292,12 @@ def report_factory(report='callsummary', datetime_range=None, agent=None,
     total_voicemail = reports.filter(queuename__exact=service,
                                       calltype__exact='Voicemail').count()
 
-    # Count calls that breach the SLA.
-    # Time in seconds that calls should be on hold. Greater than that SLA is breached.
-    SLA = 30
-    sla_breached = reports.filter(queuename__exact=service, holdtime__second__gt=SLA).count()
-
-    # SLA Breached percentage is Total of SLA Breaching calls over total offered.
     if total_offered.get('count'):
-        sla_percentage = "{0:.2f}%".format(100.0 * (
-            float(total_offered.get('count')-sla_breached)/float(
-                total_offered.get('count'))))
         answered_percentage = "{0:.2f}%".format(
             100.0 * (float(total_answered)/float(total_offered.get('count'))))
         abandoned_percentage = "{0:.2f}%".format(
             100.0 * (float(total_abandoned)/float(total_offered.get('count'))))
     else:
-        sla_percentage = "NA"
         answered_percentage = "NA"
         abandoned_percentage = "NA"
 
@@ -1364,8 +1315,6 @@ def report_factory(report='callsummary', datetime_range=None, agent=None,
                         'att': att,
                         'aht': aht,
                         'category': category,
-                        'sla_breached': sla_breached,
-                        'sla_percentage': sla_percentage,
                         'total_voicemail': total_voicemail}
 
     if report == 'callsummaryreport':
@@ -1442,56 +1391,19 @@ def helpline_home(request):
     return redirect("/helpline/")
 
 
-def report_save_handler(sender, instance, created, **kwargs):
-    """Notify supervisors when a report is saved."""
-
-    case = Case.objects.get(hl_case=instance.caseid)
-    address = Address.objects.get(hl_key=case.hl_key)
-
-
-    # Only notify if report is marked as open
-    if instance.casestatus != "Close":
-        case = Case.objects.get(hl_case=instance.caseid)
-        supervisors = HelplineUser.objects.filter(hl_role='Supervisor')
-        user = HelplineUser.objects.get(hl_nick=instance.counsellorname).user
-        verb = "saved case %s. Telephone number: %s Status: %s" % (
-            instance.caseid, instance.telephone, instance.casestatus)
-
-        description = """
-        Customer Details
-        Name: %s
-        Phone Number: %s
-        Email: %s
-        DC Number/ Policy Number: %s
-        Case ID: %s
-
-        Remarks: %s
-        """ % (instance.callernames,
-               instance.telephone,
-               address.hl_email,
-               case.hl_notes,
-               instance.caseid,
-               case.hl_details
-              )
-
-        for supervisor in supervisors:
-            notify.send(user, recipient=supervisor.user,
-                        verb=verb, level=level, description=description)
-
-
 @json_view
-def asterisk_alert(request, auth, dialstatus, caseid):
+def asterisk_alert(request, auth, dialstatus, case_id):
     """Accept user alerts from Asterisk"""
     agent = HelplineUser.objects.get(hl_auth=auth)
     user = agent.user
-    case = Case.objects.get(hl_case=caseid)
+    case = Case.objects.get(hl_case=case_id)
 
     alert = {'CHANUNAVAIL': 'unavailable',
              'NOANSWER': 'missed',
              'BUSY': 'busy'}
 
     verb = "%s" % (alert[dialstatus])
-    description = "Dial status is %s for case %s" % (alert[dialstatus], caseid)
+    description = "Dial status is %s for case %s" % (alert[dialstatus], case_id)
     channel = agent.hl_exten.split('/')[1]
     notify.send(user, recipient=user, verb=verb,
                 description=description, level="warning")
@@ -1551,5 +1463,3 @@ def queues(request):
 def queue(request, name=None):
     data = get_data_queues(name)
     return {'data': data}
-
-post_save.connect(report_save_handler, sender=Report)

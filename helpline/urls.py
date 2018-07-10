@@ -63,7 +63,7 @@ urlpatterns = [
     url('^logout/$', views.logout, name='helpline_logout'),
     url(r'^inbox/notifications/',
         include(notifications.urls, namespace='notifications')),
-    url(r'^alert/(?P<auth>\w+)/(?P<dialstatus>\w+)/(?P<caseid>\w+)/$',
+    url(r'^alert/(?P<auth>\w+)/(?P<dialstatus>\w+)/(?P<case_id>\w+)/$',
         views.asterisk_alert, name='asterisk_alert'),
 ]
 

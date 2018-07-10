@@ -1,0 +1,12 @@
+[Unit]
+Description=Helpline gunicorn daemon
+After=network.target
+
+[Service]
+User=helpline
+Group=www-data
+WorkingDirectory=/home/helpline/www/myhelpline
+ExecStart=/home/helpline/env/bin/gunicorn --reload --access-logfile - --workers 3 --bind unix:/home/helpline/myhelpline.sock myhelpline.wsgi:application
+
+[Install]
+WantedBy=multi-user.target

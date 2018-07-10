@@ -606,7 +606,7 @@
 <!-- AdminLTE for demo purposes -->
 <script src="{% static "AdminLTE/dist/js/demo.js" %}"></script>
 <script src="{% static 'notifications/notify.js' %}" type="text/javascript"></script>
-<script src="{% static "panel/js/utils.js" %}"></script>
+<script src="{% static "helpline/js/utils.js" %}"></script>
 {% register_notify_callbacks callbacks='fill_notification_list,fill_notification_badge' %}
 
         <!-- moment.js -->
@@ -774,7 +774,7 @@
             var result;
             var r = $.ajax({
                 type: 'GET',
-                url: '{% url "panel:queues" %}'
+                url: '{% url "queues" %}'
             });
             r.done(function (response) {
                 if (response) {
