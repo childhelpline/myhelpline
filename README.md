@@ -33,9 +33,16 @@ Install package dependencies.
 
 ```
     sudo apt install python-dev
+    sudo apt install libmysqlclient-dev
     sudo apt install npm
     sudo apt install virtualenv
     sudo npm install -g bower
+```
+
+Install MySQL Server:
+
+```
+    sudo apt install mysql-server
 ```
 
 Set password for MySQL root user as "root".
@@ -55,7 +62,7 @@ Not required in Ubuntu 18.04 +
 On /etc/asterisk/manager.conf set command permission for read and write, example:
 
 ```
-    [panel]
+    [helpline]
     secret = my_super_secret_password
     read = command
     write = command,originate,call,agent
@@ -68,7 +75,7 @@ On /etc/asterisk/manager.conf set command permission for read and write, example
 
 ##  3. Go and prepair environment
  ```
-  cd panel
+  cd helpline
   cp samples/config.ini-dist config.ini
  ```
   Edit config.ini file with Manager Asterisk parameters
