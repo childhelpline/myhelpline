@@ -784,9 +784,9 @@ class DashboardTable(tables.Table):
         '<a href="{{ record.get_absolute_url }}">{{record.case }}</a>')
     telephone = tables.TemplateColumn(
         '<a href="sip:{{record.telephone}}">{{record.telephone}}</a>')
+    user = tables.TemplateColumn("{{ record.user }}",
+                                 verbose_name="Agent")
 
-    escalate_to = tables.TemplateColumn('{{ record.escalatename }}',
-                                        orderable=False)
     export_formats = ['csv', 'xls']
 
     class Meta:
@@ -795,12 +795,12 @@ class DashboardTable(tables.Table):
                  'id': 'report_table'}
         unlocalise = ('holdtime', 'walkintime', 'talktime', 'callstart')
         fields = {'casetype', 'case_id', 'telephone', 'calldate',
-                  'queuename', 'callernames', 'counsellorname',
+                  'queuename', 'callernames', 'user',
                   'calldate', 'callstart', 'callend', 'talktime', 'holdtime',
                   'calltype', 'disposition', 'casestatus'}
 
         sequence = ('casetype', 'case_id', 'calldate', 'callstart',
-                    'callend', 'counsellorname', 'callernames', 'telephone',
+                    'callend', 'user', 'telephone',
                     'queuename', 'talktime', 'holdtime', 'calltype',
                     'disposition', 'casestatus')
 

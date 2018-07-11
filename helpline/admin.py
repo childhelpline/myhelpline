@@ -30,7 +30,7 @@ class DialectAdmin(admin.ModelAdmin):
 
 class ServiceAdmin(admin.ModelAdmin):
     list_display = ('name', 'extension', 'queue')
-    exclude = ('id')
+    exclude = ('id',)
 
 
 class HotdeskAdmin(admin.ModelAdmin):

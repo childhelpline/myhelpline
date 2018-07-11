@@ -432,6 +432,11 @@ class Report(models.Model):
         Case, on_delete=models.CASCADE,
         related_name='Report'
     )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        blank=True, null=True
+    )
     calldate = models.CharField(max_length=250, verbose_name='Call Date',
                                 blank=True, null=True)
     queuename = models.TextField(verbose_name='Queue Name',
@@ -495,7 +500,11 @@ class Report(models.Model):
 
 class Messaging(models.Model):
     """Inbuilt messaging model"""
-    contact = models.ForeignKey(Contact, on_delete=models.CASCADE)
+    contact = models.ForeignKey(
+        Contact,
+        on_delete=models.CASCADE,
+        blank=True, null=True
+    )
     hl_service = models.CharField(max_length=100, verbose_name='Service')
     hl_contact = models.CharField(max_length=25, verbose_name='Contact')
     hl_key = models.IntegerField(verbose_name='Key')
