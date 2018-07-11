@@ -17,10 +17,88 @@ from django.utils.translation import ugettext_lazy as _
 from helpdesk.models import Ticket
 
 
+class Address(models.Model):
+    """Gives details about parties in a report"""
+    hl_title = models.CharField(max_length=25, blank=True, null=True)
+    hl_type = models.CharField(max_length=9, blank=True, null=True)
+    hl_names = models.CharField(max_length=500, blank=True, null=True)
+    hl_gender = models.CharField(max_length=7, blank=True, null=True)
+    hl_ageclass = models.CharField(max_length=7, blank=True, null=True)
+    hl_age = models.IntegerField(blank=True, null=True)
+    hl_dob = models.DateField(blank=True, null=True)
+    hl_yeardob = models.TextField(blank=True, null=True)
+    hl_monthdob = models.SmallIntegerField(blank=True, null=True)
+    hl_datedob = models.SmallIntegerField(blank=True, null=True)
+    hl_language = models.CharField(max_length=250, blank=True, null=True)
+    hl_relation = models.CharField(max_length=100, blank=True, null=True)
+    hl_address1 = models.CharField(max_length=250, blank=True, null=True)
+    hl_address2 = models.CharField(max_length=250, blank=True, null=True)
+    hl_address3 = models.CharField(max_length=100, blank=True, null=True)
+    hl_address4 = models.CharField(max_length=100, blank=True, null=True)
+    hl_country = models.CharField(max_length=250, blank=True, null=True)
+    hl_email = models.CharField(max_length=100, blank=True, null=True)
+    hl_householdtype = models.CharField(max_length=13)
+    hl_childrenumber = models.IntegerField(blank=True, null=True)
+    hl_adultnumber = models.IntegerField(blank=True, null=True)
+    hl_headoccupation = models.CharField(max_length=100, blank=True, null=True)
+    hl_school = models.CharField(max_length=250, blank=True, null=True)
+    hl_company = models.CharField(max_length=250, blank=True, null=True)
+    hl_schooltype = models.CharField(max_length=100, blank=True, null=True)
+    hl_class = models.CharField(max_length=50, blank=True, null=True)
+    hl_attendance = models.CharField(max_length=12, blank=True, null=True)
+    hl_attendancereason = models.TextField(blank=True, null=True)
+    hl_schaddr = models.CharField(max_length=250, blank=True, null=True)
+    hl_homerole = models.CharField(max_length=7, blank=True, null=True)
+    hl_latitude = models.FloatField(blank=True, null=True)
+    hl_longitude = models.FloatField(blank=True, null=True)
+    hl_religion = models.CharField(max_length=100, blank=True, null=True)
+    hl_career = models.CharField(max_length=13, blank=True, null=True)
+    hl_shl_evel = models.CharField(max_length=11, blank=True, null=True)
+    hl_health = models.CharField(max_length=12, blank=True, null=True)
+    hl_disabled = models.CharField(max_length=3, blank=True, null=True)
+    hl_notes = models.TextField(blank=True, null=True)
+    hl_created = models.IntegerField(blank=True, null=True)
+    hl_creator = models.IntegerField(blank=True, null=True)
+    hl_deletedate = models.IntegerField(blank=True, null=True)
+    hl_deleteby = models.IntegerField(blank=True, null=True)
+    hl_deleted = models.IntegerField(blank=True, null=True)
+    hl_current = models.SmallIntegerField(blank=True, null=True)
+    hl_contact = models.IntegerField(blank=True, null=True)
+    hl_time = models.IntegerField(blank=True, null=True)
+    hl_hiv = models.CharField(max_length=8, blank=True, null=True)
+
+    def __unicode__(self):
+        return self.hl_names or u''
+
+
+class Contact(models.Model):
+    """Contact information for an address"""
+    address = models.ForeignKey(Address, on_delete=models.CASCADE)
+    hl_contact = models.CharField(max_length=250)
+    hl_parent = models.IntegerField(blank=True, null=True)
+    hl_type = models.CharField(max_length=12, blank=True, null=True)
+    hl_calls = models.IntegerField(blank=True, null=True)
+    hl_status = models.CharField(max_length=10, blank=True, null=True)
+    hl_time = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        unique_together = (('address', 'hl_contact'),)
+
+    def __unicode__(self):
+        return self.hl_contact
+
+    def get_name(self):
+        return self.address.hl_names
+
+
 class Case(models.Model):
     """Case management model"""
     hl_case = models.AutoField(primary_key=True)
-    hl_callerkey = models.IntegerField(blank=True, null=True)
+    contact = models.ForeignKey(
+        Contact,
+        on_delete=models.CASCADE,
+        blank=True, null=True
+    )
     hl_victimkey = models.IntegerField(blank=True, null=True)
     hl_unique = models.CharField(unique=True, max_length=20,
                                  blank=True, null=True)
@@ -72,7 +150,7 @@ class Case(models.Model):
 
 
 class CaseTrail(models.Model):
-    hl_case = models.ForeignKey(Case, on_delete=models.CASCADE)
+    case = models.ForeignKey(Case, on_delete=models.CASCADE)
     hl_status = models.CharField(max_length=8)
     hl_to = models.CharField(max_length=10)
     hl_userkey = models.IntegerField()
@@ -87,8 +165,11 @@ class CaseTrail(models.Model):
 class Category(models.Model):
     hl_core = models.IntegerField(verbose_name='Core ID', default=1)
     hl_category = models.CharField(max_length=100, verbose_name='Category')
-    hl_subcategory = models.CharField(max_length=100, verbose_name='Subcategory')
-    hl_subsubcat = models.CharField(max_length=100, verbose_name='Sub-subcategory', blank=True, null=True)
+    hl_subcategory = models.CharField(max_length=100,
+                                      verbose_name='Subcategory')
+    hl_subsubcat = models.CharField(max_length=100,
+                                    verbose_name='Sub-subcategory',
+                                    blank=True, null=True)
 
     def get_subcategory(self):
         return Category.objects.filter(hl_category=self.hl_category)
@@ -345,82 +426,6 @@ class Registry(models.Model):
     hl_time = models.IntegerField()
     hl_hivrelated = models.IntegerField()
 
-
-class Address(models.Model):
-    """Gives details about parties in a report"""
-    case = models.ForeignKey(Case, on_delete=models.CASCADE)
-    hl_title = models.CharField(max_length=25, blank=True, null=True)
-    hl_type = models.CharField(max_length=9, blank=True, null=True)
-    hl_names = models.CharField(max_length=500, blank=True, null=True)
-    hl_gender = models.CharField(max_length=7, blank=True, null=True)
-    hl_ageclass = models.CharField(max_length=7, blank=True, null=True)
-    hl_age = models.IntegerField(blank=True, null=True)
-    hl_dob = models.DateField(blank=True, null=True)
-    hl_yeardob = models.TextField(blank=True, null=True)
-    hl_monthdob = models.SmallIntegerField(blank=True, null=True)
-    hl_datedob = models.SmallIntegerField(blank=True, null=True)
-    hl_language = models.CharField(max_length=250, blank=True, null=True)
-    hl_relation = models.CharField(max_length=100, blank=True, null=True)
-    hl_address1 = models.CharField(max_length=250, blank=True, null=True)
-    hl_address2 = models.CharField(max_length=250, blank=True, null=True)
-    hl_address3 = models.CharField(max_length=100, blank=True, null=True)
-    hl_address4 = models.CharField(max_length=100, blank=True, null=True)
-    hl_country = models.CharField(max_length=250, blank=True, null=True)
-    hl_email = models.CharField(max_length=100, blank=True, null=True)
-    hl_householdtype = models.CharField(max_length=13)
-    hl_childrenumber = models.IntegerField(blank=True, null=True)
-    hl_adultnumber = models.IntegerField(blank=True, null=True)
-    hl_headoccupation = models.CharField(max_length=100, blank=True, null=True)
-    hl_school = models.CharField(max_length=250, blank=True, null=True)
-    hl_company = models.CharField(max_length=250, blank=True, null=True)
-    hl_schooltype = models.CharField(max_length=100, blank=True, null=True)
-    hl_class = models.CharField(max_length=50, blank=True, null=True)
-    hl_attendance = models.CharField(max_length=12, blank=True, null=True)
-    hl_attendancereason = models.TextField(blank=True, null=True)
-    hl_schaddr = models.CharField(max_length=250, blank=True, null=True)
-    hl_homerole = models.CharField(max_length=7, blank=True, null=True)
-    hl_latitude = models.FloatField(blank=True, null=True)
-    hl_longitude = models.FloatField(blank=True, null=True)
-    hl_religion = models.CharField(max_length=100, blank=True, null=True)
-    hl_career = models.CharField(max_length=13, blank=True, null=True)
-    hl_shl_evel = models.CharField(max_length=11, blank=True, null=True)
-    hl_health = models.CharField(max_length=12, blank=True, null=True)
-    hl_disabled = models.CharField(max_length=3, blank=True, null=True)
-    hl_notes = models.TextField(blank=True, null=True)
-    hl_created = models.IntegerField(blank=True, null=True)
-    hl_creator = models.IntegerField(blank=True, null=True)
-    hl_deletedate = models.IntegerField(blank=True, null=True)
-    hl_deleteby = models.IntegerField(blank=True, null=True)
-    hl_deleted = models.IntegerField(blank=True, null=True)
-    hl_current = models.SmallIntegerField(blank=True, null=True)
-    hl_contact = models.IntegerField(blank=True, null=True)
-    hl_time = models.IntegerField(blank=True, null=True)
-    hl_hiv = models.CharField(max_length=8, blank=True, null=True)
-
-    def __unicode__(self):
-        return self.hl_names or u''
-
-
-class Contact(models.Model):
-    """Contact information for an address"""
-    address = models.ForeignKey(Address, on_delete=models.CASCADE)
-    hl_contact = models.CharField(max_length=250)
-    hl_parent = models.IntegerField(blank=True, null=True)
-    hl_type = models.CharField(max_length=12, blank=True, null=True)
-    hl_calls = models.IntegerField(blank=True, null=True)
-    hl_status = models.CharField(max_length=10, blank=True, null=True)
-    hl_time = models.IntegerField(blank=True, null=True)
-
-    class Meta:
-        unique_together = (('address', 'hl_contact'),)
-
-    def __unicode__(self):
-        return self.hl_contact
-
-    def get_name(self):
-        return self.address.hl_names
-
-
 class Report(models.Model):
     """Main report table."""
     address = models.ForeignKey(
@@ -670,6 +675,7 @@ class HelplineUser(models.Model):
     def get_schedule(self):
         """Returns the users schedule in the helpline"""
         return Schedule.objects.filter(hl_key__exact=self.hl_key)
+
     def __unicode__(self):
         return self.hl_names if self.hl_names else "No Name"
 
@@ -692,10 +698,10 @@ class HelplineUser(models.Model):
                 hl_time__gt=midnight).aggregate(
                     Avg('hl_talktime')).get('hl_talktime__avg')
 
-
-        td = timedelta(seconds = seconds if seconds else 0)
-        att = {'hours':"%02d" % (td.seconds//3600)
-            ,'min':"%02d" % ((td.seconds//60)%60),'seconds': "%02d" % ((td.seconds)%60)}
+        td = timedelta(seconds=seconds if seconds else 0)
+        att = {'hours': "%02d" % (td.seconds//3600),
+               'min': "%02d" % ((td.seconds//60) % 60),
+               'seconds': "%02d" % ((td.seconds) % 60)}
         return att
 
     def get_average_wait_time(self):
