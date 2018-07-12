@@ -58,6 +58,12 @@ class Address(models.Model):
     hl_disabled = models.CharField(max_length=3, blank=True, null=True)
     hl_notes = models.TextField(blank=True, null=True)
     hl_created = models.IntegerField(blank=True, null=True)
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        blank=True, null=True
+    )
+    # Creator will be deleted in favor of user model
     hl_creator = models.IntegerField(blank=True, null=True)
     hl_deletedate = models.IntegerField(blank=True, null=True)
     hl_deleteby = models.IntegerField(blank=True, null=True)
@@ -73,7 +79,8 @@ class Address(models.Model):
 
 class Contact(models.Model):
     """Contact information for an address"""
-    address = models.ForeignKey(Address, on_delete=models.CASCADE)
+    address = models.ForeignKey(Address, on_delete=models.CASCADE,
+                                blank=True, null=True)
     hl_contact = models.CharField(max_length=250)
     hl_parent = models.IntegerField(blank=True, null=True)
     hl_type = models.CharField(max_length=12, blank=True, null=True)

@@ -918,8 +918,9 @@ class CallSummaryTable(tables.Table):
     aht = tables.Column(orderable=False, verbose_name=_('Average Hold Time'))
     answered_percentage = tables.Column(orderable=False,
                                         verbose_name=_('Answered Percentage'))
-    abandoned_percentage = tables.Column(orderable=False,
-                                         verbose_name=_('Abandoned Percentage'))
+    abandoned_percentage = tables.Column(
+        orderable=False,
+        verbose_name=_('Abandoned Percentage'))
     export_formats = ['csv', 'xls']
 
     class Meta:
@@ -944,10 +945,24 @@ class DaySummaryTable(tables.Table):
 
 def get_case_info(case_number):
     """ Get related case information from a case number"""
-    my_case = get_object_or_404(Case, hl_case=case_number)
-    report = Report.objects.get(case_id=case_number)
-    address, address_created = Address.objects.get_or_create(case=my_case)
-    contact, contact_created = Contact.objects.get_or_create(address=address)
+    report = get_object_or_404(Report, case_id=case_number)
+    contact, contact_created = Contact.objects.get_or_create(
+        hl_contact=report.telephone
+    )
+    # Create a new address entry if new contact
+    if contact_created:
+        address = Address(user=report.user)
+        address.save()
+        contact.address = address
+        contact.save()
+    elif contact.address is None:
+        address = Address(user=report.user)
+        address.save()
+        contact.address = address
+        contact.save()
+    else:
+        address = contact.address
+
     return report, contact, address
 
 
