@@ -426,6 +426,27 @@ class Registry(models.Model):
     hl_time = models.IntegerField()
     hl_hivrelated = models.IntegerField()
 
+class Service(models.Model):
+    """Identifies a queue that agents can be assigned"""
+    extension = models.CharField(
+        unique=True,
+        max_length=100,
+        help_text=_('Extension callers will dial e.g 116.'),
+    )
+    name = models.CharField(
+        max_length=255,
+        help_text=_('Service name')
+    )
+    queue = models.CharField(
+        max_length=255,
+        blank=True, null=True,
+        help_text=_('Corresponding Asterisk Queue name')
+    )
+
+    def __unicode__(self):
+        return self.name
+
+
 class Report(models.Model):
     """Main report table."""
     address = models.ForeignKey(
@@ -439,6 +460,11 @@ class Report(models.Model):
     )
     user = models.ForeignKey(
         User,
+        on_delete=models.CASCADE,
+        blank=True, null=True
+    )
+    service = models.ForeignKey(
+        Service,
         on_delete=models.CASCADE,
         blank=True, null=True
     )
@@ -549,26 +575,6 @@ class Search(models.Model):
     hl_menu = models.CharField(max_length=100)
     hl_service = models.CharField(max_length=100)
 
-
-class Service(models.Model):
-    """Identifies a queue that agents can be assigned"""
-    extension = models.CharField(
-        unique=True,
-        max_length=100,
-        help_text=_('Extension callers will dial e.g 116.'),
-    )
-    name = models.CharField(
-        max_length=255,
-        help_text=_('Service name')
-    )
-    queue = models.CharField(
-        max_length=255,
-        blank=True, null=True,
-        help_text=_('Corresponding Asterisk Queue name')
-    )
-
-    def __unicode__(self):
-        return self.name
 
 class SMSCDR(models.Model):
     sender = models.CharField(max_length=30)
