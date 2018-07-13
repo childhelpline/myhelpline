@@ -35,8 +35,6 @@ Install package dependencies.
 
 
 
-Set password for MySQL root user as "root".
-
 After you install nodejs you might want to run the following command:
 Not required in Ubuntu 18.04 +
 
