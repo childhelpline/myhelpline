@@ -1,13 +1,6 @@
 # MyHelpline
 
 MyHelpline is a communication framework for support call centers.
-The goal is simple, to help users easily communicate to support agents.
-
-Being a communication framework we have focused heavily on the voice and messaging.
-Currently the application integrates with Asterisk the opensource PBX and hardware PBX such as GOIP and Yeastar MyPBX.
-Support for other IP PBX Software such as Freeswitch is also on the pipe line.
-
-The name is as random as it can get. "MyPBX" might have inspired some of the naming, however inadvertently.
 
 ## Requirements
 
@@ -33,17 +26,14 @@ Install package dependencies.
 
 ```
     sudo apt install python-dev
-    sudo apt install libmysqlclient-dev
     sudo apt install npm
     sudo apt install virtualenv
     sudo npm install -g bower
+    sudo apt install gettext
+    sudo apt install postgresql postgresql-contrib
 ```
 
-Install MySQL Server:
 
-```
-    sudo apt install mysql-server
-```
 
 Set password for MySQL root user as "root".
 
@@ -72,11 +62,13 @@ On /etc/asterisk/manager.conf set command permission for read and write, example
     * _originate_ for spy, whisper and barge.
     * _call_ for hanging up calls.
     * _agent_ remove and add agents to and from the queues.
-
 ##  3. Go and prepair environment
+ go to project directory
  ```
-  cd helpline
-  cp samples/config.ini-dist config.ini
+  git clone https://github.com/childhelpline/myhelpline.git
+  cd myhelpline
+  cp helpline/config.ini-dist helpline/config.ini
+  cp myhelpline/localsettings.py-sample myhelpline/localsettings.py
  ```
   Edit config.ini file with Manager Asterisk parameters
 
@@ -104,11 +96,22 @@ Install requirements:
  ```
 
 ## 5.- Migrations 
+Make sure PostgreSQl is running and the cridentials for the  database are available in your "myhelpline/localsettings.py" 
 ```
 python manage.py makemigrations
+python manage.py migrate
    ```
-      
-## 6.- Run and relax
+## 6.-Install components using bower
+ ```
+ python manage.py bower install
+ ```
+ ## 7.-Create User
+ Run the following command and follow the prompt
+  ```
+  python manage.py createsuperuser
+  ```
+ 
+## 8.- Run webserver
  ```
     python manage.py runserver 0.0.0.0:8000
  ```
