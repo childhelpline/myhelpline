@@ -1,0 +1,45 @@
+//for helpline by kemboicheru
+
+
+    .caseDet , .disposeDet{
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 3px;
+    border-bottom-left-radius: 3px;
+    padding: 10px;
+	}
+	.container {
+    padding-right: 0;
+    padding-left: 0;
+    margin-right: 0;
+    margin-left: 0;
+	}
+	.skin-blue .main-header .logo {
+	background-color: #009fe3;
+	}
+    .nav.navbar-nav .dropdown.messages-menu  .fa {
+	padding-right: 5px;
+	}
+	/*.bg { 
+    /* The image used */
+    /* background-image: url("{% static 'helpline/images/login_bg.jpg' %}"); */
+
+    /* Full height *
+    height: 100%; 
+
+    /* Center and scale the image nicely *
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}*/
+
+
+.bg{
+    background: #d2d6de;
+    background-size: cover;
+    background-image: url('/static/helpline/images/315382.jpg') !important;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.login-box{}

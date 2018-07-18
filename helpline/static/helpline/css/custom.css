@@ -18,3 +18,10 @@
     cursor: pointer;
     text-decoration: none;
 }
+
+///designed for the helpline
+.login-page{
+    background: #d2d6de;
+    background-size: cover;
+    background-image: url(static/helpline/images/315382.jpg);
+}
