@@ -2,6 +2,7 @@
 """Helpline Models"""
 
 from __future__ import unicode_literals
+import calendar
 from datetime import timedelta, datetime, date, time as datetime_time
 import time
 import os
@@ -696,8 +697,9 @@ class HelplineUser(models.Model):
         """Get the average talk time for a user.
         Counted from the last midnight"""
         # Get the epoch time of the last midnight
-        midnight = datetime.combine(date.today(),
-                                    datetime_time.min).strftime('%s')
+        midnight_datetime = datetime.combine(date.today(),
+                                    datetime_time.min)
+        midnight = calendar.timegm(midnight_datetime.timetuple())
 
         # Get the average seconds of hold time from last midnight.
         # Return global values for supervisors.
@@ -721,7 +723,9 @@ class HelplineUser(models.Model):
         """Get the average hold time for a user.
         Counted from the last midnight"""
         # Get the epoch time of the last midnight
-        midnight = datetime.combine(date.today(), datetime_time.min).strftime('%s')
+        midnight_datetime = datetime.combine(date.today(),
+                                    datetime_time.min)
+        midnight = calendar.timegm(midnight_datetime.timetuple())
         # Get the average seconds of hold time from last midnight.
         # Return global values for supervisors.
         if self.hl_role.lower() != "supervisor":
