@@ -19,6 +19,7 @@ django-crispy-forms==1.7.2
 django-debug-toolbar==1.9.1
 git+git://github.com/arthanson/django-genericadmin.git@master#egg=genericadmin
 django-helpdesk==0.2.8
+-e git+https://github.com/Kirembu/django-helpline-faq.git@4cd9ef3aa310833bf2fe1cfb9bdc8c67913ab27f#egg=django_helpline_faq
 django-jsonfield==1.0.1
 django-jsonview==1.2.0
 django-mailer==1.2.5
