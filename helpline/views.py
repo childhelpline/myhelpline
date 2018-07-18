@@ -36,7 +36,6 @@ try:
 except Exception as e:
     from django.core.urlresolvers import reverse
 
-from pycall import CallFile, Call, Context
 from notifications.signals import notify
 
 import django_tables2 as tables
@@ -1083,12 +1082,15 @@ def get_dashboard_stats(user, interval=None):
     """
     # Get the epoch time of the last midnight
     if interval == 'weekly':
-        midnight = datetime.combine(
+        midnight_datetime = datetime.combine(
             date.today() - timedelta(days=date.today().weekday()),
-            datetime_time.min).strftime('%s')
+            datetime_time.min)
+        midnight = calendar.timegm(midnight_datetime.timetuple())
     else:
-        midnight = datetime.combine(
-            date.today(), datetime_time.min).strftime('%s')
+        midnight_datetime = datetime.combine(
+            date.today(), datetime_time.min)
+        midnight = calendar.timegm(midnight_datetime.timetuple())
+
     midnight_string = datetime.combine(
         date.today(), datetime_time.min).strftime('%m/%d/%Y %I:%M %p')
     now_string = datetime.now().strftime('%m/%d/%Y %I:%M %p')
@@ -1207,7 +1209,9 @@ def report_factory(report='callsummary', datetime_range=None, agent=None,
         clock = Clock.objects.filter()
         # Apply filters to queryset.
         if from_date and to_date:
-            clock = clock.filter(hl_time__gt=from_date.strftime('%s'),hl_time__lt=to_date.strftime('%s'))
+            from_date_epoch = calendar.timegm(from_date.timetuple())
+            to_date_epoch = calendar.timegm(to_date.timetuple())
+            clock = clock.filter(hl_time__gt=from_date_epoch,hl_time__lt=to_date_epoch)
         if agent:
             clock = clock.filter(hl_key__exact=agent)
             filter_query['agent'] = agent
@@ -1242,10 +1246,12 @@ def report_factory(report='callsummary', datetime_range=None, agent=None,
 
     # Apply filters to queryset.
     if from_date and to_date:
-        reports = reports.filter(hl_time__gt=from_date.strftime('%s'),
-                                 hl_time__lt=to_date.strftime('%s'))
-        cdr = cdr.filter(hl_time__gt=from_date.strftime('%s'),
-                                 hl_time__lt=to_date.strftime('%s'))
+        from_date_epoch = calendar.timegm(from_date.timetuple())
+        to_date_epoch = calendar.timegm(to_date.timetuple())
+        reports = reports.filter(hl_time__gt=from_date_epoch,
+                                 hl_time__lt=to_date_epoch)
+        cdr = cdr.filter(hl_time__gt=from_date_epoch,
+                                 hl_time__lt=to_date_epoch)
 
     if agent:
         reports = reports.filter(counsellorname__exact=username)
