@@ -57,7 +57,6 @@ pbr==1.8.1
 Pillow==3.3.0
 psycopg2-binary==2.7.5
 py-Asterisk==0.5.16
-pycall==2.2
 Pygments==2.2.0
 pyparsing==2.2.0
 python-dateutil==2.5.3
