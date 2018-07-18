@@ -42,4 +42,6 @@
     background-repeat: no-repeat;
 }
 
-.login-box{}
+.login-box{
+    background-color: #fff;
+}
