@@ -36,7 +36,6 @@ try:
 except Exception as e:
     from django.core.urlresolvers import reverse
 
-from pycall import CallFile, Call, Context
 from notifications.signals import notify
 
 import django_tables2 as tables
