@@ -34,8 +34,7 @@ Install package dependencies.
     sudo apt install python-gdal
 ```
 
-
-.. code-block:: sh
+To bulk install the requirements in Ubuntu run:
 
     ./script/install/ubuntu
 
@@ -127,7 +126,7 @@ python manage.py migrate
  ```
  python manage.py bower install
  ```
- ## 7.-Create User
+ ## Create User
  Run the following command and follow the prompt
   ```
   python manage.py createsuperuser
