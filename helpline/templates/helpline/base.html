@@ -16,6 +16,7 @@
   <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
   <!-- Bootstrap 3.3.7 -->
   <link rel="stylesheet" href="{% static "bootstrap/dist/css/bootstrap.min.css" %}">
+
   <!-- Font Awesome -->
   <link rel="stylesheet" href="{% static "font-awesome/css/font-awesome.min.css" %}">
   <!-- Ionicons -->
@@ -29,6 +30,13 @@
   <link rel="stylesheet" href="{% static "AdminLTE/dist/css/skins/_all-skins.min.css" %}">
   
   <link rel="stylesheet" href="{% static "helpline/css/style.css" %}">
+    {% block styles %}
+    {% endblock %}
+    {% block extra-styles %}
+    {% endblock %}
+
+    {% block additional-headers %}{% endblock %}
+
   
   <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
   <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -47,6 +55,7 @@
 
 
 <body class="hold-transition skin-blue sidebar-mini">
+    {% block body %}
 <div class="wrapper">
 
   <header class="main-header">
@@ -401,6 +410,11 @@
           </ul>
         </li>
         <li>
+            <a href="{% url 'user_profile' request.user.username %}">
+                <i class="fa fa-wpforms"></i> <span>{% trans "Forms" %}</span>
+            </a>
+        </li>
+        <li>
             <a href="{% url 'wall' %}">
                 <i class="fa fa-tv"></i> <span>{% trans "Wall Board" %}</span>
             </a>
@@ -531,6 +545,8 @@
 
       <!-- Main row -->
       {% block content %}
+            {% if template %}{% include template %}{% endif %}
+            {{ content|safe }}
       {% endblock content %}
       <!-- /.row -->
     </section>
@@ -587,8 +603,15 @@
 </div>
 <!-- ./wrapper -->
 
+    <!-- Le javascript -->
+	<script type="text/javascript" src="{% url "javascript-catalog" %}"></script>
+    <script src="{{STATIC_URL}}bower_components/jquery/jquery-migrate.min.js"></script>
+    <script src="{{STATIC_URL}}js/jquery.tablesorter.min.js"></script>
 <!-- Bootstrap 3.3.6 -->
 <script src="{% static "bootstrap/dist/js/bootstrap.min.js" %}"></script>
+    <script src="{{STATIC_URL}}bootstrap/js/bootstrapx-clickover.js"></script>
+    <script src="{{STATIC_URL}}bootstrap/js/bootstrapx-clickover-btns.js"></script>
+    <script src="{{STATIC_URL}}js/application.js?v=201307251039"></script>
 <!-- FastClick -->
 <script src="{% static "AdminLTE/plugins/fastclick/fastclick.js" %}"></script>
 <!-- AdminLTE App -->
@@ -615,6 +638,7 @@
         <link href="{% static "bootstrap-daterangepicker/daterangepicker.css" %}" rel="stylesheet" type="text/css" />
         <!-- date-range-picker -->
         <script src="{% static 'bootstrap-daterangepicker/daterangepicker.js' %}" type="text/javascript"></script>
+
 
 
     <script type="application/javascript">
@@ -876,5 +900,8 @@ $(document).ready(function(){
 </script>
 
 <script src="{% static "helpline/js/custom.js" %}" type="text/javascript"></script>
-</div></div></body>
+</div></div>
+
+    {% endblock %}
+</body>
 </html>
