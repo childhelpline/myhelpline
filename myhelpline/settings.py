@@ -119,7 +119,8 @@ INSTALLED_APPS = (
     # 'messaging',
     'corsheaders',
     'onadata.apps.messaging.apps.MessagingConfig',
-    'helpline',)
+    'helpline',
+    )
 
 OAUTH2_PROVIDER = {
     # this is the list of available scopes
