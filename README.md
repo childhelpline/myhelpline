@@ -32,6 +32,7 @@ Install package dependencies.
     sudo apt install gettext
     sudo apt install postgresql postgresql-contrib
     sudo apt install python-gdal
+    sudo apt install libmemcached-dev
 ```
 
 To bulk install the requirements in Ubuntu run:
