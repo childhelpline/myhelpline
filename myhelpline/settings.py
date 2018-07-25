@@ -659,6 +659,8 @@ HELPLINE_SPOOL_DIR = ''
 
 TESTING_MODE = True
 
+SLAVE_DATABASES = []
+
 try:
     from myhelpline.localsettings import *
 except ImportError as e:
