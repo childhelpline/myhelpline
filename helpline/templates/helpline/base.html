@@ -401,6 +401,11 @@
           </ul>
         </li>
         <li>
+            <a href="{% url 'user_profile' request.user.username %}">
+                <i class="fa fa-wpforms"></i> <span>{% trans "Forms" %}</span>
+            </a>
+        </li>
+        <li>
           <a href="{% url 'wall' %}">
             <i class="fa fa-tv"></i> <span>{% trans "Wall Board" %}</span>
           </a>

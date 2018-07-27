@@ -4,27 +4,38 @@
 
 {% load i18n %}
 <script type="text/javascript" src="https://www.dropbox.com/static/api/1/dropbox.js" id="dropboxjs" data-app-key="0jxhquu5po7r0an"></script>
-<section id="profile">
+
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <h1>{% trans "Publish a Form" %}<small>{{ title }}</small></h1>
+      <ol class="breadcrumb">
+        <li><a href="#"><i class="fa fa-dashboard"></i> Forms</a></li>
+        <li class="active">Publish Forms</li>
+      </ol>
+    </section>
+<div class="box box-default">
+    <div class="box-body">
   <div class="row">
-    <div class="span5">
-        <h1>{% blocktrans %}Publish a Form <small>Upload XLSForm</small>{% endblocktrans %}</h1>
+    <div class="col-md-5">
+        <p>
         {% url "tutorial" as tutorial_url %}
         {% blocktrans %}For a quick introduction on how to publish a form try do download <a href="/examples/forms/tutorial/form.xls">tutorial.xls</a> and publish it.{% endblocktrans %}
         <br/>
         <br/>
         {% url "syntax" as syntax_url %}
         {% blocktrans %}Learn about the XLSForm syntax <a href="{{ syntax_url }}">here</a> along with more <a href="/examples/">form examples</a>.{% endblocktrans %}
+    </p>
         <br/>
         <br/>
         <form action="." method="post" enctype="multipart/form-data">
             {% csrf_token %}
-            <div class="tabbable">
-            <ul class="nav nav-tabs nomarginbottom">
+            <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
                 <li class="active"><a href="#upload" data-toggle="tab">{% trans "Upload" %}</a></li>
                 <li><a href="#url" data-toggle="tab">{% trans "URL" %}</a></li>
-								<li><a href="#db-chooser" data-toggle="tab">{% trans "Dropbox" %}</a></li>
+				<li><a href="#db-chooser" data-toggle="tab">{% trans "Dropbox" %}</a></li>
             </ul>
-            <div class="tab-content bordered-side">
+            <div class="tab-content">
                 <div class="tab-pane active" id="upload">
                     <table class="narrow-labels">
                         {{ form.as_table }}
@@ -42,62 +53,53 @@
             </div>
             <div style='float:middle;'>
 	        <div class="form-actions bordered-side bordered-bottom nomargintop">
-                <input type="submit" class="btn large btn-primary" value="{% trans 'Publish' %}" />
+                <input type="submit" class="btn large btn-primary btn-flat" value="{% trans 'Publish' %}" />
             </div>
             </div>
         </form>
     </div>
-    <div class="span1">
+    <div class="col-md-1">
         &nbsp;
     </div>
-    <div class="span6 profile">
-        <div class="bordered">
-        <div class="row">
-        <div class="span1">
-            {% if not profile.gravatar_exists %}
-                <a style="display: inline-block;" title="{% trans "Click to change your avatar" %}" href="https://secure.gravatar.com/site/login" id="gravatar">
-            {% endif %}
-            <img src='{{ profile.gravatar }}' alt='gravatar' width='60' height='60' />
-            {% if not profile.gravatar_exists %}
-               </a>
-            {% endif %}
-        </div>
-        <div class="span4">
-            <h3 class="short">
-                <a href="{% url "public_profile" content_user.username %}">{{ content_user.username }}</a>
+    <div class="col-md-6">
+        
+          <!-- Widget: user widget style 1 -->
+          <div class="box box-widget widget-user-2">
+            <!-- Add the bg color to the header using any of the bg-* classes -->
+            <div class="widget-user-header bg-blue">
+              <div class="widget-user-image">
+
+                    {% if not profile.gravatar_exists %}
+                        <a style="display: inline-block;" title="{% trans "Click to change your avatar" %}" href="https://secure.gravatar.com/site/login" id="gravatar">
+                    {% endif %}
+                    <img src='{{ profile.gravatar }}' alt='gravatar' width='60' height='60' />
+                    {% if not profile.gravatar_exists %}
+                       </a>
+                    {% endif %}
+                <!--img class="img-circle" src="../dist/img/user7-128x128.jpg" alt="User Avatar"-->
+              </div>
+              <!-- /.widget-user-image -->
+              <h3 class="widget-user-username">
+                <a href="{% url "public_profile" content_user.username %}" style=" color: #fff;">{{ content_user.username }}</a>
                 {% if profile.name %}
-                <span class="name">|&nbsp;{{ profile.name }}</span>
+                <span class="name" style=" color: #fff;">|&nbsp;{{ profile.name }}</span>
                 {% endif %}
-            </h3>
-            <span><a href="{% url "public_profile" content_user.username %}">{% trans "View Profile Page" %}</a></span>
-        </div>
-        </div>
-        <div class="row">
-        <div class="span1">
-            <h4>{{ all_forms|intcomma }}</h4>
-        </div>
-        <div class="span2">
-            <h4>{{ num_forms|intcomma }}</h4>
-        </div>
-        <div class="span2">
-            <h4>{{ user_instances|intcomma }}</h4>
-        </div>
-        </div>
-        <div class="row">
-        <div class="span1">
-            <small>{% trans "FORMS" %}</small>
-        </div>
-        <div class="span2">
-            <small>{% trans "SHARED FORMS" %}</small>
-        </div>
-        <div class="span2">
-            <small>{% trans "SUBMISSIONS" %}</small>
-        </div>
-        </div>
-        </div>
+              </h3>
+              <h5 class="widget-user-desc"><a href="{% url "public_profile" content_user.username %}" style=" color: #fff;">{% trans "View Profile Page" %}</a></h5>
+            </div>
+            <div class="box-footer no-padding">
+              <ul class="nav nav-stacked">
+                <!--li><a href="#">Projects <span class="pull-right badge bg-blue">31</span></a></li-->
+                <li><a href="#">{% trans "FORMS" %} <span class="pull-right badge bg-aqua">{{ all_forms|intcomma }}</span></a></li>
+                <li><a href="#">{% trans "SHARED FORMS" %} <span class="pull-right badge bg-green">{{ num_forms|intcomma }}</span></a></li>
+                <li><a href="#">{% trans "SUBMISSIONS" %} <span class="pull-right badge bg-blue">{{ user_instances|intcomma }}</span></a></li>
+              </ul>
+            </div>
+          </div>
+          <!-- /.widget-user -->
     </div>
 </div>
-</section>
+
 {% include "published_surveys.html" %}
 <p>
 {% blocktrans with url=url %}
@@ -107,4 +109,6 @@ submit data to ona. In Collect's Main Menu, press the Menu
 button. Select Server Preferences, then Server. Enter
 <strong>{{ url }}</strong> as the server. {% endblocktrans %}
 </p>
+</div>
+</div>
 {% endblock %}
