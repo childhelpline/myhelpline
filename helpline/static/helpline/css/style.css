@@ -45,3 +45,58 @@
 .login-box{
     background-color: #fff;
 }
+
+.box{
+    border-radius: 0px !important;
+}
+.homedashboard{
+    padding: 5px;
+    background: #ffffff;
+    border-top: 3px solid #d2d6de;
+}
+
+.homedashboard .home-panel{
+    border:solid thin #d2d6de;
+    padding: 3px;
+}
+.homedashboard .long, .homedashboard .short{
+    padding: 5px !important;
+}
+.home-pallete{
+    padding: 5px 0px;
+}
+.home-pallete .palette-item{
+    padding-right:3px !important; 
+    padding-left:0px !important;
+}
+
+.home-pallete .color-palette{
+    padding-right:5px; 
+    padding-bottom:5px;
+}
+.palette-item .color-palette span{
+    font-size:50px; 
+    font-weight:800;
+}
+.qa-presence .row{
+    padding: 5px;
+    padding-right: 0px;
+    /*margin-top: 5px;*/
+}
+
+.qa-presence .row .col-md-6{
+    padding-right: 2px !important;
+    padding-left: 2px !important;
+    /*margin-top: 5px;*/
+}
+
+.home-panel .box-body{
+    padding: 5px; padding-top: 0px;
+}
+
+/*Reports*/
+ .report-filters{
+    border-bottom: solid thin #D2D6DE;
+    padding:20px;
+    background-color: #ECF0F5;
+ }
