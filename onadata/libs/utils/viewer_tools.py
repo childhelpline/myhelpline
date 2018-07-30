@@ -310,7 +310,7 @@ def get_form_url(request,
     else:
         http_host = request.META.get('HTTP_HOST', 'ona.io')
 
-    url = '%s://%s' % (protocol, http_host)
+    url = '%s://%s/ona' % (protocol, http_host)
 
     if preview:
         url = '%s/preview' % url
