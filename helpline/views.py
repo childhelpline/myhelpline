@@ -583,6 +583,7 @@ def my_forms(request, form_name):
     initial = {}
     if request.method == 'GET':
         case_number = request.GET.get('case')
+        return redirect('/ona/' + request.user.username + '/forms/Case_Form/enter-data')#"Cheru: %s",form_name)
         # Check if we're looking for a case.
         if case_number:
             my_case = Case.objects.get(hl_case=case_number)

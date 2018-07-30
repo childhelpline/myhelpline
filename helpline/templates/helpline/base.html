@@ -598,6 +598,9 @@
 
  <!-- Bootstrap 3.3.6 -->
  <script src="{% static "bootstrap/dist/js/bootstrap.min.js" %}"></script>
+ <!-- Datatables -->
+ <script src="{% static "AdminLTE/plugins/datatables/jquery.dataTables.min.js" %}"></script>
+ <script src="{% static "AdminLTE/plugins/datatables/dataTables.bootstrap.min.js" %}"></script>
  <!-- FastClick -->
  <script src="{% static "AdminLTE/plugins/fastclick/fastclick.js" %}"></script>
  <!-- AdminLTE App -->
@@ -859,6 +862,7 @@
       var n = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
       document.getElementById("clock").innerHTML = n;
     }
+    $('.datatable').DataTable()
 
 // Get current login duration.
 // Interval set to every one second.

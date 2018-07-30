@@ -243,12 +243,6 @@ def profile(request, username):
                 'xforms': user_xforms,
                 'title': _(u"Published Forms"),
                 'small': _("Export, map, and view submissions.")
-            },
-            {
-                'id': 'shared',
-                'xforms': forms_shared_with,
-                'title': _(u"Shared Forms"),
-                'small': _("List of forms shared with you.")
             }
         ]
         data.update({

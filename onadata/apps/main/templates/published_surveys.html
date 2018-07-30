@@ -21,7 +21,7 @@
       <h1>{{ xform_list.title }}<small>{{ xform_list.small }}</small></h1>
   </div>
 {% if xform_list.xforms %}
-<table id="{{ xform_list.id }}-table" class="table table-bordered table-striped">
+<table id="{{ xform_list.id }}-table" class="table table-bordered table-striped datatable">
     <thead>
       <tr>
         <th>{%  trans "Name" %}</th>
@@ -51,7 +51,7 @@
         </td>
         <td class="centered">{{ submission_count|intcomma }}</td>
         <td class="centered">
-                <a class="btn" href="{% url "enter_data" xform.user.username xform.id_string %}"><i class="icon-edit"></i> {% trans "Web" %}</a>
+                <a class="btn btn-flat btn-sm btn-warning" href="{% url "enter_data" xform.user.username xform.id_string %}"><i class="icon-edit"></i> {% trans "Open Form" %}</a>
         </td>
         <td class="centered">
                 {% if not xform.encrypted and has_instances_with_geopoints %}
