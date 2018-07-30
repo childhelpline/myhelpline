@@ -587,6 +587,7 @@ BOWER_INSTALLED_APPS = (
     'jvectormap#1.2.2',
     'ionicons#2.0.1',
     'clipboard#1.5.15',
+    'dimple#1.1.3',
     'font-awesome#4.7.0',
     'bootstrap-daterangepicker#2.1.25',
     'moment#2.18.1',
