@@ -94,6 +94,12 @@
     padding: 5px; padding-top: 0px;
 }
 
+.create-forms{
+    border: solid thin #ccc;
+    padding: 10px;
+    min-height: 187px;
+}
+
 /*Reports*/
  .report-filters{
     border-bottom: solid thin #D2D6DE;

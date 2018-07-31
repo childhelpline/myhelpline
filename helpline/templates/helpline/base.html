@@ -549,7 +549,7 @@
 
         <footer class="main-footer">
           <div class="pull-right hidden-xs">
-            <b>{% trans "Version" %}</b> 2.3.7
+            <b>{% trans "Version" %}</b> 1.0.0
           </div>
           {% now "Y" as current_year %}
           <strong>{% blocktrans %}Copyright{% endblocktrans %} &copy; {{ current_year }} <a href="http://bitz-itc.com/">Bitz ITC Limited</a></strong>. {% blocktrans %}All rights reserved.{% endblocktrans %}
@@ -598,6 +598,9 @@
 
  <!-- Bootstrap 3.3.6 -->
  <script src="{% static "bootstrap/dist/js/bootstrap.min.js" %}"></script>
+ <!-- Datatables -->
+ <script src="{% static "AdminLTE/plugins/datatables/jquery.dataTables.min.js" %}"></script>
+ <script src="{% static "AdminLTE/plugins/datatables/dataTables.bootstrap.min.js" %}"></script>
  <!-- FastClick -->
  <script src="{% static "AdminLTE/plugins/fastclick/fastclick.js" %}"></script>
  <!-- AdminLTE App -->
@@ -859,6 +862,7 @@
       var n = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
       document.getElementById("clock").innerHTML = n;
     }
+    $('.datatable').DataTable()
 
 // Get current login duration.
 // Interval set to every one second.
