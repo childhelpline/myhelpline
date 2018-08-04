@@ -323,9 +323,11 @@ def reports(request, report, casetype='Call'):
 
     sort = request.GET.get('sort')
     report_title = {
-        'answeredcalls': _('Answered Calls Report'),
-        'abandonedcalls': _('Abandoned Calls Report'),
-        'voicemail': _('Voicemail Report')
+        'performance': _('Performance Reports'),
+        'counsellor': _('Counsellor Reports'),
+        'case': _('Case Reports'),
+        'call': _('Call Reports'),
+        'service': _('Service Reports')
     }
 
     table = report_factory(report=report,
@@ -343,7 +345,7 @@ def reports(request, report, casetype='Call'):
 
     table.paginate(page=request.GET.get('page', 1), per_page=10)
 
-    return render(request, 'helpline/dashboardreports.html', {
+    return render(request, 'helpline/reports.html', { #dashboardreports
         'title': report_title.get(report),
         'report': report,
         'form': form,
