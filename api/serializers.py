@@ -16,9 +16,9 @@ class GroupSerializer(serializers.HyperlinkedModelSerializer):
 class HelplineUserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = HelplineUser
-        fields = ('url', 'user', 'chlauth', 'chlexten', 'chlcase', 'chlstatus')
+        fields = ('url', 'user', 'hl_auth', 'hl_exten', 'case', 'hl_status')
 
 class HelplineCaseSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Case
-        fields = ('url', 'chlkey', 'chltime', 'chlpriority', 'chldata', 'chlpopup')
+        fields = ('url', 'hl_time', 'hl_priority', 'hl_data', 'hl_popup')
