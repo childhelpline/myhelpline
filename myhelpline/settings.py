@@ -558,7 +558,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static/")
 
 # Enketo URL
 ENKETO_PROTOCOL = 'https'
-ENKETO_URL = 'https://enketo.helpline.co.ke/'
+ENKETO_URL = 'https://enketo.bitz-itc.com'
 ENKETO_API_SURVEY_PATH = '/api_v2/survey'
 ENKETO_API_INSTANCE_PATH = '/api_v2/instance'
 ENKETO_PREVIEW_URL = urljoin(ENKETO_URL, ENKETO_API_SURVEY_PATH + '/preview')

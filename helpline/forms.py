@@ -100,7 +100,23 @@ AGE_GROUP_CHOICES = (
     ('55-64', '55-64'),
     ('65+', '65+'),
 )
+ 
+   
 
+INTERVENTIONS = (
+    ('Counselling', 'counselling'),
+    ('appropriate_referrals','Appropriate Referrals'),
+    ('awareness','Awareness'),
+    ('psychological_support', 'Psychological Support'),
+    ('educational_support', 'Educational Support'),
+    ('directed_to_telecom', 'Support Directed to Telecom Support'),
+    ('report_to_olice', 'Report to Police'),
+    ('medical_support', 'Medical Support'),
+    ('legal_support', 'Legal Support'),
+    ('basic_need_support', 'Basic Need Support'),
+    ('resettlement', 'Resettlement'),
+    ('others', 'Others'),
+)
 
 def get_dialects():
     """Return list of languages."""
@@ -298,7 +314,7 @@ class ReportFilterForm(forms.Form):
         required=False,
     )
     agent = forms.ModelChoiceField(
-        label='Enumerator:',
+        label='Counsellor:',
         queryset=HelplineUser.objects.all().order_by('hl_names'),
         required=False,
         widget=forms.Select(attrs={'class': 'form-control pull-right',
@@ -329,6 +345,35 @@ class ReportFilterForm(forms.Form):
                                       )
 
     queueid = forms.CharField(widget = forms.HiddenInput(), required=True)
+
+    case_status = forms.ChoiceField(choices=STATUS_CHOICES,
+                                    required=False,
+                                    widget=forms.Select(
+                                        attrs={
+                                            'class': 'form-control',
+                                        }
+                                    ),)
+
+    interventions = forms.ChoiceField(choices=INTERVENTIONS,
+                                    required=False,
+                                    widget=forms.Select(
+                                        attrs={
+                                            'class': 'form-control',
+                                        }
+                                    ),)
+
+
+    '''service = forms.ChoiceField(choices=get_services,
+        label='Select Service',
+        required=True,
+        widget=forms.Select(
+            attrs={
+                'class':'form-control pull-right',
+                'id':'services',
+                'name':'services',
+            }
+            ),
+        )'''
 
 class LoginForm(forms.Form):
     username = forms.CharField(label="Username", max_length=30,

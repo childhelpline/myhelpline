@@ -3,6 +3,7 @@
 {% block content %}
 
 {% load i18n %}
+
 <script type="text/javascript" src="https://www.dropbox.com/static/api/1/dropbox.js" id="dropboxjs" data-app-key="0jxhquu5po7r0an"></script>
 
     <!-- Content Header (Page header) -->
@@ -16,24 +17,23 @@
 <div class="box box-default">
     <div class="box-body">
   <div class="row">
-    <div class="col-md-5">
-        <p>
+    <div class="col-md-6">
+        <!--p>
         {% url "tutorial" as tutorial_url %}
         {% blocktrans %}For a quick introduction on how to publish a form try do download <a href="/examples/forms/tutorial/form.xls">tutorial.xls</a> and publish it.{% endblocktrans %}
         <br/>
         <br/>
         {% url "syntax" as syntax_url %}
         {% blocktrans %}Learn about the XLSForm syntax <a href="{{ syntax_url }}">here</a> along with more <a href="/examples/">form examples</a>.{% endblocktrans %}
-    </p>
-        <br/>
-        <br/>
+    </p-->
+    <div class="create-forms">
         <form action="." method="post" enctype="multipart/form-data">
             {% csrf_token %}
             <div class="nav-tabs-custom">
             <ul class="nav nav-tabs">
                 <li class="active"><a href="#upload" data-toggle="tab">{% trans "Upload" %}</a></li>
                 <li><a href="#url" data-toggle="tab">{% trans "URL" %}</a></li>
-				<li><a href="#db-chooser" data-toggle="tab">{% trans "Dropbox" %}</a></li>
+                <li><a href="#db-chooser" data-toggle="tab">{% trans "Dropbox" %}</a></li>
             </ul>
             <div class="tab-content">
                 <div class="tab-pane active" id="upload">
@@ -47,20 +47,21 @@
                     </table>
                 </div>
                 <div class="tab-pane" id="db-chooser">
-									<input type="dropbox-chooser" name="dropbox_xls_url" data-link-type="direct" style="visibility: hidden;"/>
+                    <input type="dropbox-chooser" name="dropbox_xls_url" data-link-type="direct" style="visibility: hidden;"/>
                 </div>
             </div>
             </div>
             <div style='float:middle;'>
-	        <div class="form-actions bordered-side bordered-bottom nomargintop">
+            <div class="form-actions bordered-side bordered-bottom nomargintop">
                 <input type="submit" class="btn large btn-primary btn-flat" value="{% trans 'Publish' %}" />
             </div>
             </div>
         </form>
     </div>
-    <div class="col-md-1">
+</div>
+    <!--div class="col-md-1">
         &nbsp;
-    </div>
+    </div-->
     <div class="col-md-6">
         
           <!-- Widget: user widget style 1 -->
@@ -91,7 +92,7 @@
               <ul class="nav nav-stacked">
                 <!--li><a href="#">Projects <span class="pull-right badge bg-blue">31</span></a></li-->
                 <li><a href="#">{% trans "FORMS" %} <span class="pull-right badge bg-aqua">{{ all_forms|intcomma }}</span></a></li>
-                <li><a href="#">{% trans "SHARED FORMS" %} <span class="pull-right badge bg-green">{{ num_forms|intcomma }}</span></a></li>
+                <!--li><a href="#">{% trans "SHARED FORMS" %} <span class="pull-right badge bg-green">{{ num_forms|intcomma }}</span></a></li-->
                 <li><a href="#">{% trans "SUBMISSIONS" %} <span class="pull-right badge bg-blue">{{ user_instances|intcomma }}</span></a></li>
               </ul>
             </div>
@@ -101,14 +102,14 @@
 </div>
 
 {% include "published_surveys.html" %}
-<p>
+<!--p>
 {% blocktrans with url=url %}
 The url "of" this web application <strong>{{ url }}</strong>
 must be given to ODK Collect before it will get forms from and
 submit data to ona. In Collect's Main Menu, press the Menu
 button. Select Server Preferences, then Server. Enter
 <strong>{{ url }}</strong> as the server. {% endblocktrans %}
-</p>
+</p-->
 </div>
 </div>
 {% endblock %}

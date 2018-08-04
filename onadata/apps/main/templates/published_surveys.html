@@ -21,7 +21,7 @@
       <h1>{{ xform_list.title }}<small>{{ xform_list.small }}</small></h1>
   </div>
 {% if xform_list.xforms %}
-<table id="{{ xform_list.id }}-table" class="table table-bordered table-striped">
+<table id="{{ xform_list.id }}-table" class="table table-bordered table-striped datatable">
     <thead>
       <tr>
         <th>{%  trans "Name" %}</th>
@@ -31,7 +31,7 @@
         <th>{%  trans "Download" %}</th>
         <th>{%  trans "Last Submission" %}</th>
         <th>{%  trans "Active" %}</th>
-        <th>&nbsp;</th>
+        <th>Action</th>
       </tr>
     </thead>
     <tbody>
@@ -51,7 +51,7 @@
         </td>
         <td class="centered">{{ submission_count|intcomma }}</td>
         <td class="centered">
-                <a class="btn" href="{% url "enter_data" xform.user.username xform.id_string %}"><i class="icon-edit"></i> {% trans "Web" %}</a>
+                <a class="btn btn-flat btn-sm btn-warning" href="{% url "enter_data" xform.user.username xform.id_string %}"><i class="icon-edit"></i> {% trans "Open Form" %}</a>
         </td>
         <td class="centered">
                 {% if not xform.encrypted and has_instances_with_geopoints %}
@@ -104,48 +104,63 @@
             {% if submission_count <= 0 %}
             <div class="dropdown">
                 <a class="btn btn-flat dropdown-toggle" data-toggle="dropdown" href="#" data-original-title="{% trans 'Options' %}" rel="tooltip">
-                    <i class="icon-cog"></i>
+                    <i class="fa fa-cog"></i>
                 </a>
                     <ul class="dropdown-menu form-options left-arrow" role="menu" aria-labelledby="dropdownMenu">
                         <li><a tabindex="-1" href="#delete-{{ xform.id_string }}" class="confirm" role="button" data-toggle="modal">{% trans 'Delete' %}</a></li>
                         <li><a tabindex="-1" href="#replace-{{ xform.id_string }}" class="confirm" role="button" data-toggle="modal">{% trans 'Replace' %}</a></li>
+
                     </ul>
 
                     </div>
             {% endif %}
             {% if submission_count <= 0 %}
-                <div id="delete-{{ xform.id_string }}" class="modal hide fade">
+
+                <!-- Modal -->
+                <div class="modal fade"  id="delete-{{ xform.id_string }}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+                  <div class="modal-dialog" role="document">
+                    <div class="modal-content">
                     <form action="{% url "delete-xform" username=xform.user.username id_string=xform.id_string %}" method="post">
                         {% csrf_token %}
                       <div class="modal-header">
-                          <a data-dismiss="modal" class="close">&times;</a>
-                          <h3>{% trans "Delete Confirmation" %}</h3>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="myModalLabel">{% trans "Delete Confirmation" %}</h4>
                       </div>
                       <div class="modal-body">
                         <p>{% blocktrans with title=xform.title nb_sub=submission_count|intcomma %}Are you sure you want to delete the form '{{ title }}'? This form has <strong>{{ nb_sub }}</strong> submissions associated with it that will also be deleted. If you are unsure about deleting this form press 'Cancel' and consider 'Archiving' the form instead.{% endblocktrans %}</p>
                       </div>
                       <div class="modal-footer">
-                          <button class="btn btn-primary form-submit">Delete</button>
-                          <a href="#" data-dismiss="modal" class="btn secondary">Cancel</a>
+                        <button type="button" class="btn btn-default secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary  form-submit">Save changes</button>
                       </div>
                     </form>
+                    </div>
+                  </div>
                 </div>
-            {% endif %}
+              {% endif %}
               {% if xform.can_be_replaced and xform.user ==  user  %}
                   <div id = "xls-update">
-                      <div id="replace-{{ xform.id_string }}" class="modal hide fade">
+                      <!-- Modal -->
+                    <div class="modal fade"  id="replace-{{ xform.id_string }}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+                      <div class="modal-dialog" role="document">
+                        <div class="modal-content">
                           <form action="{% url "update-xform" xform.user.username xform.id_string %}" method="post" enctype="multipart/form-data">
-                              {% csrf_token %}
-                              <div class="modal-header">
-                                  <a data-dismiss="modal" class="close">&times;</a>
-                                  <h3>{% trans "Update XLS" %}</h3>
-                              </div>
-                              <div class="modal-body">
-                                  <input type="file" name="xls_file" id="id_xls_file" />
-                                  <input type="submit" class="btn large btn-primary" value="{% trans "Update" %}" data-original-title="" />
-                              </div>
-                          </form>
+                                                  {% csrf_token %}
+                          <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title" id="myModalLabel">{% trans "Update XLS" %}</h4>
+                          </div>
+                          <div class="modal-body">
+                            <input type="file" name="xls_file" id="id_xls_file" />
+                            <!--input type="submit" class="btn large btn-primary" value="{% trans "Update" %}" data-original-title="" /-->
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">{% trans 'Cancel' %}</button>
+                            <button type="submit" class="btn btn-primary">{% trans "Update" %}</button>
+                          </div>
+                        </div>
                       </div>
+                    </div>
                   </div>
               {% endif %}
         </td>

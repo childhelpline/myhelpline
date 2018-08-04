@@ -1,23 +1,35 @@
-{% extends 'base.html' %}
+{% extends 'helpline/base.html' %}
 {% load humanize %}
 {% block content %}
 {% load i18n %}
+
 
 {% block navbar_nav %}
 {% endblock navbar_nav %}
 {% block box %}
 {% endblock box %}
 
+<div class="content">
+     <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <h1>{% trans "Form Preview" %}<small>{{ title }}</small></h1>
+      <ol class="breadcrumb">
+        <li><a href="#"><i class="fa fa-dashboard"></i> Forms</a></li>
+        <li class="active">{{ xform.title }}</li>
+      </ol>
+    </section>
+<div class="row homedashboard">
+  <div class="col-md-12">
   <section id="profile">
     <div class="page-header">
       <!-- <img src='{{ content_user.profile.gravatar }}' alt='gravatar' width='40' height='40' style='float:left; padding-right:10px;' /> -->
     <div id="mfeedback">&nbsp;</div>
-	<h3>
+	<!--h3>
 	  <div style='vertical-align: middle'>
 	  <img src='{{ content_user.profile.gravatar }}' alt='gravatar' width='20' height='20' />
 	  <a href="{% url "user_profile" content_user.username %}">{{ content_user.username }}</a> ({% trans "Owner" %}) /
 	  </div>
-	</h3>
+	</h3-->
         <div class="clearfix">
             <div class="input">
             <form>
@@ -32,7 +44,7 @@
         </div>
     </div>
     <div class="row">
-      <div class="span8">
+      <div class="col-md-8" style="border: solid thin #cdcd;">
         {% if can_edit %}
             <h4>{% trans "Form ID:" %} {{ xform.id_string }}</h4>
         {% endif %}
@@ -294,20 +306,27 @@
 
               </div>
               {% if can_edit or xform.shared %}
-              <div id="preview-modal" class="modal hide fade">
-                  <div class="modal-header">
-                      <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                      <h3>{{ xform.title }} - {% trans "Preview" %}</h3>
-                  </div>
-                  <div class="modal-body">
+
+              <!-- Modal -->
+              <div class="modal fade" id="preview-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+                <div class="modal-dialog" role="document" style="width: 60%;">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                      <h4 class="modal-title" id="myModalLabel">{{ xform.title }} - {% trans "Preview" %}</h4>
+                    </div>
+                    <div class="modal-body">
                       <iframe src="{% url "enketo-preview" content_user.username xform.id_string %}"></iframe>
+                    </div>
+                    <div class="modal-footer">
+                    </div>
                   </div>
-                  <div class="modal-footer"></div>
+                </div>
               </div>
               {% endif %}
           </div>
         <br>
-      <div class="span4">
+      <div class="col-md-4"  style="border: solid thin #cdcd;">
       </div>
     </div>
       <br/>
@@ -550,7 +569,7 @@
             </div>
         </div>
       </div>
-      <div class="span4">
+      <div class="col-md-4" style="border: solid thin #cdcd;">
         {% if is_owner %}
         <h3>{% trans "Settings" %}</h3>
         <div class="clearfix">
@@ -572,21 +591,26 @@
           <label>{% trans "Delete Form" %}&nbsp;</label>
         <div class="input">
           <!-- DELETE -->
-          <div id="delete-{{ xform.id_string }}" class="modal hide fade">
-              <form action="{% url "delete-xform" username=user.username id_string=xform.id_string %}" method="post">
-              {% csrf_token %}
+
+          <div class="modal fade" id="delete-{{ xform.id_string }}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <form action="{% url "delete-xform" username=user.username id_string=xform.id_string %}" method="post">
+                  {% csrf_token %}
                   <div class="modal-header">
-                      <a data-dismiss="modal" class="close">&times;</a>
-                      <h3>{% trans "Delete Confirmation" %}</h3>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">{% trans "Delete Confirmation" %}</h4>
                   </div>
                   <div class="modal-body">
-                      <p>{% blocktrans with title=xform.title nb_sub=xform.submission_count|intcomma %}Are you sure you want to delete the form '{{ title }}'? This form has <strong>{{ nb_sub }}</strong> submissions associated with it that will also be deleted. If you are unsure about deleting this form press 'Cancel' and consider 'Archiving' the form instead.{% endblocktrans %}</p>
+                    <p>{% blocktrans with title=xform.title nb_sub=xform.submission_count|intcomma %}Are you sure you want to delete the form '{{ title }}'? This form has <strong>{{ nb_sub }}</strong> submissions associated with it that will also be deleted. If you are unsure about deleting this form press 'Cancel' and consider 'Archiving' the form instead.{% endblocktrans %}</p>
                   </div>
                   <div class="modal-footer">
-                      <button class="btn btn-primary form-submit">Delete</button>
-                      <a href="#" onclick="$('#delete-{{ xform.id_string }}').modal('hide');" class="btn secondary">{% trans "Cancel" %}</a>
+                    <button type="button" class="btn btn-default" onclick="$('#delete-{{ xform.id_string }}').modal('hide');"  data-dismiss="modal">{% trans "Cancel" %}</button>
+                    <button type="submit" class="btn btn-primary  form-submit">{% trans "Delete" %}</button>
                   </div>
-              </form>
+                </form>
+              </div>
+            </div>
           </div>
           <a data-toggle="modal" href="#delete-{{ xform.id_string }}" data-backdrop="true" data-keyboard="true" class="btn btn-small btn-danger">
               {% trans "Delete" %}
@@ -631,7 +655,9 @@
     </div>
     <br/>
   </section>
-
+</div>
+</div>
+</div>
 <div class="modal hide fade" id="popupmodal" style="width: auto; left:36%; margin-left: auto; margin-right: auto;" tabindex="-1" role="dialog">
      <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>

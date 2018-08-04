@@ -323,9 +323,11 @@ def reports(request, report, casetype='Call'):
 
     sort = request.GET.get('sort')
     report_title = {
-        'answeredcalls': _('Answered Calls Report'),
-        'abandonedcalls': _('Abandoned Calls Report'),
-        'voicemail': _('Voicemail Report')
+        'performance': _('Performance Reports'),
+        'counsellor': _('Counsellor Reports'),
+        'case': _('Case Reports'),
+        'call': _('Call Reports'),
+        'service': _('Service Reports')
     }
 
     table = report_factory(report=report,
@@ -343,7 +345,7 @@ def reports(request, report, casetype='Call'):
 
     table.paginate(page=request.GET.get('page', 1), per_page=10)
 
-    return render(request, 'helpline/dashboardreports.html', {
+    return render(request, 'helpline/reports.html', { #dashboardreports
         'title': report_title.get(report),
         'report': report,
         'form': form,
@@ -583,6 +585,7 @@ def my_forms(request, form_name):
     initial = {}
     if request.method == 'GET':
         case_number = request.GET.get('case')
+        return redirect('/ona/' + request.user.username + '/forms/Case_Form/enter-data')#"Cheru: %s",form_name)
         # Check if we're looking for a case.
         if case_number:
             my_case = Case.objects.get(hl_case=case_number)
