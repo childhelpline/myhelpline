@@ -57,7 +57,7 @@ function addOrEditNote(){
         if (note == ""){
             return false;
         }
-        var notes_url = '/api/v1/notes',
+        var notes_url = '/ona/api/v1/notes',
             post_data = {'note': note, 'instance': instance_id};
         if($("#notesform #note-id").val() != undefined){
             // Edit Note
@@ -442,7 +442,7 @@ function deleteNote(obj){
     var note_id = $(obj).data('note-id');
     if(confirm("Are you sure you want to delete \"" + note + "\"?") == true){
         $.ajax({
-            url: "/api/v1/notes/" + note_id,
+            url: "/ona/api/v1/notes/" + note_id,
             type: "DELETE",
             statusCode: {
                 404: function(){
