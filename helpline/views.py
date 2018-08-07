@@ -585,7 +585,7 @@ def my_forms(request, form_name):
     initial = {}
     if request.method == 'GET':
         case_number = request.GET.get('case')
-        return redirect('/ona/' + request.user.username + '/forms/Case_Form/enter-data')#"Cheru: %s",form_name)
+        #return redirect('/ona/' + request.user.username + '/forms/Case_Form/enter-data')#"Cheru: %s",form_name)
         # Check if we're looking for a case.
         if case_number:
             my_case = Case.objects.get(hl_case=case_number)
@@ -1464,6 +1464,15 @@ def wall(request):
     return render(request, 'helpline/wall.html',
                   {'dashboard_stats': dashboard_stats,
                    'week_dashboard_stats': week_dashboard_stats})
+
+@login_required
+def sources(request,csource = ''):
+    """Display statistics for the wall board"""
+    #sms_list = get_sms_list(request.user)
+   # week_dashboard_stats = get_dashboard_stats(request.user, interval='weekly')
+    ln = 'helpline/' + csource + '.html'
+    return render(request,ln)#,
+                  #{'sls_list': sms_list})
 
 
 def get_data_queues(queue=None):
