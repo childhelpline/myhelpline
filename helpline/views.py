@@ -1126,13 +1126,13 @@ def get_dashboard_stats(user, interval=None):
 
     # Filter out stats for non supervisor user.
     if user.HelplineUser.hl_role != 'Supervisor':
-        total_calls = total_calls.filter(counsellorname=user.username)
+        total_calls = total_calls.filter(user=user)
         missed_calls = missed_calls.filter(hl_key=user.HelplineUser.hl_key)
-        answered_calls = answered_calls.filter(counsellorname=user.username)
-        total_cases = total_cases.filter(counsellorname=user.username)
-        closed_cases = closed_cases.filter(hl_creator=user.HelplineUser.hl_key)
-        open_cases = open_cases.filter(hl_creator=user.HelplineUser.hl_key)
-        referred_cases = referred_cases.filter(hl_creator=user.HelplineUser.hl_key)
+        answered_calls = answered_calls.filter(user=user)
+        total_cases = total_cases.filter(user=user)
+        closed_cases = closed_cases.filter(user=user)
+        open_cases = open_cases.filter(user=user)
+        referred_cases = referred_cases.filter(user=user)
 
     number_tickets = Ticket.objects.all().count()
 
