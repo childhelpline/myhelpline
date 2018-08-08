@@ -90,9 +90,9 @@ $('.iframe').on('load',function(){$(this).height($(this).contents().outerHeight(
 </script>
 <section class="content">
 <div class="">
-  <div class="box box-info" style="{% if loaded_form.name == 'qa' %} min-height: 5350px; {% else %} min-height: 900px; {% endif %}">
+  <div class="box box-info" style="{% if loaded_form.name == 'qa' %} min-height: 5350px; {% else %} min-height: 1200px; {% endif %}">
     <div class="col-sm-9">
-      <iframe src="{{ loaded_form.url }}" style="width: 100%; border: none; {% if loaded_form.name == 'qa' %} min-height: 5300px; {% else %} max-height: 800px; {% endif %}"></iframe>
+      <iframe src="{{ loaded_form.url }}" style="width: 100%; border: none; {% if loaded_form.name == 'qa' %} min-height: 5300px; {% else %} min-height: 1200px; {% endif %}"></iframe>
     </div>
     <div class="col-md-3" >
     </div>
