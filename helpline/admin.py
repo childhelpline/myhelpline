@@ -38,9 +38,14 @@ class HotdeskAdmin(admin.ModelAdmin):
     list_display = ('extension', 'extension_type', 'status', 'agent')
 
 
+class ScheduleAdmin(admin.ModelAdmin):
+    """Schedule list for Schedule model in admin"""
+    list_display = ('id', 'user', 'service', 'hl_status')
+
+
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
-admin.site.register(Schedule)
+admin.site.register(Schedule, ScheduleAdmin)
 admin.site.register(HelplineUser)
 admin.site.register(Service, ServiceAdmin)
 admin.site.register(Hotdesk, HotdeskAdmin)

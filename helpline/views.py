@@ -258,12 +258,14 @@ def queue_pause(request):
         clock = Clock()
         clock.hl_key = request.user.HelplineUser.hl_key
         clock.hl_clock = form.cleaned_data.get('reason')
+        # Hardcoded for tests
+        # We should loop through all agent services in schedule
         clock.hl_service = 718874580
         clock.hl_time = int(time.time())
         clock.save()
         message = backend.pause_queue_member(
             queue='Q718874580',
-            interface='SIP/8007',
+            interface='%s' % (request.user.HelplineUser.hl_exten),
             paused=True
         )
         request.user.HelplineUser.hl_status = 'Pause'
@@ -1048,10 +1050,11 @@ def initialize_myaccount(user):
         myaccount.hl_pass = hashlib.md5("1234").hexdigest()
 
         myaccount.hl_role = "Supervisor" if user.is_superuser else "Counsellor"
+        # Default Service, which is the first service
+        default_service = Service.objects.all().first()
         myschedule = Schedule()
-        myschedule.hl_key = myaccount.hl_key
-        myschedule.hl_service = 718874580  # Default Service
-        myschedule.hl_queue = 718874580  # Default Queue
+        myschedule.user = user
+        myschedule.service = default_service
 
         myschedule.hl_status = 'Offline'
 
@@ -1133,13 +1136,13 @@ def get_dashboard_stats(user, interval=None):
 
     # Filter out stats for non supervisor user.
     if user.HelplineUser.hl_role != 'Supervisor':
-        total_calls = total_calls.filter(counsellorname=user.username)
+        total_calls = total_calls.filter(user=user)
         missed_calls = missed_calls.filter(hl_key=user.HelplineUser.hl_key)
-        answered_calls = answered_calls.filter(counsellorname=user.username)
-        total_cases = total_cases.filter(counsellorname=user.username)
-        closed_cases = closed_cases.filter(hl_creator=user.HelplineUser.hl_key)
-        open_cases = open_cases.filter(hl_creator=user.HelplineUser.hl_key)
-        referred_cases = referred_cases.filter(hl_creator=user.HelplineUser.hl_key)
+        answered_calls = answered_calls.filter(user=user)
+        total_cases = total_cases.filter(user=user)
+        closed_cases = closed_cases.filter(user=user)
+        open_cases = open_cases.filter(user=user)
+        referred_cases = referred_cases.filter(user=user)
 
     number_tickets = Ticket.objects.all().count()
 
@@ -1149,6 +1152,7 @@ def get_dashboard_stats(user, interval=None):
     ).exclude(
         status__in=[Ticket.CLOSED_STATUS, Ticket.RESOLVED_STATUS],
     )
+
     att = user.HelplineUser.get_average_talk_time()
     awt = user.HelplineUser.get_average_wait_time()
 
@@ -1238,7 +1242,7 @@ def report_factory(report='callsummary', datetime_range=None, agent=None,
     service = settings.DEFAULT_SERVICE
     reports = Report.objects.all()
     cdr = MainCDR.objects.all()
-    username = HelplineUser.objects.get(hl_key__exact=agent).hl_names if agent else None
+    user = HelplineUser.objects.get(hl_key__exact=agent).user if agent else None
 
     calltype = {'answeredcalls': 'Answered',
                 'abandonedcalls': 'Abandoned',
@@ -1267,7 +1271,7 @@ def report_factory(report='callsummary', datetime_range=None, agent=None,
                                  hl_time__lt=to_date_epoch)
 
     if agent:
-        reports = reports.filter(counsellorname__exact=username)
+        reports = reports.filter(user=user)
         cdr = cdr.filter(hl_agent__exact=agent)
         filter_query['agent'] = agent
 
@@ -1374,10 +1378,8 @@ def ajax_admin_report(request, report, casetype='all'):
     table = report_factory(report=report, datetime_range=datetime_range,
                            agent=agent, query=query, casetype=casetype)
 
-    # Export table to csv
-    if request.user.is_superuser:
-        RequestConfig(request).configure(table)
-        export_format = request.GET.get('_export', None)
+    RequestConfig(request).configure(table)
+    export_format = request.GET.get('_export', None)
     if TableExport.is_valid_format(export_format):
         exporter = TableExport(export_format, table)
         return exporter.response('table.{}'.format(export_format))
