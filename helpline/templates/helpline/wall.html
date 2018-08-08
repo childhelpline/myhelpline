@@ -36,18 +36,18 @@ tr:nth-child(odd) {
 }
 </style>
 
-  <!-- Left side column. contains the logo and sidebar -->
+<!-- Left side column. contains the logo and sidebar -->
 
 
-  <!-- Content Wrapper. Contains page content -->
-  
-    <!-- Content Header (Page header) -->
-    <section class="content-header">
-      
-<h1 style="text-align:right;">
-<script>
-function date_time(id)
-{
+<!-- Content Wrapper. Contains page content -->
+
+<!-- Content Header (Page header) ->
+<section class="content-header">
+
+  <h1 style="text-align:right;">
+    <script>
+      function date_time(id)
+      {
         date = new Date;
         year = date.getFullYear();
         month = date.getMonth();
@@ -58,420 +58,420 @@ function date_time(id)
         h = date.getHours();
         if(h<10)
         {
-                h = "0"+h;
+          h = "0"+h;
         }
         m = date.getMinutes();
         if(m<10)
         {
-                m = "0"+m;
+          m = "0"+m;
         }
         s = date.getSeconds();
         if(s<10)
         {
-                s = "0"+s;
+          s = "0"+s;
         }
         result = ''+days[day]+' '+months[month]+' '+d+', '+year+' '+h+':'+m+':'+s;
         document.getElementById(id).innerHTML = result;
         setTimeout('date_time("'+id+'");','1000');
         return true;
-}
+      }
 
 
 
-</script>
-        <div style="float:left; padding:15px; font-size:30px; ">
-            <i class="fa fa-clock-o"> <span id="date_time" style="font-family: 'Source Sans Pro',sans-serif;"></span>
-            <script type="text/javascript">window.onload = date_time('date_time');</script></i> 
-         </div>
-
-          <a href="{% url "dashboard_home" %}" >
-              <img src="{% static "helpline/images/liaison-logo.jpg" %}" alt=""  />
-          </a>
-       </h1>
-    </section>
-
-
-    <!-- Main content -->
-    <section class="content" style="border:solid thin #0BE3F4; background:#EAFAFD; margin:5px;">
-      <!-- Info boxes -->
-      <div class="row">
-        <div class="col-md-2 col-sm-6 col-xs-12">
-          <div class="info-box">
-            <span class="info-box-icon bg-blue"><i class="ion ion-ios-telephone-outline"></i></span>
-
-            <div class="info-box-content">
-                <span class="info-box-text">Total <br /> Calls</span>
-              <span class="info-box-number">{{ dashboard_stats.total_calls }}</span>
-            </div>
-            <!-- /.info-box-content -->
-          </div>
-          <!-- /.info-box -->
-        </div>
-        <!-- /.col -->
-        <div class="col-md-2 col-sm-6 col-xs-12">
-          <div class="info-box">
-            <span class="info-box-icon bg-red"><i class="ion ion-ios-telephone-outline"></i></span>
-
-            <div class="info-box-content">
-              <span class="info-box-text">Calls <br />Abandoned</span>
-              <span class="info-box-number">{{ dashboard_stats.abandoned_calls }}</span>
-            </div>
-            <!-- /.info-box-content -->
-          </div>
-          <!-- /.info-box -->
-        </div>
-        <!-- /.col -->
-
-        <!-- fix for small devices only -->
-        <div class="clearfix visible-sm-block"></div>
-
-        <div class="col-md-2 col-sm-6 col-xs-12">
-          <div class="info-box">
-            <span class="info-box-icon bg-aqua"><i class="ion ion-ios-telephone-outline"></i></span>
-
-            <div class="info-box-content">
-              <span class="info-box-text">Calls <br /> Recieved</span>
-              <span class="info-box-number">{{ dashboard_stats.answered_calls }}</span>
-            </div>
-            <!-- /.info-box-content -->
-          </div>
-          <!-- /.info-box -->
-        </div>
-        <!-- /.col -->
-        <div class="col-md-2 col-sm-6 col-xs-12">
-          <div class="info-box">
-            <span class="info-box-icon bg-red"><i class="ion ion-ios-telephone-outline"></i></span>
-
-            <div class="info-box-content">
-              <span class="info-box-text">Nobody<br />Available</span>
-              <span class="info-box-number">{{ dashboard_stats.voice_mails }}</span>
-            </div>
-            <!-- /.info-box-content -->
-          </div>
-          <!-- /.info-box -->
-        </div>
-        <!-- /.col -->
-        <div class="col-md-2 col-sm-6 col-xs-12">
-          <div class="info-box">
-            <span class="info-box-icon bg-yellow"><i class="ion ion-ios-telephone-outline"></i></span>
-
-            <div class="info-box-content">
-              <span class="info-box-text">Calls <br /> In Queue</span>
-              <span class="info-box-number" id="total_callers"></span>
-            </div>
-            <!-- /.info-box-content -->
-          </div>
-          <!-- /.info-box -->
-        </div>
-        <!-- /.col -->
-        <div class="col-md-2 col-sm-6 col-xs-12">
-          <div class="info-box">
-            <span class="info-box-icon bg-green"><i class="ion ion-ios-telephone-outline"></i></span>
-
-            <div class="info-box-content">
-                <span class="info-box-text">Calls <br /> Completed</span>
-              <span class="info-box-number">{{ dashboard_stats.answered_calls }}</span>
-            </div>
-            <!-- /.info-box-content -->
-          </div>
-          <!-- /.info-box -->
-        </div>
-        <!-- /.col -->
+    </script>
+    <div style="float:left; padding:15px; font-size:30px; ">
+      <i class="fa fa-clock-o"> <span id="date_time" style="font-family: 'Source Sans Pro',sans-serif;"></span>
+        <script type="text/javascript">window.onload = date_time('date_time');</script></i> 
       </div>
-      <!-- /.row -->
 
-      
-      
-          <div class="box box-info" style="border-radius:0px; padding-right:5px;">
-            <!-- /.box-header -->
-            <div class="box-body">
-              <div class="row">
-                <div class="col-sm-8 col-xs-12">
-                    <h3 class="box-title">{% trans "Agents Online" %}</h3>
-            
-                  <div class="table-responsive">
-                    <table class="table no-margin" id="agents">
-                      <thead>
-                      <tr style="background: white;">
-                        <th><i class="fa fa-user"></i> {% trans "Name" %}</th>
-                        <th><i class=" fa fa-question-circle "></i>{% trans "Status" %}</th>
-                        <th><i class="fa fa-bookmark"></i> {% trans "Calls" %}</th>
-                        <th><i class="fa fa-plug"></i> {% trans "Interface" %}</th>
-                        <th><i class="fa fa-clock-o"></i> {% trans "Last call at" %}</th>
-                      </tr>
-                      </thead>
-                      <tbody>
-                      </tbody>
-                    </table>
-                  </div>
-              <!-- /.table-responsive -->
-             </div>
-             <div class="col-sm-4 col-xs-12" style="border-left:solid thin #0CF;">
-             	<div class="row">
-                    <div class="col-sm-6 col-md-6" style="padding-right:2px; padding-left:2px;">
-                      <div class="color-palette-set">
-                        <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
-                        <div class="bg-primary color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.total_cases }} </span><br />{% trans "Total Cases" %}</div>
-                      </div>
-                    </div>
-                    <!-- /.col -->
-                    <div class="col-sm-6 col-md-6" style="padding-right:2px; padding-left:2px;">
-                      <div class="color-palette-set">
-                          <div class="bg-yellow color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.open_cases }} </span><br />{% trans "Pending Cases" %}</div>
-                      </div>
-                    </div>
-                    <!-- /.col -->
-                    <div class="col-sm-6 col-md-6" style="padding-right:2px; margin-top:10px; padding-left:2px;">
-                      <div class="color-palette-set">
-                          <div class="bg-green color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.closed_cases }} </span><br />{% trans "Closed Cases" %}</div>
-                      </div>
-                    </div>
-                    <!-- /.col -->
-                    <div class="col-sm-6 col-md-6" style="padding-right:2px; margin-top:10px; padding-left:2px;">
-                      <div class="color-palette-set">
-                          <div class="bg-red color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.referred_cases }} </span><br />{% trans "Escalated Cases" %}</div>
-                      </div>
-                    </div>
-                    <!-- /.col -->
-                    <div class="col-sm-6 col-md-6" style="padding-right:2px; margin-top:10px; padding-left:2px;">
-                      <div class="color-palette-set">
-                          <div class="bg-aqua color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.number_tickets }} </span><br />{% trans "Total Emails" %}</div>
-                      </div>
-                    </div>
-                    <!-- /.col -->
-                    <!-- /.col -->
-                    <div class="col-sm-6 col-md-6" style="padding-right:2px; margin-top:10px; padding-left:2px;">
-                      <div class="color-palette-set">
-                        <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
-                        <div class="bg-aqua color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.total_sms }} </span><br />{% trans "Total SMS" %}</div>
-                        <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
-                      </div>
-                    </div>
-                    <!-- /.col -->
-                
-                </div>
-				</div>
-                
-            </div>
-            <!-- /.box-body -->
-           
-            <!-- /.box-footer -->
+      <a href="{% url "dashboard_home" %}" >
+        <img src="{% static "helpline/images/liaison-logo.jpg" %}" alt=""  />
+      </a>
+    </h1>
+  </section>
+
+
+  <!-- Main content -->
+  <section class="content" style="border:solid thin #0BE3F4; background:#EAFAFD; margin:5px;">
+    <!-- Info boxes -->
+    <div class="row">
+      <div class="col-md-2 col-sm-6 col-xs-12">
+        <div class="info-box">
+          <span class="info-box-icon bg-blue"><i class="ion ion-ios-telephone-outline"></i></span>
+
+          <div class="info-box-content">
+            <span class="info-box-text">Total <br /> Calls</span>
+            <span class="info-box-number">{{ dashboard_stats.total_calls }}</span>
           </div>
-          <!-- /.box -->
+          <!-- /.info-box-content -->
         </div>
-        <!-- /.col -->
+        <!-- /.info-box -->
+      </div>
+      <!-- /.col -->
+      <div class="col-md-2 col-sm-6 col-xs-12">
+        <div class="info-box">
+          <span class="info-box-icon bg-red"><i class="ion ion-ios-telephone-outline"></i></span>
+
+          <div class="info-box-content">
+            <span class="info-box-text">Calls <br />Abandoned</span>
+            <span class="info-box-number">{{ dashboard_stats.abandoned_calls }}</span>
+          </div>
+          <!-- /.info-box-content -->
+        </div>
+        <!-- /.info-box -->
+      </div>
+      <!-- /.col -->
+
+      <!-- fix for small devices only -->
+      <div class="clearfix visible-sm-block"></div>
+
+      <div class="col-md-2 col-sm-6 col-xs-12">
+        <div class="info-box">
+          <span class="info-box-icon bg-aqua"><i class="ion ion-ios-telephone-outline"></i></span>
+
+          <div class="info-box-content">
+            <span class="info-box-text">Calls <br /> Recieved</span>
+            <span class="info-box-number">{{ dashboard_stats.answered_calls }}</span>
+          </div>
+          <!-- /.info-box-content -->
+        </div>
+        <!-- /.info-box -->
+      </div>
+      <!-- /.col -->
+      <div class="col-md-2 col-sm-6 col-xs-12">
+        <div class="info-box">
+          <span class="info-box-icon bg-red"><i class="ion ion-ios-telephone-outline"></i></span>
+
+          <div class="info-box-content">
+            <span class="info-box-text">Nobody<br />Available</span>
+            <span class="info-box-number">{{ dashboard_stats.voice_mails }}</span>
+          </div>
+          <!-- /.info-box-content -->
+        </div>
+        <!-- /.info-box -->
+      </div>
+      <!-- /.col -->
+      <div class="col-md-2 col-sm-6 col-xs-12">
+        <div class="info-box">
+          <span class="info-box-icon bg-yellow"><i class="ion ion-ios-telephone-outline"></i></span>
+
+          <div class="info-box-content">
+            <span class="info-box-text">Calls <br /> In Queue</span>
+            <span class="info-box-number" id="total_callers"></span>
+          </div>
+          <!-- /.info-box-content -->
+        </div>
+        <!-- /.info-box -->
+      </div>
+      <!-- /.col -->
+      <div class="col-md-2 col-sm-6 col-xs-12">
+        <div class="info-box">
+          <span class="info-box-icon bg-green"><i class="ion ion-ios-telephone-outline"></i></span>
+
+          <div class="info-box-content">
+            <span class="info-box-text">Calls <br /> Completed</span>
+            <span class="info-box-number">{{ dashboard_stats.answered_calls }}</span>
+          </div>
+          <!-- /.info-box-content -->
+        </div>
+        <!-- /.info-box -->
+      </div>
+      <!-- /.col -->
+    </div>
+    <!-- /.row -->
 
 
 
-	<div class="row">
-        <div class="col-md-12">
-          <div class="box">
-            <div class="box-header with-border">
-              <h3 class="box-title">Weekly Statistics</h3>
-
+    <div class="box box-info" style="border-radius:0px; padding-right:5px;">
+      <!-- /.box-header -->
+      <div class="box-body">
+        <div class="row">
+          <div class="col-sm-8 col-xs-12">
+            <h3 class="box-title">{% trans "Agents Online" %}</h3>
+            
+            <div class="table-responsive">
+              <table class="table no-margin" id="agents">
+                <thead>
+                  <tr style="background: white;">
+                    <th><i class="fa fa-user"></i> {% trans "Name" %}</th>
+                    <th><i class=" fa fa-question-circle "></i>{% trans "Status" %}</th>
+                    <th><i class="fa fa-bookmark"></i> {% trans "Calls" %}</th>
+                    <th><i class="fa fa-plug"></i> {% trans "Interface" %}</th>
+                    <th><i class="fa fa-clock-o"></i> {% trans "Last call at" %}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
             </div>
-            <!-- /.box-header -->
-        
-            <!-- ./box-body -->
-            <div class="box-body bg-aqua" style="padding:0px;">
-              <div class="row" style="color:#FFF; margin:0px;">
-                <div class="col-sm-3 col-xs-6">
-                  <div class="description-block border-right">
-                    
-                      <h5 class="description-header">{{ week_dashboard_stats.total_calls }}</h5>
-                    <span class="description-text">TOTAL Calls</span>
-                  </div>
-                  <!-- /.description-block -->
-                </div>
-                <!-- /.col -->
-                <div class="col-sm-3 col-xs-6">
-                  <div class="description-block border-right">
-                   
-                      <h5 class="description-header">{{ week_dashboard_stats.answered_calls }}</h5>
-                    <span class="description-text">Answered Calls</span>
-                  </div>
-                  <!-- /.description-block -->
-                </div>
-                <!-- /.col -->
-                <div class="col-sm-3 col-xs-6">
-                  <div class="description-block border-right">
-                    
-                      <h5 class="description-header"> {{ week_dashboard_stats.abandoned_calls }}</h5>
-                    <span class="description-text">Abandoned Calls</span>
-                  </div>
-                  <!-- /.description-block -->
-                </div>
-                <!-- /.col -->
-                <div class="col-sm-3 col-xs-6">
-                  <div class="description-block">
-                    
-                      <h5 class="description-header">{{ week_dashboard_stats.voice_mails }}</h5>
-                    <span class="description-text">Voice Mail</span>
-                  </div>
-                  <!-- /.description-block -->
+            <!-- /.table-responsive -->
+          </div>
+          <div class="col-sm-4 col-xs-12" style="border-left:solid thin #0CF;">
+            <div class="row">
+              <div class="col-sm-6 col-md-6" style="padding-right:2px; padding-left:2px;">
+                <div class="color-palette-set">
+                  <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
+                  <div class="bg-primary color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.total_cases }} </span><br />{% trans "Total Cases" %}</div>
                 </div>
               </div>
-              <!-- /.row -->
+              <!-- /.col -->
+              <div class="col-sm-6 col-md-6" style="padding-right:2px; padding-left:2px;">
+                <div class="color-palette-set">
+                  <div class="bg-yellow color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.open_cases }} </span><br />{% trans "Pending Cases" %}</div>
+                </div>
+              </div>
+              <!-- /.col -->
+              <div class="col-sm-6 col-md-6" style="padding-right:2px; margin-top:10px; padding-left:2px;">
+                <div class="color-palette-set">
+                  <div class="bg-green color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.closed_cases }} </span><br />{% trans "Closed Cases" %}</div>
+                </div>
+              </div>
+              <!-- /.col -->
+              <div class="col-sm-6 col-md-6" style="padding-right:2px; margin-top:10px; padding-left:2px;">
+                <div class="color-palette-set">
+                  <div class="bg-red color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.referred_cases }} </span><br />{% trans "Escalated Cases" %}</div>
+                </div>
+              </div>
+              <!-- /.col -->
+              <div class="col-sm-6 col-md-6" style="padding-right:2px; margin-top:10px; padding-left:2px;">
+                <div class="color-palette-set">
+                  <div class="bg-aqua color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.number_tickets }} </span><br />{% trans "Total Emails" %}</div>
+                </div>
+              </div>
+              <!-- /.col -->
+              <!-- /.col -->
+              <div class="col-sm-6 col-md-6" style="padding-right:2px; margin-top:10px; padding-left:2px;">
+                <div class="color-palette-set">
+                  <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
+                  <div class="bg-aqua color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.total_sms }} </span><br />{% trans "Total SMS" %}</div>
+                  <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
+                </div>
+              </div>
+              <!-- /.col -->
+
             </div>
-            <!-- /.box-footer -->
           </div>
-          <!-- /.box -->
+
         </div>
-        <!-- /.col -->
+        <!-- /.box-body -->
+
+        <!-- /.box-footer -->
       </div>
+      <!-- /.box -->
+    </div>
+    <!-- /.col -->
 
 
 
-        <!-- /.col -->
+    <div class="row">
+      <div class="col-md-12">
+        <div class="box">
+          <div class="box-header with-border">
+            <h3 class="box-title">Weekly Statistics</h3>
+
+          </div>
+          <!-- /.box-header -->
+
+          <!-- ./box-body -->
+          <div class="box-body bg-aqua" style="padding:0px;">
+            <div class="row" style="color:#FFF; margin:0px;">
+              <div class="col-sm-3 col-xs-6">
+                <div class="description-block border-right">
+
+                  <h5 class="description-header">{{ week_dashboard_stats.total_calls }}</h5>
+                  <span class="description-text">TOTAL Calls</span>
+                </div>
+                <!-- /.description-block -->
+              </div>
+              <!-- /.col -->
+              <div class="col-sm-3 col-xs-6">
+                <div class="description-block border-right">
+
+                  <h5 class="description-header">{{ week_dashboard_stats.answered_calls }}</h5>
+                  <span class="description-text">Answered Calls</span>
+                </div>
+                <!-- /.description-block -->
+              </div>
+              <!-- /.col -->
+              <div class="col-sm-3 col-xs-6">
+                <div class="description-block border-right">
+
+                  <h5 class="description-header"> {{ week_dashboard_stats.abandoned_calls }}</h5>
+                  <span class="description-text">Abandoned Calls</span>
+                </div>
+                <!-- /.description-block -->
+              </div>
+              <!-- /.col -->
+              <div class="col-sm-3 col-xs-6">
+                <div class="description-block">
+
+                  <h5 class="description-header">{{ week_dashboard_stats.voice_mails }}</h5>
+                  <span class="description-text">Voice Mail</span>
+                </div>
+                <!-- /.description-block -->
+              </div>
+            </div>
+            <!-- /.row -->
+          </div>
+          <!-- /.box-footer -->
+        </div>
+        <!-- /.box -->
       </div>
-      <!-- /.row -->
-    </section>
-    <!-- /.content -->
+      <!-- /.col -->
+    </div>
+
+
+
+    <!-- /.col -->
   </div>
-  <!-- /.content-wrapper -->
+  <!-- /.row -->
+</section>
+<!-- /.content -->
+</div>
+<!-- /.content-wrapper -->
 
 
 </div>
 <!-- ./wrapper -->
 
-    <script type="application/javascript">
-        $(document).ready(function () {
+<script type="application/javascript">
+  $(document).ready(function () {
             getDataQueue(); //load data on page ready :)
             setInterval(function () {
-                getDataQueue();
+              getDataQueue();
             }, 3000);
-        });
+          });
 
         // Parse data and put values on view
         // Shit!, this will be improved
         // If you can do it send a Pull Request
         function parseDataQueue(data) {
-            var maps_agents = Array();
-            var uniques_ids = Array();
-            var answers = 0, unattended = 0, incoming = 0;
-            var c_hold = 0, holdtime = 0, c_talk = 0, talktime = 0;
-            var call_in_service_level = 0;
-            var total_agents = 0, total_calls = 0;
+          var maps_agents = Array();
+          var uniques_ids = Array();
+          var answers = 0, unattended = 0, incoming = 0;
+          var c_hold = 0, holdtime = 0, c_talk = 0, talktime = 0;
+          var call_in_service_level = 0;
+          var total_agents = 0, total_calls = 0;
 
-            for (var q in data) {
-                var queue = data[q];
+          for (var q in data) {
+            var queue = data[q];
 
-                answers = answers + parseInt(queue.Completed);
-                unattended = unattended + parseInt(queue.Abandoned);
-                incoming = incoming + parseInt(queue.Calls);
+            answers = answers + parseInt(queue.Completed);
+            unattended = unattended + parseInt(queue.Abandoned);
+            incoming = incoming + parseInt(queue.Calls);
 
-                
 
-                if (parseInt(queue.TalkTime) > 0 ) {
-                    talktime = talktime + parseInt(queue.TalkTime);
-                    c_talk++;
-                }
 
-                if (parseInt(queue.Holdtime) > 0 ) {
-                    holdtime = holdtime + parseInt(queue.Holdtime);
-                    c_hold++;
-                }
+            if (parseInt(queue.TalkTime) > 0 ) {
+              talktime = talktime + parseInt(queue.TalkTime);
+              c_talk++;
+            }
+
+            if (parseInt(queue.Holdtime) > 0 ) {
+              holdtime = holdtime + parseInt(queue.Holdtime);
+              c_hold++;
+            }
 
                 // agents
                 maps_agents[q] = Array();
                 for (a in queue.members) {
-                    total_agents++;
-                    maps_agents[q].push(clean_div_name(a));
-                    agent = queue.members[a];
-                    agent_id_div = '[data-agent="{agent}"][data-queue="{queue}"]'.format({agent: clean_div_name(a), queue: q})
+                  total_agents++;
+                  maps_agents[q].push(clean_div_name(a));
+                  agent = queue.members[a];
+                  agent_id_div = '[data-agent="{agent}"][data-queue="{queue}"]'.format({agent: clean_div_name(a), queue: q})
 
-                    $(agent_id_div + ' #calls').html(agent.CallsTaken)
-                    str_time_ago = ''
-                    if (agent.LastCall > 0) {
-                       str_time_ago = agent.LastCallAgo;
-                    }
-                    $(agent_id_div + ' #last_call').html(str_time_ago)
+                  $(agent_id_div + ' #calls').html(agent.CallsTaken)
+                  str_time_ago = ''
+                  if (agent.LastCall > 0) {
+                   str_time_ago = agent.LastCallAgo;
+                 }
+                 $(agent_id_div + ' #last_call').html(str_time_ago)
 
-                    $(agent_id_div + ' #status .state').html(agent.Status.toStrStatusAgent())
-                    addLabelDivStatusAgent($(agent_id_div + ' #status .state'));
-                    if (agent.Paused == true) {
+                 $(agent_id_div + ' #status .state').html(agent.Status.toStrStatusAgent())
+                 addLabelDivStatusAgent($(agent_id_div + ' #status .state'));
+                 if (agent.Paused == true) {
                         // reason pause introduced in https://goo.gl/Njm6H5
                         // if dont have feature in your Asterisk
                         // check directory patches
                         var reason = '';
                         if (agent.PausedReason){
-                            reason = ": {reason}".format({'reason': agent.PausedReason});
+                          reason = ": {reason}".format({'reason': agent.PausedReason});
                         }
                         var last_pause_time = '';
                         if (parseInt(agent.LastPauseAgo.split(" ")[0]) > 0) {
-                            last_pause_time = " was {last_pause} ago".format({'last_pause': agent.LastPauseAgo});
+                          last_pause_time = " was {last_pause} ago".format({'last_pause': agent.LastPauseAgo});
                         }
 
                         $(agent_id_div + ' #status .pause').remove();
                         $(agent_id_div +' #status .state')
-                           .after(' <span class="label label-success label-mini pause">paused'+ reason + last_pause_time + '</span>');
-                    } else {
+                        .after(' <span class="label label-success label-mini pause">paused'+ reason + last_pause_time + '</span>');
+                      } else {
                         $(agent_id_div + ' #status .pause').remove();
-                    }
+                      }
 
-                    if ($(agent_id_div).length == 0) {
+                      if ($(agent_id_div).length == 0) {
                         var tr = '<tr data-queue="' + q + '" data-agent="' + clean_div_name(a) + '">'
-                             + '<td>' + agent.Name + '</td>'
-                             + '<td id="status"> <span class="label label-info state" style="padding:5px 10px; font-size:16px; border-radius:0px; display: block;">'
-                             + agent.Status.toStrStatusAgent()
-                             + '</span></td>'
-                             + '<td id="calls">' + agent.CallsTaken + '</td>'
-                             + '<td>' + agent.StateInterface + '</td>'
-                             + '<td id="last_call"></td></tr>';
+                        + '<td>' + agent.Name + '</td>'
+                        + '<td id="status"> <span class="label label-info state" style="padding:5px 10px; font-size:16px; border-radius:0px; display: block;">'
+                        + agent.Status.toStrStatusAgent()
+                        + '</span></td>'
+                        + '<td id="calls">' + agent.CallsTaken + '</td>'
+                        + '<td>' + agent.StateInterface + '</td>'
+                        + '<td id="last_call"></td></tr>';
 
                         if ($('#agents tbody tr:last').length > 0) {
-                            $('#agents tbody tr:last').after(tr);
+                          $('#agents tbody tr:last').after(tr);
                         } else {
-                            $('#agents tbody').append(tr);
+                          $('#agents tbody').append(tr);
                         }
+                      }
                     }
-                }
 
                 //callers
                 for (caller in queue.entries) {
-                    c = queue.entries[caller];
-                    total_calls++;
+                  c = queue.entries[caller];
+                  total_calls++;
 
-                    if ($("[id='caller-"+ c.Uniqueid + "']").length == 0) {
-                        console.log('add:' + c.Uniqueid);
-                        var tr = '<tr id="caller-' + c.Uniqueid + '" data-uniqueid="' + c.Uniqueid + '"><td>'
-                            + c.CallerIDName + '</td>'
-                            + '<td>' + c.CallerIDNum + '</td>'
-                            + '<td id="position">'  + c.Position + '</td>'
-                            + '<td id="wait">' + c.WaitAgo + '</td></tr>'
+                  if ($("[id='caller-"+ c.Uniqueid + "']").length == 0) {
+                    console.log('add:' + c.Uniqueid);
+                    var tr = '<tr id="caller-' + c.Uniqueid + '" data-uniqueid="' + c.Uniqueid + '"><td>'
+                    + c.CallerIDName + '</td>'
+                    + '<td>' + c.CallerIDNum + '</td>'
+                    + '<td id="position">'  + c.Position + '</td>'
+                    + '<td id="wait">' + c.WaitAgo + '</td></tr>'
 
-                        if ($('#callers tbody tr:last').length > 0){
-                            $('#callers tbody tr:last').after(tr);
-                         } else {
-                            $('#callers tbody').append(tr);
-                        }
+                    if ($('#callers tbody tr:last').length > 0){
+                      $('#callers tbody tr:last').after(tr);
+                    } else {
+                      $('#callers tbody').append(tr);
                     }
+                  }
 
-                    $("[id='caller-"+ c.Uniqueid + "'] #wait").html(c.WaitAgo);
-                    $("[id='caller-"+ c.Uniqueid + "'] #position").html(c.Position);
-                    uniques_ids.push(c.Uniqueid);
+                  $("[id='caller-"+ c.Uniqueid + "'] #wait").html(c.WaitAgo);
+                  $("[id='caller-"+ c.Uniqueid + "'] #position").html(c.Position);
+                  uniques_ids.push(c.Uniqueid);
                 }
-            }
+              }
 
-            $.each($("[id^='caller-']"), function( index, value ) {
+              $.each($("[id^='caller-']"), function( index, value ) {
                 uid = $(value).data('uniqueid');
                 if (uniques_ids.indexOf(uid.toString()) == -1) {
-                    console.log('removed: ' + uid);
-                    $("[id='caller-"+ uid +"']").remove();
+                  console.log('removed: ' + uid);
+                  $("[id='caller-"+ uid +"']").remove();
                 }
-            });
-            $('#total_callers').html("{total}".format({total:  total_calls}));
+              });
+              $('#total_callers').html("{total}".format({total:  total_calls}));
 
 
-            $.each($("[data-agent]"), function( index, value ) {
+              $.each($("[data-agent]"), function( index, value ) {
                 queue = $(value).data('queue');
                 agent = $(value).data('agent');
                 if (maps_agents[queue].indexOf(agent.toString()) == -1) {
                   console.log('removed: %s from %s', agent, queue);
                   $(value).remove();
                 }
-            });
-            $('#total_agent').html("{total}".format({total:  total_agents}));
+              });
+              $('#total_agent').html("{total}".format({total:  total_agents}));
 
             // General row
             $('#answered').html(answers);
@@ -484,82 +484,82 @@ function date_time(id)
               $('#av_time').html(parseInt((talktime / c_talk)).toString().toMMSS());
             }
             
-        }
+          }
 
-        function getDataQueue() {
+          function getDataQueue() {
             var result;
             var r = $.ajax({
-                type: 'GET',
-                url: '{% url "queues" %}'
+              type: 'GET',
+              url: '{% url "queues" %}'
             });
             r.done(function (response) {
-                if (response) {
-                    result = response.data;
-                    parseDataQueue(result);
-                }
+              if (response) {
+                result = response.data;
+                parseDataQueue(result);
+              }
             });
             r.fail(function (response) {
             });
 
             r.always(function () {
             });
-        }
-    </script>
-    
+          }
+        </script>
 
-    <script>
-    $('#language').on('change', function (e) {
-        var lang  = $(this).val();
-        window.location = '/lang' + '/' + lang;
-    });
-    $( "#language" ).val("en")
 
-    String.prototype.toStrStatusAgent = function(args) {
-        var value = this;
-        if (C.status_agent.NOT_INUSE == value) {
-            return "Available";
-        } else if (C.status_agent.INCALL == value) {
-            return "On Call";
-        } else if (parseInt(value).isUnavailableInAsterisk()) {
-            return "Unavailable";
-        } else {
-            return "Busy"
-        }
-    }
+        <script>
+          $('#language').on('change', function (e) {
+            var lang  = $(this).val();
+            window.location = '/lang' + '/' + lang;
+          });
+          $( "#language" ).val("en")
 
-    function addLabelDivStatusAgent(div) {
-        var label;
-        div.removeClass('label-success label-warning label-info label-danger');
-        value = div.html();
-        if (value == "Available") {
-            label = 'success';
-        } else if (value == "Unavailable") {
-            label = 'danger';
+          String.prototype.toStrStatusAgent = function(args) {
+            var value = this;
+            if (C.status_agent.NOT_INUSE == value) {
+              return "Available";
+            } else if (C.status_agent.INCALL == value) {
+              return "On Call";
+            } else if (parseInt(value).isUnavailableInAsterisk()) {
+              return "Unavailable";
+            } else {
+              return "Busy"
+            }
+          }
+
+          function addLabelDivStatusAgent(div) {
+            var label;
+            div.removeClass('label-success label-warning label-info label-danger');
+            value = div.html();
+            if (value == "Available") {
+              label = 'success';
+            } else if (value == "Unavailable") {
+              label = 'danger';
         //Freeswitch status and states
-        } else if (value == "Logged Out") {
-            label = 'danger';
-        } else if (value == "Available") {
-            label = 'success';
-        } else if (value == "Available (On Demand)") {
-            label = 'info';
-        } else if (value == "On Break") {
-            label = 'warning';
-        } else if (value == "Idle") {
-            label = 'info';
-        } else if (value == "Waiting") {
-            label = 'info';
-        } else if (value == "Receiving") {
-            label = 'warning';
-        } else if (value == "In a queue call") {
-            label = 'warning';
-        } else {
-            label = 'warning';
-        }
-        div.addClass('label-'+label);
+      } else if (value == "Logged Out") {
+        label = 'danger';
+      } else if (value == "Available") {
+        label = 'success';
+      } else if (value == "Available (On Demand)") {
+        label = 'info';
+      } else if (value == "On Break") {
+        label = 'warning';
+      } else if (value == "Idle") {
+        label = 'info';
+      } else if (value == "Waiting") {
+        label = 'info';
+      } else if (value == "Receiving") {
+        label = 'warning';
+      } else if (value == "In a queue call") {
+        label = 'warning';
+      } else {
+        label = 'warning';
+      }
+      div.addClass('label-'+label);
     }
 
-</script>
+  </script>
 
 
 
-{% endblock content %}
+  {% endblock content %}
