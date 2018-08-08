@@ -1232,7 +1232,7 @@ def report_factory(report='callsummary', datetime_range=None, agent=None,
     service = settings.DEFAULT_SERVICE
     reports = Report.objects.all()
     cdr = MainCDR.objects.all()
-    username = HelplineUser.objects.get(hl_key__exact=agent).hl_names if agent else None
+    user = HelplineUser.objects.get(hl_key__exact=agent).user if agent else None
 
     calltype = {'answeredcalls': 'Answered',
                 'abandonedcalls': 'Abandoned',
@@ -1261,7 +1261,7 @@ def report_factory(report='callsummary', datetime_range=None, agent=None,
                                  hl_time__lt=to_date_epoch)
 
     if agent:
-        reports = reports.filter(counsellorname__exact=username)
+        reports = reports.filter(user=user)
         cdr = cdr.filter(hl_agent__exact=agent)
         filter_query['agent'] = agent
 
@@ -1368,10 +1368,8 @@ def ajax_admin_report(request, report, casetype='all'):
     table = report_factory(report=report, datetime_range=datetime_range,
                            agent=agent, query=query, casetype=casetype)
 
-    # Export table to csv
-    if request.user.is_superuser:
-        RequestConfig(request).configure(table)
-        export_format = request.GET.get('_export', None)
+    RequestConfig(request).configure(table)
+    export_format = request.GET.get('_export', None)
     if TableExport.is_valid_format(export_format):
         exporter = TableExport(export_format, table)
         return exporter.response('table.{}'.format(export_format))
