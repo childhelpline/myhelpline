@@ -258,12 +258,14 @@ def queue_pause(request):
         clock = Clock()
         clock.hl_key = request.user.HelplineUser.hl_key
         clock.hl_clock = form.cleaned_data.get('reason')
+        # Hardcoded for tests
+        # We should loop through all agent services in schedule
         clock.hl_service = 718874580
         clock.hl_time = int(time.time())
         clock.save()
         message = backend.pause_queue_member(
             queue='Q718874580',
-            interface='SIP/8007',
+            interface='%s' % (request.user.HelplineUser.hl_exten),
             paused=True
         )
         request.user.HelplineUser.hl_status = 'Pause'
@@ -1038,10 +1040,11 @@ def initialize_myaccount(user):
         myaccount.hl_pass = hashlib.md5("1234").hexdigest()
 
         myaccount.hl_role = "Supervisor" if user.is_superuser else "Counsellor"
+        # Default Service, which is the first service
+        default_service = Service.objects.all().first()
         myschedule = Schedule()
-        myschedule.hl_key = myaccount.hl_key
-        myschedule.hl_service = 718874580  # Default Service
-        myschedule.hl_queue = 718874580  # Default Queue
+        myschedule.user = user
+        myschedule.service = default_service
 
         myschedule.hl_status = 'Offline'
 
@@ -1139,6 +1142,7 @@ def get_dashboard_stats(user, interval=None):
     ).exclude(
         status__in=[Ticket.CLOSED_STATUS, Ticket.RESOLVED_STATUS],
     )
+
     att = user.HelplineUser.get_average_talk_time()
     awt = user.HelplineUser.get_average_wait_time()
 
