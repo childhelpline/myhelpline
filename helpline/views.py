@@ -582,6 +582,15 @@ def queue_manager(user, extension, action):
 def my_forms(request, form_name):
     """Handle Walkin and CallForm POST and GET Requests"""
     message = ''
+
+    if(form_name == 'walkin'):
+        loaded_form = {'url':'https://enketo.bitz-itc.com/i/::4n1oArZH',
+                        'name':'walkin'}
+    elif(form_name == 'qa'):
+        loaded_form = {'url':'https://enketo.bitz-itc.com/i/::Bkyb35PE',
+                        'name':'qa'}
+
+
     initial = {}
     if request.method == 'GET':
         case_number = request.GET.get('case')
@@ -774,7 +783,8 @@ def my_forms(request, form_name):
             'disposition_form': disposition_form,
             'case_history_table': case_history_table,
             'form_name': form_name,
-            'message': message}
+            'message': message,
+            'loaded_form':loaded_form}
     )
 
 

@@ -166,7 +166,7 @@
         </li>
 
         <li class="dropdown messages-menu">
-          <a href="/ona/demoadmin/forms/qa_form/enter-data">
+          <a href="{% url 'my_forms' 'walkin' %}">
             <i class="fa fa-file"></i>{% trans "QA Form" %}
           </a>
         </li>
@@ -346,17 +346,17 @@
         <ul class="treeview-menu">
           <li><a href="{% url 'dashboardreports' 'totalcases' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Today's Cases" %}
             <span class="pull-right-container">
-              <span class="label label-success pull-right">{{ dashboard_stats.total_cases }}</span><span class="label label-default pull-right">4</span>
+              <span class="label label-success pull-right">{{ dashboard_stats.total_cases }}</span>
             </span>
           </a></li>
           <li><a href="{% url 'dashboardreports' 'pendingcases' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Progressive Cases" %}
             <span class="pull-right-container">
-              <span class="label label-warning pull-right">{{ dashboard_stats.open_cases }}</span><span class="label label-warning pull-right">4</span>
+              <span class="label label-warning pull-right">{{ dashboard_stats.open_cases }}</span>
             </span>
           </a></li>
           <li><a href="{% url 'dashboardreports' 'totalcases' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "All Cases" %}
             <span class="pull-right-container">
-              <span class="label label-info pull-right">{{ dashboard_stats.total_cases }}</span><span class="label label-info pull-right">4</span>
+              <span class="label label-info pull-right">{{ dashboard_stats.total_cases }}</span>
             </span>
           </a></li>
         </ul>
@@ -372,17 +372,17 @@
         <ul class="treeview-menu">
           <li><a href="{% url 'dashboardreports' 'totalcases' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Missed Calls" %}
             <span class="pull-right-container">
-              <span class="label label-success pull-right">{{ dashboard_stats.total_cases }}</span><span class="label label-danger pull-right">4</span>
+              <span class="label label-danger pull-right">{{ dashboard_stats.total_cases }}</span>
             </span>
           </a></li>
           <li><a href="{% url 'dashboardreports' 'pendingcases' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Received Calls" %}
             <span class="pull-right-container">
-              <span class="label label-warning pull-right">{{ dashboard_stats.open_cases }}</span><span class="label label-success pull-right">4</span>
+              <span class="label label-success pull-right">{{ dashboard_stats.open_cases }}</span>
             </span>
           </a></li>
           <li><a href="{% url 'dashboardreports' 'totalcases' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Voice Mails" %}
             <span class="pull-right-container">
-              <span class="label label-info pull-right">{{ dashboard_stats.total_cases }}</span><span class="label label-warning pull-right">4</span>
+              <span class="label label-warning pull-right">{{ dashboard_stats.total_cases }}</span>
             </span>
           </a></li>
         </ul>
@@ -414,26 +414,47 @@
             </span>
           </a>
           <ul class="treeview-menu">
-      <li>
-        <a href="{% url 'mysources' 'email' %}">
-          <i class="fa fa-circle-o"></i>
-          <span>{% trans "Emails" %}</span><span class="label label-info pull-right">4</span>
-        </a>
-      </li>
-      <li class="treeview">
-        <a href="{% url 'mysources' 'sms' %}">
-          <i class="fa fa-circle-o"></i>
-          <span>{% trans "SMS" %}</span><span class="label label-info pull-right">4</span>
-        </a>
-      </li>
-      <li class="treeview">
-        <a href="{% url 'mysources' 'web' %}">
-          <i class="fa fa-circle-o"></i>
-          <span>{% trans "Web Online" %}</span><span class="label label-info pull-right">4</span>
-        </a>
-      </li>
-      </ul>
-    </li>
+            <li>
+              <a href="{% url 'mysources' 'email' %}">
+                <i class="fa fa-circle-o"></i>
+                <span>{% trans "Emails" %}</span><span class="label label-info pull-right">4</span>
+              </a>
+            </li>
+            <li class="treeview">
+              <a href="{% url 'mysources' 'sms' %}">
+                <i class="fa fa-circle-o"></i>
+                <span>{% trans "SMS" %}</span><span class="label label-info pull-right">4</span>
+              </a>
+            </li>
+            <li class="treeview">
+              <a href="{% url 'mysources' 'web' %}">
+                <i class="fa fa-circle-o"></i>
+                <span>{% trans "Web Online" %}</span><span class="label label-info pull-right">4</span>
+              </a>
+            </li>
+          </ul>
+        </li>
+        <li class="treeview">
+          <a href="#">
+            <i class="fa fa-files-o"></i>
+            <span>{% trans "QA" %}</span>
+            <span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+          </a>
+          <ul class="treeview-menu">
+            <li><a href="{% url 'dashboardreports' 'totalcases' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Cases" %}
+              <span class="pull-right-container">
+                <span class="label label-info pull-right">{{ dashboard_stats.total_cases }}</span>
+              </span>
+            </a></li>
+            <li><a href="{% url 'dashboardreports' 'pendingcases' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Analysed Cases" %}
+              <span class="pull-right-container">
+                <span class="label label-success pull-right">{{ dashboard_stats.open_cases }}</span>
+              </span>
+            </a></li>
+          </ul>
+        </li>
         <li>
           <a href="/admin/auth/user/">
             <i class="fa fa-users"></i> <span>{% trans "Users" %}</span>
@@ -444,9 +465,9 @@
         </li>
 
         <li>
-            <a href="{% url 'user_profile' request.user.username %}">
-                <i class="fa fa-wpforms"></i> <span>{% trans "Forms" %}</span>
-            </a>
+          <a href="{% url 'user_profile' request.user.username %}">
+            <i class="fa fa-wpforms"></i> <span>{% trans "Forms" %}</span>
+          </a>
         </li>
         <li>
           <a href="{% url 'wall' %}">
@@ -576,7 +597,7 @@
                   <div class="{% if request.user.HelplineUser.hl_role == 'Supervisor' %} col-sm-6 col-md-6 {% else %} col-sm-12 col-md-12 {% endif %}">
                     <div class="color-palette-set">
                       <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
-                      <div class="bg-aqua color-palette" align="center" style="border-radius:0px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">QA</span><br /><br />    </div>
+                      <div class="bg-aqua color-palette" align="center" style="border-radius:0px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.total_sms }} %</span><br /><br />    </div>
                       <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
                     </div>
                   </div>
@@ -624,11 +645,11 @@
             </div>
             <!-- /.row -->
 
-      {% block message %}
-        {% if message or messages or message_list %}
-          {% include "message.html" %}
-        {% endif %}
-      {% endblock %}
+            {% block message %}
+            {% if message or messages or message_list %}
+            {% include "message.html" %}
+            {% endif %}
+            {% endblock %}
             <!-- Main row -->
             {% block content %}
             {% endblock content %}
