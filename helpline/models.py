@@ -569,13 +569,20 @@ class Role(models.Model):
 
 
 class Schedule(models.Model):
-    hl_key = models.IntegerField()
-    hl_service = models.IntegerField()
-    hl_queue = models.IntegerField()
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        blank=True, null=True
+    )
+    service = models.ForeignKey(
+        Service,
+        on_delete=models.CASCADE,
+        blank=True, null=True
+    )
     hl_status = models.CharField(max_length=7)
 
     def __unicode__(self):
-        return str(self.hl_key)
+        return str(self.id)
 
 class Search(models.Model):
     hl_word = models.CharField(unique=True, max_length=100)

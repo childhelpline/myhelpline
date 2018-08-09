@@ -13,7 +13,6 @@ Including another URLconf
     1. Add an import:  from blog import urls as blog_urls
     2. Add a URL to urlpatterns:  url(r'^blog/', include(blog_urls))
 """
-
 from django.conf.urls import include, url
 from django.contrib import admin
 from django.conf import settings
@@ -30,8 +29,11 @@ from faq import urls as faq_urls
 
 from messaging import urls as messaging_urls
 
+from onadata.apps.main import urls as onadata_urls
+
 admin.site.site_header = 'Helpline'
 admin.site.site_title = 'Helpline'
+
 
 urlpatterns = [
     url(r'^admin_tools/', include('admin_tools.urls')),
@@ -41,6 +43,7 @@ urlpatterns = [
     url(r'^faq/', include(faq_urls)),
     url(r'^helpdesk/', include('helpdesk.urls', namespace='helpdesk')),
     url(r'^messaging/', include(messaging_urls, namespace='messaging')),
+    url(r'^ona/', include(onadata_urls)),
     url(r'^avatar/', include('avatar.urls')),
     url('^accounts/login/$', login, {
         'template_name': 'helpline/login.html'}, name='login'),
