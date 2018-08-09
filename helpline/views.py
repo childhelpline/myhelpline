@@ -36,7 +36,6 @@ try:
 except Exception as e:
     from django.core.urlresolvers import reverse
 
-from pycall import CallFile, Call, Context
 from notifications.signals import notify
 
 import django_tables2 as tables
@@ -259,12 +258,14 @@ def queue_pause(request):
         clock = Clock()
         clock.hl_key = request.user.HelplineUser.hl_key
         clock.hl_clock = form.cleaned_data.get('reason')
+        # Hardcoded for tests
+        # We should loop through all agent services in schedule
         clock.hl_service = 718874580
         clock.hl_time = int(time.time())
         clock.save()
         message = backend.pause_queue_member(
             queue='Q718874580',
-            interface='SIP/8007',
+            interface='%s' % (request.user.HelplineUser.hl_exten),
             paused=True
         )
         request.user.HelplineUser.hl_status = 'Pause'
@@ -324,9 +325,11 @@ def reports(request, report, casetype='Call'):
 
     sort = request.GET.get('sort')
     report_title = {
-        'answeredcalls': _('Answered Calls Report'),
-        'abandonedcalls': _('Abandoned Calls Report'),
-        'voicemail': _('Voicemail Report')
+        'performance': _('Performance Reports'),
+        'counsellor': _('Counsellor Reports'),
+        'case': _('Case Reports'),
+        'call': _('Call Reports'),
+        'service': _('Service Reports')
     }
 
     table = report_factory(report=report,
@@ -344,7 +347,7 @@ def reports(request, report, casetype='Call'):
 
     table.paginate(page=request.GET.get('page', 1), per_page=10)
 
-    return render(request, 'helpline/dashboardreports.html', {
+    return render(request, 'helpline/reports.html', { #dashboardreports
         'title': report_title.get(report),
         'report': report,
         'form': form,
@@ -581,9 +584,19 @@ def queue_manager(user, extension, action):
 def my_forms(request, form_name):
     """Handle Walkin and CallForm POST and GET Requests"""
     message = ''
+
+    if(form_name == 'walkin'):
+        loaded_form = {'url':'https://enketo.bitz-itc.com/i/::4n1oArZH',
+                        'name':'walkin'}
+    elif(form_name == 'qa'):
+        loaded_form = {'url':'https://enketo.bitz-itc.com/i/::Bkyb35PE',
+                        'name':'qa'}
+
+
     initial = {}
     if request.method == 'GET':
         case_number = request.GET.get('case')
+        #return redirect('/ona/' + request.user.username + '/forms/Case_Form/enter-data')#"Cheru: %s",form_name)
         # Check if we're looking for a case.
         if case_number:
             my_case = Case.objects.get(hl_case=case_number)
@@ -772,7 +785,8 @@ def my_forms(request, form_name):
             'disposition_form': disposition_form,
             'case_history_table': case_history_table,
             'form_name': form_name,
-            'message': message}
+            'message': message,
+            'loaded_form':loaded_form}
     )
 
 
@@ -1036,10 +1050,11 @@ def initialize_myaccount(user):
         myaccount.hl_pass = hashlib.md5("1234").hexdigest()
 
         myaccount.hl_role = "Supervisor" if user.is_superuser else "Counsellor"
+        # Default Service, which is the first service
+        default_service = Service.objects.all().first()
         myschedule = Schedule()
-        myschedule.hl_key = myaccount.hl_key
-        myschedule.hl_service = 718874580  # Default Service
-        myschedule.hl_queue = 718874580  # Default Queue
+        myschedule.user = user
+        myschedule.service = default_service
 
         myschedule.hl_status = 'Offline'
 
@@ -1083,12 +1098,15 @@ def get_dashboard_stats(user, interval=None):
     """
     # Get the epoch time of the last midnight
     if interval == 'weekly':
-        midnight = datetime.combine(
+        midnight_datetime = datetime.combine(
             date.today() - timedelta(days=date.today().weekday()),
-            datetime_time.min).strftime('%s')
+            datetime_time.min)
+        midnight = calendar.timegm(midnight_datetime.timetuple())
     else:
-        midnight = datetime.combine(
-            date.today(), datetime_time.min).strftime('%s')
+        midnight_datetime = datetime.combine(
+            date.today(), datetime_time.min)
+        midnight = calendar.timegm(midnight_datetime.timetuple())
+
     midnight_string = datetime.combine(
         date.today(), datetime_time.min).strftime('%m/%d/%Y %I:%M %p')
     now_string = datetime.now().strftime('%m/%d/%Y %I:%M %p')
@@ -1118,13 +1136,13 @@ def get_dashboard_stats(user, interval=None):
 
     # Filter out stats for non supervisor user.
     if user.HelplineUser.hl_role != 'Supervisor':
-        total_calls = total_calls.filter(counsellorname=user.username)
+        total_calls = total_calls.filter(user=user)
         missed_calls = missed_calls.filter(hl_key=user.HelplineUser.hl_key)
-        answered_calls = answered_calls.filter(counsellorname=user.username)
-        total_cases = total_cases.filter(counsellorname=user.username)
-        closed_cases = closed_cases.filter(hl_creator=user.HelplineUser.hl_key)
-        open_cases = open_cases.filter(hl_creator=user.HelplineUser.hl_key)
-        referred_cases = referred_cases.filter(hl_creator=user.HelplineUser.hl_key)
+        answered_calls = answered_calls.filter(user=user)
+        total_cases = total_cases.filter(user=user)
+        closed_cases = closed_cases.filter(user=user)
+        open_cases = open_cases.filter(user=user)
+        referred_cases = referred_cases.filter(user=user)
 
     number_tickets = Ticket.objects.all().count()
 
@@ -1134,6 +1152,7 @@ def get_dashboard_stats(user, interval=None):
     ).exclude(
         status__in=[Ticket.CLOSED_STATUS, Ticket.RESOLVED_STATUS],
     )
+
     att = user.HelplineUser.get_average_talk_time()
     awt = user.HelplineUser.get_average_wait_time()
 
@@ -1207,7 +1226,9 @@ def report_factory(report='callsummary', datetime_range=None, agent=None,
         clock = Clock.objects.filter()
         # Apply filters to queryset.
         if from_date and to_date:
-            clock = clock.filter(hl_time__gt=from_date.strftime('%s'),hl_time__lt=to_date.strftime('%s'))
+            from_date_epoch = calendar.timegm(from_date.timetuple())
+            to_date_epoch = calendar.timegm(to_date.timetuple())
+            clock = clock.filter(hl_time__gt=from_date_epoch,hl_time__lt=to_date_epoch)
         if agent:
             clock = clock.filter(hl_key__exact=agent)
             filter_query['agent'] = agent
@@ -1221,7 +1242,7 @@ def report_factory(report='callsummary', datetime_range=None, agent=None,
     service = settings.DEFAULT_SERVICE
     reports = Report.objects.all()
     cdr = MainCDR.objects.all()
-    username = HelplineUser.objects.get(hl_key__exact=agent).hl_names if agent else None
+    user = HelplineUser.objects.get(hl_key__exact=agent).user if agent else None
 
     calltype = {'answeredcalls': 'Answered',
                 'abandonedcalls': 'Abandoned',
@@ -1242,13 +1263,15 @@ def report_factory(report='callsummary', datetime_range=None, agent=None,
 
     # Apply filters to queryset.
     if from_date and to_date:
-        reports = reports.filter(hl_time__gt=from_date.strftime('%s'),
-                                 hl_time__lt=to_date.strftime('%s'))
-        cdr = cdr.filter(hl_time__gt=from_date.strftime('%s'),
-                                 hl_time__lt=to_date.strftime('%s'))
+        from_date_epoch = calendar.timegm(from_date.timetuple())
+        to_date_epoch = calendar.timegm(to_date.timetuple())
+        reports = reports.filter(hl_time__gt=from_date_epoch,
+                                 hl_time__lt=to_date_epoch)
+        cdr = cdr.filter(hl_time__gt=from_date_epoch,
+                                 hl_time__lt=to_date_epoch)
 
     if agent:
-        reports = reports.filter(counsellorname__exact=username)
+        reports = reports.filter(user=user)
         cdr = cdr.filter(hl_agent__exact=agent)
         filter_query['agent'] = agent
 
@@ -1355,10 +1378,8 @@ def ajax_admin_report(request, report, casetype='all'):
     table = report_factory(report=report, datetime_range=datetime_range,
                            agent=agent, query=query, casetype=casetype)
 
-    # Export table to csv
-    if request.user.is_superuser:
-        RequestConfig(request).configure(table)
-        export_format = request.GET.get('_export', None)
+    RequestConfig(request).configure(table)
+    export_format = request.GET.get('_export', None)
     if TableExport.is_valid_format(export_format):
         exporter = TableExport(export_format, table)
         return exporter.response('table.{}'.format(export_format))
@@ -1455,6 +1476,15 @@ def wall(request):
     return render(request, 'helpline/wall.html',
                   {'dashboard_stats': dashboard_stats,
                    'week_dashboard_stats': week_dashboard_stats})
+
+@login_required
+def sources(request,csource = ''):
+    """Display statistics for the wall board"""
+    #sms_list = get_sms_list(request.user)
+   # week_dashboard_stats = get_dashboard_stats(request.user, interval='weekly')
+    ln = 'helpline/' + csource + '.html'
+    return render(request,ln)#,
+                  #{'sls_list': sms_list})
 
 
 def get_data_queues(queue=None):

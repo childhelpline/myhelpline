@@ -8,8 +8,8 @@
 
 {% block box %}
 <section class="content-header">
-      <h1>
-        Case Registration
+      <h1 style="text-transform: capitalize;">
+        {{ loaded_form.name }} Form
       </h1>
       <ol class="breadcrumb">
         <li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
@@ -84,11 +84,17 @@ $(function(){
     }
   })
 });
+
+
+$('.iframe').on('load',function(){$(this).height($(this).contents().outerHeight());});
 </script>
 <section class="content">
-<div class="container">
-  <div class="box box-info">
-    <div class="box-header with-border">
+<div class="">
+  <div class="box box-info" style="{% if loaded_form.name == 'qa' %} min-height: 5350px; {% else %} min-height: 1200px; {% endif %}">
+    <div class="col-sm-12">
+      <iframe src="{{ loaded_form.url }}" style="width: 100%; border: none; {% if loaded_form.name == 'qa' %} min-height: 5300px; {% else %} min-height: 1200px; {% endif %}"></iframe>
+    </div>
+    <!--div class="box-header with-border">
         <h3 class="box-title">Case Number: {{ initial.case_number }}   Reporter: {{ initial.caller_name }}</h3>
     </div>
           <div class="box-tools pull-right">
@@ -113,7 +119,7 @@ $(function(){
                 </div>
             </div>
             {% endif %}
-          </div>
+          </div-->
     </div>
 </div>
 </section>

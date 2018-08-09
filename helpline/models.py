@@ -2,6 +2,7 @@
 """Helpline Models"""
 
 from __future__ import unicode_literals
+import calendar
 from datetime import timedelta, datetime, date, time as datetime_time
 import time
 import os
@@ -568,13 +569,20 @@ class Role(models.Model):
 
 
 class Schedule(models.Model):
-    hl_key = models.IntegerField()
-    hl_service = models.IntegerField()
-    hl_queue = models.IntegerField()
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        blank=True, null=True
+    )
+    service = models.ForeignKey(
+        Service,
+        on_delete=models.CASCADE,
+        blank=True, null=True
+    )
     hl_status = models.CharField(max_length=7)
 
     def __unicode__(self):
-        return str(self.hl_key)
+        return str(self.id)
 
 class Search(models.Model):
     hl_word = models.CharField(unique=True, max_length=100)
@@ -696,8 +704,9 @@ class HelplineUser(models.Model):
         """Get the average talk time for a user.
         Counted from the last midnight"""
         # Get the epoch time of the last midnight
-        midnight = datetime.combine(date.today(),
-                                    datetime_time.min).strftime('%s')
+        midnight_datetime = datetime.combine(date.today(),
+                                    datetime_time.min)
+        midnight = calendar.timegm(midnight_datetime.timetuple())
 
         # Get the average seconds of hold time from last midnight.
         # Return global values for supervisors.
@@ -721,7 +730,9 @@ class HelplineUser(models.Model):
         """Get the average hold time for a user.
         Counted from the last midnight"""
         # Get the epoch time of the last midnight
-        midnight = datetime.combine(date.today(), datetime_time.min).strftime('%s')
+        midnight_datetime = datetime.combine(date.today(),
+                                    datetime_time.min)
+        midnight = calendar.timegm(midnight_datetime.timetuple())
         # Get the average seconds of hold time from last midnight.
         # Return global values for supervisors.
         if self.hl_role.lower() != "supervisor":
