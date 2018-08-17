@@ -289,7 +289,7 @@ def queue_unpause(request):
 
     message = backend.pause_queue_member(
         queue='Q718874580',
-        interface='SIP/8007',
+        interface='%s' % (request.user.HelplineUser.hl_exten),
         paused=False
     )
     return redirect("/helpline/#%s" % (message))
