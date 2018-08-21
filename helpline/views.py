@@ -293,7 +293,7 @@ def queue_unpause(request):
 
     message = backend.pause_queue_member(
         queue='Q718874580',
-        interface='SIP/8007',
+        interface='%s' % (request.user.HelplineUser.hl_exten),
         paused=False
     )
     return redirect("/helpline/#%s" % (message))
@@ -1144,11 +1144,11 @@ def get_dashboard_stats(user, interval=None):
     total_cases = Report.objects.filter(
         hl_time__gt=midnight).filter(casestatus__gt='')
     closed_cases = Case.objects.filter(
-        hl_time__gt=midnight).filter(hl_status__exact='Close')
+        hl_time__gt=midnight)
     open_cases = Case.objects.filter(
-        hl_time__gt=midnight).filter(hl_status__exact='Pending')
+        hl_time__gt=midnight)
     referred_cases = Case.objects.filter(
-        hl_time__gt=midnight).filter(hl_status__exact='Escalate')
+        hl_time__gt=midnight)
 
     total_sms = Messaging.objects.filter(hl_time__gt=midnight)
 
