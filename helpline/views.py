@@ -22,6 +22,7 @@ from django.shortcuts import get_object_or_404
 from django.template.context_processors import csrf
 from django.db.models import Avg
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.db.models import Q
 from django.db.models import Sum
 from django.contrib.auth.views import login as django_login
@@ -49,6 +50,9 @@ from jsonview.decorators import json_view
 
 from helpdesk.models import Ticket
 from dateutil.relativedelta import relativedelta
+
+from onadata.libs.utils.viewer_tools import (
+    create_attachments_zipfile, export_def_from_filename, get_form)
 
 from helpline.models import Report, HelplineUser,\
         Schedule, Case, Postcode,\
@@ -315,6 +319,20 @@ def faq(request):
 
 @login_required
 def reports(request, report, casetype='Call'):
+
+    """
+    Data view displays submission data.
+    """
+    username = 'kemboicheru'
+    id_string = 'Case_Form'
+    owner = get_object_or_404(User, username__iexact=username)
+    xform = get_form({'id_string__iexact': id_string, 'user': owner})
+    
+    data = {'owner': owner, 'xform': xform}
+
+    return render(request, "helpline/report_body.html", data)
+@login_required
+def reports1(request, report, casetype='Call'):
     """Handle report rendering"""
     query = request.GET.get('q', '')
     datetime_range = request.GET.get("datetime_range")

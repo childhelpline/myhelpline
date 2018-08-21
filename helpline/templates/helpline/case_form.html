@@ -1,0 +1,110 @@
+
+    <section class="invoice">
+      <div class="row">
+        <!-- accepted payments column -->
+        <div class="col-xs-6 col-md-12 contact-search">
+          <p class="lead">Contact Search:</p>
+            <div class="text-muted well well-sm no-shadow">
+            <!-- form start -->
+            <form role="form">
+              <div class="box-body">
+                <div class="form-group">
+                  <label for="exampleInputEmail1">Contact Number</label>
+                  <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Enter Contact">
+                </div>
+                <div class="form-group">
+                  <label for="exampleInputPassword1">Name</label>
+                  <input type="text" class="form-control" id="exampleInputPassword1" placeholder="Reporter Name">
+                </div>
+              </div>
+              <!-- /.box-body -->
+
+              <div class="box-footer" style="background-color: transparent;">
+                <button type="button" class="btn btn-primary" onclick="$('.contact-search').removeClass('col-md-12');$('.contact-results').removeClass('hidden');">Search Contact</button>
+                <button type="button" class="btn btn-primary pull-right" onclick="$('.invoice').addClass('hidden'); $('iframe').removeClass('hidden'); ">New Reporter</button>
+              </div>
+            </form>
+          </div>
+        </div>
+        <!-- /.col -->
+        <div class="col-xs-6 contact-results hidden">
+          <p class="lead">Contact Search Results</p>
+
+          <div class="table-responsive text-muted well well-sm no-shadow" style="min-height: 242px;">
+            <table class="table table-responsive">
+              <tr>
+                <th style="width:5px;">#</th>
+                <th style="width:40%;" align="left">Name</th>
+                <th style="width:40%;" align="left">Contact</th>
+                <th style="width:16%;" align="left">Action</th>
+              </tr>
+              <tr>
+                <td>1.</td>
+                <td><a href="javascript:void(0)" onclick="$('.conact-cases').removeClass('hidden');">Kemboi Cheruiyot</a></td>
+                <td>072324343434</td>
+                <td><a href="javascript:void(0)" onclick="$('.invoice').addClass('hidden'); $('iframe').removeClass('hidden');">Create Case</a></td>
+              </tr>
+              <tr>
+                <td>2.</td>
+                <td><a href="javascript:void(0)" onclick="$('.conact-cases').removeClass('hidden');">Kemboi Cheru</a></td>
+                <td>072333332222</td>
+                <td><a href="javascript:void(0)" onclick="$('.invoice').addClass('hidden'); $('iframe').removeClass('hidden');">Create Case</a></td>
+              </tr>
+              <tr>
+                <td>3.</td>
+                <td><a href="javascript:void(0)" onclick="$('.conact-cases').removeClass('hidden');">Cheru Kemboi</a></td>
+                <td>0723444344232</td>
+                <td><a href="javascript:void(0)" onclick="$('.invoice').addClass('hidden'); $('iframe').removeClass('hidden');">Create Case</a></td>
+              </tr>
+            </table>
+          </div>
+        </div>
+        <!-- /.col -->
+      </div>
+      <!-- /.row -->
+
+
+      <!-- Table row -->
+      <div class="row conact-cases hidden">
+        <div class="col-xs-12 table-responsive" style="max-height: 250px; overflow-y: scroll; ">
+          <table class="table table-striped">
+            <thead>
+            <tr>
+              <th width="5px">#</th>
+              <th>Case ID</th>
+              <th>Source</th>
+              <th>Case Category</th>
+              <th>Case Status</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+              <td>1.</td>
+              <td><a href="">21232</a></td>
+              <td>Email</td>
+              <td>Abuse</td>
+              <td>Escalated</td>
+            </tr>
+            <tr>
+              <td>2.</td>
+              <td><a href="">21332</a></td>
+              <td>SMS</td>
+              <td>Abuse</td>
+              <td>Closed</td>
+            </tr>
+            <tr>
+              <td>3.</td>
+              <td><a href="">21322</a></td>
+              <td>Call</td>
+              <td>Information Inquiry</td>
+              <td>Closed</td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- /.col -->
+      </div>
+      <!-- /.row -->
+
+      <!-- this row will not appear when printing -->
+    </section>
