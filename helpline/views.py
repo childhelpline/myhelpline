@@ -323,7 +323,7 @@ def reports(request, report, casetype='Call'):
     """
     Data view displays submission data.
     """
-    username = 'kemboicheru'
+    username = 'demoadmin'
     id_string = 'Case_Form'
     owner = get_object_or_404(User, username__iexact=username)
     xform = get_form({'id_string__iexact': id_string, 'user': owner})
@@ -340,6 +340,12 @@ def reports1(request, report, casetype='Call'):
     category = request.GET.get("category", "")
     form = ReportFilterForm(request.GET)
     dashboard_stats = get_dashboard_stats(request.user)
+
+    headers = {
+            'Authorization': 'Token 7331a310c46884d2643ca9805aaf0d420ebfc831'
+    }
+
+    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/1',headers= headers).json();
 
     sort = request.GET.get('sort')
     report_title = {
@@ -372,6 +378,7 @@ def reports1(request, report, casetype='Call'):
         'datetime_range': datetime_range,
         'dashboard_stats': dashboard_stats,
         'table': table,
+        'stat':stat,
         'query': query})
 
 

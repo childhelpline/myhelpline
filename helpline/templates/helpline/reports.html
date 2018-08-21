@@ -178,6 +178,9 @@ div.scrollmenu {
        {% if table %}
        {% render_table table %}
        {% endif %}
+       {% for record in stat %}
+       <div>1. {{ record }}</div>
+       {% endfor %}
      </div>
    </div>
  </div>
