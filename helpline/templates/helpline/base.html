@@ -29,7 +29,8 @@
    <link rel="stylesheet" href="{% static "AdminLTE/dist/css/skins/_all-skins.min.css" %}">
 
    <link rel="stylesheet" href="{% static "helpline/css/style.css" %}">
-
+   <!--converse.js css link-->
+  <link rel="stylesheet" type="text/css" media="screen" href="converse.css">
    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
   <!--[if lt IE 9]>
@@ -42,7 +43,8 @@
 <script type="text/javascript" src="/jsi18n/"></script>
 <script src="{% static 'clipboard/dist/clipboard.min.js' %}" type="text/javascript"></script>
 <script type="text/javascript" src="{% static 'helpline/js/codedance/jquery.are-you-sure.js' %}"></script></head>
-
+<!-- convers.js script-->
+<script data-main="main" src="node_modules/requirejs/require.js"></script>
 {% block head %}{% endblock head %}
 
 
@@ -1003,4 +1005,11 @@ $(document).ready(function(){
 <script src="{% static "helpline/js/custom.js" %}" type="text/javascript"></script>
 
 </div></div></body>
+  <script>
+    converse.initialize({
+        bosh_service_url: 'https://conversejs.org/http-bind/', // Please use th$
+        show_controlbox_by_default: true
+    });
+</script>
+
 </html>
