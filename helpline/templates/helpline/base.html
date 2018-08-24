@@ -426,6 +426,9 @@ input:checked + .slider:before {
         </a>
         <ul class="treeview-menu">
           <li>
+            <a tabindex="-1" href="#web-modal" data-backdrop="static"  data-keyboard="false" class="confirm" role="button" data-toggle="modal"><i class="fa fa-circle-o"></i> {% trans "Web Online" %}
+          </a></li>
+          <li>
             <a tabindex="-1" href="#walkin-modal" data-backdrop="static"  data-keyboard="false" class="confirm" role="button" data-toggle="modal"><i class="fa fa-circle-o"></i> {% trans "New WalkIn" %}
           </a></li>
           <li><a href="{% url 'dashboardreports' 'totalcases' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Today's Cases" %}
@@ -769,7 +772,7 @@ input:checked + .slider:before {
                       </div>
                       <div class="modal-body" style="padding: 0px; height: 80vh;">
                         {% include "helpline/case_form.html" %}
-                        <iframe src="https://enketo.bitz-itc.com/i/::4n1oArZH" class="hidden" onload="access(this)" name="frameID" id="frameID" style="width: 100%; min-height: 80vh; padding:10px; border: none;"></iframe>
+                        <iframe src="https://enketo.bitz-itc.com/i/::XLqAHBeh" class="hidden" onload="access(this)" name="frameID" id="frameID" style="width: 100%; min-height: 80vh; padding:10px; border: none;"></iframe>
                       </div>
                       <!--div class="modal-footer">
                         <button type="button" class="btn btn-default secondary" data-dismiss="modal">Close</button>
@@ -791,6 +794,23 @@ input:checked + .slider:before {
                       </div>
                       <div class="modal-body" style="padding: 0px; height: 80vh;">
                         <iframe src="https://enketo.bitz-itc.com/i/::Bkyb35PE" style="width: 100%; min-height: 80vh; border: none;"></iframe>
+                      </div>
+                    </form>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Modal -->
+                <div class="modal fade"  id="web-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+                  <div class="modal-dialog" role="document" style="width: 80%;">
+                    <div class="modal-content">
+                    <form action="" method="post">
+                        {% csrf_token %}
+                      <div class="modal-header">
+                        <h2 class="modal-title" id="myModalLabel">{% trans "Web Online" %}</h2>
+                      </div>
+                      <div class="modal-body" style="padding: 0px; height: 80vh;">
+                        <iframe src="https://enketo.bitz-itc.com/i/::CIBYdg90" style="width: 100%; min-height: 80vh; border: none;"></iframe>
                       </div>
                     </form>
                     </div>
