@@ -648,6 +648,8 @@ HELPDESK_EMAILS = []
 ADMIN_TOOLS_MENU = 'custom_admin_tools.menu.CustomMenu'
 ADMIN_TOOLS_INDEX_DASHBOARD = 'custom_admin_tools.dashboard.CustomIndexDashboard'
 
+ADMIN_TOOLS_THEMING_CSS = 'helpline/css/theming.css'
+
 CORS_ORIGIN_WHITELIST = (
     'localhost:5000',
     '127.0.0.1:5000'
