@@ -46,6 +46,112 @@
 </li>
 
 {% endblock navbar_nav %}
+
+
+
+        <div class="col-md-12 report-filters">
+          {% load django_tables2 %}
+          <div id="form_collapse" class="in" style="height: auto;">
+            {% block filterform %}
+              <!--div class="col-md-12">
+                <div class="box box-default">
+                  <div class="box-header with-border">
+                   <h3 class="box-title">Filter Parameters:</h3>
+
+                </div>
+
+                <!--div class="box-body">
+                  <!-- Filter Form -->
+                  <form action="#">
+                    <!-- Date and time range -->
+
+                    <script>
+                      $(function() {
+                        $('#datetimerange').daterangepicker({
+                         opens: 'left',
+                         timePicker: true,
+                         locale: {
+                          format: 'MM/DD/YYYY h:mm A'
+                        }
+
+                      }, function(start, end, label) {
+                       console.log("A new date selection was made: " + start.format('M/DD hh:mm A') + ' to ' + end.format('M/DD hh:mm A'));
+                     });
+                      });
+                    </script>
+
+
+                    <div class="form-group col-md-4" style="padding-left: 0px;">
+                      <label>Choose Date and time Range:</label>
+                      <div class="input-group">
+                        <div class="input-group-addon">
+                         <i class="fa fa-calendar"></i>
+                       </div>
+                       {{ form.datetime_range }}
+                     </div><!-- /.input group -->
+                   </div><!-- /.form group -->
+                   <div class="form-group col-md-4">
+                    <label>Counsellor:</label>
+                    <div class="input-group">
+                      <div class="input-group-addon">
+                       <i class="fa fa-users"></i>
+                     </div>
+                     {{ form.agent }}
+                   </div><!-- /.input group -->
+                 </div><!-- /.form group -->
+                 <div class="form-group col-md-4">
+                  <label>Category:</label>
+                  <div class="input-group">
+                    <div class="input-group-addon">
+                     <i class="fa fa-th"></i>
+
+                   </div>
+                   {{ form.category }}
+                 </div><!-- /.input group -->
+               </div><!-- /.form group -->
+
+
+
+               <div class="form-group col-md-4">
+                <label>Case Status:</label>
+                <div class="input-group">
+                  <div class="input-group-addon">
+                   <i class="fa fa-th"></i>
+
+                 </div>
+                 {{ form.case_status }}
+               </div><!-- /.input group -->
+             </div><!-- /.form group -->
+
+
+               <div class="form-group col-md-4">
+                <label>Interventions:</label>
+                <div class="input-group">
+                  <div class="input-group-addon">
+                   <i class="fa fa-th"></i>
+
+                 </div>
+                 {{ form.interventions }}
+               </div><!-- /.input group -->
+             </div><!-- /.form group -->
+
+
+             {{ form.queueid }}
+             <br>
+               <div class="form-group col-md-4">
+                <div class="input-group pt-20">
+                 <input type="button" value="Fetch Reports" id="total-calls-search-btn" class="btn btn-success btn-sm btn-flat" onclick="sendtoReportFactory();">
+               </div><!-- /.input group -->
+             </div>
+           </form>
+             <!-- End Filter Form ->
+           </div>
+         </div-->
+       </div>
+       {% endblock filterform %}
+     </div>
+   </div>
+   
 {% block content %}
     <section id="data-view">
         <div class="page-header">

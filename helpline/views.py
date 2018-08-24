@@ -323,12 +323,47 @@ def reports(request, report, casetype='Call'):
     """
     Data view displays submission data.
     """
-    username = 'demoadmin'
+    username = 'kemboicheru'
     id_string = 'Case_Form'
     owner = get_object_or_404(User, username__iexact=username)
     xform = get_form({'id_string__iexact': id_string, 'user': owner})
+
+    query = request.GET.get('q', '')
+    datetime_range = request.GET.get("datetime_range")
+    agent = request.GET.get("agent")
+    category = request.GET.get("category", "")
+    form = ReportFilterForm(request.GET)
+    dashboard_stats = get_dashboard_stats(request.user)
+
+    sort = request.GET.get('sort')
+    report_title = {
+        'performance': _('Performance Reports'),
+        'counsellor': _('Counsellor Reports'),
+        'case': _('Case Reports'),
+        'call': _('Call Reports'),
+        'service': _('Service Reports')
+    }
+
+    table = report_factory(report=report,
+                           datetime_range=datetime_range,
+                           agent=agent,
+                           query=query, sort=sort,
+                           category=category,
+                           casetype=casetype)
+
+    # Export table to csv
+    export_format = request.GET.get('_export', None)
+    if TableExport.is_valid_format(export_format):
+        exporter = TableExport(export_format, table)
+        return exporter.response('table.{}'.format(export_format))
     
-    data = {'owner': owner, 'xform': xform}
+    data = {'owner': owner, 'xform': xform,'title': report_title.get(report),
+        'report': report,
+        'form': form,
+        'datetime_range': datetime_range,
+        'dashboard_stats': dashboard_stats,
+        'table': table,
+        'query': query}
 
     return render(request, "helpline/report_body.html", data)
 @login_required
