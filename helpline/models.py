@@ -107,6 +107,8 @@ class Case(models.Model):
         on_delete=models.CASCADE,
         blank=True, null=True
     )
+    hl_unique = models.CharField(unique=True, max_length=20,
+                                 blank=True, null=True)
     hl_disposition = models.CharField(max_length=250, blank=True, null=True)
     user = models.ForeignKey(
         User,
@@ -430,7 +432,8 @@ class Report(models.Model):
     )
     case = models.OneToOneField(
         Case, on_delete=models.CASCADE,
-        related_name='Report'
+        related_name='Report',
+        blank=True, null=True
     )
     user = models.ForeignKey(
         User,
