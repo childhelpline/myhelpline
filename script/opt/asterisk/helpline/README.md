@@ -63,8 +63,10 @@ Below is an example odbc.ini configuration.
 [helplineconn]
 Driver      = PostgreSQL Unicode
 Description = PostgreSQL Connection to Asterisk database
-Database    = helpline ; This should match your helpline application database
-Servername  = 127.0.0.1 ; OR IP of your database server 
+Database    = helpline
+; This should match your helpline application database
+Servername  = 127.0.0.1
+; OR IP of your database server 
 User        = helplineuser
 Password    = MYSUPERSECRETPASSWORD 
 Port        = 5432
