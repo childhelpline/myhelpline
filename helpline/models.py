@@ -157,15 +157,6 @@ class Category(models.Model):
         return self.hl_category
 
 
-class Clock(models.Model):
-    hl_key = models.IntegerField(verbose_name='Agent')
-    hl_clock = models.CharField(verbose_name='Action',  max_length=50)
-    hl_service = models.IntegerField(verbose_name='Service')
-    hl_time = models.IntegerField(verbose_name='Time')
-
-    def __unicode__(self):
-        return self.hl_clock
-
 class ClockBit(models.Model):
     hl_key = models.IntegerField()
     hl_clock = models.CharField(max_length=11)
@@ -421,6 +412,24 @@ class Service(models.Model):
 
     def __unicode__(self):
         return self.name
+
+
+class Clock(models.Model):
+    """A Clock is an audit trail of agent actions"""
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        blank=True, null=True
+    )
+    hl_clock = models.CharField(verbose_name='Action', max_length=50)
+    service = models.ForeignKey(
+        Service, on_delete=models.CASCADE,
+        blank=True, null=True
+    )
+    hl_time = models.IntegerField(verbose_name='Time')
+
+    def __unicode__(self):
+        return self.hl_clock
 
 
 class Report(models.Model):
@@ -752,7 +761,7 @@ class HelplineUser(models.Model):
     def get_recent_clocks(self):
         """Get recent actions A.K.A Clocks
         We return only 5 at this time."""
-        return Clock.objects.filter(hl_key=self.hl_key).order_by('-id')[:5]
+        return Clock.objects.filter(user=self.user).order_by('-id')[:5]
 
 
 class Cdr(models.Model):

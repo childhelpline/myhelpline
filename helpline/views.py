@@ -246,32 +246,37 @@ def queue_remove(request, auth):
         hotdesk.update(agent=0)
         agent.hl_exten = ''
         agent.hl_jabber = ''
-        queue_manager(agent.hl_key, request.session.get('extension'), 'queueleave')
+        schedules = Schedule.objects.filter(user=agent.user)
+        for schedule in schedules:
+            data = backend.remove_from_queue(
+                agent="SIP/%s" % (request.session.get('extension')),
+                queue='%s' % (schedule.service.queue),
+            )
         agent.save()
 
     except Exception as e:
-        message = e
+        data = e
 
-    return redirect("web_presence")
+    return redirect("/helpline/status/web/presence/#%s" % (data))
 
 
 def queue_pause(request):
     """Pause Asterisk Queue member"""
     form = QueuePauseForm(request.POST)
     if form.is_valid():
-        clock = Clock()
-        clock.hl_key = request.user.HelplineUser.hl_key
-        clock.hl_clock = form.cleaned_data.get('reason')
-        # Hardcoded for tests
-        # We should loop through all agent services in schedule
-        clock.hl_service = 718874580
-        clock.hl_time = int(time.time())
-        clock.save()
-        message = backend.pause_queue_member(
-            queue='Q718874580',
-            interface='%s' % (request.user.HelplineUser.hl_exten),
-            paused=True
-        )
+        schedules = Schedule.objects.filter(user=request.user)
+        for schedule in schedules:
+            message = backend.pause_queue_member(
+                queue='%s' % (schedule.service.queue),
+                interface='%s' % (request.user.HelplineUser.hl_exten),
+                paused=True
+            )
+            clock = Clock()
+            clock.user = request.user
+            clock.hl_clock = form.cleaned_data.get('reason')
+            clock.service = schedule.service
+            clock.hl_time = int(time.time())
+            clock.save()
         request.user.HelplineUser.hl_status = 'Pause'
         request.user.HelplineUser.save()
     else:
@@ -283,7 +288,7 @@ def queue_pause(request):
 def queue_unpause(request):
     """Unpause Asterisk Queue member"""
     clock = Clock()
-    clock.hl_key = request.user.HelplineUser.hl_key
+    clock.user = request.user
     clock.hl_clock = "Unpause"
     clock.hl_service = 718874580
     clock.hl_time = int(time.time())
@@ -632,11 +637,17 @@ def autolocation(request):
 
 def queue_manager(user, extension, action):
     """queuejoin:queueleave:queuepause:queueunpause:queuetrain"""
-    data = backend.add_to_queue(
-        agent="SIP/%s" % (extension),
-        queue='Q718874580',
-        member_name=user.get_full_name()
-    )
+    if action == 'queuejoin':
+        data = backend.add_to_queue(
+            agent="SIP/%s" % (extension),
+            queue='Q718874580',
+            member_name=user.get_full_name()
+        )
+    elif action == 'queueleave':
+        data = backend.remove_from_queue(
+            agent="SIP/%s" % (extension),
+            queue='Q718874580',
+        )
     return data
 
 
@@ -1197,7 +1208,7 @@ def get_dashboard_stats(user, interval=None):
     # Filter out stats for non supervisor user.
     if user.HelplineUser.hl_role != 'Supervisor':
         total_calls = total_calls.filter(user=user)
-        missed_calls = missed_calls.filter(hl_key=user.HelplineUser.hl_key)
+        missed_calls = missed_calls.filter(user=user)
         answered_calls = answered_calls.filter(user=user)
         total_cases = total_cases.filter(user=user)
         closed_cases = closed_cases.filter(user=user)
