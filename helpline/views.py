@@ -247,11 +247,14 @@ def queue_remove(request, auth):
         agent.hl_exten = ''
         agent.hl_jabber = ''
         schedules = Schedule.objects.filter(user=agent.user)
-        for schedule in schedules:
-            data = backend.remove_from_queue(
-                agent="SIP/%s" % (request.session.get('extension')),
-                queue='%s' % (schedule.service.queue),
-            )
+        if schedules:
+            for schedule in schedules:
+                data = backend.remove_from_queue(
+                    agent="SIP/%s" % (request.session.get('extension')),
+                    queue='%s' % (schedule.service.queue),
+                )
+        else:
+            data = _("Agent does not have any assigned schedule")
         agent.save()
 
     except Exception as e:
