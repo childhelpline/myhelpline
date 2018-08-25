@@ -128,14 +128,25 @@ def check_call(request):
         request.user.HelplineUser.save()
         report = Report.objects.get(case=my_case)
         telephone = report.telephone
+        contact, contact_created = Contact.objects.get_or_create(hl_contact=telephone)
+        if contact_created:
+            address = Address(user=request.user)
+            contact.address = address
+            contact.save()
+            address.save()
 
     else:
         telephone = None
         my_case = None
 
-    response = JsonResponse({'my_case': my_case,
-                             'telephone': telephone,
-                             'type': my_case.hl_data if my_case else 0})
+    response = JsonResponse(
+        {
+            'my_case': my_case.hl_case if my_case else None,
+            'telephone': telephone,
+            'name': contact.address.hl_names if my_case else None,
+            'type': my_case.hl_data if my_case else 0
+        }
+    )
     return response
 
 
