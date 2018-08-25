@@ -480,6 +480,9 @@ class Report(models.Model):
     casetype = models.CharField(max_length=6, verbose_name='Case Type',
                                 blank=True, null=True)
     hl_time = models.IntegerField(verbose_name='Time', blank=True, null=True)
+    hl_unique = models.CharField(unique=True, max_length=20,
+                                 blank=True, null=True,
+                                 verbose_name='Unique Call-ID')
     qa = models.CharField(max_length=3, verbose_name='QA',
                           blank=True, null=True)
 
@@ -490,7 +493,7 @@ class Report(models.Model):
         """ Get casetype."""
         if self.casetype.lower() == "call":
             return "Inbound"
-        elif self.casetype.lower() == "voicmail":
+        elif self.casetype.lower() == "voicemail":
             return "Voicemail"
         else:
             return "Outbound"
