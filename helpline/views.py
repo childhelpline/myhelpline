@@ -290,20 +290,26 @@ def queue_pause(request):
 
 def queue_unpause(request):
     """Unpause Asterisk Queue member"""
-    clock = Clock()
-    clock.user = request.user
-    clock.hl_clock = "Unpause"
-    clock.hl_service = 718874580
-    clock.hl_time = int(time.time())
-    clock.save()
+    schedules = Schedule.objects.filter(user=request.user)
+    if schedules:
+        for schedule in schedules:
+            message = backend.pause_queue_member(
+                queue='%s' % (schedule.service.queue),
+                interface='%s' % (request.user.HelplineUser.hl_exten),
+                paused=False
+            )
+            clock = Clock()
+            clock.hl_clock = "Unpause"
+            clock.user = request.user
+            clock.service = schedule.service
+            clock.hl_time = int(time.time())
+            clock.save()
+    else:
+        message = _("Agent does not have any assigned schedule")
+
     request.user.HelplineUser.hl_status = 'Available'
     request.user.HelplineUser.save()
 
-    message = backend.pause_queue_member(
-        queue='Q718874580',
-        interface='%s' % (request.user.HelplineUser.hl_exten),
-        paused=False
-    )
     return redirect("/helpline/#%s" % (message))
 
 
