@@ -767,7 +767,7 @@ input:checked + .slider:before {
                         {% csrf_token %}
                       <div class="modal-header bg-light-blue-active">
                         <!--button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button-->
-                        <h4 class="modal-title" id="myModalLabel">{% trans "Case Form" %} | Case ID 00000 | 00:00:00<small class="pull-right" style="color:#fff;">Time: <span id="tday" >|</span></small></h4>
+                        <h4 class="modal-title" id="myModalLabel">{% trans "Case Form" %} | Case ID <span id="caseid" >00000</span> | 00:00:00<small class="pull-right" style="color:#fff;">Time: <span id="tday" >|</span></small></h4>
                         
                       </div>
                       <div class="modal-body" style="padding: 0px; height: 80vh;">
