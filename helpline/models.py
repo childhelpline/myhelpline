@@ -735,14 +735,22 @@ class HelplineUser(models.Model):
         time_now = timezone.now()
         last_login = self.user.last_login
         ld = time_now - last_login
-        login_duration = {'hours':"%02d" % (ld.seconds//3600)
-            ,'min':"%02d" % ((ld.seconds//60)%60),'seconds': "%02d" % ((ld.seconds)%60)}
+        login_duration = {
+            'hours': "%02d" % (ld.seconds//3600),
+            'min': "%02d" % ((ld.seconds//60) % 60),
+            'seconds': "%02d" % ((ld.seconds) % 60)
+        }
         return login_duration
 
     def get_ready_duration(self):
         """Get how long the agent has been on the queue"""
-        clockin = Clock.objects.filter(hl_key=self.hl_key,hl_clock="Queue Join").order_by('-id').first()
-        clockout = Clock.objects.filter(hl_key=self.hl_key,hl_clock="Queue Leave").order_by('-id').first()
+        clockin = Clock.objects.filter(
+            user=self.user,
+            hl_clock="Queue Join").order_by('-id').first()
+        clockout = Clock.objects.filter(
+            user=self.user,
+            hl_clock="Queue Leave"
+        ).order_by('-id').first()
 
         if clockin:
             if clockout:
@@ -750,10 +758,13 @@ class HelplineUser(models.Model):
                     return
             seconds = time.time() - clockin.hl_time
             ld = timedelta(seconds=seconds if seconds else 0)
-            ready_duration = {'hours': "%02d" % (ld.seconds//3600),
-                              'min': "%02d" % (
-                                  (ld.seconds//60) % 60), 'seconds': "%02d" % (
-                    (ld.seconds) % 60)}
+            ready_duration = {
+                'hours': "%02d" % (ld.seconds//3600),
+                'min': "%02d" % (
+                    (ld.seconds//60) % 60),
+                'seconds': "%02d" % (
+                    (ld.seconds) % 60)
+            }
             return ready_duration
         else:
             return
