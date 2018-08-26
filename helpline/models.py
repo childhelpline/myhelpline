@@ -17,6 +17,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from helpdesk.models import Ticket
 from onadata.apps.logger.models.instance import Instance
+from onadata.apps.logger.models.xform import XForm
 
 class Address(models.Model):
     """Gives details about parties in a report"""
@@ -409,6 +410,30 @@ class Service(models.Model):
         blank=True, null=True,
         help_text=_('Corresponding Asterisk Queue name')
     )
+    walkin_xform = models.ForeignKey(
+        XForm, on_delete=models.CASCADE,
+        blank=True, null=True,
+        related_name='walkin_xform',
+        help_text=_('Walkin Case Form')
+    )
+    call_xform = models.ForeignKey(
+        XForm, on_delete=models.CASCADE,
+        blank=True, null=True,
+        related_name='call_xform',
+        help_text=_('Call Case Form')
+    )
+    qa_xform = models.ForeignKey(
+        XForm, on_delete=models.CASCADE,
+        blank=True, null=True,
+        related_name='qa_xform',
+        help_text=_('Quality Analysis Form')
+    )
+    web_online_xform = models.ForeignKey(
+        XForm, on_delete=models.CASCADE,
+        blank=True, null=True,
+        related_name='web_online_xform',
+        help_text=_('Quality Analysis Form')
+    )
 
     def __unicode__(self):
         return self.name
@@ -515,7 +540,7 @@ class Report(models.Model):
         except Exception as e:
             from django.core.urlresolvers import reverse
 
-        return reverse('my_forms', args=[self.casetype.lower() if self.casetype else "call"]) + "?case=%s" % str(self.case.hl_case)
+        return reverse('case_form', args=[self.casetype.lower() if self.casetype else "call"]) + "?case=%s" % str(self.case)
 
 
 class Messaging(models.Model):
