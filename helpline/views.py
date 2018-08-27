@@ -683,55 +683,39 @@ def case_form(request, form_name):
     message = ''
     service = Service.objects.get(id=1)
     if(form_name == 'walkin'):
-        id_string = service.walkin_xform.id_string
+        xform = service.walkin_xform
     elif(form_name == 'qa'):
-        id_string = service.qa_xform.id_string
+        xform = service.qa_xform
     elif(form_name == 'webonline'):
-        id_string = service.web_online_xform.id_string
+        xform = service.web_online_xform
     else:
-        id_string = service.call_xform.id_string
-
+        xform = service.call_xform
 
     initial = {}
+    data = {}
     if request.method == 'GET':
         case_number = request.GET.get('case')
         username = 'demoadmin'
         form_url = get_form_url(request, username, settings.ENKETO_PROTOCOL)
-        xform = get_form({
-            'user__username__iexact': username,
-            'id_string__iexact': id_string
-        })
         # Check if we're looking for a case.
         if case_number:
             my_case = Case.objects.get(hl_case=case_number)
             report, contact, address = get_case_info(case_number)
         try:
             url = enketo_url(form_url, xform.id_string)
+            # Poor mans iframe url gen
+            iframe_url = url[:url.find("::")] + "i/" + url[url.find("::"):]+\
+              "?parentWindowOrigin=" + request.build_absolute_uri()
+            data['iframe_url'] = iframe_url
             if not url:
                 return HttpResponseRedirect(
                     reverse(
                         'form-show',
                         kwargs={'username': username,
-                                'id_string': id_string}))
-            return HttpResponseRedirect(url)
+                                'id_string': xform.id_string}))
+#            return HttpResponseRedirect(iframe_url)
         except EnketoError as e:
-
-            case_history = Report.objects.filter(telephone='3344').order_by('-case')
-            disposition_form = DispositionForm()
-            form = CallForm(initial=initial)
-            case_history_table = CaseHistoryTable(case_history)
-            my_case = Case.objects.get(hl_case=1)
-            report, contact, address = get_case_info(1)
-
-            data = {
-                'form': form,
-                'contact': contact if contact else None,
-                'initial': initial,
-                'disposition_form': disposition_form,
-                'case_history_table': case_history_table,
-                'form_name': form_name,
-                'message': message,
-            }
+            data = {}
             owner = User.objects.get(username__iexact=username)
             data['profile'], __ = UserProfile.objects.get_or_create(user=owner)
             data['xform'] = xform
@@ -748,52 +732,7 @@ def case_form(request, form_name):
                 fail_silently=True)
 
 
-            return render(request, "helpline/case_form.html", data)
-
-            initial = {
-                'case_number': case_number,
-                'phone_number': contact.hl_contact if contact else '',
-                'calls': contact.hl_calls if contact else '',
-                'caller_name': address.hl_names if address else '',
-                'company': address.hl_company if address else '',
-                'gender': address.hl_gender if address else '',
-                'region': address.hl_address3 if address else '',
-                'language': address.hl_language if address else '',
-                'district': address.hl_address2 if address else '',
-                'address': address.hl_address1 if address else '',
-                'current': address.hl_current if address else '',
-                'occupation': address.hl_headoccupation if address else '',
-                'age_group': address.hl_ageclass if address else '',
-                'email': address.hl_email if address else '',
-                'data': my_case.hl_data if my_case else '',
-                'case_status': report.casestatus if report else '',
-                'national_registration_card': address.hl_adultnumber if address else '',
-                'physical_address': address.hl_address4 if address else '',
-
-            }
-            case_history = Report.objects.filter(telephone=contact.hl_contact).order_by('-case')
-            case_history_table = CaseHistoryTable(case_history)
-            try:
-                case_history_table.paginate(page=request.GET.get('page', 1), per_page=10)
-            except Exception as e:
-                # Ignore pagination error.
-                pass
-        else:
-            initial = {}
-            my_case = None
-
-            # Case history table will display all records when initialized.
-            case_history = Report.objects.all().order_by('-case_id')
-            report, contact, address = (None, None, None)
-            case_history_table = CaseHistoryTable(case_history)
-            case_history_table.paginate(page=request.GET.get('page', 1), per_page=10)
-
-        initial_disposition = {'case_number': case_number,
-                               'disposition': my_case.hl_disposition
-                               if my_case else ''}
-        disposition_form = DispositionForm(initial=(initial_disposition))
-
-        form = CallForm(initial=initial)
+        return render(request, "helpline/case_form.html", data)
 
     elif request.method == 'POST':
         contact, address = (None, None)

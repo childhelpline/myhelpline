@@ -93,18 +93,18 @@ $(function(){
 <div class="">
   <div class="box box-info" style="{% if loaded_form.name == 'qa' %} min-height: 5350px; {% else %} min-height: 1200px; {% endif %}">
     <div class="col-sm-12">
-      <iframe src="{{ loaded_form.url }}" style="width: 100%; border: none; {% if loaded_form.name == 'qa' %} min-height: 5300px; {% else %} min-height: 1200px; {% endif %}"></iframe>
+      <iframe src="{{ iframe_url }}" style="width: 100%; border: none; {% if loaded_form.name == 'qa' %} min-height: 5300px; {% else %} min-height: 1200px; {% endif %}"></iframe>
     </div>
     <!--div class="box-header with-border">
         <h3 class="box-title">Case Number: {{ initial.case_number }}   Reporter: {{ initial.caller_name }}</h3>
     </div>
           <div class="box-tools pull-right">
-            {% crispy disposition_form %}
+            {# crispy disposition_form #}
           </div>
     <div class="row">
         <div class="col-sm-8">
             {% if message %}<div class="alert alert-info alert-dismissible">{{ message }}</div>{% endif %}
-            <div id="form_html">{% crispy form form.helper %}</div>
+            <div id="form_html">{# crispy form form.helper #}</div>
 
         </div>
             {% if contact %}
@@ -114,7 +114,7 @@ $(function(){
                         <h5 style="width:100%; border-bottom:solid thin #CCC;"><strong>Previous Cases</strong></h5>
                         <div style="padding:3px;">
                         {% load django_tables2 %}
-                        {% render_table case_history_table %}
+                        {# render_table case_history_table #}
                         </div>
                     </div>
                 </div>
@@ -357,5 +357,16 @@ function closeOverlay(){
               <!--END FORMs-->
 
 </div>
+        <script>
+            window.addEventListener("message", receiveMessage, false);
 
+            function receiveMessage(event)
+            {
+              // TODO in real life, check origin! if (event.origin !== "http://enk.to:8080") return;
+              console.log('data received from iframe', JSON.parse(event.data));
+              console.log('origin of message', event.origin);
+              console.log('source of message', event.source);
+            }
+
+        </script>
 {% endblock content %}

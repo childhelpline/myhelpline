@@ -531,7 +531,7 @@ input:checked + .slider:before {
           </a>
           <ul class="treeview-menu">
           <li>
-            <a tabindex="-1" href="#qa-modal" data-backdrop="static"  data-keyboard="false" class="confirm" role="button" data-toggle="modal"><i class="fa fa-circle-o"></i> {% trans "New QA Form" %}
+            <a href="{% url "case_form" "qa" %}" role="button"><i class="fa fa-circle-o"></i> {% trans "New QA Form" %}
           </a></li>
             <li><a href="{% url 'dashboardreports' 'totalcases' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Cases" %}
               <span class="pull-right-container">
