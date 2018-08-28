@@ -153,7 +153,7 @@
         <form action="" method="post">
           {% csrf_token %}
           <div class="">
-            <h2 class="" id="myModalLabel">{% trans "New Case" %}  {{ form_name }}</h2>
+            <h2 class="" id="myModalLabel">{{ form_name }}{% trans ' Form' %}</h2>
           </div>
           <div class="modal-body" style="padding: 0px; height: 80vh;">
 
@@ -227,7 +227,7 @@
 
               <div class="row">
                 <!-- accepted payments column -->
-                <div class="col-xs-6 col-md-12 contact-search">
+                <div class="col-xs-6 contact-search">
                   <p class="lead">Reporter Details:</p>
                   <div class="text-muted well well-sm no-shadow">
                     <!-- form start -->
@@ -270,7 +270,7 @@
                   </div>
                 </div>
                 <!-- /.col -->
-                <div class="col-xs-6 contact-results hidden">
+                <div class="col-xs-6 contact-results">
                   <p class="lead">Historical Cases</p>
 
                   <div class="table-responsive text-muted well well-sm no-shadow" style="min-height: 242px;">
