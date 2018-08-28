@@ -263,8 +263,8 @@
                       <!-- /.box-body -->
 
                       <div class="box-footer" style="background-color: transparent;">
-                        <!--button type="button" class="btn btn-primary" onclick="$('.contact-search').removeClass('col-md-12');$('.contact-results').removeClass('hidden');">Search Contact</button-->
-                        <button type="button" class="btn btn-primary pull-right" onclick="$('.invoice').addClass('hidden'); $('iframe').removeClass('hidden'); ">New Case</button>
+                        <!--button type="button" class="btn btn-primary" onclick="$('.contact-search').removeClass('col-md-12');$('.contact-results').removeClass('hidden');">Search Contact</button->
+                        <button type="button" class="btn btn-primary" onclick="$('.invoice').addClass('hidden'); $('iframe').removeClass('hidden'); "--><a style="padding-bottom: 10px; padding-top:10px;" tabindex="-1" href="#walkin-modal" data-backdrop="static" class="btn btn-lg btn-primary btn-flat pull-right" role="button" data-toggle="modal">{% trans 'Next' %} </a>
                       </div>
                     </form>
                   </div>
@@ -366,7 +366,7 @@
         {% csrf_token %}
         <div class="modal-header bg-light-blue-active">
           <!--button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button-->
-          <h4 class="modal-title" id="myModalLabel">{% trans "Case Form" %} | Case ID <span id="caseid" >00000</span> | 00:00:00</h4>
+          <h4 class="modal-title" id="myModalLabel">{% trans "Case Form" %} | Case ID <span id="caseid">00000</span> | 00:00:00 <span class="pull-right" id="formTimer" style="font-size: 18px; color: #fff;">00:00:00</span><h4>
 
         </div>
         <div class="modal-body" style="padding: 0px; height: 80vh;">
