@@ -1,110 +1,367 @@
+{% extends "helpline/base.html" %}
+{% load i18n %}
+{% load selectable_tags %}
+{% include_jquery_libs %}
+{% include_ui_theme %}
 
-    <section class="invoice">
-      <div class="row">
-        <!-- accepted payments column -->
-        <div class="col-xs-6 col-md-12 contact-search">
-          <p class="lead">Contact Search:</p>
-            <div class="text-muted well well-sm no-shadow">
-            <!-- form start -->
-            <form role="form">
-              <div class="box-body">
-                <div class="form-group">
-                  <label for="exampleInputEmail1">Contact Number</label>
-                  <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Enter Contact">
-                </div>
-                <div class="form-group">
-                  <label for="exampleInputPassword1">Name</label>
-                  <input type="text" class="form-control" id="exampleInputPassword1" placeholder="Reporter Name">
-                </div>
-              </div>
-              <!-- /.box-body -->
+{% load staticfiles %}
+{% load crispy_forms_tags %}
 
-              <div class="box-footer" style="background-color: transparent;">
-                <button type="button" class="btn btn-primary" onclick="$('.contact-search').removeClass('col-md-12');$('.contact-results').removeClass('hidden');">Search Contact</button>
-                <button type="button" class="btn btn-primary pull-right" onclick="$('.invoice').addClass('hidden'); $('iframe').removeClass('hidden'); ">New Reporter</button>
-              </div>
-            </form>
-          </div>
-        </div>
-        <!-- /.col -->
-        <div class="col-xs-6 contact-results hidden">
-          <p class="lead">Contact Search Results</p>
+{% block navbar_nav %}
+{% endblock navbar_nav %}
 
-          <div class="table-responsive text-muted well well-sm no-shadow" style="min-height: 242px;">
-            <table class="table table-responsive">
-              <tr>
-                <th style="width:5px;">#</th>
-                <th style="width:40%;" align="left">Name</th>
-                <th style="width:40%;" align="left">Contact</th>
-                <th style="width:16%;" align="left">Action</th>
-              </tr>
-              <tr>
-                <td>1.</td>
-                <td><a href="javascript:void(0)" onclick="$('.conact-cases').removeClass('hidden');">Kemboi Cheruiyot</a></td>
-                <td>072324343434</td>
-                <td><a href="javascript:void(0)" onclick="$('.invoice').addClass('hidden'); $('iframe').removeClass('hidden');">Create Case</a></td>
-              </tr>
-              <tr>
-                <td>2.</td>
-                <td><a href="javascript:void(0)" onclick="$('.conact-cases').removeClass('hidden');">Kemboi Cheru</a></td>
-                <td>072333332222</td>
-                <td><a href="javascript:void(0)" onclick="$('.invoice').addClass('hidden'); $('iframe').removeClass('hidden');">Create Case</a></td>
-              </tr>
-              <tr>
-                <td>3.</td>
-                <td><a href="javascript:void(0)" onclick="$('.conact-cases').removeClass('hidden');">Cheru Kemboi</a></td>
-                <td>0723444344232</td>
-                <td><a href="javascript:void(0)" onclick="$('.invoice').addClass('hidden'); $('iframe').removeClass('hidden');">Create Case</a></td>
-              </tr>
-            </table>
-          </div>
-        </div>
-        <!-- /.col -->
-      </div>
-      <!-- /.row -->
-
-
-      <!-- Table row -->
-      <div class="row conact-cases hidden">
-        <div class="col-xs-12 table-responsive" style="max-height: 250px; overflow-y: scroll; ">
-          <table class="table table-striped">
-            <thead>
-            <tr>
-              <th width="5px">#</th>
-              <th>Case ID</th>
-              <th>Source</th>
-              <th>Case Category</th>
-              <th>Case Status</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-              <td>1.</td>
-              <td><a href="">21232</a></td>
-              <td>Email</td>
-              <td>Abuse</td>
-              <td>Escalated</td>
-            </tr>
-            <tr>
-              <td>2.</td>
-              <td><a href="">21332</a></td>
-              <td>SMS</td>
-              <td>Abuse</td>
-              <td>Closed</td>
-            </tr>
-            <tr>
-              <td>3.</td>
-              <td><a href="">21322</a></td>
-              <td>Call</td>
-              <td>Information Inquiry</td>
-              <td>Closed</td>
-            </tr>
-            </tbody>
-          </table>
-        </div>
-        <!-- /.col -->
-      </div>
-      <!-- /.row -->
-
-      <!-- this row will not appear when printing -->
+{% block box %}
+<section class="content-header">
+      <h1 style="text-transform: capitalize;">
+        {{ loaded_form.name }} Form
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><a href="#">Forms</a></li>
+        <li class="active">{{ form_name }}</li>
+      </ol>
     </section>
+{% endblock box %}
+
+{% block head %}
+    <link rel="stylesheet" href="{% static 'helpline/css/ui/1.10.4/themes/ui-lightness/jquery-ui.css' %}" type="text/css" />
+    <link href="{% static 'selectable/css/dj.selectable.css' %}" type="text/css" media="all" rel="stylesheet" />
+    <script src="{% static 'helpline/js/ui/1.10.4/jquery-ui.js' %}"></script>
+    <script type="text/javascript" src="{% static 'selectable/js/jquery.dj.selectable.js' %}"></script>
+{% endblock head %}
+{% block content %}
+
+<script>
+  $(function() {
+    $('#caseDet').areYouSure(
+      {
+        message: 'It looks like you have been editing something. '
+               + 'If you leave before saving, your changes will be lost.'
+      }
+    );
+  });
+
+</script>
+
+
+<script type='text/javascript'>
+$(function(){
+  $('select[name=sub_category]').empty();
+  $('select[name=sub_category]').prepend('<option value="Not selected" selected disabled>Select Category...</option>');
+  $('select[name=sub_sub_category]').empty();
+  $('select[name=sub_sub_category]').prepend('<option value="Not selected" selected disabled>Select a Sub-Category...</option>');
+  // called when category field changes from initial value
+  $('select[name=category]').change(function(){
+
+    if($("#id_category option:selected").text()) {
+    category_id = $('select[name=category]').val();
+
+    request_url = '/helpline/ajax/get_subcategory/' + category_id + '/';
+      $.ajax({
+        url: request_url,
+        type: "GET",
+        success: function(data){
+          $('select[name=sub_category]').empty();
+          $.each(data.data, function(key, value){
+            $('select[name=sub_category]').append('<option value="' + value.chlsubcategory + '">' + value.chlsubcategory + '</option>');
+          });
+        }
+      })
+    }
+  })
+  $('select[name=sub_category]').change(function(){
+
+    if($("#id_sub_category option:selected").text()) {
+    sub_category_id = $('select[name=sub_category]').val();
+
+    request_url = '/helpline/ajax/get_sub_subcategory/' + sub_category_id + '/';
+      $.ajax({
+        url: request_url,
+        type: "GET",
+        success: function(data){
+          $('select[name=sub_sub_category]').empty();
+          $.each(data.data, function(key, value){
+            $('select[name=sub_sub_category]').append('<option value="' + value.chlsubsubcat + '">' + value.chlsubsubcat + '</option>');
+          });
+        }
+      })
+    }
+  })
+});
+</script>
+<section class="content">
+<div class="">
+  <div class="box box-info" style="{% if loaded_form.name == 'qa' %} min-height: 5350px; {% else %} min-height: 1200px; {% endif %}">
+    <div class="col-sm-12">
+    </div>
+    <!--div class="box-header with-border">
+        <h3 class="box-title">Case Number: {{ initial.case_number }}   Reporter: {{ initial.caller_name }}</h3>
+    </div>
+          <div class="box-tools pull-right">
+            {# crispy disposition_form #}
+          </div>
+    <div class="row">
+        <div class="col-sm-8">
+            {% if message %}<div class="alert alert-info alert-dismissible">{{ message }}</div>{% endif %}
+            <div id="form_html">{# crispy form form.helper #}</div>
+
+        </div>
+            {% if contact %}
+            <div class="col-md-4">
+                <div style="box box-warning">
+                    <div class="box-body">
+                        <h5 style="width:100%; border-bottom:solid thin #CCC;"><strong>Previous Cases</strong></h5>
+                        <div style="padding:3px;">
+                        {% load django_tables2 %}
+                        {# render_table case_history_table #}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+          </div-->
+    </div>
+</div>
+</section>
+
+
+<script type="text/javascript">
+
+function saveCase(){
+var case_form = '#caseDet';
+
+$.ajax({
+    url: "{% url 'save_call_form' %}",
+    type: "POST",
+    data: $("#caseDet").serialize(),
+    success: function(data) {
+        if (!(data['success'])) {
+            // Here we replace the form, for the
+            $(case_form).replaceWith(data['form_html']);
+        }
+        else {
+            // Here you can show the user a success message or do whatever you need
+            //$(example_form).find('.success-message').show();
+            $("#success-message").html("Success");
+        }
+    },
+    error: function () {
+        //$(case_form).find('.error-message').show()
+        $("#error-message").html("Error");
+    }
+});
+}
+
+function disposeCase(param){
+    var dispose_form = '#disposeDet';
+
+    $.ajax({
+        url: "{% url 'save_disposition_form' %}",
+        type: "POST",
+        data: $("#disposeDet").serialize(),
+        success: function(data) {
+            if (!(data['success'])) {
+                    $(dispose_form).replaceWith(data['form_html']);
+                }
+            else{
+                closeOverlay();
+            }
+        },
+        error: function() {
+            $("#error-message").html("Error");
+        }
+    });
+}
+
+function closeOverlay(){
+    top.window.location.href = '{% url "dashboard_home" %}';
+    }
+
+
+</script>
+
+<div>
+
+        <!--Forms-->
+
+                <!-- Modal -->
+                <div class="modal fade"  id="walkin-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+                  <div class="modal-dialog" role="document" style="width: 80%;">
+                    <div class="modal-content">
+                    <form action="" method="post">
+                        {% csrf_token %}
+                      <div class="modal-header bg-light-blue-active">
+                        <!--button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button-->
+                        <h4 class="modal-title" id="myModalLabel">{% trans "Case Form" %} | Case ID <span id="caseid" >00000</span> | 00:00:00</h4>
+                        
+                      </div>
+                      <div class="modal-body" style="padding: 0px; height: 80vh;">
+                          <iframe src="{{ iframe_url }}" style="width: 100%; border: none; {% if form_name == 'qa' %} min-height: 5300px; {% else %} min-height: 1200px; {% endif %}"></iframe>
+                      </div>
+                    </form>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Modal -->
+                <div class="modal fade"  id="qa-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+                  <div class="modal-dialog" role="document" style="width: 80%;">
+                    <div class="modal-content">
+                    <form action="" method="post">
+                        {% csrf_token %}
+                      <div class="modal-header">
+                        <h2 class="modal-title" id="myModalLabel">{% trans "QA Form" %}</h2>
+                      </div>
+                      <div class="modal-body" style="padding: 0px; height: 80vh;">
+
+
+                        <section class="invoice">
+                          <div class="row">
+                            <!-- accepted payments column -->
+                            <div class="col-xs-6 col-md-12 contact-search">
+                              <p class="lead">Contact Search:</p>
+                                <div class="text-muted well well-sm no-shadow">
+                                <!-- form start -->
+                                <form role="form">
+                                  <div class="box-body">
+                                    <div class="form-group">
+                                      <label for="contactTel">Telephone Number</label>
+                                      <input type="tel" class="form-control" id="contactTel" placeholder="Enter telephone number">
+                                    </div>
+                                    <div class="form-group">
+                                      <label for="contactName">Name</label>
+                                      <input type="text" class="form-control" id="contactName" placeholder="Contact Name">
+                                    </div>
+                                  </div>
+                                  <!-- /.box-body -->
+
+                                  <div class="box-footer" style="background-color: transparent;">
+                                    <button type="button" class="btn btn-primary" onclick="$('.contact-search').removeClass('col-md-12');$('.contact-results').removeClass('hidden');">Search Contact</button>
+                                    <button type="button" class="btn btn-primary pull-right" onclick="$('.invoice').addClass('hidden'); $('iframe').removeClass('hidden'); ">New Reporter</button>
+                                  </div>
+                                </form>
+                              </div>
+                            </div>
+                            <!-- /.col -->
+                            <div class="col-xs-6 contact-results hidden">
+                              <p class="lead">Contact Search Results</p>
+
+                              <div class="table-responsive text-muted well well-sm no-shadow" style="min-height: 242px;">
+                                <table class="table table-responsive">
+                                  <tr>
+                                    <th style="width:5px;">#</th>
+                                    <th style="width:40%;" align="left">Name</th>
+                                    <th style="width:40%;" align="left">Contact</th>
+                                    <th style="width:16%;" align="left">Action</th>
+                                  </tr>
+                                  <tr>
+                                    <td>1.</td>
+                                    <td><a href="javascript:void(0)" onclick="$('.conact-cases').removeClass('hidden');">Kemboi Cheruiyot</a></td>
+                                    <td>072324343434</td>
+                                    <td><a href="javascript:void(0)" onclick="$('.invoice').addClass('hidden'); $('iframe').removeClass('hidden');">Create Case</a></td>
+                                  </tr>
+                                  <tr>
+                                    <td>2.</td>
+                                    <td><a href="javascript:void(0)" onclick="$('.conact-cases').removeClass('hidden');">Kemboi Cheru</a></td>
+                                    <td>072333332222</td>
+                                    <td><a href="javascript:void(0)" onclick="$('.invoice').addClass('hidden'); $('iframe').removeClass('hidden');">Create Case</a></td>
+                                  </tr>
+                                  <tr>
+                                    <td>3.</td>
+                                    <td><a href="javascript:void(0)" onclick="$('.conact-cases').removeClass('hidden');">Cheru Kemboi</a></td>
+                                    <td>0723444344232</td>
+                                    <td><a href="javascript:void(0)" onclick="$('.invoice').addClass('hidden'); $('iframe').removeClass('hidden');">Create Case</a></td>
+                                  </tr>
+                                </table>
+                              </div>
+                            </div>
+                            <!-- /.col -->
+                          </div>
+                          <!-- /.row -->
+
+
+                          <!-- Table row -->
+                          <div class="row conact-cases hidden">
+                            <div class="col-xs-12 table-responsive" style="max-height: 250px; overflow-y: scroll; ">
+                              <table class="table table-striped">
+                                <thead>
+                                <tr>
+                                  <th width="5px">#</th>
+                                  <th>Case ID</th>
+                                  <th>Source</th>
+                                  <th>Case Category</th>
+                                  <th>Case Status</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                  <td>1.</td>
+                                  <td><a href="">21232</a></td>
+                                  <td>Email</td>
+                                  <td>Abuse</td>
+                                  <td>Escalated</td>
+                                </tr>
+                                <tr>
+                                  <td>2.</td>
+                                  <td><a href="">21332</a></td>
+                                  <td>SMS</td>
+                                  <td>Abuse</td>
+                                  <td>Closed</td>
+                                </tr>
+                                <tr>
+                                  <td>3.</td>
+                                  <td><a href="">21322</a></td>
+                                  <td>Call</td>
+                                  <td>Information Inquiry</td>
+                                  <td>Closed</td>
+                                </tr>
+                                </tbody>
+                              </table>
+                            </div>
+                            <!-- /.col -->
+                          </div>
+                          <!-- /.row -->
+
+                          <!-- this row will not appear when printing -->
+                        </section>
+
+                        <iframe src="https://enketo.bitz-itc.com/i/::Bkyb35PE" style="width: 100%; min-height: 80vh; border: none;"></iframe>
+                      </div>
+                    </form>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Modal -->
+                <div class="modal fade"  id="web-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+                  <div class="modal-dialog" role="document" style="width: 80%;">
+                    <div class="modal-content">
+                    <form action="" method="post">
+                        {% csrf_token %}
+                      <div class="modal-header">
+                        <h2 class="modal-title" id="myModalLabel">{% trans "Web Online" %}</h2>
+                      </div>
+                      <div class="modal-body" style="padding: 0px; height: 80vh;">
+                        <iframe src="https://enketo.bitz-itc.com/i/::CIBYdg90" style="width: 100%; min-height: 80vh; border: none;"></iframe>
+                      </div>
+                    </form>
+                    </div>
+                  </div>
+                </div>
+
+              <!--END FORMs-->
+
+</div>
+        <script>
+            window.addEventListener("message", receiveMessage, false);
+
+            function receiveMessage(event)
+            {
+              // TODO in real life, check origin! if (event.origin !== "http://enk.to:8080") return;
+              console.log('data received from iframe', JSON.parse(event.data));
+              console.log('origin of message', event.origin);
+              console.log('source of message', event.source);
+            }
+
+        </script>
+{% endblock content %}

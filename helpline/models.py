@@ -17,6 +17,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from helpdesk.models import Ticket
 from onadata.apps.logger.models.instance import Instance
+from onadata.apps.logger.models.xform import XForm
 
 class Address(models.Model):
     """Gives details about parties in a report"""
@@ -156,15 +157,6 @@ class Category(models.Model):
     def __unicode__(self):
         return self.hl_category
 
-
-class Clock(models.Model):
-    hl_key = models.IntegerField(verbose_name='Agent')
-    hl_clock = models.CharField(verbose_name='Action',  max_length=50)
-    hl_service = models.IntegerField(verbose_name='Service')
-    hl_time = models.IntegerField(verbose_name='Time')
-
-    def __unicode__(self):
-        return self.hl_clock
 
 class ClockBit(models.Model):
     hl_key = models.IntegerField()
@@ -418,9 +410,51 @@ class Service(models.Model):
         blank=True, null=True,
         help_text=_('Corresponding Asterisk Queue name')
     )
+    walkin_xform = models.ForeignKey(
+        XForm, on_delete=models.CASCADE,
+        blank=True, null=True,
+        related_name='walkin_xform',
+        help_text=_('Walkin Case Form')
+    )
+    call_xform = models.ForeignKey(
+        XForm, on_delete=models.CASCADE,
+        blank=True, null=True,
+        related_name='call_xform',
+        help_text=_('Call Case Form')
+    )
+    qa_xform = models.ForeignKey(
+        XForm, on_delete=models.CASCADE,
+        blank=True, null=True,
+        related_name='qa_xform',
+        help_text=_('Quality Analysis Form')
+    )
+    web_online_xform = models.ForeignKey(
+        XForm, on_delete=models.CASCADE,
+        blank=True, null=True,
+        related_name='web_online_xform',
+        help_text=_('Quality Analysis Form')
+    )
 
     def __unicode__(self):
         return self.name
+
+
+class Clock(models.Model):
+    """A Clock is an audit trail of agent actions"""
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        blank=True, null=True
+    )
+    hl_clock = models.CharField(verbose_name='Action', max_length=50)
+    service = models.ForeignKey(
+        Service, on_delete=models.CASCADE,
+        blank=True, null=True
+    )
+    hl_time = models.IntegerField(verbose_name='Time')
+
+    def __unicode__(self):
+        return self.hl_clock
 
 
 class Report(models.Model):
@@ -480,6 +514,9 @@ class Report(models.Model):
     casetype = models.CharField(max_length=6, verbose_name='Case Type',
                                 blank=True, null=True)
     hl_time = models.IntegerField(verbose_name='Time', blank=True, null=True)
+    hl_unique = models.CharField(unique=True, max_length=20,
+                                 blank=True, null=True,
+                                 verbose_name='Unique Call-ID')
     qa = models.CharField(max_length=3, verbose_name='QA',
                           blank=True, null=True)
 
@@ -490,7 +527,7 @@ class Report(models.Model):
         """ Get casetype."""
         if self.casetype.lower() == "call":
             return "Inbound"
-        elif self.casetype.lower() == "voicmail":
+        elif self.casetype.lower() == "voicemail":
             return "Voicemail"
         else:
             return "Outbound"
@@ -503,7 +540,7 @@ class Report(models.Model):
         except Exception as e:
             from django.core.urlresolvers import reverse
 
-        return reverse('my_forms', args=[self.casetype.lower() if self.casetype else "call"]) + "?case=%s" % str(self.case.hl_case)
+        return reverse('case_form', args=[self.casetype.lower() if self.casetype else "call"]) + "?case=%s" % str(self.case)
 
 
 class Messaging(models.Model):
@@ -723,14 +760,22 @@ class HelplineUser(models.Model):
         time_now = timezone.now()
         last_login = self.user.last_login
         ld = time_now - last_login
-        login_duration = {'hours':"%02d" % (ld.seconds//3600)
-            ,'min':"%02d" % ((ld.seconds//60)%60),'seconds': "%02d" % ((ld.seconds)%60)}
+        login_duration = {
+            'hours': "%02d" % (ld.seconds//3600),
+            'min': "%02d" % ((ld.seconds//60) % 60),
+            'seconds': "%02d" % ((ld.seconds) % 60)
+        }
         return login_duration
 
     def get_ready_duration(self):
         """Get how long the agent has been on the queue"""
-        clockin = Clock.objects.filter(hl_key=self.hl_key,hl_clock="Queue Join").order_by('-id').first()
-        clockout = Clock.objects.filter(hl_key=self.hl_key,hl_clock="Queue Leave").order_by('-id').first()
+        clockin = Clock.objects.filter(
+            user=self.user,
+            hl_clock="Queue Join").order_by('-id').first()
+        clockout = Clock.objects.filter(
+            user=self.user,
+            hl_clock="Queue Leave"
+        ).order_by('-id').first()
 
         if clockin:
             if clockout:
@@ -738,10 +783,13 @@ class HelplineUser(models.Model):
                     return
             seconds = time.time() - clockin.hl_time
             ld = timedelta(seconds=seconds if seconds else 0)
-            ready_duration = {'hours': "%02d" % (ld.seconds//3600),
-                              'min': "%02d" % (
-                                  (ld.seconds//60) % 60), 'seconds': "%02d" % (
-                    (ld.seconds) % 60)}
+            ready_duration = {
+                'hours': "%02d" % (ld.seconds//3600),
+                'min': "%02d" % (
+                    (ld.seconds//60) % 60),
+                'seconds': "%02d" % (
+                    (ld.seconds) % 60)
+            }
             return ready_duration
         else:
             return
@@ -749,7 +797,7 @@ class HelplineUser(models.Model):
     def get_recent_clocks(self):
         """Get recent actions A.K.A Clocks
         We return only 5 at this time."""
-        return Clock.objects.filter(hl_key=self.hl_key).order_by('-id')[:5]
+        return Clock.objects.filter(user=self.user).order_by('-id')[:5]
 
 
 class Cdr(models.Model):

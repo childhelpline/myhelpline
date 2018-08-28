@@ -17,6 +17,8 @@ import requests
 
 from django.shortcuts import render, redirect
 from django.http import JsonResponse, Http404
+from django.http import (HttpResponse, HttpResponseBadRequest,
+                         HttpResponseForbidden, HttpResponseRedirect)
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
 from django.template.context_processors import csrf
@@ -27,6 +29,7 @@ from django.db.models import Q
 from django.db.models import Sum
 from django.contrib.auth.views import login as django_login
 from django.contrib.auth.views import logout as django_logout
+from django.contrib import messages
 from django.db.models.signals import post_save
 from django.conf import settings
 from django.utils.translation import gettext as _
@@ -53,6 +56,9 @@ from dateutil.relativedelta import relativedelta
 
 from onadata.libs.utils.viewer_tools import (
     create_attachments_zipfile, export_def_from_filename, get_form)
+from onadata.libs.exceptions import EnketoError
+from onadata.libs.utils.viewer_tools import enketo_url, get_form, get_form_url
+from onadata.apps.main.models import MetaData, UserProfile
 
 from helpline.models import Report, HelplineUser,\
         Schedule, Case, Postcode,\
@@ -128,14 +134,25 @@ def check_call(request):
         request.user.HelplineUser.save()
         report = Report.objects.get(case=my_case)
         telephone = report.telephone
+        contact, contact_created = Contact.objects.get_or_create(hl_contact=telephone)
+        if contact_created or contact.address == None:
+            address = Address(user=request.user)
+            contact.address = address
+            address.save()
+            contact.save()
 
     else:
         telephone = None
         my_case = None
 
-    response = JsonResponse({'my_case': my_case,
-                             'telephone': telephone,
-                             'type': my_case.hl_data if my_case else 0})
+    response = JsonResponse(
+        {
+            'my_case': my_case.hl_case if my_case else None,
+            'telephone': telephone,
+            'name': contact.address.hl_names if my_case else None,
+            'type': my_case.hl_data if my_case else 0
+        }
+    )
     return response
 
 
@@ -246,32 +263,40 @@ def queue_remove(request, auth):
         hotdesk.update(agent=0)
         agent.hl_exten = ''
         agent.hl_jabber = ''
-        queue_manager(agent.hl_key, request.session.get('extension'), 'queueleave')
+        schedules = Schedule.objects.filter(user=agent.user)
+        if schedules:
+            for schedule in schedules:
+                data = backend.remove_from_queue(
+                    agent="SIP/%s" % (request.session.get('extension')),
+                    queue='%s' % (schedule.service.queue),
+                )
+        else:
+            data = _("Agent does not have any assigned schedule")
         agent.save()
 
     except Exception as e:
-        message = e
+        data = e
 
-    return redirect("web_presence")
+    return redirect("/helpline/status/web/presence/#%s" % (data))
 
 
 def queue_pause(request):
     """Pause Asterisk Queue member"""
     form = QueuePauseForm(request.POST)
     if form.is_valid():
-        clock = Clock()
-        clock.hl_key = request.user.HelplineUser.hl_key
-        clock.hl_clock = form.cleaned_data.get('reason')
-        # Hardcoded for tests
-        # We should loop through all agent services in schedule
-        clock.hl_service = 718874580
-        clock.hl_time = int(time.time())
-        clock.save()
-        message = backend.pause_queue_member(
-            queue='Q718874580',
-            interface='%s' % (request.user.HelplineUser.hl_exten),
-            paused=True
-        )
+        schedules = Schedule.objects.filter(user=request.user)
+        for schedule in schedules:
+            message = backend.pause_queue_member(
+                queue='%s' % (schedule.service.queue),
+                interface='%s' % (request.user.HelplineUser.hl_exten),
+                paused=True
+            )
+            clock = Clock()
+            clock.user = request.user
+            clock.hl_clock = form.cleaned_data.get('reason')
+            clock.service = schedule.service
+            clock.hl_time = int(time.time())
+            clock.save()
         request.user.HelplineUser.hl_status = 'Pause'
         request.user.HelplineUser.save()
     else:
@@ -282,20 +307,26 @@ def queue_pause(request):
 
 def queue_unpause(request):
     """Unpause Asterisk Queue member"""
-    clock = Clock()
-    clock.hl_key = request.user.HelplineUser.hl_key
-    clock.hl_clock = "Unpause"
-    clock.hl_service = 718874580
-    clock.hl_time = int(time.time())
-    clock.save()
+    schedules = Schedule.objects.filter(user=request.user)
+    if schedules:
+        for schedule in schedules:
+            message = backend.pause_queue_member(
+                queue='%s' % (schedule.service.queue),
+                interface='%s' % (request.user.HelplineUser.hl_exten),
+                paused=False
+            )
+            clock = Clock()
+            clock.hl_clock = "Unpause"
+            clock.user = request.user
+            clock.service = schedule.service
+            clock.hl_time = int(time.time())
+            clock.save()
+    else:
+        message = _("Agent does not have any assigned schedule")
+
     request.user.HelplineUser.hl_status = 'Available'
     request.user.HelplineUser.save()
 
-    message = backend.pause_queue_member(
-        queue='Q718874580',
-        interface='%s' % (request.user.HelplineUser.hl_exten),
-        paused=False
-    )
     return redirect("/helpline/#%s" % (message))
 
 
@@ -634,12 +665,214 @@ def autolocation(request):
 
 def queue_manager(user, extension, action):
     """queuejoin:queueleave:queuepause:queueunpause:queuetrain"""
-    data = backend.add_to_queue(
-        agent="SIP/%s" % (extension),
-        queue='Q718874580',
-        member_name=user.get_full_name()
-    )
+    if action == 'queuejoin':
+        data = backend.add_to_queue(
+            agent="SIP/%s" % (extension),
+            queue='Q718874580',
+            member_name=user.get_full_name()
+        )
+    elif action == 'queueleave':
+        data = backend.remove_from_queue(
+            agent="SIP/%s" % (extension),
+            queue='Q718874580',
+        )
     return data
+
+
+@login_required
+def case_form(request, form_name):
+    """Handle Walkin and CallForm POST and GET Requests"""
+    message = ''
+    initial = {}
+    data = {}
+
+    service = Service.objects.get(id=1)
+    if(form_name == 'walkin'):
+        xform = service.walkin_xform
+        data['form_name'] = 'walkin'
+    elif(form_name == 'qa'):
+        xform = service.qa_xform
+        data['form_name'] = 'qa'
+    elif(form_name == 'webonline'):
+        xform = service.web_online_xform
+        data['form_name'] = 'webonline'
+    else:
+        xform = service.call_xform
+    if request.method == 'GET':
+        case_number = request.GET.get('case')
+        username = 'demoadmin'
+        form_url = get_form_url(request, username, settings.ENKETO_PROTOCOL)
+        # Check if we're looking for a case.
+        if case_number:
+            my_case = Case.objects.get(hl_case=case_number)
+            report, contact, address = get_case_info(case_number)
+        try:
+            url = enketo_url(form_url, xform.id_string)
+            # Poor mans iframe url gen
+            iframe_url = url[:url.find("::")] + "i/" + url[url.find("::"):]+\
+              "?parentWindowOrigin=" + request.build_absolute_uri()
+            data['iframe_url'] = iframe_url
+            if not url:
+                return HttpResponseRedirect(
+                    reverse(
+                        'form-show',
+                        kwargs={'username': username,
+                                'id_string': xform.id_string}))
+#            return HttpResponseRedirect(iframe_url)
+        except EnketoError as e:
+            data = {}
+            owner = User.objects.get(username__iexact=username)
+            data['profile'], __ = UserProfile.objects.get_or_create(user=owner)
+            data['xform'] = xform
+            data['content_user'] = owner
+            data['form_view'] = True
+            data['message'] = {
+                'type': 'alert-error',
+                'text': u"Enketo error, reason: %s" % e
+            }
+            messages.add_message(
+                request,
+                messages.WARNING,
+                _("Enketo error: enketo replied %s") % e,
+                fail_silently=True)
+
+
+        return render(request, "helpline/case_form.html", data)
+
+    elif request.method == 'POST':
+        contact, address = (None, None)
+        # Process forms differently.
+
+        if form_name == 'call':
+            form = CallForm(request.POST)
+        elif form_name == 'walkin':
+            form = CallForm(request.POST)
+
+        if form.is_valid():
+            case_number = form.cleaned_data.get('case_number')
+            if case_number:
+                my_case = Case.objects.get(hl_case=case_number)
+                report, contact, address = get_case_info(case_number)
+                case_history = Report.objects.filter(
+                    telephone=contact.hl_contact).order_by('-case')
+                case_history_table = CaseHistoryTable(case_history)
+                try:
+                    case_history_table.paginate(page=request.GET.get('page', 1), per_page=10)
+                except Exception as e:
+                    # Do not paginate if there is an error
+                    pass
+            else:
+                my_case = Case()
+                my_case.hl_data = form_name
+                my_case.hl_counsellor = request.user.HelplineUser.hl_key
+                my_case.popup = 'Done'
+                my_case.hl_time = int(time.time())
+                my_case.hl_status = form.cleaned_data.get('case_status')
+                my_case.hl_acategory = form.cleaned_data.get('category')
+                my_case.hl_notes = form.cleaned_data.get('notes')
+                my_case.hl_type = form.cleaned_data.get('case_type')
+                my_case.hl_subcategory = form.cleaned_data.get('sub_category')
+                my_case.hl_subsubcat = form.cleaned_data.get('sub_sub_category')
+                my_case.isrefferedfrom = form.cleaned_data.get('referred_from')
+                my_case.hl_details = form.cleaned_data.get('comment')
+
+                my_case.hl_priority = 'Non-Critical'
+                my_case.hl_creator = request.user.HelplineUser.hl_key
+                my_case.save()
+                address, address_created = Address.objects.get_or_create(hl_key=my_case.hl_key)
+
+                contact, contact_created = Contact.objects.get_or_create(hl_key=my_case.hl_key,
+                                                                            hl_type='Cell Phone',
+                                                                            hl_calls=0,
+                                                                            hl_status='Available',
+                                                                            hl_time=int(time.time()))
+                now = datetime.now()
+                callstart = "%s:%s:%s" % (now.hour, now.minute, now.second)
+                notime = "00:00:00"
+                report = Report(case_id=my_case.hl_case,
+                                callstart=callstart,
+                                callend=callstart,
+                                talktime=notime,
+                                holdtime=notime,
+                                walkintime=callstart,
+                                hl_time=int(time.time()),
+                                calldate=time.strftime('%d-%b-%y'))
+                case_number = my_case.hl_case
+                case_history = Report.objects.filter(telephone=contact.hl_contact).order_by('-case_id')
+                case_history_table = CaseHistoryTable(case_history)
+                try:
+                    case_history_table.paginate(
+                        page=request.GET.get('page', 1), per_page=10)
+                except Exception as e:
+                    # Bad idea.
+                    # Ignore pagination errors when a new contact with no case history is input.
+                    pass
+
+            address.hl_names = form.cleaned_data['caller_name']
+            address.hl_gender = form.cleaned_data.get('gender')
+            address.hl_address1 = form.cleaned_data.get('address')
+            address.hl_email = form.cleaned_data.get('email')
+            address.hl_address4 = form.cleaned_data.get('physical_address')
+            address.hl_address3 = form.cleaned_data.get('region')
+            address.hl_language = form.cleaned_data.get('language')
+            address.hl_company = form.cleaned_data.get('company')
+            contact.hl_contact = form.cleaned_data['phone_number']
+            report.callernames = form.cleaned_data['caller_name']
+            report.casearea = form.cleaned_data.get('address')
+            report.casearea = form.cleaned_data.get('address')
+            report.telephone = form.cleaned_data['phone_number']
+            report.counsellorname = request.user.username
+            report.casetype = form_name
+
+            report.casestatus = form.cleaned_data['case_status']
+            report.escalatename = form.cleaned_data.get('escalate_to')
+            my_case.hl_status = form.cleaned_data.get('case_status')
+            my_case.hl_acategory = form.cleaned_data.get('category')
+            my_case.hl_notes = form.cleaned_data.get('notes')
+            my_case.hl_details = form.cleaned_data['comment']
+            my_case.isrefferedfrom = form.cleaned_data.get('referred_from')
+            my_case.hl_type = form.cleaned_data.get('case_type')
+            my_case.hl_subcategory = form.cleaned_data.get('sub_category')
+            my_case.hl_subsubcat = form.cleaned_data.get('sub_sub_category')
+            my_case.hl_escalateto = form.cleaned_data.get('escalate_to')
+
+            my_case.save()
+            address.save()
+            contact.save()
+            report.save()
+            message = 'Success'
+            disposition_form = DispositionForm(
+                initial={'case_number': case_number})
+        else:
+            case_number = form.cleaned_data.get('case_number')
+            disposition_form = DispositionForm()
+
+            if case_number:
+                report, contact, address = get_case_info(case_number)
+                case_history = Report.objects.filter(
+                    telephone=contact.hl_contact).order_by('-case_id')
+                case_history_table = CaseHistoryTable(case_history)
+            else:
+                report, contact, address = (None, None, None)
+                case_history = Report.objects.all().order_by('-case_id')
+                case_history_table = CaseHistoryTable(case_history)
+
+    request.user.HelplineUser.hl_case = 0
+    request.user.HelplineUser.save()
+
+    return render(
+        request, 'helpline/case_form.html', {
+            'form': form,
+            'contact': contact if contact else None,
+            'initial': initial,
+            'disposition_form': disposition_form,
+            'case_history_table': case_history_table,
+            'form_name': form_name,
+            'message': message
+        }
+    )
+
+
 
 
 @login_required
@@ -1199,7 +1432,7 @@ def get_dashboard_stats(user, interval=None):
     # Filter out stats for non supervisor user.
     if user.HelplineUser.hl_role != 'Supervisor':
         total_calls = total_calls.filter(user=user)
-        missed_calls = missed_calls.filter(hl_key=user.HelplineUser.hl_key)
+        missed_calls = missed_calls.filter(user=user)
         answered_calls = answered_calls.filter(user=user)
         total_cases = total_cases.filter(user=user)
         closed_cases = closed_cases.filter(user=user)
