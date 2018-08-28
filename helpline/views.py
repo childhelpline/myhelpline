@@ -396,7 +396,7 @@ def reports(request, report, casetype='Call'):
         'table': table,
         'query': query}
     if report == 'nonanalysed':
-        return render(request, "nonanalysed.html")
+        return render(request, "helpline/nonanalysed.html")
     else:
         return render(request, "helpline/report_body.html", data)
 @login_required
@@ -690,6 +690,9 @@ def case_form(request, form_name):
     if(form_name == 'walkin'):
         xform = service.walkin_xform
         data['form_name'] = 'walkin'
+    elif(form_name == 'call'):
+        xform = service.call_xform
+        data['form_name'] = 'call'
     elif(form_name == 'qa'):
         xform = service.qa_xform
         data['form_name'] = 'qa'
@@ -698,6 +701,7 @@ def case_form(request, form_name):
         data['form_name'] = 'webonline'
     else:
         xform = service.call_xform
+
     if request.method == 'GET':
         case_number = request.GET.get('case')
         username = 'demoadmin'
