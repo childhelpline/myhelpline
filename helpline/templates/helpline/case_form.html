@@ -93,7 +93,6 @@ $(function(){
 <div class="">
   <div class="box box-info" style="{% if loaded_form.name == 'qa' %} min-height: 5350px; {% else %} min-height: 1200px; {% endif %}">
     <div class="col-sm-12">
-      <iframe src="{{ iframe_url }}" style="width: 100%; border: none; {% if loaded_form.name == 'qa' %} min-height: 5300px; {% else %} min-height: 1200px; {% endif %}"></iframe>
     </div>
     <!--div class="box-header with-border">
         <h3 class="box-title">Case Number: {{ initial.case_number }}   Reporter: {{ initial.caller_name }}</h3>
@@ -193,16 +192,12 @@ function closeOverlay(){
                         {% csrf_token %}
                       <div class="modal-header bg-light-blue-active">
                         <!--button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button-->
-                        <h4 class="modal-title" id="myModalLabel">{% trans "Case Form" %} | Case ID <span id="caseid" >00000</span> | 00:00:00<small class="pull-right" style="color:#fff;">Time: <span id="tday" >|</span></small></h4>
+                        <h4 class="modal-title" id="myModalLabel">{% trans "Case Form" %} | Case ID <span id="caseid" >00000</span> | 00:00:00</h4>
                         
                       </div>
                       <div class="modal-body" style="padding: 0px; height: 80vh;">
-                        <iframe src="https://enketo.bitz-itc.com/i/::XLqAHBeh" class="hidden" onload="access(this)" name="frameID" id="frameID" style="width: 100%; min-height: 80vh; padding:10px; border: none;"></iframe>
+                          <iframe src="{{ iframe_url }}" style="width: 100%; border: none; {% if form_name == 'qa' %} min-height: 5300px; {% else %} min-height: 1200px; {% endif %}"></iframe>
                       </div>
-                      <!--div class="modal-footer">
-                        <button type="button" class="btn btn-default secondary" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary  form-submit">Save changes</button>
-                      </div-->
                     </form>
                     </div>
                   </div>

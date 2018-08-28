@@ -681,18 +681,21 @@ def queue_manager(user, extension, action):
 def case_form(request, form_name):
     """Handle Walkin and CallForm POST and GET Requests"""
     message = ''
+    initial = {}
+    data = {}
+
     service = Service.objects.get(id=1)
     if(form_name == 'walkin'):
         xform = service.walkin_xform
+        data['form_name'] = 'walkin'
     elif(form_name == 'qa'):
         xform = service.qa_xform
+        data['form_name'] = 'qa'
     elif(form_name == 'webonline'):
         xform = service.web_online_xform
+        data['form_name'] = 'webonline'
     else:
         xform = service.call_xform
-
-    initial = {}
-    data = {}
     if request.method == 'GET':
         case_number = request.GET.get('case')
         username = 'demoadmin'
