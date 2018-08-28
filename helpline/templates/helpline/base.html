@@ -1085,20 +1085,7 @@ $(document).ready(function(){
   setInterval(function () {
     $.get("{% url "check_call" %}",function(data){
       if(data.my_case){
-          var popup = document.getElementById("walkin-modal");
-          popup.classList.add("in");
-          popup.style['display'] = "block";
-          popup.style['padding-left'] = "0px";
-
-          var caseid = document.getElementById("caseid");
-          caseid.innerHTML = data.my_case;
-
-          var contactTel = document.getElementById("contactTel");
-          contactTel.value = data.telephone;
-          var contactName = document.getElementById("contactName");
-          contactName.value = data.name;
-
-          window.location = "#caseform"+data.my_case;
+          window.location = "{% url "case_form" "call"  %}?case="+data.my_case;
 
         clearInterval();
       }
