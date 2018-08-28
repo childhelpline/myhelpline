@@ -228,7 +228,7 @@
               <div class="row">
                 <!-- accepted payments column -->
                 <div class="col-xs-6 contact-search">
-                  <p class="lead">Reporter Details:</p>
+                    <p class="lead">Reporter Details: {{ contact.hl_contact }}</p>
                   <div class="text-muted well well-sm no-shadow">
                     <!-- form start -->
                     <form role="form">
@@ -236,27 +236,27 @@
                         <div class="row">
                         <div class="form-group col-md-6">
                           <label for="contactTel">Name:</label>
-                          <input type="tel" class="form-control" id="contactTel" placeholder="Enter telephone number">
+                          <input type="tel" class="form-control" id="contactTel" placeholder="Enter telephone number" value="{{ contact.address.hl_names|default:"" }}">
                         </div>
                         <div class="form-group  col-md-6">
                           <label for="contactName">Language</label>
-                          <input type="text" class="form-control" id="contactName" placeholder="Contact Name">
+                          <input type="text" class="form-control" id="contactName" placeholder="Contact Name" value="{{ contact.address.hl_language|default:"" }}">
                         </div>
                         <div class="form-group col-md-6">
                           <label for="contactTel">Gender:</label>
-                          <input type="tel" class="form-control" id="contactTel" placeholder="Enter telephone number">
+                          <input type="tel" class="form-control" id="contactTel" placeholder="Enter telephone number" value="{{ contact.address.hl_gender|default:"" }}">
                         </div>
                         <div class="form-group  col-md-6">
                           <label for="contactName">Age Group</label>
-                          <input type="text" class="form-control" id="contactName" placeholder="Contact Name">
+                          <input type="text" class="form-control" id="contactName" placeholder="Contact Name" value="{{ contact.address.hl_ageclass|default:"" }}">
                         </div>
                         <div class="form-group col-md-6">
                           <label for="contactTel">Email:</label>
-                          <input type="tel" class="form-control" id="contactTel" placeholder="Enter telephone number">
+                          <input type="tel" class="form-control" id="contactTel" placeholder="Enter telephone number" value="{{ contact.address.hl_email|default:"" }}">
                         </div>
                         <div class="form-group  col-md-6">
                           <label for="contactName">Nationality</label>
-                          <input type="text" class="form-control" id="contactName" placeholder="Contact Name">
+                          <input type="text" class="form-control" id="contactName" placeholder="Contact Name" value="{{ contact.address.address1|default:"" }}">
                         </div>
                       </div>
                     </div>
@@ -274,33 +274,10 @@
                   <p class="lead">Historical Cases</p>
 
                   <div class="table-responsive text-muted well well-sm no-shadow" style="min-height: 242px;">
-                    <table class="table table-responsive">
-                      <tr>
-                        <th style="width:5px;">#</th>
-                        <th style="width:40%;" align="left">Case Number</th>
-                        <th style="width:40%;" align="left">Category</th>
-                        <th style="width:16%;" align="left">Report Date</th>
-                        <th style="width:16%;" align="left">Status</th>
-                      </tr>
-                      <tr>
-                        <td>1.</td>
-                        <td><a href="javascript:void(0)" onclick="$('.conact-cases').removeClass('hidden');">534</a></td>
-                        <td>072324343434</td>
-                        <td><a href="javascript:void(0)" onclick="$('.invoice').addClass('hidden'); $('iframe').removeClass('hidden');">Create Case</a></td>
-                      </tr>
-                      <tr>
-                        <td>2.</td>
-                        <td><a href="javascript:void(0)" onclick="$('.conact-cases').removeClass('hidden');">435</a></td>
-                        <td>072333332222</td>
-                        <td><a href="javascript:void(0)" onclick="$('.invoice').addClass('hidden'); $('iframe').removeClass('hidden');">Create Case</a></td>
-                      </tr>
-                      <tr>
-                        <td>3.</td>
-                        <td><a href="javascript:void(0)" onclick="$('.conact-cases').removeClass('hidden');">665</a></td>
-                        <td>0723444344232</td>
-                        <td><a href="javascript:void(0)" onclick="$('.invoice').addClass('hidden'); $('iframe').removeClass('hidden');">Create Case</a></td>
-                      </tr>
-                    </table>
+                      {% if case %}
+                        {% load django_tables2 %}
+                        {% render_table case_history_table %}
+                       {% endif %}
                   </div>
                 </div>
                 <!-- /.col -->
