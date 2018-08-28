@@ -88,7 +88,7 @@
         rowDoubleClicked: function (evt) {
             var record_id = this.model.get("_id");
             if (record_id) {
-                window.open(instance_view_url + "#/" + record_id, "_blank");
+                window.open(instance_view_url + "#/" + record_id, "");
             }
         }
     });
@@ -122,7 +122,7 @@
             this.data = new FH.PageableDataset([], {
                 url: options.dataUrl
             });
-
+            //alert("Cheru: " + JSON.stringify(this.data));
             // Initialize the header name/label toggle
             var headerLangSwitcher = new NameLabelLanguagePicker({
                 label: "Column Headers",
@@ -180,6 +180,20 @@
                     }),
                     collection: this.data
                 });
+
+                /* Adding column headers kemboicheru
+                var action_column = {
+                    "name":"action",
+                    "label":"Action",
+                    "editable":false,
+                    "sortable":true,
+                    "renderable":true,
+                    "sortType":"cycle",
+                    "direction":null
+                }
+                //alert(JSON.stringify(this.dataGrid.columns))
+                //this.dataGrid.columns.push(action_column)
+                */
 
                 this.$el.append(this.dataGrid.render().$el);
 

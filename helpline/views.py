@@ -364,8 +364,10 @@ def reports(request, report, casetype='Call'):
         'dashboard_stats': dashboard_stats,
         'table': table,
         'query': query}
-
-    return render(request, "helpline/report_body.html", data)
+    if report == 'nonanalysed':
+        return render(request, "nonanalysed.html")
+    else:
+        return render(request, "helpline/report_body.html", data)
 @login_required
 def reports1(request, report, casetype='Call'):
     """Handle report rendering"""
@@ -413,7 +415,7 @@ def reports1(request, report, casetype='Call'):
         'datetime_range': datetime_range,
         'dashboard_stats': dashboard_stats,
         'table': table,
-        'stat':stat,
+        'stat':stat[0],
         'query': query})
 
 

@@ -24,6 +24,8 @@
   <link rel="stylesheet" href="{% static "AdminLTE/plugins/jvectormap/jquery-jvectormap-1.2.2.css" %}">
   <!-- Theme style -->
   <link rel="stylesheet" href="{% static "AdminLTE/dist/css/AdminLTE.min.css" %}">
+  <!-- DataTables -->
+  <link rel="stylesheet" href="{% static "AdminLTE/plugins/datatables/dataTables.bootstrap.css" %}">
   <!-- AdminLTE Skins. Choose a skin from the css/skins
    folder instead of downloading all of them to reduce the load. -->
    <link rel="stylesheet" href="{% static "AdminLTE/dist/css/skins/_all-skins.min.css" %}">
@@ -533,12 +535,12 @@ input:checked + .slider:before {
           <li>
             <a tabindex="-1" href="#qa-modal" data-backdrop="static"  data-keyboard="false" class="confirm" role="button" data-toggle="modal"><i class="fa fa-circle-o"></i> {% trans "New QA Form" %}
           </a></li>
-            <li><a href="{% url 'dashboardreports' 'totalcases' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Cases" %}
+            <li><a href="{% url 'dashboardreports' 'nonanalysed' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Cases" %}
               <span class="pull-right-container">
                 <span class="label label-info pull-right">{{ dashboard_stats.total_cases }}</span>
               </span>
             </a></li>
-            <li><a href="{% url 'dashboardreports' 'pendingcases' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Analysed Cases" %}
+            <li><a href="{% url 'dashboardreports' 'analysed' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Analysed Cases" %}
               <span class="pull-right-container">
                 <span class="label label-success pull-right">{{ dashboard_stats.open_cases }}</span>
               </span>
@@ -767,7 +769,7 @@ input:checked + .slider:before {
                         {% csrf_token %}
                       <div class="modal-header bg-light-blue-active">
                         <!--button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button-->
-                        <h4 class="modal-title" id="myModalLabel">{% trans "Case Form" %} | Case ID 00000 | 00:00:00<small class="pull-right" style="color:#fff;">Time: <span id="tday" >|</span></small></h4>
+                        <h4 class="modal-title" id="myModalLabel">{% trans "Case Form" %} | Case ID 00000 | <small class="pull-right" style="color:#fff; padding-left: 20px; font-size: 18px; font-family: 'digital -7 regular"><span id="formTimer" >00:00:00</span></small><small class="pull-right" style="color:#fff; font-size: 18px;">Time: <span id="tday" >|</span></small></h4>
                         
                       </div>
                       <div class="modal-body" style="padding: 0px; height: 80vh;">
@@ -793,7 +795,7 @@ input:checked + .slider:before {
                         <h2 class="modal-title" id="myModalLabel">{% trans "QA Form" %}</h2>
                       </div>
                       <div class="modal-body" style="padding: 0px; height: 80vh;">
-                        <iframe src="https://enketo.bitz-itc.com/i/::Bkyb35PE" style="width: 100%; min-height: 80vh; border: none;"></iframe>
+                        <iframe src="https://enketo.bitz-itc.com/i/::P6SEqt57" style="width: 100%; min-height: 80vh; border: none;"></iframe>
                       </div>
                     </form>
                     </div>
@@ -885,6 +887,7 @@ input:checked + .slider:before {
  <script src="{% static "AdminLTE/dist/js/demo.js" %}"></script>
  <script src="{% static 'notifications/notify.js' %}" type="text/javascript"></script>
  <script src="{% static "helpline/js/utils.js" %}"></script>
+ <script src="{% static "easytimer.js/dist/C.js" %}"></script>
  {% register_notify_callbacks callbacks='fill_notification_list,fill_notification_badge' %}
 
  <!-- moment.js -->
@@ -1155,6 +1158,62 @@ $(document).ready(function(){
   }, 1000);
 });
 
+function access(iframee){
+  /*var iframe = document.getElementsByTagName('iframe')[0];
+  iframe.style.background = 'white';
+  iframe.contentWindow.document.body.style.backgroundColor = 'white';*/
+  }
+
+var timer = new Timer();
+$('#walkin-modal').on('shown.bs.modal', function () {
+  timer.start();
+  timer.addEventListener('secondsUpdated', function (e) {
+    $('#formTimer').html(timer.getTimeValues().toString());
+    });
+});
+
+$('#walkin-modal').on('hidden.bs.modal', function () {
+  timer.stop();
+  timer.reset();
+  //alert($('#formTimer').html())
+});
+
+
+$("#example1").DataTable();
+$('#example2').DataTable({
+  "paging": true,
+  "lengthChange": false,
+  "searching": false,
+  "ordering": true,
+  "info": true,
+  "autoWidth": false
+});
+/*
+var request = new XMLHttpRequest();
+request.onreadystatechange = function () {
+    var DONE = this.DONE || 4;
+    if (this.readyState === DONE){
+      //var data = JSON.stringify(this.response)
+      //for(var dat in data){
+        $('#data-table-data').dataTable({data: this.response});
+      //}
+
+    }
+};
+request.open('GET', 'https://dev.bitz-itc.com/ona/api/v1/data/1?format=json', true);
+//request.setRequestHeader('X-Requested-With', 'XMLHttpRequest');  // Tells server that this call is made for ajax purposes.
+//request.setRequestHeader('Content-tye', 'json')
+request.setRequestHeader('Authorization', 'Token 7331a310c46884d2643ca9805aaf0d420ebfc831');
+                                                                 // Most libraries like jQuery/Prototype/Dojo do this
+request.send(null) // No data needs to be sent along with the request.
+//alert("Cheru: " + JSON.stringify(request.response))
+//alert("Cheru: " + data)
+/*
+var myHeaders = new Headers({'Authorization':'Token 7331a310c46884d2643ca9805aaf0d420ebfc831'});
+
+$.get('https://dev.bitz-itc.com/ona/api/v1/data/1?format=json',function(data){
+  alert("Cheru");
+})*/
 </script>
 
 <script src="{% static "helpline/js/custom.js" %}" type="text/javascript"></script>

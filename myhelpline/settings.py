@@ -594,6 +594,8 @@ BOWER_INSTALLED_APPS = (
     'font-awesome#4.7.0',
     'bootstrap-daterangepicker#2.1.25',
     'moment#2.18.1',
+    'easytimer.js#2.2.3'
+
 )
 
 STATICFILES_FINDERS = ['djangobower.finders.BowerFinder',
