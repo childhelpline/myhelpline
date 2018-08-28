@@ -705,6 +705,25 @@ def case_form(request, form_name):
     if request.method == 'GET':
         case_number = request.GET.get('case')
         username = 'demoadmin'
+        if case_number:
+            my_case = Case.objects.get(hl_case=case_number)
+            report, contact, address = get_case_info(case_number)
+            case_history = Report.objects.filter(
+                telephone=contact.hl_contact).order_by('-case')
+            case_history_table = CaseHistoryTable(case_history)
+
+            # Initial case data
+            data['case'] = my_case
+            data['report'] = report
+            data['contact'] = contact
+            data['address'] = address
+            data['case_history_table'] = case_history_table
+
+            try:
+                case_history_table.paginate(page=request.GET.get('page', 1), per_page=10)
+            except Exception as e:
+                # Do not paginate if there is an error
+                pass
         form_url = get_form_url(request, username, settings.ENKETO_PROTOCOL)
         # Check if we're looking for a case.
         if case_number:
@@ -760,6 +779,14 @@ def case_form(request, form_name):
                 case_history = Report.objects.filter(
                     telephone=contact.hl_contact).order_by('-case')
                 case_history_table = CaseHistoryTable(case_history)
+
+                # Initial case data
+                data['case'] = my_case
+                data['report'] = report
+                data['contact'] = contact
+                data['address'] = address
+                data['case_history_table'] = case_history_table
+
                 try:
                     case_history_table.paginate(page=request.GET.get('page', 1), per_page=10)
                 except Exception as e:
