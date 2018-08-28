@@ -135,11 +135,11 @@ def check_call(request):
         report = Report.objects.get(case=my_case)
         telephone = report.telephone
         contact, contact_created = Contact.objects.get_or_create(hl_contact=telephone)
-        if contact_created:
+        if contact_created or contact.address == None:
             address = Address(user=request.user)
             contact.address = address
-            contact.save()
             address.save()
+            contact.save()
 
     else:
         telephone = None
