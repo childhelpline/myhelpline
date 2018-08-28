@@ -411,25 +411,25 @@ class Service(models.Model):
         help_text=_('Corresponding Asterisk Queue name')
     )
     walkin_xform = models.ForeignKey(
-        XForm, on_delete=models.CASCADE,
+        XForm, on_delete=models.SET_NULL,
         blank=True, null=True,
         related_name='walkin_xform',
         help_text=_('Walkin Case Form')
     )
     call_xform = models.ForeignKey(
-        XForm, on_delete=models.CASCADE,
+        XForm, on_delete=models.SET_NULL,
         blank=True, null=True,
         related_name='call_xform',
         help_text=_('Call Case Form')
     )
     qa_xform = models.ForeignKey(
-        XForm, on_delete=models.CASCADE,
+        XForm, on_delete=models.SET_NULL,
         blank=True, null=True,
         related_name='qa_xform',
         help_text=_('Quality Analysis Form')
     )
     web_online_xform = models.ForeignKey(
-        XForm, on_delete=models.CASCADE,
+        XForm, on_delete=models.SET_NULL,
         blank=True, null=True,
         related_name='web_online_xform',
         help_text=_('Quality Analysis Form')
