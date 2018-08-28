@@ -208,6 +208,11 @@ class Hotdesk(models.Model):
         choices=AVAILABILITY_CHOICES,
         default=UNAVAILABLE
     )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        blank=True, null=True
+    )
     agent = models.IntegerField(
         blank=True, null=True
     )

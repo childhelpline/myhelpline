@@ -193,6 +193,7 @@ def queue_log(request):
                 hotdesk.jabber = 'helpline@jabber'
                 hotdesk.status = 'Available'
                 hotdesk.agent = request.user.HelplineUser.hl_key
+                hotdesk.user = request.user
 
                 agent = request.user.HelplineUser
                 agent.hl_status = 'Available'
@@ -232,6 +233,7 @@ def queue_leave(request):
         hotdesk = Hotdesk.objects.filter(agent__exact=request.user.HelplineUser.hl_key)
         hl_user = HelplineUser.objects.get(hl_key=request.user.HelplineUser.hl_key)
         hotdesk.update(agent=0)
+        hotdesk.update(user=None)
 
         request.session['queuejoin'] = 'out'
         request.session['status'] = 'out'
@@ -686,7 +688,7 @@ def case_form(request, form_name):
     initial = {}
     data = {}
 
-    service = Service.objects.get(id=1)
+    service = Service.objects.get(id=2)
     if(form_name == 'walkin'):
         xform = service.walkin_xform
         data['form_name'] = 'walkin'
