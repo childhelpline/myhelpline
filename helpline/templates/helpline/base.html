@@ -1113,6 +1113,11 @@ $('#walkin-modal').on('hidden.bs.modal', function () {
   //alert($('#formTimer').html())
 });
 
+{% if iframe_url %}
+ $('#case_form_modal').modal('show')
+ timer.start();
+{% endif %}
+
 
 $("#example1").DataTable();
 $('#example2').DataTable({
