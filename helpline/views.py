@@ -349,7 +349,7 @@ def faq(request):
 
 
 @login_required
-def reports(request, report, casetype='Call'):
+def reports1(request, report, casetype='Call'):
 
     """
     Data view displays submission data.
@@ -400,7 +400,7 @@ def reports(request, report, casetype='Call'):
     else:
         return render(request, "helpline/report_body.html", data)
 @login_required
-def reports1(request, report, casetype='Call'):
+def reports(request, report, casetype='Call'):
     """Handle report rendering"""
     query = request.GET.get('q', '')
     datetime_range = request.GET.get("datetime_range")
@@ -409,11 +409,11 @@ def reports1(request, report, casetype='Call'):
     form = ReportFilterForm(request.GET)
     dashboard_stats = get_dashboard_stats(request.user)
 
-    headers = {
+    '''headers = {
             'Authorization': 'Token 7331a310c46884d2643ca9805aaf0d420ebfc831'
     }
 
-    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/1',headers= headers).json();
+    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/1',headers= headers).json();'''
 
     sort = request.GET.get('sort')
     report_title = {
@@ -446,7 +446,6 @@ def reports1(request, report, casetype='Call'):
         'datetime_range': datetime_range,
         'dashboard_stats': dashboard_stats,
         'table': table,
-        'stat':stat[0],
         'query': query})
 
 
@@ -686,7 +685,7 @@ def case_form(request, form_name):
     initial = {}
     data = {}
 
-    service = Service.objects.get(id=1)
+    service = Service.objects.get(id=2)
     if(form_name == 'walkin'):
         xform = service.walkin_xform
         data['form_name'] = 'walkin'
