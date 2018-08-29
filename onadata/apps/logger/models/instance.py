@@ -141,6 +141,34 @@ def submission_time():
     return timezone.now()
 
 
+def get_case_id_string_from_xml_str(xml_str):
+    xml_obj = clean_and_parse_xml(xml_str)
+    case_id = xml_obj.getElementsByTagName("case_id")[0].firstChild.data
+    if not case_id:
+        raise ValueError(_("XML string must have a case_id element."))
+
+    return case_id
+
+
+@task
+@transaction.atomic()
+def update_helpline_case_report(instance_id, created):
+    if created:
+        try:
+            instance = Instance.objects.get(pk=instance_id)
+            case_id = get_case_id_string_from_xml_str(instance.xml)
+        except Instance.DoesNotExist:
+            pass
+        else:
+            # update xform.num_of_submissions
+            cursor = connection.cursor()
+            sql = '''
+                INSERT INTO helpline_case_instance (case_id, instance_id)
+                VALUES(%s,%s)
+                ''' % (case_id, instance.id)
+            cursor.execute(sql)
+
+
 @task
 @transaction.atomic()
 def update_xform_submission_count(instance_id, created):
@@ -557,10 +585,12 @@ def post_save_submission(sender, instance=None, created=False, **kwargs):
         update_xform_submission_count.apply_async(args=[instance.pk, created])
         save_full_json.apply_async(args=[instance.pk, created])
         update_project_date_modified.apply_async(args=[instance.pk, created])
+        update_helpline_case_report.apply_async(args=[instance.pk, created])
     else:
         update_xform_submission_count(instance.pk, created)
         save_full_json(instance.pk, created)
         update_project_date_modified(instance.pk, created)
+        update_helpline_case_report(instance.pk, created)
 
 
 post_save.connect(post_save_submission, sender=Instance,
