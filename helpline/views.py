@@ -735,7 +735,7 @@ def case_form(request, form_name):
             url = enketo_url(form_url, xform.id_string)
             # Poor mans iframe url gen
             iframe_url = url[:url.find("::")] + "i/" + url[url.find("::"):]+\
-              "?parentWindowOrigin=" + request.build_absolute_uri()
+              "?d[/%s/case_id]=%s&parentWindowOrigin=" % (xform.id_string, case_number) + request.build_absolute_uri()
             data['iframe_url'] = iframe_url
             if not url:
                 return HttpResponseRedirect(
