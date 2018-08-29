@@ -287,6 +287,8 @@ def queue_pause(request):
     form = QueuePauseForm(request.POST)
     if form.is_valid():
         schedules = Schedule.objects.filter(user=request.user)
+        if not schedules:
+            message = _("Agent does not have any assigned schedule")
         for schedule in schedules:
             message = backend.pause_queue_member(
                 queue='%s' % (schedule.service.queue),
@@ -702,6 +704,16 @@ def case_form(request, form_name):
         data['form_name'] = 'webonline'
     else:
         xform = service.call_xform
+
+    # If no XForm is associated with the above cases
+    if not xform:
+            data['message'] = {
+                'type': 'alert-error',
+                'text': _(u"No form found for the service %s" % (service.name))
+            }
+            return render(
+                request, "helpline/case_form.html", data
+            )
 
     if request.method == 'GET':
         case_number = request.GET.get('case')
