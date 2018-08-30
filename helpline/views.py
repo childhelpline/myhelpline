@@ -405,6 +405,8 @@ def reports1(request, report, casetype='Call'):
 @login_required
 def reports(request, report, casetype='Call'):
     """Handle report rendering"""
+    if report == 'nonanalysed':
+        report = 'totalcases'
     query = request.GET.get('q', '')
     datetime_range = request.GET.get("datetime_range")
     agent = request.GET.get("agent")
@@ -1139,6 +1141,7 @@ class DashboardTable(tables.Table):
     user_id = tables.TemplateColumn("{{ record.user }}", verbose_name="Agent")
     service_id = tables.TemplateColumn("{{ record.service }}",
                                        verbose_name="Service")
+    qaaction = tables.TemplateColumn('<a href="{{ record.get_absolute_url }}"><i class="fa fa-volume-up"></i> Analyse</a>', verbose_name="Action")
 
     export_formats = ['csv', 'xls']
 

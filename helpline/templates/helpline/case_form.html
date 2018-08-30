@@ -151,7 +151,7 @@
       <form action="" method="post">
         {% csrf_token %}
         <div class="modal-header bg-light-blue-active">
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <!--button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button-->
           <h4 class="modal-title" id="myModalLabel">{% trans "Case Form" %} > {{ form_name }} | Case ID <span id="caseid">00000</span> <span class="pull-right" id="formTimer" style="font-size: 18px; color: #fff;">00:00:00</span><h4>
 
           </div>
@@ -323,7 +323,7 @@
                             <!-- this row will not appear when printing -->
                           </section>
 
-                          <!--iframe src="https://enketo.bitz-itc.com/i/::Bkyb35PE" style="width: 100%; min-height: 80vh; border: none;"></iframe-->
+                          <!--iframe src="https://enketo.bitz-itc.com/i/::Bkyb35PE" style="width: 100%; min-height: 80vh; border: none;"></iframe{{ iframe_url }}-->
                         </div>
                       </div>
                     </div>
@@ -332,7 +332,7 @@
 
                 </div>
                 <div id="frame_iframe"  class="{% if form_name != 'webonline' %} hidden {% endif %}">
-                  <iframe src="{{ iframe_url }}" style="width: 100%; border: none; {% if form_name == 'qa' %} min-height: 5300px; {% else %} min-height: 1200px; {% endif %}"></iframe>
+                  <iframe src="https://enketo.bitz-itc.com/i/::P6SEqt57" style="width: 100%; border: none; {% if form_name == 'qa' %} min-height: 5300px; {% else %} min-height: 1200px; {% endif %}"></iframe>
                 </div>
               </div>
             </form>
