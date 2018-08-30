@@ -244,28 +244,42 @@
                                   <div class="box-body">
                                     <div class="row">
                                       <div class="form-group col-md-6">
-                                        <label for="contactTel">Name:</label>
-                                        <input type="tel" class="form-control" id="contactTel" placeholder="Enter telephone number" value="{{ contact.address.hl_names|default:"" }}">
+                                        <label for="contactName">Name:</label>
+                                        <input type="tel" class="form-control" id="contactName" placeholder="Enter Name" value="{{ contact.address.hl_names|default:"" }}">
                                       </div>
                                       <div class="form-group  col-md-6">
-                                        <label for="contactName">Language</label>
-                                        <input type="text" class="form-control" id="contactName" placeholder="Contact Name" value="{{ contact.address.hl_language|default:"" }}">
+                                        <label for="contactLanguage">Language</label>
+                                        <input type="text" class="form-control" id="contactLanguage" placeholder="Contact Name" value="{{ contact.address.hl_language|default:"" }}">
                                       </div>
                                       <div class="form-group col-md-6">
-                                        <label for="contactTel">Gender:</label>
-                                        <input type="tel" class="form-control" id="contactTel" placeholder="Enter telephone number" value="{{ contact.address.hl_gender|default:"" }}">
+                                        <label for="contactTel">Sex:</label>
+                                        <select class="form-control" id="contactSex" name="contactSex">
+                                          <option>-- Select Sex --</option>
+                                          <option>Male</option>
+                                          <option>Female</option>
+                                        </select>
+                                        <!--input type="tel" class="form-control" id="contactTel" placeholder="Enter telephone number" value="{{ contact.address.hl_gender|default:"" }}"-->
                                       </div>
                                       <div class="form-group  col-md-6">
-                                        <label for="contactName">Age Group</label>
-                                        <input type="text" class="form-control" id="contactName" placeholder="Contact Name" value="{{ contact.address.hl_ageclass|default:"" }}">
+                                        <label for="contactAgegroup">Age Group</label>
+                                        <select class="form-control" id="contactAgegroup" name="contactAgegroup">
+                                          <option>-- Select Age Group --</option>
+                                          <option value="0-5">0-5</option>
+                                          <option value="6-10">6-10</option>
+                                          <option value="11-14">11-14</option>
+                                          <option value="15-18">15-18</option>
+                                          <option value=">18">>18</option>
+                                          <option>Unknown</option>
+                                        </select>
+                                        <!--input type="text" class="form-control" id="contactName" placeholder="Contact Name" value="{{ contact.address.hl_ageclass|default:"" }}"-->
                                       </div>
                                       <div class="form-group col-md-6">
-                                        <label for="contactTel">Email:</label>
-                                        <input type="tel" class="form-control" id="contactTel" placeholder="Enter telephone number" value="{{ contact.address.hl_email|default:"" }}">
+                                        <label for="contactEmail">Email:</label>
+                                        <input type="tel" class="form-control" id="contactEmail" placeholder="Enter Email Address" value="{{ contact.address.hl_email|default:"" }}">
                                       </div>
                                       <div class="form-group  col-md-6">
-                                        <label for="contactName">Nationality</label>
-                                        <input type="text" class="form-control" id="contactName" placeholder="Contact Name" value="{{ contact.address.address1|default:"" }}">
+                                        <label for="contactNationality">Nationality</label>
+                                        <input type="text" class="form-control" id="contactNationality" placeholder="Enter Nationality" value="{{ contact.address.address1|default:"" }}">
                                       </div>
 
 
