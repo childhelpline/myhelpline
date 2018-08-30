@@ -152,7 +152,7 @@
         {% csrf_token %}
         <div class="modal-header bg-light-blue-active">
           <!--button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button-->
-          <h4 class="modal-title" id="myModalLabel">{% trans "Case Form" %} > {{ form_name }} | Case ID <span id="caseid">00000</span> <span class="pull-right" id="formTimer" style="font-size: 18px; color: #fff;">00:00:00</span><h4>
+          <h4 class="modal-title" id="myModalLabel">{% trans "Case Form" %} > {{ form_name }} | Case ID <span id="caseid">00000</span> {{ iframe_url }}<span class="pull-right" id="formTimer" style="font-size: 18px; color: #fff;">00:00:00</span><h4>
 
           </div>
           <div class="modal-body" style="padding: 0px; height: 80vh;" >
