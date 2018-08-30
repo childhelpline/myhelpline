@@ -151,179 +151,180 @@
       <form action="" method="post">
         {% csrf_token %}
         <div class="modal-header bg-light-blue-active">
-          <!--button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button-->
-          <h4 class="modal-title" id="myModalLabel">{% trans "Case Form" %} > {{ form_name }} | Case ID <span id="caseid">00000</span> | 00:00:00 <span class="pull-right" id="formTimer" style="font-size: 18px; color: #fff;">00:00:00</span><h4>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title" id="myModalLabel">{% trans "Case Form" %} > {{ form_name }} | Case ID <span id="caseid">00000</span> <span class="pull-right" id="formTimer" style="font-size: 18px; color: #fff;">00:00:00</span><h4>
 
-        </div>
-        <div class="modal-body" style="padding: 0px; height: 80vh;">
-          <div id="frame-contact">
-            
-
-<section class="content">
-  <div class="row">
-    <div class="col-sm-12">
-          <div class="modal-body" style="padding: 0px; height: 80vh;">
+          </div>
+          <div class="modal-body" style="padding: 0px; height: 80vh;" >
+          <div id="frame_iframes">
+            <div id="frame-contact" class="{% if form_name == 'webonline' %} hidden {% endif %}" >
 
 
-            <section class="invoice">
-              <div id="contact-search" class={% if form_name == 'call' %} hidden {% endif %}>
-              <div class="row">
-                <!-- accepted payments column -->
-                <div class="col-xs-6 col-md-12 contact-search">
-                  <p class="lead">Contact Search:</p>
-                  <div class="text-muted well well-sm no-shadow">
-                    <!-- form start -->
-                    <form role="form">
-                      {% csrf_token %}
-                      <div class="box-body">
-                        <div class="form-group">
-                          <label for="contactTel">Telephone Number</label>
-                          <input type="tel" class="form-control" id="contactTel" placeholder="Enter telephone number">
-                        </div>
-                        <div class="form-group">
-                          <label for="contactName">Name</label>
-                          <input type="text" class="form-control" id="contactName" placeholder="Contact Name">
-                        </div>
-                      </div>
-                      <!-- /.box-body -->
-
-                      <div class="box-footer" style="background-color: transparent;">
-                        <button type="button" class="btn btn-primary" onclick="$('.contact-search').removeClass('col-md-12');$('.contact-results').removeClass('hidden');">Search Contact</button>
-                        <button type="button" class="btn btn-primary pull-right" onclick="$('#contact-search').addClass('hidden');$('.contact-cases').removeClass('hidden');">New Reporter</button>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-                <!-- /.col -->
-                <div class="col-xs-6 contact-results hidden">
-                  <p class="lead">Contact Search Results</p>
-
-                  <div class="table-responsive text-muted well well-sm no-shadow" style="min-height: 242px;">
-                    <table class="table table-responsive">
-                      <tr>
-                        <th style="width:5px;">#</th>
-                        <th style="width:40%;" align="left">Name</th>
-                        <th style="width:40%;" align="left">Contact</th>
-                        <th style="width:16%;" align="left">Action</th>
-                      </tr>
-                      <tr>
-                        <td>1.</td>
-                        <td><a href="javascript:void(0)" onclick="$('#contact-search').addClass('hidden');$('.contact-cases').removeClass('hidden');">Kemboi Cheruiyot</a></td>
-                        <td>072324343434</td>
-                      </tr>
-                      <tr>
-                        <td>2.</td>
-                        <td><a href="javascript:void(0)" onclick="$('#contact-search').addClass('hidden');$('.contact-cases').removeClass('hidden');">Kemboi Cheru</a></td>
-                        <td>072333332222</td>
-                      </tr>
-                      <tr>
-                        <td>3.</td>
-                        <td><a href="javascript:void(0)" onclick="$('#contact-search').addClass('hidden');$('.contact-cases').removeClass('hidden');">Cheru Kemboi</a></td>
-                        <td>0723444344232</td>
-                      </tr>
-                    </table>
-                  </div>
-                </div>
-                <!-- /.col -->
-              </div>
-              <!-- /.row -->
-            </div>
+              <section class="content" style="background-color: #fff;">
+                <div class="row">
+                  <div class="col-sm-12">
+                    <div class="modal-body" style="padding: 0px; height: 80vh;">
 
 
-              <!-- Table row -->
-              <div class="contact-cases {% if form_name == 'walkin' %} hidden {% endif %}">
+                      <section class="invoice">
+                        <div id="contact-search" class={% if form_name == 'call' %} hidden {% endif %}>
+                          <div class="row">
+                            <!-- accepted payments column -->
+                            <div class="col-xs-6 col-md-12 contact-search">
+                              <p class="lead">Contact Search:</p>
+                              <div class="text-muted well well-sm no-shadow">
+                                <!-- form start -->
+                                <form role="form">
+                                  {% csrf_token %}
+                                  <div class="box-body">
+                                    <div class="form-group">
+                                      <label for="contactTel">Telephone Number</label>
+                                      <input type="tel" class="form-control" id="contactTel" placeholder="Enter telephone number">
+                                    </div>
+                                    <div class="form-group">
+                                      <label for="contactName">Name</label>
+                                      <input type="text" class="form-control" id="contactName" placeholder="Contact Name">
+                                    </div>
+                                  </div>
+                                  <!-- /.box-body -->
 
-              <div class="row">
-                <!-- accepted payments column -->
-                <div class="col-xs-6 contact-search">
-                    <p class="lead">Reporter Details: {{ contact.hl_contact }}</p>
-                  <div class="text-muted well well-sm no-shadow">
-                    <!-- form start -->
-                    <form role="form">
-                      <div class="box-body">
-                        <div class="row">
-                        <div class="form-group col-md-6">
-                          <label for="contactTel">Name:</label>
-                          <input type="tel" class="form-control" id="contactTel" placeholder="Enter telephone number" value="{{ contact.address.hl_names|default:"" }}">
-                        </div>
-                        <div class="form-group  col-md-6">
-                          <label for="contactName">Language</label>
-                          <input type="text" class="form-control" id="contactName" placeholder="Contact Name" value="{{ contact.address.hl_language|default:"" }}">
-                        </div>
-                        <div class="form-group col-md-6">
-                          <label for="contactTel">Gender:</label>
-                          <input type="tel" class="form-control" id="contactTel" placeholder="Enter telephone number" value="{{ contact.address.hl_gender|default:"" }}">
-                        </div>
-                        <div class="form-group  col-md-6">
-                          <label for="contactName">Age Group</label>
-                          <input type="text" class="form-control" id="contactName" placeholder="Contact Name" value="{{ contact.address.hl_ageclass|default:"" }}">
-                        </div>
-                        <div class="form-group col-md-6">
-                          <label for="contactTel">Email:</label>
-                          <input type="tel" class="form-control" id="contactTel" placeholder="Enter telephone number" value="{{ contact.address.hl_email|default:"" }}">
-                        </div>
-                        <div class="form-group  col-md-6">
-                          <label for="contactName">Nationality</label>
-                          <input type="text" class="form-control" id="contactName" placeholder="Contact Name" value="{{ contact.address.address1|default:"" }}">
+                                  <div class="box-footer" style="background-color: transparent;">
+                                    <button type="button" class="btn btn-primary" onclick="$('.contact-search').removeClass('col-md-12');$('.contact-results').removeClass('hidden');">Search Contact</button>
+                                    <button type="button" class="btn btn-primary pull-right" onclick="$('#contact-search').addClass('hidden');$('.contact-cases').removeClass('hidden');">New Reporter</button>
+                                  </div>
+                                </form>
+                              </div>
+                            </div>
+                            <!-- /.col -->
+                            <div class="col-xs-6 contact-results hidden">
+                              <p class="lead">Contact Search Results</p>
+
+                              <div class="table-responsive text-muted well well-sm no-shadow" style="min-height: 242px;">
+                                <table class="table table-responsive">
+                                  <tr>
+                                    <th style="width:5px;">#</th>
+                                    <th style="width:40%;" align="left">Name</th>
+                                    <th style="width:40%;" align="left">Contact</th>
+                                    <th style="width:16%;" align="left">Action</th>
+                                  </tr>
+                                  <tr>
+                                    <td>1.</td>
+                                    <td><a href="javascript:void(0)" onclick="$('#contact-search').addClass('hidden');$('.contact-cases').removeClass('hidden');">Kemboi Cheruiyot</a></td>
+                                    <td>072324343434</td>
+                                  </tr>
+                                  <tr>
+                                    <td>2.</td>
+                                    <td><a href="javascript:void(0)" onclick="$('#contact-search').addClass('hidden');$('.contact-cases').removeClass('hidden');">Kemboi Cheru</a></td>
+                                    <td>072333332222</td>
+                                  </tr>
+                                  <tr>
+                                    <td>3.</td>
+                                    <td><a href="javascript:void(0)" onclick="$('#contact-search').addClass('hidden');$('.contact-cases').removeClass('hidden');">Cheru Kemboi</a></td>
+                                    <td>0723444344232</td>
+                                  </tr>
+                                </table>
+                              </div>
+                            </div>
+                            <!-- /.col -->
+                          </div>
+                          <!-- /.row -->
                         </div>
 
 
+                        <!-- Table row -->
+                        <div class="contact-cases {% if form_name == 'walkin' %} hidden {% endif %}">
+
+                          <div class="row">
+                            <!-- accepted payments column -->
+                            <div class="col-xs-6 contact-search">
+                              <p class="lead">Reporter Details: {{ contact.hl_contact }}</p>
+                              <div class="text-muted well well-sm no-shadow">
+                                <!-- form start -->
+                                <form role="form">
+                                  <div class="box-body">
+                                    <div class="row">
+                                      <div class="form-group col-md-6">
+                                        <label for="contactTel">Name:</label>
+                                        <input type="tel" class="form-control" id="contactTel" placeholder="Enter telephone number" value="{{ contact.address.hl_names|default:"" }}">
+                                      </div>
+                                      <div class="form-group  col-md-6">
+                                        <label for="contactName">Language</label>
+                                        <input type="text" class="form-control" id="contactName" placeholder="Contact Name" value="{{ contact.address.hl_language|default:"" }}">
+                                      </div>
+                                      <div class="form-group col-md-6">
+                                        <label for="contactTel">Gender:</label>
+                                        <input type="tel" class="form-control" id="contactTel" placeholder="Enter telephone number" value="{{ contact.address.hl_gender|default:"" }}">
+                                      </div>
+                                      <div class="form-group  col-md-6">
+                                        <label for="contactName">Age Group</label>
+                                        <input type="text" class="form-control" id="contactName" placeholder="Contact Name" value="{{ contact.address.hl_ageclass|default:"" }}">
+                                      </div>
+                                      <div class="form-group col-md-6">
+                                        <label for="contactTel">Email:</label>
+                                        <input type="tel" class="form-control" id="contactTel" placeholder="Enter telephone number" value="{{ contact.address.hl_email|default:"" }}">
+                                      </div>
+                                      <div class="form-group  col-md-6">
+                                        <label for="contactName">Nationality</label>
+                                        <input type="text" class="form-control" id="contactName" placeholder="Contact Name" value="{{ contact.address.address1|default:"" }}">
+                                      </div>
 
 
-                        <div class="form-group col-md-6">
-                          <label for="contactTel">Location:</label>
-                          <input type="tel" class="form-control" id="contactTel" placeholder="Enter Location" value="{{ contact.address.hl_email|default:"" }}">
-                        </div>
-                        <div class="form-group  col-md-6">
-                          <label for="contactName">Nearest Landmark</label>
-                          <input type="text" class="form-control" id="landmark" placeholder="Nearest Landmark" value="{{ contact.address.address1|default:"" }}">
+
+
+                                      <div class="form-group col-md-6">
+                                        <label for="contactTel">Location:</label>
+                                        <input type="tel" class="form-control" id="contactTel" placeholder="Enter Location" value="{{ contact.address.hl_email|default:"" }}">
+                                      </div>
+                                      <div class="form-group  col-md-6">
+                                        <label for="contactName">Nearest Landmark</label>
+                                        <input type="text" class="form-control" id="landmark" placeholder="Nearest Landmark" value="{{ contact.address.address1|default:"" }}">
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <!-- /.box-body -->
+
+                                  <div class="box-footer" style="background-color: transparent;">
+                                    <button type="button" class="btn btn-primary pull-right btn-lg btn-flat" onclick="$('.contact-search').removeClass('col-md-12');$('#frame-contact').addClass('hidden');$('#frame_iframe').removeClass('hidden');">Next</button->
+                                      <!--button type="button" class="btn btn-primary" onclick="$('.invoice').addClass('hidden'); $('iframe').removeClass('hidden'); "><a style="padding-bottom: 10px; padding-top:10px;" tabindex="-1" href="#case_form_modal" data-keyboard="false" data-backdrop="static" class="btn btn-lg btn-primary btn-flat pull-right" role="button" data-toggle="modal">{% trans 'Next' %} </a-->
+                                      </div>
+                                    </form>
+                                  </div>
+                                </div>
+                                <!-- /.col -->
+                                <div class="col-xs-6 contact-results">
+                                  <p class="lead">Historical Cases</p>
+
+                                  <div class="table-responsive text-muted well well-sm no-shadow" style="min-height: 242px;">
+                                    {% if case %}
+                                    {% load django_tables2 %}
+                                    {% render_table case_history_table %}
+                                    {% endif %}
+                                  </div>
+                                </div>
+                                <!-- /.col -->
+                              </div>
+                              <!-- /.row -->
+                            </div>
+
+                            <!-- this row will not appear when printing -->
+                          </section>
+
+                          <!--iframe src="https://enketo.bitz-itc.com/i/::Bkyb35PE" style="width: 100%; min-height: 80vh; border: none;"></iframe-->
                         </div>
                       </div>
                     </div>
-                      <!-- /.box-body -->
+                  </section>
 
-                      <div class="box-footer" style="background-color: transparent;">
-                        <button type="button" class="btn btn-primary pull-right btn-lg btn-flat" onclick="$('.contact-search').removeClass('col-md-12');$('#frame-contact').addClass('hidden');$('#frame_iframe').removeClass('hidden');">Next</button->
-                        <!--button type="button" class="btn btn-primary" onclick="$('.invoice').addClass('hidden'); $('iframe').removeClass('hidden'); "><a style="padding-bottom: 10px; padding-top:10px;" tabindex="-1" href="#case_form_modal" data-keyboard="false" data-backdrop="static" class="btn btn-lg btn-primary btn-flat pull-right" role="button" data-toggle="modal">{% trans 'Next' %} </a-->
-                      </div>
-                    </form>
-                  </div>
-                </div>
-                <!-- /.col -->
-                <div class="col-xs-6 contact-results">
-                  <p class="lead">Historical Cases</p>
 
-                  <div class="table-responsive text-muted well well-sm no-shadow" style="min-height: 242px;">
-                      {% if case %}
-                        {% load django_tables2 %}
-                        {% render_table case_history_table %}
-                       {% endif %}
-                  </div>
                 </div>
-                <!-- /.col -->
+                <div id="frame_iframe"  class="{% if form_name != 'webonline' %} hidden {% endif %}">
+                  <iframe src="{{ iframe_url }}" style="width: 100%; border: none; {% if form_name == 'qa' %} min-height: 5300px; {% else %} min-height: 1200px; {% endif %}"></iframe>
+                </div>
               </div>
-              <!-- /.row -->
-            </div>
-
-              <!-- this row will not appear when printing -->
-            </section>
-
-            <!--iframe src="https://enketo.bitz-itc.com/i/::Bkyb35PE" style="width: 100%; min-height: 80vh; border: none;"></iframe-->
-          </div>
-    </div>
-  </div>
-</section>
-
-
-          </div>
-          <div id="frame_iframe"  class="hidden">
-            <iframe src="{{ iframe_url }}" style="width: 100%; border: none; {% if form_name == 'qa' %} min-height: 5300px; {% else %} min-height: 1200px; {% endif %}"></iframe>
+            </form>
           </div>
         </div>
-      </form>
-    </div>
-  </div>
-</div>
+      </div>
 
 
 

@@ -74,6 +74,7 @@ from helpline.qpanel.config import QPanelConfig
 from helpline.qpanel.backend import Backend
 if QPanelConfig().has_queuelog_config():
     from helpline.qpanel.model import queuelog_data_queue
+import json
 
 
 cfg = QPanelConfig()
@@ -193,7 +194,6 @@ def queue_log(request):
                 hotdesk.jabber = 'helpline@jabber'
                 hotdesk.status = 'Available'
                 hotdesk.agent = request.user.HelplineUser.hl_key
-                hotdesk.user = request.user
 
                 agent = request.user.HelplineUser
                 agent.hl_status = 'Available'
@@ -233,7 +233,6 @@ def queue_leave(request):
         hotdesk = Hotdesk.objects.filter(agent__exact=request.user.HelplineUser.hl_key)
         hl_user = HelplineUser.objects.get(hl_key=request.user.HelplineUser.hl_key)
         hotdesk.update(agent=0)
-        hotdesk.update(user=None)
 
         request.session['queuejoin'] = 'out'
         request.session['status'] = 'out'
@@ -415,7 +414,7 @@ def reports(request, report, casetype='Call'):
             'Authorization': 'Token 7331a310c46884d2643ca9805aaf0d420ebfc831'
     }
 
-    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/1',headers= headers).json();'''
+    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/24',headers= headers).json();'''
 
     sort = request.GET.get('sort')
     report_title = {

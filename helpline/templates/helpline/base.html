@@ -1100,22 +1100,17 @@ function access(iframee){
   }
 
 var timer = new Timer();
-$('#walkin-modal').on('shown.bs.modal', function () {
+$('#case_form_modal').on('hidden.bs.modal', function () {
+  timer.stop();
+  timer.reset();
+});
+
+{% if iframe_url %}
+ $('#case_form_modal').modal({backdrop: 'static', keyboard: false}).show()
   timer.start();
   timer.addEventListener('secondsUpdated', function (e) {
     $('#formTimer').html(timer.getTimeValues().toString());
     });
-});
-
-$('#walkin-modal').on('hidden.bs.modal', function () {
-  timer.stop();
-  timer.reset();
-  //alert($('#formTimer').html())
-});
-
-{% if iframe_url %}
- $('#case_form_modal').modal('show')
- timer.start();
 {% endif %}
 
 
