@@ -157,7 +157,7 @@
           </div>
           <div class="modal-body" style="padding: 0px; height: 80vh;" >
           <div id="frame_iframes">
-            <div id="frame-contact" class="{% if form_name == 'webonline' %} hidden {% endif %}" >
+            <div id="frame-contact" class="{% if form_name == 'webonline' or form_name == 'qa' %} hidden {% endif %}" >
 
 
               <section class="content" style="background-color: #fff;">
@@ -323,7 +323,7 @@
                             <!-- this row will not appear when printing -->
                           </section>
 
-                          <!--iframe src="https://enketo.bitz-itc.com/i/::Bkyb35PE" style="width: 100%; min-height: 80vh; border: none;"></iframe{{ iframe_url }}-->
+                          <!--iframe src="https://enketo.bitz-itc.com/i/::Bkyb35PE" style="width: 100%; min-height: 80vh; border: none;"></iframe-->
                         </div>
                       </div>
                     </div>
@@ -331,8 +331,8 @@
 
 
                 </div>
-                <div id="frame_iframe"  class="{% if form_name != 'webonline' %} hidden {% endif %}">
-                  <iframe src="https://enketo.bitz-itc.com/i/::P6SEqt57" style="width: 100%; border: none; {% if form_name == 'qa' %} min-height: 5300px; {% else %} min-height: 1200px; {% endif %}"></iframe>
+                <div id="frame_iframe"  class="{% if form_name != 'webonline' and form_name != 'qa' %} hidden {% endif %}">
+                  <iframe src="{{ iframe_url }}" style="width: 100%; border: none; {% if form_name == 'qa' %} min-height: 5300px; {% else %} min-height: 1200px; {% endif %}"></iframe>
                 </div>
               </div>
             </form>

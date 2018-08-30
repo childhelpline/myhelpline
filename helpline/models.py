@@ -547,6 +547,16 @@ class Report(models.Model):
 
         return reverse('case_form', args=[self.casetype.lower() if self.casetype else "call"]) + "?case=%s" % str(self.case)
 
+    def get_qa_url(self):
+        """Calculate the canonical URL for Report."""
+        # Django 1.10 breaks reverse imports.
+        try:
+            from django.urls import reverse
+        except Exception as e:
+            from django.core.urlresolvers import reverse
+
+        return reverse('case_form', args=[self.casetype.lower() if self.qa else "qa"]) + "?case=%s" % str(self.case)
+
 
 class Messaging(models.Model):
     """Inbuilt messaging model"""

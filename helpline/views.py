@@ -1141,7 +1141,7 @@ class DashboardTable(tables.Table):
     user_id = tables.TemplateColumn("{{ record.user }}", verbose_name="Agent")
     service_id = tables.TemplateColumn("{{ record.service }}",
                                        verbose_name="Service")
-    qaaction = tables.TemplateColumn('<a href="{{ record.get_absolute_url }}"><i class="fa fa-volume-up"></i> Analyse</a>', verbose_name="Action")
+    qaaction = tables.TemplateColumn('<a href="{{ record.get_qa_url }}"><i class="fa fa-volume-up"></i> Analyse</a>', verbose_name="Action")
 
     export_formats = ['csv', 'xls']
 
