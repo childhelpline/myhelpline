@@ -555,7 +555,7 @@ class Report(models.Model):
         except Exception as e:
             from django.core.urlresolvers import reverse
 
-        return reverse('qa_form', args=[self.casetype.lower() if self.qa else "qa"]) + "?case=%s" % str(self.case)
+        return reverse('case_form', args=[self.casetype.lower() if self.qa else "qa"]) + "?case=%s" % str(self.case)
 
 
 class Messaging(models.Model):
