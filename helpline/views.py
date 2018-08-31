@@ -74,6 +74,7 @@ from helpline.qpanel.config import QPanelConfig
 from helpline.qpanel.backend import Backend
 if QPanelConfig().has_queuelog_config():
     from helpline.qpanel.model import queuelog_data_queue
+import json
 
 
 cfg = QPanelConfig()
@@ -193,7 +194,6 @@ def queue_log(request):
                 hotdesk.jabber = 'helpline@jabber'
                 hotdesk.status = 'Available'
                 hotdesk.agent = request.user.HelplineUser.hl_key
-                hotdesk.user = request.user
 
                 agent = request.user.HelplineUser
                 agent.hl_status = 'Available'
@@ -233,7 +233,6 @@ def queue_leave(request):
         hotdesk = Hotdesk.objects.filter(agent__exact=request.user.HelplineUser.hl_key)
         hl_user = HelplineUser.objects.get(hl_key=request.user.HelplineUser.hl_key)
         hotdesk.update(agent=0)
-        hotdesk.update(user=None)
 
         request.session['queuejoin'] = 'out'
         request.session['status'] = 'out'
@@ -406,6 +405,8 @@ def reports1(request, report, casetype='Call'):
 @login_required
 def reports(request, report, casetype='Call'):
     """Handle report rendering"""
+    if report == 'nonanalysed':
+        report = 'totalcases'
     query = request.GET.get('q', '')
     datetime_range = request.GET.get("datetime_range")
     agent = request.GET.get("agent")
@@ -417,7 +418,7 @@ def reports(request, report, casetype='Call'):
             'Authorization': 'Token 7331a310c46884d2643ca9805aaf0d420ebfc831'
     }
 
-    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/1',headers= headers).json();'''
+    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/24',headers= headers).json();'''
 
     sort = request.GET.get('sort')
     report_title = {
@@ -745,8 +746,9 @@ def case_form(request, form_name):
         try:
             url = enketo_url(form_url, xform.id_string)
             # Poor mans iframe url gen
+            parent_window_origin = urllib.quote_plus(request.build_absolute_uri())
             iframe_url = url[:url.find("::")] + "i/" + url[url.find("::"):]+\
-              "?d[/%s/case_id]=%s&parentWindowOrigin=" % (xform.id_string, case_number) + request.build_absolute_uri()
+              "?d[/%s/case_id]=%s&parentWindowOrigin=" % (xform.id_string, case_number) + parent_window_origin
             data['iframe_url'] = iframe_url
             if not url:
                 return HttpResponseRedirect(
@@ -1140,6 +1142,7 @@ class DashboardTable(tables.Table):
     user_id = tables.TemplateColumn("{{ record.user }}", verbose_name="Agent")
     service_id = tables.TemplateColumn("{{ record.service }}",
                                        verbose_name="Service")
+    qaaction = tables.TemplateColumn('<a href="{{ record.get_qa_url }}"><i class="fa fa-volume-up"></i> Analyse</a>', verbose_name="Action")
 
     export_formats = ['csv', 'xls']
 

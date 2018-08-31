@@ -143,9 +143,10 @@ def submission_time():
 
 def get_case_id_string_from_xml_str(xml_str):
     xml_obj = clean_and_parse_xml(xml_str)
-    case_id = xml_obj.getElementsByTagName("case_id")[0].firstChild.data
-    if not case_id:
-        raise ValueError(_("XML string must have a case_id element."))
+    try:
+        case_id = xml_obj.getElementsByTagName("case_id")[0].firstChild.data
+    except:
+        case_id = None
 
     return case_id
 
@@ -160,13 +161,14 @@ def update_helpline_case_report(instance_id, created):
         except Instance.DoesNotExist:
             pass
         else:
-            # update xform.num_of_submissions
-            cursor = connection.cursor()
-            sql = '''
-                INSERT INTO helpline_case_instance (case_id, instance_id)
-                VALUES(%s,%s)
-                ''' % (case_id, instance.id)
-            cursor.execute(sql)
+            # update helpline with instance id
+            if case_id:
+                cursor = connection.cursor()
+                sql = '''
+                    INSERT INTO helpline_case_instance (case_id, instance_id)
+                    VALUES(%s,%s)
+                    ''' % (case_id, instance.id)
+                cursor.execute(sql)
 
 
 @task
