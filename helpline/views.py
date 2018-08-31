@@ -352,7 +352,22 @@ def faq(request):
 
 
 @login_required
-def reports1(request, report, casetype='Call'):
+def reports(request, report, casetype='Call'):
+    headers = {
+            'Authorization': 'Token 7331a310c46884d2643ca9805aaf0d420ebfc831'
+    }
+
+    data = {
+    'name': "My DataView",
+    'xform': 'https://dev.bitz-itc.com/ona/api/v1/forms/24',
+    'project':  'https://dev.bitz-itc.com/ona/api/v1/projects/1',
+    'columns': '["select_category", "client_name", "case_action"]',
+    'query': '[{"column":"if_client", "filter":"=", "value":"yes"}]'
+    }
+
+
+    stat = requests.post('https://dev.bitz-itc.com/ona/api/v1/dataviews',data=data, headers= headers).json();
+    #stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/24', headers= headers).json();
 
     """
     Data view displays submission data.
@@ -397,13 +412,14 @@ def reports1(request, report, casetype='Call'):
         'datetime_range': datetime_range,
         'dashboard_stats': dashboard_stats,
         'table': table,
-        'query': query}
+        'query': query,
+        'stat':stat}
     if report == 'nonanalysed':
         return render(request, "helpline/nonanalysed.html")
     else:
-        return render(request, "helpline/report_body.html", data)
+        return render(request, "helpline/report_bodys.html", data)
 @login_required
-def reports(request, report, casetype='Call'):
+def reports1(request, report, casetype='Call'):
     """Handle report rendering"""
     if report == 'nonanalysed':
         report = 'totalcases'
