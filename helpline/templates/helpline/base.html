@@ -534,13 +534,13 @@ input:checked + .slider:before {
           <ul class="treeview-menu">
           <!--li>
             <a href="{% url "case_form" "qa" %}" role="button"><i class="fa fa-circle-o"></i> {% trans "New QA Form" %}
-          </a></li-->
-            <li><a href="{% url 'dashboardreports' 'nonanalysed' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Cases" %}
+          </a></li ?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }} -->
+            <li><a href="{% url 'dashboardreports' 'nonanalysed' %}"><i class="fa fa-circle-o"></i> {% trans "Cases" %}
               <span class="pull-right-container">
                 <span class="label label-info pull-right">{{ dashboard_stats.total_cases }}</span>
               </span>
             </a></li>
-            <li><a href="{% url 'dashboardreports' 'analysed' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Analysed Cases" %}
+            <li><a href="{% url 'dashboardreports' 'analysed' %}"><i class="fa fa-circle-o"></i> {% trans "Analysed Cases" %}
               <span class="pull-right-container">
                 <span class="label label-success pull-right">{{ dashboard_stats.open_cases }}</span>
               </span>
@@ -1100,22 +1100,17 @@ function access(iframee){
   }
 
 var timer = new Timer();
-$('#walkin-modal').on('shown.bs.modal', function () {
+$('#case_form_modal').on('hidden.bs.modal', function () {
+  timer.stop();
+  timer.reset();
+});
+
+{% if iframe_url %}
+ $('#case_form_modal').modal({backdrop: 'static', keyboard: false}).show()
   timer.start();
   timer.addEventListener('secondsUpdated', function (e) {
     $('#formTimer').html(timer.getTimeValues().toString());
     });
-});
-
-$('#walkin-modal').on('hidden.bs.modal', function () {
-  timer.stop();
-  timer.reset();
-  //alert($('#formTimer').html())
-});
-
-{% if iframe_url %}
- $('#case_form_modal').modal('show')
- timer.start();
 {% endif %}
 
 
