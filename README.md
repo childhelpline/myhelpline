@@ -34,6 +34,7 @@ Install package dependencies.
     sudo apt install python-gdal
     sudo apt install libmemcached-dev
     sudo apt-get install libz-dev
+    sudo apt-get install postgis
 ```
 
 To bulk install the requirements in Ubuntu run:
