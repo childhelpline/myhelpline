@@ -33,6 +33,7 @@ Install package dependencies.
     sudo apt install postgresql postgresql-contrib
     sudo apt install python-gdal
     sudo apt install libmemcached-dev
+    sudo apt-get install libz-dev
 ```
 
 To bulk install the requirements in Ubuntu run:
