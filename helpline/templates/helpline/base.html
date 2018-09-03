@@ -506,19 +506,25 @@ input:checked + .slider:before {
             <li>
               <a href="{% url 'mysources' 'email' %}">
                 <i class="fa fa-circle-o"></i>
-                <span>{% trans "Emails" %}</span><span class="label label-info pull-right">4</span>
+                <span>{% trans "Emails" %}</span><span class="label label-info pull-right"></span>
               </a>
             </li>
             <li class="treeview">
               <a href="{% url 'mysources' 'sms' %}">
                 <i class="fa fa-circle-o"></i>
-                <span>{% trans "SMS" %}</span><span class="label label-info pull-right">4</span>
+                <span>{% trans "SMS" %}</span><span class="label label-info pull-right"></span>
               </a>
             </li>
             <li class="treeview">
               <a href="{% url 'mysources' 'web' %}">
                 <i class="fa fa-circle-o"></i>
-                <span>{% trans "Web Online" %}</span><span class="label label-info pull-right">4</span>
+                <span>{% trans "Web Online" %}</span><span class="label label-info pull-right"></span>
+              </a>
+            </li>
+            <li class="treeview">
+              <a href="{% url 'mysources' 'twitter' %}">
+                <i class="fa fa-twitter"></i>
+                <span>{% trans "Twitter" %}</span><span class="label label-info pull-right"></span>
               </a>
             </li>
           </ul>
