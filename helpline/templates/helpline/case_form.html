@@ -24,9 +24,9 @@
 {% endblock box %}
 
 {% block head %}
-<!--link rel="stylesheet" href="{% static 'helpline/css/ui/1.10.4/themes/ui-lightness/jquery-ui.css' %}" type="text/css" /-->
+<link rel="stylesheet" href="{% static 'jquery-ui/themes/ui-lightness/jquery-ui.css' %}" type="text/css" />
 <link href="{% static 'selectable/css/dj.selectable.css' %}" type="text/css" media="all" rel="stylesheet" />
-<script src="{% static 'helpline/js/ui/1.10.4/jquery-ui.js' %}"></script>
+<script src="{% static 'jquery-ui/ui/jquery-ui.js' %}"></script>
 <script type="text/javascript" src="{% static 'selectable/js/jquery.dj.selectable.js' %}"></script>
 {% endblock head %}
 {% block content %}
@@ -152,7 +152,7 @@
         {% csrf_token %}
         <div class="modal-header bg-light-blue-active">
           <!--button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button-->
-          <h4 class="modal-title" id="myModalLabel">{% trans "Case Form" %} > {{ form_name }} | Case ID <span id="caseid">00000</span><span class="pull-right" id="formTimer" style="font-size: 18px; color: #fff;">00:00:00</span><h4>
+          <h4 class="modal-title" id="myModalLabel">{% trans "Case Form" %} > {{ form_name }} | Case ID <span id="caseid">{{ case }}<span><span id="editedBadge"></span></span> <span class="pull-right" id="formTimer" style="font-size: 18px; color: #fff;">00:00:00</span><h4>
 
           </div>
           <div class="modal-body" style="padding: 0px; height: 80vh;" ><!-- -->
@@ -370,18 +370,12 @@
 
   function receiveMessage(event)
   {
-    if (event.origin !== "https://enketo.bitz-itc.com")
+      if (event.origin !== "{{ enketo_url }}")
         return;
-    // TODO in real life, check origin! if (event.origin !== "http://enk.to:8080") return
-    
-    
-    var resp = JSON.parse(event.data)
-    //console.log('origin of message', event.origin);
-    //console.log('source of message', event.source);
-    if(resp.enketoEvent == 'submissionsuccess'){
+        var resp = JSON.parse(event.data)
+      if(resp.enketoEvent == 'submissionsuccess'){
       setInterval(function(){window.location.assign({% url "dashboard_home" %});},500)
     }
-      
-      }else console.log('data received from iframe', JSON.parse(event.data));
+  }
 </script>
 {% endblock content %}
