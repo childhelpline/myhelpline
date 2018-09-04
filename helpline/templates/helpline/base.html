@@ -523,7 +523,8 @@ input:checked + .slider:before {
             </li>
           </ul>
         </li>
-        <li class="treeview">
+        {% if request.user.HelplineUser.hl_role == 'Supervisor' %}
+        <li class="treeview" >
           <a href="#">
             <i class="fa fa-files-o"></i>
             <span>{% trans "QA" %}</span>
@@ -547,6 +548,7 @@ input:checked + .slider:before {
             </a></li>
           </ul>
         </li>
+        {% endif %}
         <li>
           <a href="/admin/auth/user/">
             <i class="fa fa-users"></i> <span>{% trans "Users" %}</span>
@@ -1087,7 +1089,7 @@ $(document).ready(function(){
       if(data.my_case){
           window.location = "{% url "case_form" "call"  %}?case="+data.my_case;
 
-        clearInterval();
+        clearInterval();    
       }
     });
   }, 1000);
@@ -1123,32 +1125,20 @@ $('#example2').DataTable({
   "info": true,
   "autoWidth": false
 });
-/*
-var request = new XMLHttpRequest();
-request.onreadystatechange = function () {
-    var DONE = this.DONE || 4;
-    if (this.readyState === DONE){
-      //var data = JSON.stringify(this.response)
-      //for(var dat in data){
-        $('#data-table-data').dataTable({data: this.response});
-      //}
 
-    }
-};
-request.open('GET', 'https://dev.bitz-itc.com/ona/api/v1/data/1?format=json', true);
-//request.setRequestHeader('X-Requested-With', 'XMLHttpRequest');  // Tells server that this call is made for ajax purposes.
-//request.setRequestHeader('Content-tye', 'json')
-request.setRequestHeader('Authorization', 'Token 7331a310c46884d2643ca9805aaf0d420ebfc831');
-                                                                 // Most libraries like jQuery/Prototype/Dojo do this
-request.send(null) // No data needs to be sent along with the request.
-//alert("Cheru: " + JSON.stringify(request.response))
-//alert("Cheru: " + data)
-/*
-var myHeaders = new Headers({'Authorization':'Token 7331a310c46884d2643ca9805aaf0d420ebfc831'});
 
-$.get('https://dev.bitz-itc.com/ona/api/v1/data/1?format=json',function(data){
-  alert("Cheru");
-})*/
+  window.addEventListener("message", receiveMessage, false);
+
+  function receiveMessage(event)
+  {
+    //if (event.origin !== "https://enketo.bitz-itc.com")
+    //return;
+    // TODO in real life, check origin! if (event.origin !== "http://enk.to:8080") return;
+    console.log('data received from iframe', JSON.parse(event.data));
+    console.log('origin of message', event.origin);
+    console.log('source of message', event.source);
+  }
+
 </script>
 
 <script src="{% static "helpline/js/custom.js" %}" type="text/javascript"></script>

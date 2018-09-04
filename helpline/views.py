@@ -418,7 +418,7 @@ def reports1(request, report, casetype='Call'):
     if report == 'nonanalysed':
         return render(request, "helpline/nonanalysed.html")
     else:
-        return render(request, "helpline/report_bodys.html", data)
+        return render(request, "helpline/report_body.html", data)
 @login_required
 def reports(request, report, casetype='Call'):
     """Handle report rendering"""
@@ -459,9 +459,18 @@ def reports(request, report, casetype='Call'):
         exporter = TableExport(export_format, table)
         return exporter.response('table.{}'.format(export_format))
 
+     
+    '''if report == 'nonanalysed':
+        template = "helpline/nonanalysed.html"
+    elif report == 'totalcases':
+        template = "helpline/report_body.html"
+    else:'''
+    template = "helpline/reports.html"
+
     table.paginate(page=request.GET.get('page', 1), per_page=10)
 
-    return render(request, 'helpline/reports.html', { #dashboardreports
+
+    return render(request, template, { #dashboardreports
         'title': report_title.get(report),
         'report': report,
         'form': form,
