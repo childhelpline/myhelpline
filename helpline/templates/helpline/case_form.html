@@ -323,7 +323,7 @@
                             <!-- this row will not appear when printing -->
                           </section>
 
-                          <!--iframe src="https://enketo.bitz-itc.com/i/::Bkyb35PE" style="width: 100%; min-height: 80vh; border: none;"></iframe {{ iframe_url }}-->
+                          <!--iframe src="https://enketo.bitz-itc.com/i/::Bkyb35PE" style="width: 100%; min-height: 80vh; border: none;"></iframe {{ iframe_url }}https://enketo.bitz-itc.com/i/::P6SEqt57-->
                         </div>
                       </div>
                     </div>
@@ -332,7 +332,7 @@
 
                 </div>
                 <div id="frame_iframe"  class="{% if form_name != 'webonline' and form_name != 'qa' %} hidden {% endif %}">
-                  <iframe src="https://enketo.bitz-itc.com/i/::P6SEqt57" style="width: 100%; height: 80vh; border: none;"></iframe>
+                  <iframe src="{{ iframe_url }}" style="width: 100%; height: 80vh; border: none;"></iframe>
                 </div>
               </div>
             </form>
@@ -376,6 +376,7 @@
     console.log('data received from iframe', JSON.parse(event.data));
     
     var resp = JSON.parse(event.data)
+      alert(resp.enketoEvent)
     //console.log('origin of message', event.origin);
     //console.log('source of message', event.source);
     if(resp.enketoEvent == 'submissionsuccess'){
