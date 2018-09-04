@@ -352,7 +352,7 @@ def faq(request):
 
 
 @login_required
-def reports1(request, report, casetype='Call'):
+def reports(request, report, casetype='Call'):
     headers = {
             'Authorization': 'Token 7331a310c46884d2643ca9805aaf0d420ebfc831'
     }
@@ -415,15 +415,17 @@ def reports1(request, report, casetype='Call'):
         'table': table,
         'query': query,
         'stat':stat}
-    if report == 'nonanalysed':
-        return render(request, "helpline/nonanalysed.html")
-    else:
-        return render(request, "helpline/report_body.html", data)
+
+    htmltemplate = "helpline/reports.html"
+
+    if report == 'totalcases':
+        htmltemplate = "helpline/report_body.html"
+
+    return render(request, htmltemplate,data)
 @login_required
-def reports(request, report, casetype='Call'):
+def reports1(request, report, casetype='Call'):
     """Handle report rendering"""
-    if report == 'nonanalysed':
-        report = 'totalcases'
+
     query = request.GET.get('q', '')
     datetime_range = request.GET.get("datetime_range")
     agent = request.GET.get("agent")
@@ -458,19 +460,12 @@ def reports(request, report, casetype='Call'):
     if TableExport.is_valid_format(export_format):
         exporter = TableExport(export_format, table)
         return exporter.response('table.{}'.format(export_format))
-
-     
-    '''if report == 'nonanalysed':
-        template = "helpline/nonanalysed.html"
-    elif report == 'totalcases':
-        template = "helpline/report_body.html"
-    else:'''
-    template = "helpline/reports.html"
+        
 
     table.paginate(page=request.GET.get('page', 1), per_page=10)
 
 
-    return render(request, template, { #dashboardreports
+    return render(request, htmltemplate, { #dashboardreports
         'title': report_title.get(report),
         'report': report,
         'form': form,
