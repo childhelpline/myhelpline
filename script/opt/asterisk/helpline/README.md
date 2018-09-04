@@ -51,6 +51,24 @@ Add the following lines to the end of each of the corresponding files.
 ```
     #include /opt/asterisk/helpline/app/func_odbc.conf
 ```
+```
+   /etc/asterisk/queues.conf
+   
+    ADD
+sudo cp -rpv PATH_TO_MYHELPLINE/script/opt/asterisk/helpline/ 
+```
+
+```
+On 
+
+/etc/asterisk/queues.conf
+
+ADD
+
+#include /opt/asterisk/helpline/app/queues.conf
+```
+  
+   
 
 
 ## Example odbc.ini config.
