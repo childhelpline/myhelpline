@@ -124,7 +124,7 @@
             });
             //alert("Cheru: " + JSON.stringify(this.data));
             // Initialize the header name/label toggle
-            var headerLangSwitcher = new NameLabelLanguagePicker({
+            /*var headerLangSwitcher = new NameLabelLanguagePicker({
                 label: "Column Headers",
                 model: this.form
             });
@@ -133,7 +133,7 @@
             var dataLangSwitcher = new NameLabelLanguagePicker({
                 label: "Answer Values",
                 model: this.form
-            });
+            });*/
 
             this.form.on("load", function () {
                 var dataTableView = this;

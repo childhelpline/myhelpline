@@ -352,7 +352,23 @@ def faq(request):
 
 
 @login_required
-def reports1(request, report, casetype='Call'):
+def reports(request, report, casetype='Call'):
+    headers = {
+            'Authorization': 'Token 7331a310c46884d2643ca9805aaf0d420ebfc831'
+    }
+
+    data = {
+    'name': "My DataView2",
+    'xform': 'https://dev.bitz-itc.com/ona/api/v1/forms/24',
+    'project':  'https://dev.bitz-itc.com/ona/api/v1/projects/1',
+    'columns': '[]',
+    'query': '[]'
+    }
+
+
+    #stat = requests.post('https://dev.bitz-itc.com/ona/api/v1/dataviews',data=data, headers= headers).json();
+    #stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/dataviews/7/data', headers= headers).json();
+    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/24/26', headers= headers).json();
 
     """
     Data view displays submission data.
@@ -397,16 +413,19 @@ def reports1(request, report, casetype='Call'):
         'datetime_range': datetime_range,
         'dashboard_stats': dashboard_stats,
         'table': table,
-        'query': query}
-    if report == 'nonanalysed':
-        return render(request, "helpline/nonanalysed.html")
-    else:
-        return render(request, "helpline/report_body.html", data)
+        'query': query,
+        'stat':stat}
+
+    htmltemplate = "helpline/reports.html"
+
+    if report == 'totalcases':
+        htmltemplate = "helpline/report_body.html"
+
+    return render(request, htmltemplate,data)
 @login_required
-def reports(request, report, casetype='Call'):
+def reports1(request, report, casetype='Call'):
     """Handle report rendering"""
-    if report == 'nonanalysed':
-        report = 'totalcases'
+
     query = request.GET.get('q', '')
     datetime_range = request.GET.get("datetime_range")
     agent = request.GET.get("agent")
@@ -441,10 +460,12 @@ def reports(request, report, casetype='Call'):
     if TableExport.is_valid_format(export_format):
         exporter = TableExport(export_format, table)
         return exporter.response('table.{}'.format(export_format))
+        
 
     table.paginate(page=request.GET.get('page', 1), per_page=10)
 
-    return render(request, 'helpline/reports.html', { #dashboardreports
+
+    return render(request, htmltemplate, { #dashboardreports
         'title': report_title.get(report),
         'report': report,
         'form': form,
