@@ -707,7 +707,7 @@ def case_form(request, form_name):
     initial = {}
     data = {}
 
-    service = Service.objects.get(id=2)
+    service = Service.objects.all().first()
     if(form_name == 'walkin'):
         xform = service.walkin_xform
         data['form_name'] = 'walkin'
@@ -735,7 +735,7 @@ def case_form(request, form_name):
 
     if request.method == 'GET':
         case_number = request.GET.get('case')
-        username = 'demoadmin'
+        username = xform.user.username
         if case_number:
             my_case = Case.objects.get(hl_case=case_number)
             report, contact, address = get_case_info(case_number)
@@ -1837,13 +1837,10 @@ def wall(request):
                    'week_dashboard_stats': week_dashboard_stats})
 
 @login_required
-def sources(request,csource = ''):
-    """Display statistics for the wall board"""
-    #sms_list = get_sms_list(request.user)
-   # week_dashboard_stats = get_dashboard_stats(request.user, interval='weekly')
-    ln = 'helpline/' + csource + '.html'
-    return render(request,ln)#,
-                  #{'sls_list': sms_list})
+def sources(request, source=None):
+    """Display data source"""
+    template = 'helpline/%s.html' % (source)
+    return render(request, template)
 
 
 def get_data_queues(queue=None):
