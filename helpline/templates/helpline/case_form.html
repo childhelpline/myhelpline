@@ -373,16 +373,15 @@
     if (event.origin !== "https://enketo.bitz-itc.com")
         return;
     // TODO in real life, check origin! if (event.origin !== "http://enk.to:8080") return
-    console.log('data received from iframe', JSON.parse(event.data));
+    
     
     var resp = JSON.parse(event.data)
-      alert(resp.enketoEvent)
     //console.log('origin of message', event.origin);
     //console.log('source of message', event.source);
     if(resp.enketoEvent == 'submissionsuccess'){
-      setInterval(function(){window.location.href = '/helpline'},500)
+      setInterval(function(){window.location.assign({% url "dashboard_home" %});},500)
     }
       
-      }
+      }else console.log('data received from iframe', JSON.parse(event.data));
 </script>
 {% endblock content %}
