@@ -762,8 +762,13 @@ def case_form(request, form_name):
             report, contact, address = get_case_info(case_number)
         try:
             url = enketo_url(form_url, xform.id_string)
+            uri = request.build_absolute_uri()
+
+            # Use https for the iframe parent window uri, always.
+            uri = uri.replace('http://', 'https://')
+
             # Poor mans iframe url gen
-            parent_window_origin = urllib.quote_plus(request.build_absolute_uri())
+            parent_window_origin = urllib.quote_plus(uri)
             iframe_url = url[:url.find("::")] + "i/" + url[url.find("::"):]+\
               "?d[/%s/case_id]=%s&parentWindowOrigin=" % (xform.id_string, case_number) + parent_window_origin
             data['iframe_url'] = iframe_url
