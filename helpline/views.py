@@ -352,7 +352,7 @@ def faq(request):
 
 
 @login_required
-def reports1(request, report, casetype='Call'):
+def reports(request, report, casetype='Call'):
     headers = {
             'Authorization': 'Token 7331a310c46884d2643ca9805aaf0d420ebfc831'
     }
@@ -415,15 +415,17 @@ def reports1(request, report, casetype='Call'):
         'table': table,
         'query': query,
         'stat':stat}
-    if report == 'nonanalysed':
-        return render(request, "helpline/nonanalysed.html")
-    else:
-        return render(request, "helpline/report_bodys.html", data)
+
+    htmltemplate = "helpline/reports.html"
+
+    if report == 'totalcases':
+        htmltemplate = "helpline/report_body.html"
+
+    return render(request, htmltemplate,data)
 @login_required
-def reports(request, report, casetype='Call'):
+def reports1(request, report, casetype='Call'):
     """Handle report rendering"""
-    if report == 'nonanalysed':
-        report = 'totalcases'
+
     query = request.GET.get('q', '')
     datetime_range = request.GET.get("datetime_range")
     agent = request.GET.get("agent")
@@ -458,10 +460,12 @@ def reports(request, report, casetype='Call'):
     if TableExport.is_valid_format(export_format):
         exporter = TableExport(export_format, table)
         return exporter.response('table.{}'.format(export_format))
+        
 
     table.paginate(page=request.GET.get('page', 1), per_page=10)
 
-    return render(request, 'helpline/reports.html', { #dashboardreports
+
+    return render(request, htmltemplate, { #dashboardreports
         'title': report_title.get(report),
         'report': report,
         'form': form,
@@ -707,7 +711,9 @@ def case_form(request, form_name):
     initial = {}
     data = {}
 
-    service = Service.objects.get(id=2)
+    data['enketo_url'] = settings.ENKETO_URL
+
+    service = Service.objects.all().first()
     if(form_name == 'walkin'):
         xform = service.walkin_xform
         data['form_name'] = 'walkin'
@@ -735,7 +741,7 @@ def case_form(request, form_name):
 
     if request.method == 'GET':
         case_number = request.GET.get('case')
-        username = 'demoadmin'
+        username = xform.user.username
         if case_number:
             my_case = Case.objects.get(hl_case=case_number)
             report, contact, address = get_case_info(case_number)
@@ -762,8 +768,13 @@ def case_form(request, form_name):
             report, contact, address = get_case_info(case_number)
         try:
             url = enketo_url(form_url, xform.id_string)
+            uri = request.build_absolute_uri()
+
+            # Use https for the iframe parent window uri, always.
+            uri = uri.replace('http://', 'https://')
+
             # Poor mans iframe url gen
-            parent_window_origin = urllib.quote_plus(request.build_absolute_uri())
+            parent_window_origin = urllib.quote_plus(uri)
             iframe_url = url[:url.find("::")] + "i/" + url[url.find("::"):]+\
               "?d[/%s/case_id]=%s&parentWindowOrigin=" % (xform.id_string, case_number) + parent_window_origin
             data['iframe_url'] = iframe_url
@@ -1837,13 +1848,10 @@ def wall(request):
                    'week_dashboard_stats': week_dashboard_stats})
 
 @login_required
-def sources(request,csource = ''):
-    """Display statistics for the wall board"""
-    #sms_list = get_sms_list(request.user)
-   # week_dashboard_stats = get_dashboard_stats(request.user, interval='weekly')
-    ln = 'helpline/' + csource + '.html'
-    return render(request,ln)#,
-                  #{'sls_list': sms_list})
+def sources(request, source=None):
+    """Display data source"""
+    template = 'helpline/%s.html' % (source)
+    return render(request, template)
 
 
 def get_data_queues(queue=None):
