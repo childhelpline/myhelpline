@@ -594,7 +594,10 @@ BOWER_INSTALLED_APPS = (
     'font-awesome#4.7.0',
     'bootstrap-daterangepicker#2.1.25',
     'moment#2.18.1',
-    'easytimer.js#2.2.3'
+    'easytimer.js#2.2.3',
+    "datatables.net-buttons#^1.5.3",
+    "pdfmake#^0.1.38",
+    "jszip#^3.1.5"
 
 )
 

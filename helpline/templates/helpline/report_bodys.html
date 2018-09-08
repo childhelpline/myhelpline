@@ -179,7 +179,7 @@
           <!-- /.box-header -->
           <div class="box-body">
             <div class="row">
-              <span class="col-md-12">
+              <!--span class="col-md-12">
                 <div class="data-table-container">
                 </div>
                 <div style="clear: both;"></div>
@@ -191,9 +191,24 @@
                   </table>
                 </div>
                 <div style="clear: both;"></div>
-              </span>
+              </span-->
               <span class="col-md-12">
-                {{ stat }}
+                <div class="data-table-data table table-responsive">
+                <table id="example1" border="1">
+                  {{ stat }}
+                  <thead class="hidden"></thead>
+                  <tbody>
+
+                    {% for key,value in stat.items %}
+                    <tr>
+                      <td>{{ key }}</td>
+                      <td>{{ value }}</td>
+                    </tr>
+                    {% endfor %}
+                    
+                  </tbody>
+                </table>
+              </div>
               </span>
             </div>
           </div>
