@@ -194,6 +194,7 @@ def queue_log(request):
                 hotdesk.jabber = 'helpline@jabber'
                 hotdesk.status = 'Available'
                 hotdesk.agent = request.user.HelplineUser.hl_key
+                hotdesk.user = request.user
 
                 agent = request.user.HelplineUser
                 agent.hl_status = 'Available'
