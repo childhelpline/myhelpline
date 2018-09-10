@@ -171,6 +171,8 @@
                       <td>
                         {% if item_key == 'case_id' %}
                         <a href="/ona/demoadmin/forms/Case_Form/instance/#/{{ records | get_item:'_id' }}">{{  records | get_item:item_key }}</a>
+                        {% elif forloop.last %}
+                        {{  records | get_item:'_submission_time' | slice:'10' }}
                         {% else %}
                         {{  records | get_item:item_key }}
                         {% endif %}
