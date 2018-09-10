@@ -99,11 +99,13 @@ def home(request):
     case_search_form = CaseSearchForm()
     queue_form = QueueLogForm(request.POST)
     queue_pause_form = QueuePauseForm()
+    queues = get_data_queues()
 
     return render(request, 'helpline/home.html',
                   {'dashboard_stats': dashboard_stats,
                    'att': att,
                    'awt': awt,
+                   'queues': queues,
                    'case_search_form': case_search_form,
                    'queue_form': queue_form,
                    'queue_pause_form': queue_pause_form,
@@ -1917,7 +1919,51 @@ def queues(request):
 
 
 @login_required
-@json_view
 def queue(request, name=None):
     data = get_data_queues(name)
-    return {'data': data}
+    return render(request, 'helpline/queue.html',
+                  {'data': data,
+                   'name': name
+                  })
+
+
+@login_required
+@json_view
+def queue_json(request, name=None):
+     data = get_data_queues(name)
+     return {'data': data}
+
+
+@login_required
+@json_view
+def spy(request):
+    channel = request.POST.get('channel', '')
+    to_exten = request.POST.get('to_exten', '')
+    r = backend.spy(channel, to_exten)
+    return r
+
+
+@login_required
+@json_view
+def whisper(request):
+    channel = request.POST.get('channel', '')
+    to_exten = request.POST.get('to_exten', '')
+    r = backend.whisper(channel, to_exten)
+    return r
+
+
+@login_required
+@json_view
+def barge(request):
+    channel = request.POST.get('channel', '')
+    to_exten = request.POST.get('to_exten', '')
+    r = backend.barge(channel, to_exten)
+    return r
+
+
+@login_required
+@json_view
+def hangup_call(request):
+    channel = request.POST.get('channel', '')
+    r = backend.hangup(channel)
+    return r
