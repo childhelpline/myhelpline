@@ -737,7 +737,11 @@ def case_form(request, form_name):
         case_number = request.GET.get('case')
         username = xform.user.username
         if case_number:
-            my_case = Case.objects.get(hl_case=case_number)
+            try:
+                my_case = int(case_number)
+            except ValueError:
+                raise Http404(_("Case not found"))
+            my_case = get_object_or_404(Case, hl_case=case_number)
             report, contact, address = get_case_info(case_number)
             case_history = Report.objects.filter(
                 telephone=contact.hl_contact).order_by('-case')
