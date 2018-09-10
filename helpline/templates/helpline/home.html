@@ -127,105 +127,76 @@
             <!-- /.row -->
             <div class="row homedashboard">
               <div class="col-md-12">
-                <div class="row">
-                  <!-- Left col -->
-                  <!-- /.col -->
+<div class="row">
+  <!-- Left col -->
+  <!-- /.col -->
 
-                  <div class="col-md-9 long">
+  <div class="col-md-9 long">
 
-                    <div class="row">
-                      <div class="col-md-5 col-sm-12 ">
-                        <div class="home-panel" style=" min-height: 406px;">
-                          <div class="box-header with-border">
-                            <h3 class="box-title">{% trans "Consolidated View" %}</h3>
-                            <div class="box-tools pull-right">
-                              <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
-                              </button>
-                              <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
-                            </div>
-                          </div>
-                          <!-- /.box-header -->
-                          <div class="">
-                            <div class="content-panel">
-                              <h4><i class="fa fa-users"></i> {% trans "Agents" %}: <span id="total_agent" class="label label-default">0</span></h4><hr><table class="table table-striped table-advance table-hover" id="agents">
-                                <thead>
-                                  <tr>
-                                    <th><i class="fa fa-user"></i> {% trans "Queue" %}</th>
-                                    <th><i class="fa fa-user"></i> {% trans "Name" %}</th>
-                                    <th><i class="fa fa-plug"></i> {% trans "Interface" %}</th>
-                                    <th><i class=" fa fa-question-circle "></i> {% trans "Status" %}</th>
-                                    <th><i class="fa fa-bookmark"></i> <span data-toggle="tooltip" data-placement="left" title="Attend calls"> {% trans "Calls" %}</span></th>
-                                    <th><i class="fa fa-clock-o"></i> {% trans "Last call at" %}</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                </tbody>
-                              </table>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="col-md-7 col-sm-12" style="padding-left: 0px;">
-                        <div class="home-panel" style=" min-height: 406px;">
-          <!--div class="box-header with-border">
-            <h3 class="box-title"><!--{% trans "Consolidated View" %}->{% trans "Cases" %}: <span id="total_callers" class="label label-default">1</span></h3>
+    <div class="row">
+      <div class="col-md-5 col-sm-12 ">
+        <div class="home-panel" style=" min-height: 406px;">
+          <div class="box-header with-border">
+            <h3 class="box-title">{% trans "Consolidated View" %}</h3>
             <div class="box-tools pull-right">
               <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
               </button>
               <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
             </div>
-          </div-->
+          </div>
           <!-- /.box-header -->
           <div class="">
             <div class="content-panel">
-              <div class="content-panel">
-                <!--h4><i class="fa fa-angle-right"></i> {% trans "Cases" %}: <span id="total_callers" class="label label-default">1</span></h4-->
-                <form>
-
-                  <div class="col-md-6" style="padding-left:0px;">
-                    <label>Search Case by:</label>
-                    <select class="form-control select2" style="width: 100%;">
-                      <option selected="selected">Select Creteria</option>
-                      <option>Case ID</option>
-                      <option>Phone Number</option>
-                      <option>National ID</option>
-                    </select>
-
-                  </div>
-                  <div class="col-md-6" style="padding: 0px;">
-                    <label>Enter Details:</label>
-                    <input type="text" class="form-control" placeholder="Enter Details">
-                  </div>
-                  <div class="col-md-12" style="padding: 0px;">
-                    <input type="button" class="btn btn-warning" style="border-radius:0px; width:100%; font-size:18px; margin-top:4px; margin-bottom:5px;" value="Search">
-                  </div>
-                </form>
-                <hr>
-                <table class="table table-striped table-advance table-hover" id="callers">
-
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th> {% trans "Case No" %}</th>
-                      <th class="hidden-phone"> {% trans "Case Category" %}</th>
-                      <th>{% trans "Reporter" %}</th>
-                      <th>{% trans "Status" %}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>1.</td>
-                      <td><a href="#">1234</a></td>
-                      <td>Abuse</td>
-                      <td>Kemboi Cheruiyot</td>
-                      <td>Escalated</td>
-                    </tr>
-                  </tbody>
-
-                </table>
-              </div><!-- /content-panel -->
+              <h4><i class="fa fa-users"></i> {% trans "Agents" %}: <span id="total_agent" class="label label-default">0</span></h4><hr><table class="table table-striped table-advance table-hover" id="agents">
+                <thead>
+                  <tr>
+                    <th><i class="fa fa-user"></i> {% trans "Queue" %}</th>
+                    <th><i class="fa fa-user"></i> {% trans "Name" %}</th>
+                    <th><i class="fa fa-plug"></i> {% trans "Interface" %}</th>
+                    <th><i class=" fa fa-question-circle "></i> {% trans "Status" %}</th>
+                    <th><i class="fa fa-bookmark"></i> <span data-toggle="tooltip" data-placement="left" title="Attend calls"> {% trans "Calls" %}</span></th>
+                    <th><i class="fa fa-clock-o"></i> {% trans "Last call at" %}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
             </div>
           </div>
+        </div>
+      </div>
+      <div class="col-md-7 col-sm-12" style="padding-left: 0px;">
+        <div class="home-panel" style=" min-height: 406px;">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Consolidated View</h3>
+                    <div class="box-tools pull-right">
+                        <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
+                        </button>
+                        <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+                    </div>
+                </div>
+            <!-- /.box-header -->
+
+                <div class="box-body">
+                    <div class="content-panel">
+                        <div class="content-panel">
+                            <h4><i class="fa fa-angle-right"></i> Callers: <span id="total_callers" class="label label-default">0</span></h4><hr><table class="table table-striped table-advance table-hover" id="callers">
+
+                              <thead>
+                              <tr>
+                                  <th><i class="fa fa-user"></i> Id Name</th>
+                                  <th class="hidden-phone"><i class="fa fa-phone"></i> Id Number</th>
+                                  <th><i class="fa fa-sort-numeric-asc"></i> Position</th>
+                                  <th><i class="fa fa-clock-o"></i> Wait</th>
+                              </tr>
+                              </thead>
+                              <tbody>
+
+                          </tbody></table>
+                      </div><!-- /content-panel -->
+                      </div>
+               </div>
+            
         </div>
       </div>
     </div>
