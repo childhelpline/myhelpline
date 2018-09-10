@@ -323,7 +323,7 @@
                             <!-- this row will not appear when printing -->
                           </section>
 
-                          <!--iframe src="https://enketo.bitz-itc.com/i/::Bkyb35PE" style="width: 100%; min-height: 80vh; border: none;"></iframe {{ iframe_url }}-->
+                          <!--iframe src="https://enketo.bitz-itc.com/i/::Bkyb35PE" style="width: 100%; min-height: 80vh; border: none;"></iframe {{ iframe_url }}https://enketo.bitz-itc.com/i/::P6SEqt57-->
                         </div>
                       </div>
                     </div>
@@ -370,24 +370,12 @@
 
   function receiveMessage(event)
   {
-    //if (event.origin !== "https://enketo.bitz-itc.com")
-    //return;
-    enketoEvent = JSON.parse(event.data).enketoEvent
-      if (enketoEvent === 'edited'){
-          var edited_badge = '#editedBadge';
-          $(edited_badge).html("{% trans "Edited" %}");
-      }
-      else if(enketoEvent === 'submissionsuccess'){
-          window.location.assign({% url "dashboard_home" %}); 
-      }
-      else
-      {
-          // TODO in real life, check origin! if (event.origin !== "http://enk.to:8080") return;
-          console.log('data received from iframe', JSON.parse(event.data).enketoEvent);
-          console.log('enketo event from iframe', enketoEvent);
-          console.log('origin of message', event.origin);
-          console.log('source of message', event.source);
-      }
+      if (event.origin !== "{{ enketo_url }}")
+        return;
+        var resp = JSON.parse(event.data)
+      if(resp.enketoEvent == 'submissionsuccess'){
+      setInterval(function(){window.location.assign({% url "dashboard_home" %});},500)
+    }
   }
 </script>
 {% endblock content %}
