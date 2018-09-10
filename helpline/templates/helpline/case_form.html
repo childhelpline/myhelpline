@@ -342,26 +342,6 @@
 
 
 
-<!-- Modal ->
-<div class="modal fade"  id="web-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
-  <div class="modal-dialog" role="document" style="width: 80%;">
-    <div class="modal-content">
-      <form action="" method="post">
-        {% csrf_token %}
-        <div class="modal-header">
-          <h2 class="modal-title" id="myModalLabel">{% trans "Web Online" %}</h2>
-        </div>
-        <div class="modal-body" style="padding: 0px; height: 80vh;">
-          <iframe src="https://enketo.bitz-itc.com/i/::CIBYdg90" style="width: 100%; min-height: 80vh; border: none;"></iframe>
-        </div>
-      </form>
-    </div>
-  </div>
-</div-->
-
-
-
-
 <!--END FORMs-->
 
 </div>
@@ -374,7 +354,7 @@
         return;
         var resp = JSON.parse(event.data)
       if(resp.enketoEvent == 'submissionsuccess'){
-      setInterval(function(){window.location.assign({% url "dashboard_home" %});},500)
+      window.location.assign({% url "dashboard_home" %});
     }
   }
 </script>
