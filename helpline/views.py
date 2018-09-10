@@ -75,6 +75,8 @@ from helpline.qpanel.backend import Backend
 if QPanelConfig().has_queuelog_config():
     from helpline.qpanel.model import queuelog_data_queue
 import json
+from django.template.defaulttags import register
+from onadata.apps.logger.models import Instance, XForm
 
 
 cfg = QPanelConfig()
@@ -350,6 +352,9 @@ def faq(request):
     """Render FAQ app"""
     return render(request, 'helpline/callform.html')
 
+@register.filter
+def get_item(dictionary, key):
+    return dictionary.get(key,"")
 
 @login_required
 def reports1(request, report, casetype='Call'):
@@ -357,18 +362,48 @@ def reports1(request, report, casetype='Call'):
             'Authorization': 'Token 7331a310c46884d2643ca9805aaf0d420ebfc831'
     }
 
-    data = {
-    'name': "My DataView2",
-    'xform': 'https://dev.bitz-itc.com/ona/api/v1/forms/24',
-    'project':  'https://dev.bitz-itc.com/ona/api/v1/projects/1',
-    'columns': '[]',
-    'query': '[]'
-    }
+    #still need to determine service case_id_string dynamically for data/form url
+    service = Service.objects.get(id=2)
+    xform_det = service.walkin_xform
+    #instance_view_url = 'submission-instance' + owner.username + xform 
+
+    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/24', headers= headers).json();
+    #form_details= requests.get('https://dev.bitz-itc.com/ona/demoadmin/forms/Case_Form/form.json',headers=headers).json()
 
 
-    #stat = requests.post('https://dev.bitz-itc.com/ona/api/v1/dataviews',data=data, headers= headers).json();
-    #stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/dataviews/7/data', headers= headers).json();
-    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/24/26', headers= headers).json();
+    statrecords = []
+    recordkeys = []
+
+    ##brings up data only for existing records
+    def get_records(recs):
+        return_obj = []
+        record = {}
+
+        for key,value in recs.items():
+            #if not (key.startswith('_') and key.endswith('_')):# str(key) == "_id":
+            key = str(key)
+            if key.find('/') != -1:
+                k = key.split('/')
+                l = len(k)
+                kk = str(k[l-1])
+            else:
+                kk = str(key)
+            if isinstance(value,dict) and len(value) >= 1:
+                record.update(get_records(value))
+            elif isinstance(value,list) and len(value) >= 1:
+                if isinstance(value[0],dict):
+                    record.update(get_records(value[0]))
+            else:
+                if not kk in recordkeys and not kk.endswith('ID') and str(value) != 'yes' and str(value) != 'no':
+                    recordkeys.append(kk)
+                record.update({kk : str(value).capitalize()})
+        return record
+
+
+    for rec in stat:
+        if isinstance(rec,dict) and len(rec) > 1:
+            statrecords.append(get_records(rec))
+
 
     """
     Data view displays submission data.
@@ -406,7 +441,7 @@ def reports1(request, report, casetype='Call'):
     if TableExport.is_valid_format(export_format):
         exporter = TableExport(export_format, table)
         return exporter.response('table.{}'.format(export_format))
-    
+
     data = {'owner': owner, 'xform': xform,'title': report_title.get(report),
         'report': report,
         'form': form,
@@ -414,11 +449,21 @@ def reports1(request, report, casetype='Call'):
         'dashboard_stats': dashboard_stats,
         'table': table,
         'query': query,
-        'stat':stat}
-    if report == 'nonanalysed':
-        return render(request, "helpline/nonanalysed.html")
+        'stat':stat,
+        'statrecords':statrecords,
+        'recordkeys':recordkeys,
+        'xform':xform_det}
+
+    callreports = ["missedcalls","receivedcalls","voicecalls"]
+
+    if report in callreports:
+        htmltemplate = "helpline/reports.html"
     else:
-        return render(request, "helpline/report_bodys.html", data)
+        htmltemplate = "helpline/report_body.html"
+
+    return render(request, htmltemplate,data)
+
+
 @login_required
 def reports(request, report, casetype='Call'):
     """Handle report rendering"""

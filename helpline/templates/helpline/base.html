@@ -95,7 +95,7 @@ input:checked + .slider:before {
   -ms-transform: translateX(16px);
   transform: translateX(16px);
 }
-  /* Rounded sliders */
+/* Rounded sliders */
 .slider.round {
   border-radius: 28px;
 }
@@ -353,29 +353,29 @@ input:checked + .slider:before {
   <input type="checkbox">
   <span class="slider round"></span>
 </label>
-                </div-->
-              </div>
-              <!-- /.row -->
-            </li>
-            <!-- Menu Footer-->
-            <li class="user-footer">
-              <div class="pull-left">
-                <a href="{% url "myaccount" %}" class="btn btn-default btn-flat">Profile</a>
-              </div>
-              <div class="pull-right">
-                <a href="{% url 'logout' %}" class="btn btn-default btn-flat">Sign out</a>
-              </div>
-            </li>
-          </ul>
-        </li>
-        <!-- Control Sidebar Toggle Button -->
-        <li>
-          <a href="#" data-toggle="control-sidebar"><i class="fa fa-gears"></i></a>
-        </li>
-      </ul>
-    </div>
+</div-->
+</div>
+<!-- /.row -->
+</li>
+<!-- Menu Footer-->
+<li class="user-footer">
+  <div class="pull-left">
+    <a href="{% url "myaccount" %}" class="btn btn-default btn-flat">Profile</a>
+  </div>
+  <div class="pull-right">
+    <a href="{% url 'logout' %}" class="btn btn-default btn-flat">Sign out</a>
+  </div>
+</li>
+</ul>
+</li>
+<!-- Control Sidebar Toggle Button -->
+<li>
+  <a href="#" data-toggle="control-sidebar"><i class="fa fa-gears"></i></a>
+</li>
+</ul>
+</div>
 
-  </nav>
+</nav>
 </header>
 <!-- Left side column. contains the logo and sidebar -->
 <aside class="main-sidebar">
@@ -429,53 +429,53 @@ input:checked + .slider:before {
         <ul class="treeview-menu">
           <li>
             <a href="{% url "case_form" "webonline" %}" role="button"><i class="fa fa-circle-o"></i> {% trans "Web Online" %}
-          </a></li>
-          <li>
+            </a></li>
+            <li>
               <a href="{% url "case_form" "walkin" %}" role="button"><i class="fa fa-circle-o"></i> {% trans "New WalkIn" %}
-          </a></li>
-          <li><a href="{% url 'dashboardreports' 'totalcases' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Today's Cases" %}
-            <span class="pull-right-container">
-              <span class="label label-success pull-right">{{ dashboard_stats.total_cases }}</span>
-            </span>
-          </a></li>
-          <li><a href="{% url 'dashboardreports' 'pendingcases' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Progressive Cases" %}
-            <span class="pull-right-container">
-              <span class="label label-warning pull-right">{{ dashboard_stats.open_cases }}</span>
-            </span>
-          </a></li>
-          <li><a href="{% url 'dashboardreports' 'totalcases' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "All Cases" %}
-            <span class="pull-right-container">
-              <span class="label label-info pull-right">{{ dashboard_stats.total_cases }}</span>
-            </span>
-          </a></li>
-        </ul>
-      </li>
-      <li class="treeview">
-        <a href="#">
-          <i class="fa fa-files-o"></i>
-          <span>{% trans "Calls" %}</span>
-          <span class="pull-right-container">
-            <i class="fa fa-angle-left pull-right"></i>
-          </span>
-        </a>
-        <ul class="treeview-menu">
-          <li><a href="{% url 'dashboardreports' 'totalcases' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Missed Calls" %}
-            <span class="pull-right-container">
-              <span class="label label-danger pull-right">{{ dashboard_stats.total_cases }}</span>
-            </span>
-          </a></li>
-          <li><a href="{% url 'dashboardreports' 'pendingcases' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Received Calls" %}
-            <span class="pull-right-container">
-              <span class="label label-success pull-right">{{ dashboard_stats.open_cases }}</span>
-            </span>
-          </a></li>
-          <li><a href="{% url 'dashboardreports' 'totalcases' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Voice Mails" %}
-            <span class="pull-right-container">
-              <span class="label label-warning pull-right">{{ dashboard_stats.total_cases }}</span>
-            </span>
-          </a></li>
-        </ul>
-      </li>
+              </a></li>
+              <li><a href="{% url 'dashboardreports' 'today' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Today's Cases" %}
+                <span class="pull-right-container">
+                  <span class="label label-success pull-right">{{ dashboard_stats.total_cases }}</span>
+                </span>
+              </a></li>
+              <li><a href="{% url 'dashboardreports' 'pendingcases' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Pending Cases" %}
+                <span class="pull-right-container">
+                  <span class="label label-warning pull-right">{{ dashboard_stats.open_cases }}</span>
+                </span>
+              </a></li>
+              <li><a href="{% url 'dashboardreports' 'totalcases' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "All Cases" %}
+                <span class="pull-right-container">
+                  <span class="label label-info pull-right">{{ dashboard_stats.total_cases }}</span>
+                </span>
+              </a></li>
+            </ul>
+          </li>
+          <li class="treeview">
+            <a href="#">
+              <i class="fa fa-files-o"></i>
+              <span>{% trans "Calls" %}</span>
+              <span class="pull-right-container">
+                <i class="fa fa-angle-left pull-right"></i>
+              </span>
+            </a>
+            <ul class="treeview-menu">
+              <li><a href="{% url 'dashboardreports' 'missedcalls' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Missed Calls" %}
+                <span class="pull-right-container">
+                  <span class="label label-danger pull-right">{{ dashboard_stats.total_cases }}</span>
+                </span>
+              </a></li>
+              <li><a href="{% url 'dashboardreports' 'receivedcalls' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Received Calls" %}
+                <span class="pull-right-container">
+                  <span class="label label-success pull-right">{{ dashboard_stats.open_cases }}</span>
+                </span>
+              </a></li>
+              <li><a href="{% url 'dashboardreports' 'voicecalls' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Voice Mails" %}
+                <span class="pull-right-container">
+                  <span class="label label-warning pull-right">{{ dashboard_stats.total_cases }}</span>
+                </span>
+              </a></li>
+            </ul>
+          </li>
         <!--<li>
             <a href="{% url 'helpdesk:dashboard' %}">
                 <i class="fa fa-envelope"></i> <span>{% trans "Mails" %}</span>
@@ -541,7 +541,7 @@ input:checked + .slider:before {
           <ul class="treeview-menu">
           <!--li>
             <a href="{% url "case_form" "qa" %}" role="button"><i class="fa fa-circle-o"></i> {% trans "New QA Form" %}
-          </a></li ?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }} -->
+            </a></li ?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }} -->
             <li><a href="{% url 'dashboardreports' 'nonanalysed' %}"><i class="fa fa-circle-o"></i> {% trans "Cases" %}
               <span class="pull-right-container">
                 <span class="label label-info pull-right">{{ dashboard_stats.total_cases }}</span>
@@ -626,178 +626,56 @@ input:checked + .slider:before {
 
     <!-- Main content -->
 
-    <section class="content">
-      <div class="row">
-        <div class="col-md-12">
-          <!-- /.box-footer -->
-          {% block box %}
-          <section class="content-header">
-            <h1>Dashboard</h1>
-          </section>
-          <div class="box-body">
+    {% block message %}
+    {% if message or messages or message_list %}
+    {% include "message.html" %}
+    {% endif %}
+    {% endblock %}
+    <!-- Main row -->
+    {% block content %}
+    {% endblock content %}
+  </div>
+  <!-- /.content-wrapper -->
 
-            <div class="row">
+  <footer class="main-footer">
+    <div class="pull-right hidden-xs">
+      <b>{% trans "Version" %}</b> 1.0.0
+    </div>
+    {% now "Y" as current_year %}
+    <strong>{% blocktrans %}Copyright{% endblocktrans %} &copy; {{ current_year }} <a href="http://bitz-itc.com/">Bitz ITC Limited</a></strong>. {% blocktrans %}All rights reserved.{% endblocktrans %}
+  </footer>
+  <!-- Control Sidebar -->
+  <aside class="control-sidebar control-sidebar-dark">
+    <!-- Create the tabs -->
+    <ul class="nav nav-tabs nav-justified control-sidebar-tabs">
+      <li><a href="#control-sidebar-home-tab" data-toggle="tab"><i class="fa fa-home"></i></a></li>
+    </ul>
+    <!-- Tab panes -->
+    <div class="tab-content">
+      <!-- Home tab content -->
+      <div class="tab-pane" id="control-sidebar-home-tab">
+        <h3 class="control-sidebar-heading">Recent Activity</h3>
+        <ul class="control-sidebar-menu">
 
-              <div class="col-md-8" >
-                <div class="row home-pallete">
-                  <div class="col-sm-4 col-md-2 palette-item">
-                    <div class="color-palette-set">
-                      <div class="bg-blue color-palette" align="center" onclick="window.location = '{% url 'dashboardreports' 'totalcalls' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.total_calls }} </span><br>{% trans "Total Calls" %}</div>
-                    </div>
-                  </div>
-                  <!-- /.col -->
-                  <div class="col-sm-4 col-md-2 palette-item">
-                    <div class="color-palette-set">
-                      <div class="bg-aqua color-palette" align="center" style="padding-right:5px; padding-bottom:5px;" onclick="window.location = '{% url 'dashboardreports' 'answeredcalls' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.answered_calls }}</span><br>{% trans "Received Calls" %}</div>
-                      <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
-                    </div>
-                  </div>
-                  <!-- /.col -->
-                  <div class="col-sm-4 col-md-2 palette-item">
-                    <div class="color-palette-set">
-                      <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
-                      {% if request.user.HelplineUser.hl_role == 'Supervisor' %}
-                      <div class="bg-red color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"  onclick="window.location = '{% url 'dashboardreports' 'abandonedcalls' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.abandoned_calls }} </span><br>{% trans "Abandoned Calls" %}</div>
-                      {% else %}
-                      <div class="bg-red color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.missed_calls }} </span><br>{% trans "Missed Calls" %}</div>
-                      {% endif %}
+          {% for clock in request.user.HelplineUser.get_recent_clocks %}
+          <li>
+            <a href="#">
+              <i class="menu-icon fa fa-check bg-green"></i>
+              <div class="menu-info">
+                <h4 class="control-sidebar-subheading">{{ clock }}</h4>
 
-                      <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
-                    </div>
-                  </div>
-                  <!-- /.col -->
-                  <div class="col-sm-4 col-md-2 palette-item" onclick="window.location = '{% url 'dashboardreports' 'voicemail' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}'">
-                    <div class="color-palette-set">
-                      <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
-                      <div class="bg-yellow color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.voice_mails }} </span><br>{% trans "Voice Mails" %}</div>
-                      <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
-                    </div>
-                  </div>
-                  <!-- /.col -->
-                  <div class="col-sm-4 col-md-2 palette-item">
-                    <div class="color-palette-set">
-                      <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
-                      <div class="bg-gray color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.number_tickets }}</span><br>{% trans "Mails" %}</div>
-                      <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
-                    </div>
-                  </div>
-                  <!-- /.col -->
-                  <div class="col-sm-4 col-md-2 palette-item">
-                    <div class="color-palette-set">
-                      <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
-                      <div class="bg-gray color-palette" align="center" style=" padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.total_sms }}</span><br>SMS</div>
-                      <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
-                    </div>
-                  </div>
-                  <!-- /.col -->
-                </div>
+                <p>{{ clock.hl_time|timestamp|timesince }} {% trans "ago" %} </p>
               </div>
-              <div class="col-md-4 qa-presence">
-                <div class="row">
-                  <div class="{% if request.user.HelplineUser.hl_role == 'Supervisor' %} col-sm-6 col-md-6 {% else %} col-sm-12 col-md-12 {% endif %}">
-                    <div class="color-palette-set">
-                      <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
-                      <div class="bg-aqua color-palette" align="center" style="border-radius:0px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.total_sms }} %</span><br /><br />    </div>
-                      <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
-                    </div>
-                  </div>
-                  {% if request.user.HelplineUser.hl_role == 'Supervisor' %}
-                  <div class="col-sm-6 col-md-6">
-
-                    <div class="color-palette-set" style="border:solid thin #09F; padding:2px;" align="center">
-                      <div class="bg-green disabled color-palette" style="height:30px;"><span>{{ status_count.available }} Available | {% widthratio status_count.available  status_count.total 100 %}%</span></div>
-                      <div class="bg-yellow-active color-palette" style="height:30px;"><span>{{ status_count.idle }} Idle | {% widthratio status_count.idle  status_count.total 100 %}%</span></div>
-                      <div class="bg-red-active color-palette" style="height:30px;"><span>{{ status_count.busy_on_call }} Busy | {% widthratio status_count.busy_on_call  status_count.total 100 %}%</span></div>
-                    </div>
-
-                    <!--div class="box-body no-padding">
-                      <table class="table table-condensed" onclick="window.location = '{% url 'web_presence' %}'">
-                        <tbody>
-                          <tr>
-                            <td width="56"><strong>Available </strong></td>
-                            <td width="29"><span class="badge bg-green">{{ status_count.available }}</span></td>
-                            <td width="29"><span class="badge bg-green">{% widthratio status_count.available  status_count.total 100 %}%</span></td>
-                          </tr>
-                          <tr>
-                            <td><strong>Idle </strong></td>
-                            <td><span class="badge bg-yellow">{{ status_count.idle }}</span></td>
-                            <td><span class="badge bg-yellow">{% widthratio status_count.idle  status_count.total 100 %}%</span></td>
-                          </tr>
-                          <tr>
-                            <td><strong>Busy </strong></td>
-                            <td><span class="badge bg-red">{{ status_count.busy_on_call }}</span></td>
-                            <td><span class="badge bg-red">{% widthratio status_count.busy_on_call  status_count.total 100 %}%</span></td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div--> 
-                    
-                    
-                    
-                  </div>
-                  {% endif %}
-                  <!-- /.col -->
-                </div>
-                {% endblock box %}
-                <!-- ./box-body -->
-              </div>
-              <!-- /.col -->
-            </div>
-            <!-- /.row -->
-
-            {% block message %}
-            {% if message or messages or message_list %}
-            {% include "message.html" %}
-            {% endif %}
-            {% endblock %}
-            <!-- Main row -->
-            {% block content %}
-            {% endblock content %}
-            <!-- /.row -->
-          </section>
-          <!-- /.content -->
-        </div>
-        <!-- /.content-wrapper -->
-
-        <footer class="main-footer">
-          <div class="pull-right hidden-xs">
-            <b>{% trans "Version" %}</b> 1.0.0
-          </div>
-          {% now "Y" as current_year %}
-          <strong>{% blocktrans %}Copyright{% endblocktrans %} &copy; {{ current_year }} <a href="http://bitz-itc.com/">Bitz ITC Limited</a></strong>. {% blocktrans %}All rights reserved.{% endblocktrans %}
-        </footer>
-        <!-- Control Sidebar -->
-        <aside class="control-sidebar control-sidebar-dark">
-          <!-- Create the tabs -->
-          <ul class="nav nav-tabs nav-justified control-sidebar-tabs">
-            <li><a href="#control-sidebar-home-tab" data-toggle="tab"><i class="fa fa-home"></i></a></li>
-          </ul>
-          <!-- Tab panes -->
-          <div class="tab-content">
-            <!-- Home tab content -->
-            <div class="tab-pane" id="control-sidebar-home-tab">
-              <h3 class="control-sidebar-heading">Recent Activity</h3>
-              <ul class="control-sidebar-menu">
-
-                {% for clock in request.user.HelplineUser.get_recent_clocks %}
-                <li>
-                  <a href="#">
-                    <i class="menu-icon fa fa-check bg-green"></i>
-                    <div class="menu-info">
-                      <h4 class="control-sidebar-subheading">{{ clock }}</h4>
-
-                      <p>{{ clock.hl_time|timestamp|timesince }} {% trans "ago" %} </p>
-                    </div>
-                  </a>
-                </li>
-                {% endfor %}
-              </ul>
-              <!-- /.control-sidebar-menu -->
-            </div>
-            <!-- /.tab-pane -->
-          </div>
-        </aside>
-        <!-- /.control-sidebar -->
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+        <!-- /.control-sidebar-menu -->
+      </div>
+      <!-- /.tab-pane -->
+    </div>
+  </aside>
+  <!-- /.control-sidebar -->
   <!-- Add the sidebar's background. This div must be placed
    immediately after the control sidebar -->
    <div class="control-sidebar-bg"></div>
@@ -831,6 +709,16 @@ input:checked + .slider:before {
  <script src="{% static 'notifications/notify.js' %}" type="text/javascript"></script>
  <script src="{% static "helpline/js/utils.js" %}"></script>
  <script src="{% static "easytimer.js/dist/easytimer.js" %}"></script>
+ <!-- Datatable Buttons -->
+
+ <script src="{% static "datatables.net-buttons/js/dataTables.buttons.min.js" %}"></script>
+ <script src="{% static "datatables.net-buttons/js/buttons.flash.min.js" %}"></script>
+ <script src="{% static "jszip/dist/jszip.min.js" %}"></script>
+ <script src="{% static "pdfmake/build/pdfmake.min.js" %}"></script>
+ <script src="{% static "pdfmake/build/vfs_fonts.js" %}"></script>
+ <script src="{% static "datatables.net-buttons/js/buttons.html5.min.js" %}"></script>
+ <script src="{% static "datatables.net-buttons/js/buttons.print.min.js" %}"></script>
+
  {% register_notify_callbacks callbacks='fill_notification_list,fill_notification_badge' %}
 
  <!-- moment.js -->
@@ -840,7 +728,7 @@ input:checked + .slider:before {
  <link href="{% static "bootstrap-daterangepicker/daterangepicker.css" %}" rel="stylesheet" type="text/css" />
  <!-- date-range-picker -->
  <script src="{% static 'bootstrap-daterangepicker/daterangepicker.js' %}" type="text/javascript"></script>
-{% block javascripts %}{% endblock javascripts %}
+ {% block javascripts %}{% endblock javascripts %}
 
  <script type="application/javascript">
   $(document).ready(function () {
@@ -1093,7 +981,7 @@ $(document).ready(function(){
   setInterval(function () {
     $.get("{% url "check_call" %}",function(data){
       if(data.my_case){
-          window.location = "{% url "case_form" "call"  %}?case="+data.my_case;
+        window.location = "{% url "case_form" "call"  %}?case="+data.my_case;
 
         clearInterval();    
       }
@@ -1105,7 +993,7 @@ function access(iframee){
   /*var iframe = document.getElementsByTagName('iframe')[0];
   iframe.style.background = 'white';
   iframe.contentWindow.document.body.style.backgroundColor = 'white';*/
-  }
+}
 
 var timer = new Timer();
 $('#case_form_modal').on('hidden.bs.modal', function () {
@@ -1114,15 +1002,21 @@ $('#case_form_modal').on('hidden.bs.modal', function () {
 });
 
 {% if iframe_url %}
- $('#case_form_modal').modal({backdrop: 'static', keyboard: false}).show()
-  timer.start();
-  timer.addEventListener('secondsUpdated', function (e) {
-    $('#formTimer').html(timer.getTimeValues().toString());
-    });
+$('#case_form_modal').modal({backdrop: 'static', keyboard: false}).show()
+timer.start();
+timer.addEventListener('secondsUpdated', function (e) {
+  $('#formTimer').html(timer.getTimeValues().toString());
+});
 {% endif %}
 
 
-$("#example1").DataTable();
+$("#example1").DataTable({
+  "lengthChange": false,
+  dom: 'Bfrtip',
+  buttons: [
+  'copy', 'csv', 'excel'
+  ]
+} );
 $('#example2').DataTable({
   "paging": true,
   "lengthChange": false,
@@ -1131,7 +1025,8 @@ $('#example2').DataTable({
   "info": true,
   "autoWidth": false
 });
-
+$('.dt-button').addClass("btn btn-md btn-primary btn-square");
+$('.dt-buttons, #example1_info').addClass("col-md-6 col-sm-12");
 </script>
 
 <script src="{% static "helpline/js/custom.js" %}" type="text/javascript"></script>
