@@ -362,12 +362,58 @@ def reports(request, report, casetype='Call'):
             'Authorization': 'Token 7331a310c46884d2643ca9805aaf0d420ebfc831'
     }
 
+    """
+    Data view displays submission data.
+    """
+    username = request.user.username
+    id_string = 'Case_Form'
+    owner = get_object_or_404(User, username__iexact=username)
+    xform = get_form({'id_string__iexact': id_string, 'user': owner})
+
+    query = request.GET.get('q', '')
+    datetime_range = request.GET.get("datetime_range")
+    agent = request.GET.get("agent")
+    category = request.GET.get("category", "")
+    form = ReportFilterForm(request.GET)
+    dashboard_stats = get_dashboard_stats(request.user)
+
+    request_string = ''
+
+    if datetime_range == '':
+        start_date, end_date = [datetime_range.split(" - ")[0], datetime_range.split(" - ")[1]]
+        start_date = datetime.strptime(start_date, '%m/%d/%Y %I:%M %p')
+        end_date = datetime.strptime(end_date, '%m/%d/%Y %I:%M %p')
+
+
+        d_from = start_date.strftime('%d')
+        m_from = start_date.strftime('%m')
+        y_from = start_date.strftime('%Y')
+
+
+        d_to = end_date.strftime('%d')
+        m_to = end_date.strftime('%m')
+        y_to = end_date.strftime('%Y')
+
+        request_string += '?date_created__day__gte=' + d_from
+        request_string += '&date_created__day__lte=' + d_to
+
+        request_string += '&date_created__month__gte=' + m_from
+        request_string += '&date_created__month__lte=' + m_to
+
+        request_string += '&date_created__year__gte=' + y_from
+        request_string += '&date_created__year__lte=' + y_to
+
+
+
+    """
+    Data Request and processing
+    """
     #still need to determine service case_id_string dynamically for data/form url
     service = Service.objects.get(id=2)
     xform_det = service.walkin_xform
     #instance_view_url = 'submission-instance' + owner.username + xform 
 
-    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/24', headers= headers).json();
+    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/24' + request_string, headers= headers).json();
     #form_details= requests.get('https://dev.bitz-itc.com/ona/demoadmin/forms/Case_Form/form.json',headers=headers).json()
 
 
@@ -404,30 +450,20 @@ def reports(request, report, casetype='Call'):
         if isinstance(rec,dict) and len(rec) > 1:
             statrecords.append(get_records(rec))
 
-
-    """
-    Data view displays submission data.
-    """
-    username = request.user.username
-    id_string = 'Case_Form'
-    owner = get_object_or_404(User, username__iexact=username)
-    xform = get_form({'id_string__iexact': id_string, 'user': owner})
-
-    query = request.GET.get('q', '')
-    datetime_range = request.GET.get("datetime_range")
-    agent = request.GET.get("agent")
-    category = request.GET.get("category", "")
-    form = ReportFilterForm(request.GET)
-    dashboard_stats = get_dashboard_stats(request.user)
+    if len(recordkeys) > 0:
+        recordkeys.append('Date Created')
+    else:
+        recordkeys = False
 
     sort = request.GET.get('sort')
-    report_title = {
+    report_title = {report :_(str(report).capitalize() + " Reports")} 
+    '''report_title = {
         'performance': _('Performance Reports'),
         'counsellor': _('Counsellor Reports'),
         'case': _('Case Reports'),
         'call': _('Call Reports'),
         'service': _('Service Reports')
-    }
+    }'''
 
     table = report_factory(report=report,
                            datetime_range=datetime_range,
@@ -442,6 +478,8 @@ def reports(request, report, casetype='Call'):
         exporter = TableExport(export_format, table)
         return exporter.response('table.{}'.format(export_format))
     
+    table.paginate(page=request.GET.get('page', 1), per_page=10)
+    
     data = {'owner': owner, 'xform': xform,'title': report_title.get(report),
         'report': report,
         'form': form,
@@ -449,15 +487,15 @@ def reports(request, report, casetype='Call'):
         'dashboard_stats': dashboard_stats,
         'table': table,
         'query': query,
-        'stat':stat,
         'statrecords':statrecords,
-        'recordkeys':recordkeys,
-        'xform':xform_det}
+        'recordkeys':recordkeys}
 
     callreports = ["missedcalls","receivedcalls","voicecalls"]
 
     if report in callreports:
         htmltemplate = "helpline/reports.html"
+    elif report == 'nonanalysed':
+        htmltemplate = "helpline/nonanalysed.html"
     else:
         htmltemplate = "helpline/report_body.html"
 
@@ -1219,7 +1257,7 @@ class DashboardTable(tables.Table):
     class Meta:
         model = Report
         attrs = {'class': 'table table-bordered table-striped dataTable',
-                 'id': 'report_table'}
+                 'id': 'report_table example1'}
         unlocalise = ('holdtime', 'walkintime', 'talktime', 'callstart')
         fields = {'casetype', 'case_id', 'telephone', 'calldate',
                   'service_id', 'callernames', 'user_id',
