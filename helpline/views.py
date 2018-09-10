@@ -706,6 +706,7 @@ def case_form(request, form_name):
     message = ''
     initial = {}
     data = {}
+    data['enketo_url'] = settings.ENKETO_URL
 
     service = Service.objects.all().first()
     if(form_name == 'walkin'):
