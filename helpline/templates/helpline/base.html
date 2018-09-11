@@ -905,12 +905,6 @@ input:checked + .slider:before {
 
 
         <script>
-          $('#language').on('change', function (e) {
-            var lang  = $(this).val();
-            window.location = '/lang' + '/' + lang;
-          });
-          $( "#language" ).val("en")
-
           String.prototype.toStrStatusAgent = function(args) {
             var value = this;
             if (C.status_agent.NOT_INUSE == value) {
@@ -1030,6 +1024,8 @@ $('.dt-buttons, #example1_info').addClass("col-md-6 col-sm-12");
 </script>
 
 <script src="{% static "helpline/js/custom.js" %}" type="text/javascript"></script>
+    {% block script_end %}
+    {% endblock script_end %}
 
 </div></div></body>
 </html>

@@ -1967,3 +1967,12 @@ def hangup_call(request):
     channel = request.POST.get('channel', '')
     r = backend.hangup(channel)
     return r
+
+
+@login_required
+@json_view
+def remove_from_queue(request):
+    queue = request.POST.get('queue', '')
+    agent = request.POST.get('agent', '')
+    r = backend.remove_from_queue(agent, queue)
+    return r
