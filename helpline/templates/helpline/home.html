@@ -276,6 +276,7 @@
     <!-- /.info-box -->
 
   </div>
+                  {% if request.user.HelplineUser.hl_role == 'Supervisor' %}
                     {% for queue_name, queue in queues.items  %}
                         <div class="col-lg-4 col-md-4 col-sm-4 mb project">
                             <div class="weather-2 pn photo-wrapper transparent-background">
@@ -331,6 +332,7 @@
                             </a>
                         </div><!--/col-md-4 -->
                     {% endfor %}
+                    {% endif %}
   <!-- /.col -->
 </div>
 </div>
