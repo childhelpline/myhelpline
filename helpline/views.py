@@ -1250,8 +1250,8 @@ class CaseHistoryTable(tables.Table):
     class Meta:
         model = Report
         attrs = {'class': 'table table-bordered table-striped dataTable'}
-        fields = {'case', 'counsellorname', 'calldate', 'calltype'}
-        sequence = ('case', 'counsellorname', 'calldate', 'calltype')
+        fields = {'case', 'user', 'calldate', 'calltype'}
+        sequence = ('case', 'user', 'calldate', 'calltype')
 
         unlocalise = ('holdtime', 'walkintime', 'talktime', 'callstart')
 
