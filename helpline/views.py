@@ -479,7 +479,7 @@ def reports(request, report, casetype='Call'):
         return exporter.response('table.{}'.format(export_format))
     
     table.paginate(page=request.GET.get('page', 1), per_page=10)
-    
+
     data = {'owner': owner, 'xform': xform,'title': report_title.get(report),
         'report': report,
         'form': form,
@@ -490,7 +490,7 @@ def reports(request, report, casetype='Call'):
         'statrecords':statrecords,
         'recordkeys':recordkeys}
 
-    callreports = ["missedcalls","receivedcalls","voicecalls"]
+    callreports = ["missedcalls","voicemails","totalcalls","answeredcalls","abandonedcalls"]
 
     if report in callreports:
         htmltemplate = "helpline/reports.html"
