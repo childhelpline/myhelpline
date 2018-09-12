@@ -1227,7 +1227,7 @@ class DashboardTable(tables.Table):
     casetype = tables.TemplateColumn("<b>{{ record.get_call_type }}</b>",
                                      verbose_name="Call Type")
     case_id = tables.TemplateColumn(
-        '<a href="{{ record.get_absolute_url }}">{{record.case }}</a>')
+        '{% if record.case %}<a href="{{ record.get_absolute_url }}">{{record.case }}</a>{% else %}-{% endif %}')
     telephone = tables.TemplateColumn(
         '<a href="sip:{{record.telephone}}">{{record.telephone}}</a>')
     user_id = tables.TemplateColumn("{{ record.user }}", verbose_name="Agent")
@@ -1262,7 +1262,7 @@ class WebPresenceTable(tables.Table):
 
 class CaseHistoryTable(tables.Table):
     """Show related Case form contact"""
-    case = tables.TemplateColumn('<a href="{{ record.get_absolute_url }}">{{record.case }}</a>')
+    case = tables.TemplateColumn('{% if record.case %}<a href="{{ record.get_absolute_url }}">{{record.case }}</a>{% else %}-{% endif %}')
     class Meta:
         model = Report
         attrs = {'class': 'table table-bordered table-striped dataTable'}
