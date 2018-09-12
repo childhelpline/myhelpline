@@ -183,6 +183,35 @@ class ContactForm(forms.Form):
 
 
 
+class CaseActionForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        self.helper = FormHelper()
+        self.helper.form_id = 'caseAction'
+        self.helper.form_class = 'caseAction'
+        self.helper.form_method = 'post'
+        self.helper.form_action = ''
+
+        super(CaseActionForm, self).__init__(*args, **kwargs)
+
+    case_number = forms.CharField(widget=forms.HiddenInput(), required=False)
+
+    case_status = forms.ChoiceField(choices=STATUS_CHOICES,
+                                    required=False,
+                                    widget=forms.Select(
+                                        attrs={
+                                            'class': 'form-control',
+                                        }
+                                    ),)
+
+    escalate_to = forms.ModelChoiceField(
+        label='Escalate To:',
+        queryset=HelplineUser.objects.all().order_by('hl_names'),
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control pull-right',
+                                   'id': 'agent',
+                                   'name': 'agent'}))
+
+
 class DispositionForm(forms.Form):
     def __init__(self, *args, **kwargs):
         self.helper = FormHelper()

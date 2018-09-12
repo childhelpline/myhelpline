@@ -68,7 +68,7 @@ from helpline.models import Report, HelplineUser,\
 
 from helpline.forms import QueueLogForm,\
         ContactForm, DispositionForm, CaseSearchForm, MyAccountForm, \
-        ReportFilterForm, QueuePauseForm
+        ReportFilterForm, QueuePauseForm, CaseActionForm
 
 from helpline.qpanel.config import QPanelConfig
 from helpline.qpanel.backend import Backend
@@ -847,6 +847,11 @@ def case_form(request, form_name):
                     'case_number': my_case
                 }
             )
+            data['case_action_form'] = CaseActionForm(
+                initial={
+                    'case_number': my_case
+                }
+            )
 
             try:
                 case_history_table.paginate(page=request.GET.get('page', 1), per_page=10)
@@ -1422,6 +1427,25 @@ def save_contact_form(request):
         report, contact, address = get_case_info(case_number)
         contact.address.hl_names = contact_form.cleaned_data.get('caller_name')
         contact.address.save()
+        return {'success': True}
+
+    ctx = {}
+    ctx.update(csrf(request))
+    form_html = render_crispy_form(form, context=ctx)
+    return {'success': False, 'form_html':form_html}
+
+
+@json_view
+def save_case_action(request):
+    """Save case action returns json status"""
+    form = CaseActionForm(request.POST or None)
+    if form.is_valid():
+        case_number = form.cleaned_data.get('case_number')
+        report = Report.objects.get(case=case_number)
+        case_status = form.cleaned_data.get('case_status')
+        share_case = form.cleaned_data.get('share_case')
+        report.save()
+
         return {'success': True}
 
     ctx = {}

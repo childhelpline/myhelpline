@@ -112,6 +112,33 @@ audio{
     });
   }
 
+
+  function saveCaseAction(){
+    var case_action_form = '#caseAction';
+
+    $.ajax({
+      url: "{% url 'save_case_action' %}",
+      type: "POST",
+      data: $("#caseAction").serialize(),
+      success: function(data) {
+        if (!(data['success'])) {
+            // Here we replace the form, for the
+            $(case_action_form).replaceWith(data['form_html']);
+          }
+          else {
+            // Here you can show the user a success message or do whatever you need
+            $("#success-message").html("Success");
+            window.location.href = "{% url "dashboard_home" %}";
+
+          }
+        },
+        error: function () {
+        $("#error-message").html("Error");
+      }
+    });
+  }
+
+
   function disposeCase(param){
     var dispose_form = '#disposeDet';
 
@@ -148,7 +175,11 @@ audio{
         <div class="modal-header bg-light-blue-active">
           <!--button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button-->
           <h4 class="modal-title" id="myModalLabel">{% trans "Form" %} > {{ form_name }} | Case ID 
-            <span id="caseid">{{ case }}</span><span id="editedBadge"></span>
+              <span id="caseid">{{ case }}</span>
+              > <span id="contact_details_step" onclick="$('#frame-contact').removeClass('hidden');$('#frame_iframe').addClass('hidden');$('#frame-case-action').addClass('hidden');">Contact Details</span>
+              > <span id="case_details_step">Case Details</span>
+              > <span id="case_action_step" onclick="$('#frame-case-action').removeClass('hidden');$('#frame_iframe').addClass('hidden');$('#frame-contact').addClass('hidden');">Case Action</span>
+            <span id="editedBadge"></span>
             <span class="pull-right" id="formTimer" style="font-size: 24px; color: #fff;">00:00:00</span>
             {% if form_name == 'qa' %}
             <span class="pull-right">
@@ -213,21 +244,6 @@ audio{
                                     <th style="width:40%;" align="left">Contact</th>
                                     <th style="width:16%;" align="left">Action</th>
                                   </tr>
-                                  <tr>
-                                    <td>1.</td>
-                                    <td><a href="javascript:void(0)" onclick="$('#contact-search').addClass('hidden');$('.contact-cases').removeClass('hidden');">Kemboi Cheruiyot</a></td>
-                                    <td>072324343434</td>
-                                  </tr>
-                                  <tr>
-                                    <td>2.</td>
-                                    <td><a href="javascript:void(0)" onclick="$('#contact-search').addClass('hidden');$('.contact-cases').removeClass('hidden');">Kemboi Cheru</a></td>
-                                    <td>072333332222</td>
-                                  </tr>
-                                  <tr>
-                                    <td>3.</td>
-                                    <td><a href="javascript:void(0)" onclick="$('#contact-search').addClass('hidden');$('.contact-cases').removeClass('hidden');">Cheru Kemboi</a></td>
-                                    <td>0723444344232</td>
-                                  </tr>
                                 </table>
                               </div>
                             </div>
@@ -257,7 +273,6 @@ audio{
 
                                   <div class="box-footer" style="background-color: transparent;">
                                     <button type="button" class="btn btn-primary pull-right btn-lg btn-flat" onclick="saveContact();$('.contact-search').removeClass('col-md-12');$('#frame-contact').addClass('hidden');$('#frame_iframe').removeClass('hidden');">Next</button->
-                                      <!--button type="button" class="btn btn-primary" onclick="$('.invoice').addClass('hidden'); $('iframe').removeClass('hidden'); "><a style="padding-bottom: 10px; padding-top:10px;" tabindex="-1" href="#case_form_modal" data-keyboard="false" data-backdrop="static" class="btn btn-lg btn-primary btn-flat pull-right" role="button" data-toggle="modal">{% trans 'Next' %} </a-->
                                       </div>
                                   </div>
                                 </div>
@@ -277,10 +292,11 @@ audio{
                               <!-- /.row -->
                             </div>
 
+                        <!-- Table row -->
+
                             <!-- this row will not appear when printing -->
                           </section>
 
-                          <!--iframe src="https://enketo.bitz-itc.com/i/::Bkyb35PE" style="width: 100%; min-height: 80vh; border: none;"></iframe {{ iframe_url }}https://enketo.bitz-itc.com/i/::P6SEqt57-->
                         </div>
                       </div>
                     </div>
@@ -288,6 +304,32 @@ audio{
 
 
                 </div>
+                        <div id="frame-case-action" class="hidden">
+
+                          <div class="row">
+                            <!-- accepted payments column -->
+                            <div class="col-xs-6 case-action">
+                              <p class="lead">Case Action</p>
+                              <div class="text-muted well well-sm no-shadow">
+                                <!-- form start -->
+                                  <div class="box-body">
+                                    <div class="row">
+
+            {% crispy case_action_form case_action_form.helper %}
+
+                                    </div>
+                                  </div>
+                                  <!-- /.box-body -->
+
+                                  <div class="box-footer" style="background-color: transparent;">
+                                    <button type="button" class="btn btn-primary pull-right btn-lg btn-flat" onclick="saveCaseAction();">Save</button->
+                                      </div>
+                                  </div>
+                                </div>
+                                <!-- /.col -->
+                              </div>
+                              <!-- /.row -->
+                            </div>
                 <div id="frame_iframe"  class="{% if form_name != 'webonline' and form_name != 'qa' %} hidden {% endif %}">
                   <iframe src="{{ iframe_url }}" style="width: 100%; height: 80vh; border: none;"></iframe>
                 </div>
@@ -311,7 +353,10 @@ audio{
         return;
         var resp = JSON.parse(event.data)
       if(resp.enketoEvent == 'submissionsuccess'){
-      window.location.assign({% url "dashboard_home" %});
+          // Show case action form after successful case submission
+              $('#frame-case-action').removeClass('hidden');
+              $('#frame_iframe').addClass('hidden');
+              $('#frame-contact').addClass('hidden');
     }
   }
 </script>
