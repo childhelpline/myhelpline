@@ -31,6 +31,12 @@
 {% endblock head %}
 {% block content %}
 
+<style type="text/css">
+audio{
+  margin:-30px 10px;
+}
+</style>
+
 <script>
   $(function() {
     $('#caseDet').areYouSure(
@@ -152,7 +158,18 @@
         {% csrf_token %}
         <div class="modal-header bg-light-blue-active">
           <!--button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button-->
-          <h4 class="modal-title" id="myModalLabel">{% trans "Case Form" %} > {{ form_name }} | Case ID <span id="caseid">{{ case }}<span><span id="editedBadge"></span></span> <span class="pull-right" id="formTimer" style="font-size: 18px; color: #fff;">00:00:00</span><h4>
+          <h4 class="modal-title" id="myModalLabel">{% trans "Form" %} > {{ form_name }} | Case ID 
+            <span id="caseid">{{ case }}</span><span id="editedBadge"></span>
+            <span class="pull-right" id="formTimer" style="font-size: 24px; color: #fff;">00:00:00</span>
+            {% if form_name == 'qa' %}
+            <span class="pull-right">
+              <audio controls autoplay="autoplay">
+                <source src="horse.ogg" type="audio/ogg" />
+                <source src="http://soundbible.com/mp3/Tyrannosaurus%20Rex%20Roar-SoundBible.com-807702404.mp3" type="audio/mpeg" />
+              </audio> 
+            </span>
+            {% endif %}
+          <h4>
 
           </div>
           <div class="modal-body" style="padding: 0px; height: 80vh;" ><!-- -->

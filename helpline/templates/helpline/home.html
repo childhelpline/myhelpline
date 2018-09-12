@@ -28,7 +28,7 @@
               <!-- /.col -->
               <div class="col-sm-4 col-md-2 palette-item">
                 <div class="color-palette-set">
-                  <div class="bg-aqua color-palette" align="center" style="padding-right:5px; padding-bottom:5px;" onclick="window.location = '{% url 'dashboardreports' 'answeredcalls' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.answered_calls }}</span><br>{% trans "Received Calls" %}</div>
+                  <div class="bg-aqua color-palette" align="center" style="padding-right:5px; padding-bottom:5px;" onclick="window.location = '{% url 'dashboardreports' 'answeredcalls' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.answered_calls }}</span><br>{% trans "Answered Calls" %}</div>
                   <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
                 </div>
               </div>
@@ -46,7 +46,7 @@
                 </div>
               </div>
               <!-- /.col -->
-              <div class="col-sm-4 col-md-2 palette-item" onclick="window.location = '{% url 'dashboardreports' 'voicemail' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}'">
+              <div class="col-sm-4 col-md-2 palette-item" onclick="window.location = '{% url 'dashboardreports' 'voicemails' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}'">
                 <div class="color-palette-set">
                   <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
                   <div class="bg-yellow color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.voice_mails }} </span><br>{% trans "Voice Mails" %}</div>
