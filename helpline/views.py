@@ -22,6 +22,7 @@ from django.http import (HttpResponse, HttpResponseBadRequest,
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
 from django.template.context_processors import csrf
+from django.template.loader import render_to_string
 from django.db.models import Avg
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -68,7 +69,7 @@ from helpline.models import Report, HelplineUser,\
 
 from helpline.forms import QueueLogForm,\
         ContactForm, DispositionForm, CaseSearchForm, MyAccountForm, \
-        ReportFilterForm, QueuePauseForm, CaseActionForm
+        ReportFilterForm, QueuePauseForm, CaseActionForm, ContactSearchForm
 
 from helpline.qpanel.config import QPanelConfig
 from helpline.qpanel.backend import Backend
@@ -825,6 +826,7 @@ def case_form(request, form_name):
         data['disposition_form'] = DispositionForm()
         data['contact_form'] = ContactForm()
         data['case_action_form'] = CaseActionForm()
+        data['contact_search_form'] = ContactSearchForm()
         if case_number:
             try:
                 my_case = int(case_number)
@@ -1268,6 +1270,17 @@ class WebPresenceTable(tables.Table):
         attrs = {'class': 'table table-bordered table-striped dataTable'}
 
 
+class ContactTable(tables.Table):
+    """Contact list table"""
+    address = tables.Column(verbose_name= 'Name')
+    hl_contact = tables.Column(verbose_name= 'Phone')
+    action = tables.TemplateColumn('<a onClick="createCase({{ record.id }});"><i class="fa fa-plus"></i>Create Case</a>', verbose_name="Action")
+    class Meta:
+        model = Contact
+        fields = {'address', 'hl_contact'}
+        attrs = {'class': 'table table-bordered table-striped dataTable'}
+
+
 class CaseHistoryTable(tables.Table):
     """Show related Case form contact"""
     case = tables.TemplateColumn('{% if record.case %}<a href="{{ record.get_absolute_url }}">{{record.case }}</a>{% else %}-{% endif %}')
@@ -1439,6 +1452,33 @@ def save_contact_form(request):
 
 
 @json_view
+def contact_search_form(request):
+    """Search contact/address and returns html contact list"""
+
+    form = ContactSearchForm(request.POST or None)
+    if form.is_valid():
+        telephone = form.cleaned_data.get('telephone')
+        name = form.cleaned_data.get('name')
+        contacts = Contact.objects.filter(
+            Q(address__hl_names__icontains=name) |
+            Q(hl_contact=telephone)
+        )
+        table = ContactTable(contacts)
+        table_html = render_to_string(
+            'helpline/contacts.html',
+            {
+                'table': table
+            }, request
+        )
+        return {'success': True, 'table_html': table_html}
+
+    ctx = {}
+    ctx.update(csrf(request))
+    form_html = render_crispy_form(form, context=ctx)
+    return {'success': False, 'form_html':form_html}
+
+
+@json_view
 def save_case_action(request):
     """Save case action returns json status"""
     form = CaseActionForm(request.POST or None)
@@ -1447,6 +1487,9 @@ def save_case_action(request):
         report = Report.objects.get(case=case_number)
         case_status = form.cleaned_data.get('case_status')
         share_case = form.cleaned_data.get('share_case')
+        hl_user = request.user.HelplineUser
+        hl_user.hl_status = "Available"
+        hl_user.save()
         report.save()
 
         return {'success': True}
@@ -1472,6 +1515,52 @@ def save_disposition_form(request):
     ctx.update(csrf(request))
     form_html = render_crispy_form(form, context=ctx)
     return {'success': False, 'form_html': form_html}
+
+
+@json_view
+def save_disposition_form(request):
+    """Save disposition, uses AJAX and returns json status"""
+    form = DispositionForm(request.POST or None)
+    if form.is_valid():
+        case = Case.objects.get(hl_case=form.cleaned_data['case_number'])
+        case.hl_disposition = form.cleaned_data['disposition']
+        case.save()
+        request.user.HelplineUser.hl_status = 'Available'
+        request.user.HelplineUser.save()
+        return {'success': True}
+    ctx = {}
+    ctx.update(csrf(request))
+    form_html = render_crispy_form(form, context=ctx)
+    return {'success': False, 'form_html': form_html}
+
+
+@json_view
+def contact_create_case(request):
+    """Create a case for a contact and return the case url"""
+    contact_id = request.POST.get('contact_id', None)
+    default_service = Service.objects.all().first()
+    if contact_id:
+        contact = Contact.objects.get(id=contact_id)
+        case = Case()
+        report = Report()
+        case.contact = contact
+        case.user = request.user
+        case.hl_popup = 'No'
+        case.save()
+        report.case = case
+        report.callstart = datetime.now().strftime('%H:%M:%S.%f')
+        report.calldate = datetime.now().strftime('%d-%m-%Y')
+        report.queuename = default_service.queue
+        report.telephone = contact.hl_contact
+        report.save()
+        hl_user = request.user.HelplineUser
+        hl_user.case = case
+        hl_user.hl_status = 'Busy'
+        hl_user.save()
+        return {'success': True}
+    ctx = {}
+    ctx.update(csrf(request))
+    return {'success': False}
 
 
 @json_view

@@ -328,3 +328,35 @@ class QueuePauseForm(forms.Form):
         choices=QUEUE_PAUSE_REASON_CHOICES,
         required=False
     )
+
+class ContactSearchForm(forms.Form):
+    """Contact search form"""
+    def __init__(self, *args, **kwargs):
+        self.helper = FormHelper()
+        self.helper.form_id = 'contact-search-form'
+        self.helper.form_class = 'contact-search-form'
+        self.helper.form_method = 'post'
+        self.helper.form_action = ''
+
+        super(ContactSearchForm, self).__init__(*args, **kwargs)
+    telephone = forms.CharField(
+        required=False,
+        label = 'Telephone',
+        widget=forms.TextInput(
+            attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter Phone Number',
+                                      'type': 'tel'
+            }
+        )
+    )
+    name = forms.CharField(
+        required=False,
+        label = 'Name',
+        widget=forms.TextInput(
+            attrs={
+                'class': 'form-control',
+                'placeholder': 'Contact Name',
+            }
+        )
+    )
