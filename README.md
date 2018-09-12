@@ -127,7 +127,7 @@ python manage.py migrate
    ```
 ## Install components using bower
  ```
- python manage.py bower install
+ python manage.py bower_install--allow-root
  ```
  ## Create User
  Run the following command and follow the prompt
