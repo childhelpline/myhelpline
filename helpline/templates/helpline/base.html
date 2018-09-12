@@ -554,6 +554,27 @@ input:checked + .slider:before {
             </a></li>
           </ul>
         </li>
+        <li class="treeview" >
+          <a href="#">
+            <i class="fa fa-files-o"></i>
+            <span>{% trans "Monitor" %}</span>
+            <span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+          </a>
+          <ul class="treeview-menu">
+                    {% for queue_name, queue in queues.items  %}
+                    <li>
+                        <a href="{% url 'queue' queue_name  %}">
+                            <i class="fa fa-circle-o"></i>{{ queue_name }}
+                            <span class="pull-right-container">
+                                <span class="label label-info pull-right">{{ queue.members | length }}</span>
+                            </span>
+                        </a>
+                    </li>
+                    {% endfor %}
+          </ul>
+        </li>
         {% endif %}
         <li>
           <a href="/admin/auth/user/">
