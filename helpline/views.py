@@ -823,6 +823,8 @@ def case_form(request, form_name):
         case_number = request.GET.get('case')
         username = xform.user.username
         data['disposition_form'] = DispositionForm()
+        data['contact_form'] = ContactForm()
+        data['case_action_form'] = CaseActionForm()
         if case_number:
             try:
                 my_case = int(case_number)
@@ -858,6 +860,7 @@ def case_form(request, form_name):
             except Exception as e:
                 # Do not paginate if there is an error
                 pass
+
         form_url = get_form_url(request, username, settings.ENKETO_PROTOCOL)
         # Check if we're looking for a case.
         if case_number:
