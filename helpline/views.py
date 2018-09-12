@@ -67,7 +67,7 @@ from helpline.models import Report, HelplineUser,\
         Messaging
 
 from helpline.forms import QueueLogForm,\
-        CallForm, DispositionForm, CaseSearchForm, MyAccountForm, \
+        ContactForm, DispositionForm, CaseSearchForm, MyAccountForm, \
         ReportFilterForm, QueuePauseForm
 
 from helpline.qpanel.config import QPanelConfig
@@ -340,7 +340,7 @@ def queue_unpause(request):
 
 def walkin(request):
     """Render CallForm manualy."""
-    form = CallForm()
+    form = ContactForm()
 
     return render(request, 'helpline/walkin.html',
                   {'form': form})
@@ -822,6 +822,7 @@ def case_form(request, form_name):
     if request.method == 'GET':
         case_number = request.GET.get('case')
         username = xform.user.username
+        data['disposition_form'] = DispositionForm()
         if case_number:
             try:
                 my_case = int(case_number)
@@ -839,6 +840,13 @@ def case_form(request, form_name):
             data['contact'] = contact
             data['address'] = address
             data['case_history_table'] = case_history_table
+            data['contact_form'] = ContactForm(
+                initial={
+                    'caller_name': address.hl_names,
+                    'phone_number': contact.hl_contact,
+                    'case_number': my_case
+                }
+            )
 
             try:
                 case_history_table.paginate(page=request.GET.get('page', 1), per_page=10)
@@ -894,9 +902,9 @@ def case_form(request, form_name):
         # Process forms differently.
 
         if form_name == 'call':
-            form = CallForm(request.POST)
+            contact_form = ContactForm(request.POST)
         elif form_name == 'walkin':
-            form = CallForm(request.POST)
+            contact_form = ContactForm(request.POST)
 
         if form.is_valid():
             case_number = form.cleaned_data.get('case_number')
@@ -919,31 +927,25 @@ def case_form(request, form_name):
                 except Exception as e:
                     # Do not paginate if there is an error
                     pass
+
+            # If no case number is given we create a new case
             else:
                 my_case = Case()
                 my_case.hl_data = form_name
-                my_case.hl_counsellor = request.user.HelplineUser.hl_key
+                my_case.user = request.user
                 my_case.popup = 'Done'
                 my_case.hl_time = int(time.time())
                 my_case.hl_status = form.cleaned_data.get('case_status')
                 my_case.hl_acategory = form.cleaned_data.get('category')
                 my_case.hl_notes = form.cleaned_data.get('notes')
                 my_case.hl_type = form.cleaned_data.get('case_type')
-                my_case.hl_subcategory = form.cleaned_data.get('sub_category')
-                my_case.hl_subsubcat = form.cleaned_data.get('sub_sub_category')
-                my_case.isrefferedfrom = form.cleaned_data.get('referred_from')
-                my_case.hl_details = form.cleaned_data.get('comment')
 
                 my_case.hl_priority = 'Non-Critical'
                 my_case.hl_creator = request.user.HelplineUser.hl_key
                 my_case.save()
-                address, address_created = Address.objects.get_or_create(hl_key=my_case.hl_key)
 
-                contact, contact_created = Contact.objects.get_or_create(hl_key=my_case.hl_key,
-                                                                            hl_type='Cell Phone',
-                                                                            hl_calls=0,
-                                                                            hl_status='Available',
-                                                                            hl_time=int(time.time()))
+                report, contact, address = get_case_info(case_number)
+
                 now = datetime.now()
                 callstart = "%s:%s:%s" % (now.hour, now.minute, now.second)
                 notime = "00:00:00"
@@ -966,33 +968,10 @@ def case_form(request, form_name):
                     # Ignore pagination errors when a new contact with no case history is input.
                     pass
 
-            address.hl_names = form.cleaned_data['caller_name']
-            address.hl_gender = form.cleaned_data.get('gender')
-            address.hl_address1 = form.cleaned_data.get('address')
-            address.hl_email = form.cleaned_data.get('email')
-            address.hl_address4 = form.cleaned_data.get('physical_address')
-            address.hl_address3 = form.cleaned_data.get('region')
-            address.hl_language = form.cleaned_data.get('language')
-            address.hl_company = form.cleaned_data.get('company')
-            contact.hl_contact = form.cleaned_data['phone_number']
-            report.callernames = form.cleaned_data['caller_name']
-            report.casearea = form.cleaned_data.get('address')
-            report.casearea = form.cleaned_data.get('address')
-            report.telephone = form.cleaned_data['phone_number']
+            address.hl_names = form.cleaned_data.get('caller_name')
             report.counsellorname = request.user.username
+            report.user = request.user
             report.casetype = form_name
-
-            report.casestatus = form.cleaned_data['case_status']
-            report.escalatename = form.cleaned_data.get('escalate_to')
-            my_case.hl_status = form.cleaned_data.get('case_status')
-            my_case.hl_acategory = form.cleaned_data.get('category')
-            my_case.hl_notes = form.cleaned_data.get('notes')
-            my_case.hl_details = form.cleaned_data['comment']
-            my_case.isrefferedfrom = form.cleaned_data.get('referred_from')
-            my_case.hl_type = form.cleaned_data.get('case_type')
-            my_case.hl_subcategory = form.cleaned_data.get('sub_category')
-            my_case.hl_subsubcat = form.cleaned_data.get('sub_sub_category')
-            my_case.hl_escalateto = form.cleaned_data.get('escalate_to')
 
             my_case.save()
             address.save()
@@ -1020,13 +999,13 @@ def case_form(request, form_name):
 
     return render(
         request, 'helpline/case_form.html', {
-            'form': form,
             'contact': contact if contact else None,
             'initial': initial,
             'disposition_form': disposition_form,
             'case_history_table': case_history_table,
             'form_name': form_name,
-            'message': message
+            'message': message,
+            'contact_form': contact_form
         }
     )
 
@@ -1107,16 +1086,16 @@ def my_forms(request, form_name):
                                if my_case else ''}
         disposition_form = DispositionForm(initial=(initial_disposition))
 
-        form = CallForm(initial=initial)
+        contact_form = ContactForm(initial=initial)
 
     elif request.method == 'POST':
         contact, address = (None, None)
         # Process forms differently.
 
         if form_name == 'call':
-            form = CallForm(request.POST)
+            contact_form = ContactForm(request.POST)
         elif form_name == 'walkin':
-            form = CallForm(request.POST)
+            contact_form = ContactForm(request.POST)
 
         if form.is_valid():
             case_number = form.cleaned_data.get('case_number')
@@ -1435,11 +1414,14 @@ def get_case_info(case_number):
 
 
 @json_view
-def save_call_form(request):
-    """Save call form returns json status"""
-    form = CallForm(request.POST or None)
-    if form.is_valid():
-        # form.save()
+def save_contact_form(request):
+    """Save contact/address form returns json status"""
+    contact_form = ContactForm(request.POST or None)
+    if contact_form.is_valid():
+        case_number = contact_form.cleaned_data.get('case_number')
+        report, contact, address = get_case_info(case_number)
+        contact.address.hl_names = contact_form.cleaned_data.get('caller_name')
+        contact.address.save()
         return {'success': True}
 
     ctx = {}

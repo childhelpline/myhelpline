@@ -150,21 +150,15 @@ def get_sub_sub_categories():
             ).distinct())
 
 
-class CallForm(forms.Form):
+class ContactForm(forms.Form):
     def __init__(self, *args, **kwargs):
         self.helper = FormHelper()
-        self.helper.form_id = 'caseDet'
-        self.helper.form_class = 'caseDet'
+        self.helper.form_id = 'contactDet'
+        self.helper.form_class = 'contactDet'
         self.helper.form_method = 'post'
         self.helper.form_action = ''
 
-        self.helper.add_input(Submit('submit', 'Save'))
-        super(CallForm, self).__init__(*args, **kwargs)
-
-    class Meta:
-        model = Address
-        fieleds = ['hl_names', 'hl_phone'
-                   'hl_address1']
+        super(ContactForm, self).__init__(*args, **kwargs)
 
     case_number = forms.CharField(widget=forms.HiddenInput(), required=False)
 
@@ -177,23 +171,6 @@ class CallForm(forms.Form):
         required=False,
     )
 
-    company = forms.CharField(
-        label='Company',
-        widget=AutoCompleteWidget(AddressLookup,
-                                  attrs={
-                                      'class': 'form-control',
-                                  }),
-        required=False,
-    )
-
-    email = forms.CharField(
-        label='Email',
-        widget=AutoCompleteWidget(AddressLookup,
-                                  attrs={
-                                      'class': 'form-control',
-                                  }),
-        required=False,
-    )
 
     phone_number = forms.CharField(
         label='Phone Number',
@@ -204,79 +181,7 @@ class CallForm(forms.Form):
         required=False,
     )
 
-    case_type = forms.ChoiceField(
-        label='Type',
-        widget=forms.Select(
-            attrs={
-                'class': 'form-control',
-            }
-        ),
-        choices=CASE_TYPE_CHOICES,
-        required=False
-    )
 
-    category = forms.ChoiceField(
-        required=False,
-        choices=get_categories,
-        widget=forms.Select(
-            attrs={
-                'class': 'form-control',
-            }
-        ),
-    )
-
-    sub_category = forms.ChoiceField(
-        required=False,
-        choices=get_sub_categories,
-        widget=forms.Select(
-            attrs={
-                'class': 'form-control',
-            }
-        ),)
-
-    business_portfolio = forms.ChoiceField(choices=BUSINESS_PORTFOLIO_CHOICES,
-                                           required=False,
-                                           widget=forms.Select(
-                                               attrs={
-                                                   'class': 'form-control',
-                                               }
-                                           ),)
-
-    case_status = forms.ChoiceField(choices=STATUS_CHOICES,
-                                    required=False,
-                                    widget=forms.Select(
-                                        attrs={
-                                            'class': 'form-control',
-                                        }
-                                    ),)
-
-    comment = forms.CharField(
-        label='Description',
-        widget=forms.Textarea(
-            attrs={'col': '30',
-                   'rows': '7',
-                   'class': 'form-control',
-                   'id': 'txtComment'}
-
-        ),
-        required=False,
-    )
-
-    case_status = forms.ChoiceField(choices=STATUS_CHOICES,
-                                    required=False,
-                                    widget=forms.Select(
-                                        attrs={
-                                            'class': 'form-control',
-                                        }
-                                    ),)
-
-    notes = forms.CharField(required=False,
-                            label='Claim Reference Number:',
-                            widget=forms.TextInput(
-                                attrs={
-                                    'class': 'form-control',
-                                }
-                            ),)
 
 class DispositionForm(forms.Form):
     def __init__(self, *args, **kwargs):

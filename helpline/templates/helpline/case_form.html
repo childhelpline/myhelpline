@@ -37,18 +37,6 @@ audio{
 }
 </style>
 
-<script>
-  $(function() {
-    $('#caseDet').areYouSure(
-    {
-      message: 'It looks like you have been editing something. '
-      + 'If you leave before saving, your changes will be lost.'
-    }
-    );
-  });
-
-</script>
-
 
 <script type='text/javascript'>
   $(function(){
@@ -98,22 +86,24 @@ audio{
 
 <script type="text/javascript">
 
-  function saveCase(){
-    var case_form = '#caseDet';
+  function saveContact(){
+    var contact_form = '#contactDet';
 
     $.ajax({
-      url: "{% url 'save_call_form' %}",
+      url: "{% url 'save_contact_form' %}",
       type: "POST",
-      data: $("#caseDet").serialize(),
+      data: $("#contactDet").serialize(),
       success: function(data) {
         if (!(data['success'])) {
             // Here we replace the form, for the
-            $(case_form).replaceWith(data['form_html']);
+            $(contact_form).replaceWith(data['form_html']);
           }
           else {
             // Here you can show the user a success message or do whatever you need
             //$(example_form).find('.success-message').show();
             $("#success-message").html("Success");
+            alert("Contact saved");
+
           }
         },
         error: function () {
@@ -257,68 +247,19 @@ audio{
                               <p class="lead">Reporter Details: {{ contact.hl_contact }}</p>
                               <div class="text-muted well well-sm no-shadow">
                                 <!-- form start -->
-                                <form role="form">
                                   <div class="box-body">
                                     <div class="row">
-                                      <div class="form-group col-md-6">
-                                        <label for="contactName">Name:</label>
-                                        <input type="tel" class="form-control" id="contactName" placeholder="Enter Name" value="{{ contact.address.hl_names|default:"" }}">
-                                      </div>
-                                      <div class="form-group  col-md-6">
-                                        <label for="contactLanguage">Language</label>
-                                        <input type="text" class="form-control" id="contactLanguage" placeholder="Contact Name" value="{{ contact.address.hl_language|default:"" }}">
-                                      </div>
-                                      <div class="form-group col-md-6">
-                                        <label for="contactTel">Sex:</label>
-                                        <select class="form-control" id="contactSex" name="contactSex">
-                                          <option>-- Select Sex --</option>
-                                          <option>Male</option>
-                                          <option>Female</option>
-                                        </select>
-                                        <!--input type="tel" class="form-control" id="contactTel" placeholder="Enter telephone number" value="{{ contact.address.hl_gender|default:"" }}"-->
-                                      </div>
-                                      <div class="form-group  col-md-6">
-                                        <label for="contactAgegroup">Age Group</label>
-                                        <select class="form-control" id="contactAgegroup" name="contactAgegroup">
-                                          <option>-- Select Age Group --</option>
-                                          <option value="0-5">0-5</option>
-                                          <option value="6-10">6-10</option>
-                                          <option value="11-14">11-14</option>
-                                          <option value="15-18">15-18</option>
-                                          <option value=">18">>18</option>
-                                          <option>Unknown</option>
-                                        </select>
-                                        <!--input type="text" class="form-control" id="contactName" placeholder="Contact Name" value="{{ contact.address.hl_ageclass|default:"" }}"-->
-                                      </div>
-                                      <div class="form-group col-md-6">
-                                        <label for="contactEmail">Email:</label>
-                                        <input type="tel" class="form-control" id="contactEmail" placeholder="Enter Email Address" value="{{ contact.address.hl_email|default:"" }}">
-                                      </div>
-                                      <div class="form-group  col-md-6">
-                                        <label for="contactNationality">Nationality</label>
-                                        <input type="text" class="form-control" id="contactNationality" placeholder="Enter Nationality" value="{{ contact.address.address1|default:"" }}">
-                                      </div>
 
+            {% crispy contact_form contact_form.helper %}
 
-
-
-                                      <div class="form-group col-md-6">
-                                        <label for="contactTel">Location:</label>
-                                        <input type="tel" class="form-control" id="contactTel" placeholder="Enter Location" value="{{ contact.address.hl_email|default:"" }}">
-                                      </div>
-                                      <div class="form-group  col-md-6">
-                                        <label for="contactName">Nearest Landmark</label>
-                                        <input type="text" class="form-control" id="landmark" placeholder="Nearest Landmark" value="{{ contact.address.address1|default:"" }}">
-                                      </div>
                                     </div>
                                   </div>
                                   <!-- /.box-body -->
 
                                   <div class="box-footer" style="background-color: transparent;">
-                                    <button type="button" class="btn btn-primary pull-right btn-lg btn-flat" onclick="$('.contact-search').removeClass('col-md-12');$('#frame-contact').addClass('hidden');$('#frame_iframe').removeClass('hidden');">Next</button->
+                                    <button type="button" class="btn btn-primary pull-right btn-lg btn-flat" onclick="saveContact();$('.contact-search').removeClass('col-md-12');$('#frame-contact').addClass('hidden');$('#frame_iframe').removeClass('hidden');">Next</button->
                                       <!--button type="button" class="btn btn-primary" onclick="$('.invoice').addClass('hidden'); $('iframe').removeClass('hidden'); "><a style="padding-bottom: 10px; padding-top:10px;" tabindex="-1" href="#case_form_modal" data-keyboard="false" data-backdrop="static" class="btn btn-lg btn-primary btn-flat pull-right" role="button" data-toggle="modal">{% trans 'Next' %} </a-->
                                       </div>
-                                    </form>
                                   </div>
                                 </div>
                                 <!-- /.col -->

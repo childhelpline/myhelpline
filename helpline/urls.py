@@ -54,7 +54,7 @@ urlpatterns = [
         name='get_subcategory'),
     url('^ajax/get_sub_subcategory/(?P<category>.+)/$',
         views.ajax_get_sub_subcategory, name='get_sub_subcategory'),
-    url('^ajax/call/$', views.save_call_form, name='save_call_form'),
+    url('^ajax/contact/$', views.save_contact_form, name='save_contact_form'),
     url('^ajax/dispose/$', views.save_disposition_form,
         name='save_disposition_form'),
     url('^ajax/average/talktime/$', views.average_talk_time,
