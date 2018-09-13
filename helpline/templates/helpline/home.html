@@ -228,7 +228,7 @@
 
       <div class="info-box-content">
         <span class="info-box-text">{% trans "Escalated Cases" %}</span>
-        <span class="info-box-number">{{ dashboard_stats.closed_cases|intcomma }}</span>
+        <span class="info-box-number">{{ dashboard_stats.referred_cases|intcomma }}</span>
 
         <div class="progress">
           <div class="progress-bar" style="width: {% widthratio dashboard_stats.referred_cases dashboard_stats.total_cases 100 %}%"></div>

@@ -1491,8 +1491,9 @@ def save_case_action(request):
         hl_user.hl_status = "Available"
         hl_user.save()
         report.casestatus = case_status
-        report.escalatename = escalate_to.user.username
+        report.escalatename = escalate_to.user.username if escalate_to else None
         report.callend = datetime.now().strftime('%H:%M:%S.%f')
+        report.hl_time = calendar.timegm(time.gmtime())
         report.save()
 
         return {'success': True}
@@ -1680,12 +1681,12 @@ def get_dashboard_stats(user, interval=None):
 
     total_cases = Report.objects.filter(
         hl_time__gt=midnight).filter(casestatus__gt='')
-    closed_cases = Case.objects.filter(
-        hl_time__gt=midnight)
-    open_cases = Case.objects.filter(
-        hl_time__gt=midnight)
-    referred_cases = Case.objects.filter(
-        hl_time__gt=midnight)
+    closed_cases = Report.objects.filter(
+        hl_time__gt=midnight, casestatus__exact='Close')
+    open_cases = Report.objects.filter(
+        hl_time__gt=midnight, casestatus__exact='Pending')
+    referred_cases = Report.objects.filter(
+        hl_time__gt=midnight, casestatus__exact='Escalate')
 
     total_sms = Messaging.objects.filter(hl_time__gt=midnight)
 
