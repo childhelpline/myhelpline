@@ -1486,10 +1486,13 @@ def save_case_action(request):
         case_number = form.cleaned_data.get('case_number')
         report = Report.objects.get(case=case_number)
         case_status = form.cleaned_data.get('case_status')
-        share_case = form.cleaned_data.get('share_case')
+        escalate_to = form.cleaned_data.get('escalate_to')
         hl_user = request.user.HelplineUser
         hl_user.hl_status = "Available"
         hl_user.save()
+        report.casestatus = case_status
+        report.escalatename = escalate_to.user.username
+        report.callend = datetime.now().strftime('%H:%M:%S.%f')
         report.save()
 
         return {'success': True}
