@@ -121,6 +121,7 @@ class Case(models.Model):
                                 blank=True, null=True)
     hl_time = models.IntegerField(blank=True, null=True)
     instance = models.ManyToManyField(Instance)
+    status = models.CharField(max_length=25, blank=True, null=True)
 
     def __unicode__(self):
         return str(self.hl_case)
@@ -530,12 +531,15 @@ class Report(models.Model):
 
     def get_call_type(self):
         """ Get casetype."""
-        if self.casetype.lower() == "call":
-            return "Inbound"
-        elif self.casetype.lower() == "voicemail":
-            return "Voicemail"
+        if self.casetype:
+            if self.casetype.lower() == "call":
+                return "Inbound"
+            elif self.casetype.lower() == "voicemail":
+                return "Voicemail"
+            else:
+                return "Outbound"
         else:
-            return "Outbound"
+            return "Walkin"
 
     def get_absolute_url(self):
         """Calculate the canonical URL for Report."""

@@ -554,6 +554,27 @@ input:checked + .slider:before {
             </a></li>
           </ul>
         </li>
+        <li class="treeview" >
+          <a href="#">
+            <i class="fa fa-phone"></i>
+            <span>{% trans "Monitor" %}</span>
+            <span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+          </a>
+          <ul class="treeview-menu">
+                    {% for queue_name, queue in queues.items  %}
+                    <li>
+                        <a href="{% url 'queue' queue_name  %}">
+                            <i class="fa fa-circle-o"></i>{{ queue_name }}
+                            <span class="pull-right-container">
+                                <span class="label label-info pull-right">{{ queue.members | length }}</span>
+                            </span>
+                        </a>
+                    </li>
+                    {% endfor %}
+          </ul>
+        </li>
         {% endif %}
         <li>
           <a href="/admin/auth/user/">
@@ -905,12 +926,6 @@ input:checked + .slider:before {
 
 
         <script>
-          $('#language').on('change', function (e) {
-            var lang  = $(this).val();
-            window.location = '/lang' + '/' + lang;
-          });
-          $( "#language" ).val("en")
-
           String.prototype.toStrStatusAgent = function(args) {
             var value = this;
             if (C.status_agent.NOT_INUSE == value) {
@@ -1132,6 +1147,8 @@ $('.dt-buttons, #example1_info').addClass("col-md-6 col-sm-12");
 
 
 <script src="{% static "helpline/js/custom.js" %}" type="text/javascript"></script>
+    {% block script_end %}
+    {% endblock script_end %}
 
 </div></div></body>
 </html>

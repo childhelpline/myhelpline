@@ -150,21 +150,15 @@ def get_sub_sub_categories():
             ).distinct())
 
 
-class CallForm(forms.Form):
+class ContactForm(forms.Form):
     def __init__(self, *args, **kwargs):
         self.helper = FormHelper()
-        self.helper.form_id = 'caseDet'
-        self.helper.form_class = 'caseDet'
+        self.helper.form_id = 'contactDet'
+        self.helper.form_class = 'contactDet'
         self.helper.form_method = 'post'
         self.helper.form_action = ''
 
-        self.helper.add_input(Submit('submit', 'Save'))
-        super(CallForm, self).__init__(*args, **kwargs)
-
-    class Meta:
-        model = Address
-        fieleds = ['hl_names', 'hl_phone'
-                   'hl_address1']
+        super(ContactForm, self).__init__(*args, **kwargs)
 
     case_number = forms.CharField(widget=forms.HiddenInput(), required=False)
 
@@ -177,23 +171,6 @@ class CallForm(forms.Form):
         required=False,
     )
 
-    company = forms.CharField(
-        label='Company',
-        widget=AutoCompleteWidget(AddressLookup,
-                                  attrs={
-                                      'class': 'form-control',
-                                  }),
-        required=False,
-    )
-
-    email = forms.CharField(
-        label='Email',
-        widget=AutoCompleteWidget(AddressLookup,
-                                  attrs={
-                                      'class': 'form-control',
-                                  }),
-        required=False,
-    )
 
     phone_number = forms.CharField(
         label='Phone Number',
@@ -204,43 +181,19 @@ class CallForm(forms.Form):
         required=False,
     )
 
-    case_type = forms.ChoiceField(
-        label='Type',
-        widget=forms.Select(
-            attrs={
-                'class': 'form-control',
-            }
-        ),
-        choices=CASE_TYPE_CHOICES,
-        required=False
-    )
 
-    category = forms.ChoiceField(
-        required=False,
-        choices=get_categories,
-        widget=forms.Select(
-            attrs={
-                'class': 'form-control',
-            }
-        ),
-    )
 
-    sub_category = forms.ChoiceField(
-        required=False,
-        choices=get_sub_categories,
-        widget=forms.Select(
-            attrs={
-                'class': 'form-control',
-            }
-        ),)
+class CaseActionForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        self.helper = FormHelper()
+        self.helper.form_id = 'caseAction'
+        self.helper.form_class = 'caseAction'
+        self.helper.form_method = 'post'
+        self.helper.form_action = ''
 
-    business_portfolio = forms.ChoiceField(choices=BUSINESS_PORTFOLIO_CHOICES,
-                                           required=False,
-                                           widget=forms.Select(
-                                               attrs={
-                                                   'class': 'form-control',
-                                               }
-                                           ),)
+        super(CaseActionForm, self).__init__(*args, **kwargs)
+
+    case_number = forms.CharField(widget=forms.HiddenInput(), required=False)
 
     case_status = forms.ChoiceField(choices=STATUS_CHOICES,
                                     required=False,
@@ -250,33 +203,14 @@ class CallForm(forms.Form):
                                         }
                                     ),)
 
-    comment = forms.CharField(
-        label='Description',
-        widget=forms.Textarea(
-            attrs={'col': '30',
-                   'rows': '7',
-                   'class': 'form-control',
-                   'id': 'txtComment'}
-
-        ),
+    escalate_to = forms.ModelChoiceField(
+        label='Escalate To:',
+        queryset=HelplineUser.objects.all().order_by('hl_names'),
         required=False,
-    )
+        widget=forms.Select(attrs={'class': 'form-control pull-right',
+                                   'id': 'agent',
+                                   'name': 'agent'}))
 
-    case_status = forms.ChoiceField(choices=STATUS_CHOICES,
-                                    required=False,
-                                    widget=forms.Select(
-                                        attrs={
-                                            'class': 'form-control',
-                                        }
-                                    ),)
-
-    notes = forms.CharField(required=False,
-                            label='Claim Reference Number:',
-                            widget=forms.TextInput(
-                                attrs={
-                                    'class': 'form-control',
-                                }
-                            ),)
 
 class DispositionForm(forms.Form):
     def __init__(self, *args, **kwargs):
@@ -393,4 +327,36 @@ class QueuePauseForm(forms.Form):
         ),
         choices=QUEUE_PAUSE_REASON_CHOICES,
         required=False
+    )
+
+class ContactSearchForm(forms.Form):
+    """Contact search form"""
+    def __init__(self, *args, **kwargs):
+        self.helper = FormHelper()
+        self.helper.form_id = 'contact-search-form'
+        self.helper.form_class = 'contact-search-form'
+        self.helper.form_method = 'post'
+        self.helper.form_action = ''
+
+        super(ContactSearchForm, self).__init__(*args, **kwargs)
+    telephone = forms.CharField(
+        required=False,
+        label = 'Telephone',
+        widget=forms.TextInput(
+            attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter Phone Number',
+                                      'type': 'tel'
+            }
+        )
+    )
+    name = forms.CharField(
+        required=False,
+        label = 'Name',
+        widget=forms.TextInput(
+            attrs={
+                'class': 'form-control',
+                'placeholder': 'Contact Name',
+            }
+        )
     )
