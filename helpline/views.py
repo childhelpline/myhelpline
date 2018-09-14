@@ -114,7 +114,7 @@ def home(request):
     }
     
 
-    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/charts/6.json?field_name=_submission_time' , headers= headers).json();
+    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/charts/24.json?field_name=_submission_time' , headers= headers).json();
         
     gtdata = []
     
@@ -124,7 +124,7 @@ def home(request):
 
 
     #for case status 
-    status_data = requests.get('https://dev.bitz-itc.com/ona/api/v1/charts/6.json?field_name=case_action' , headers= headers).json();
+    status_data = requests.get('https://dev.bitz-itc.com/ona/api/v1/charts/24.json?field_name=case_action' , headers= headers).json();
 
     color = {"Closed":'#00a65a',"Escalate":'#f39c12',"Pending":'#00c0ef'}
     stdata = []
@@ -412,9 +412,9 @@ def caseview(request,form_name,case_id):
     #instance_view_url = 'submission-instance' + owner.username + xform 
     request_string = ''
 
-    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/6/' + case_id + request_string, headers= headers).json();
+    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/24/' + case_id + request_string, headers= headers).json();
     #form_details= requests.get('http://192.168.56.102:8000/ona/kemboicheru/forms/Case_Form/form.json',headers={'Authorization':'Token 68cf8a32a8f4af59333527fb58dbe1c2423249a0'})
-    history = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/6/' + case_id + '/history',headers=headers).json()
+    history = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/24/' + case_id + '/history',headers=headers).json()
 
     statrecords = []
     recordkeys = []
@@ -528,7 +528,7 @@ def reports(request, report, casetype='Call'):
     xform_det = service.walkin_xform
     #instance_view_url = 'submission-instance' + owner.username + xform 
 
-    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/6?page=1&page_size=40&sort={"_id":1}' + request_string, headers= headers).json();
+    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/24?page=1&page_size=40&sort={"_id":1}' + request_string, headers= headers).json();
     #form_details= requests.get('https://dev.bitz-itc.com/ona/demoadmin/forms/Case_Form/form.json',headers=headers).json()
 
 
