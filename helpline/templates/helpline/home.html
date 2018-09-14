@@ -194,7 +194,7 @@
                       <div class="box-header with-border">
                         <i class="fa fa-bar-chart-o"></i>
 
-                        <h3 class="box-title">{% trans "Cases Per Status" %}</h3>
+                        <h3 class="box-title">{% trans "Cases Per Status" %}{{ domhost }}</h3>
 
                         <div class="box-tools pull-right">
                           <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
@@ -356,3 +356,97 @@
       </section>
       <!-- /.content -->
       {% endblock content %}
+      {% block script_end %}
+
+<script type="text/javascript">
+  
+    /*
+     * BAR CHART
+     * ---------
+     */
+    data = []
+
+
+    var bar_data = {
+      data: {{ gdata|safe }}/*[["January", 10], ["February", 8], ["March", 4], ["April", 13], ["May", 17], ["June", 9]]*/,
+      color: "#3c8dbc"
+    };
+    $.plot("#bar-chart", [bar_data], {
+      grid: {
+        borderWidth: 0.1,
+        borderColor: "#f3f3f3",
+        tickColor: "#f3f3f3"
+      },
+      series: {
+        bars: {
+          show: true,
+          barWidth: 0.1,
+          align: "center"
+        }
+      },
+      xaxis: {
+        mode: "categories",
+        tickLength: 0
+      }
+    });
+    /* END BAR CHART */
+
+
+
+    /*
+     * DONUT CHART
+     * -----------
+     */
+    var dData = {{ dt|safe }}
+    var donutData = []
+    var i = 0;
+    for(var key in dData){
+      var x = 0
+      var dk = {};
+      if(dData.hasOwnProperty(key)){
+        var ds = dData[key]
+        for(var keys in ds){
+         dk[keys] = ds[keys]
+        }
+      }
+      donutData[i] = dk
+      i++
+      
+    }
+
+    $.plot("#donut-chart", donutData, {
+      series: {
+        pie: {
+          show: true,
+          radius: 1,
+          innerRadius: 0.5,
+          label: {
+            show: true,
+            radius: 2 / 3,
+            formatter: labelFormatter,
+            threshold: 0.1
+          }
+
+        }
+      },
+      legend: {
+        show: false
+      }
+    });
+    /*
+     * END DONUT CHART
+     */
+
+
+       /*
+   * Custom Label formatter
+   * ----------------------
+   */
+  function labelFormatter(label,series) {
+    return '<div style="font-size:13px; text-align:center; padding:2px; color: #fff; font-weight: 600;">'
+        + label
+        + "<br>"
+        + Math.round(series.percent) + "%</div>";
+  }
+</script>
+{% endblock script_end %}

@@ -112,17 +112,15 @@ def home(request):
     headers = {
             'Authorization': 'Token 7331a310c46884d2643ca9805aaf0d420ebfc831'
     }
-    
+
 
     stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/charts/24.json?field_name=_submission_time' , headers= headers).json();
-        
     gtdata = []
     
     for dt in get_item(stat,'data'):
         t = [str(get_item(dt,'_submission_time')),get_item(dt,'count')]
         gtdata.append(t)
-
-
+    
     #for case status 
     status_data = requests.get('https://dev.bitz-itc.com/ona/api/v1/charts/24.json?field_name=case_action' , headers= headers).json();
 
@@ -132,9 +130,6 @@ def home(request):
         lbl = str(dt['case_action'][0])
         vl = str(dt['count'])
         stdata.append({"label":str(lbl),"data":str(vl),"color":str(color[lbl])})
-
-
-   
 
     return render(request, 'helpline/home.html',
                   {'dashboard_stats': dashboard_stats,
@@ -146,7 +141,8 @@ def home(request):
                    'queue_pause_form': queue_pause_form,
                    'status_count': status_count,
                    'gdata':gtdata,
-                   'dt':stdata})
+                   'dt':stdata
+                   })
 
 
 @login_required
