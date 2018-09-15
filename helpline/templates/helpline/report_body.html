@@ -164,13 +164,13 @@
                   </thead>
                   <tbody>
                     {% for records in statrecords %}
-                    <tr ondblclick="window.open('/ona/demoadmin/forms/Case_Form/instance/#/' +  {{ records | get_item:'_id' }} )">
+                    <tr ondblclick="window.open('http://192.168.56.102:8000/helpline/forms/Case_Form/' + {{ records | get_item:'_id' }} )">
                       <td>{{ forloop.counter }}. </td>
                       {% for item_key in recordkeys %}
                       {% if not '_' == item_key|first %}
                       <td>
                         {% if item_key == 'case_id' %}
-                        <a href="/ona/demoadmin/forms/Case_Form/instance/#/{{ records | get_item:'_id' }}">{{  records | get_item:item_key }}</a>
+                        <a href="http://192.168.56.102:8000/helpline/forms/Case_Form/{{ records | get_item:'_id' }}">{{  records | get_item:item_key }}</a>
                         {% elif forloop.last %}
                         {{  records | get_item:'_submission_time' | slice:'10' }}
                         {% else %}

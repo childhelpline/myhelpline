@@ -79,6 +79,10 @@ import json
 from django.template.defaulttags import register
 from onadata.apps.logger.models import Instance, XForm
 
+from onadata.libs.utils.chart_tools import build_chart_data
+from onadata.libs.utils.user_auth import (get_xform_and_perms, has_permission,
+                                          helper_auth_helper)
+
 
 cfg = QPanelConfig()
 backend = Backend()
@@ -102,6 +106,36 @@ def home(request):
     queue_pause_form = QueuePauseForm()
     queues = get_data_queues()
 
+    """
+    Graph data
+    """
+    headers = {
+            'Authorization': 'Token 7331a310c46884d2643ca9805aaf0d420ebfc831'
+    }
+    
+
+    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/charts/24.json?field_name=_submission_time' , headers= headers).json();
+        
+    gtdata = []
+    
+    for dt in get_item(stat,'data'):
+        t = [str(get_item(dt,'_submission_time')),get_item(dt,'count')]
+        gtdata.append(t)
+
+
+    #for case status 
+    status_data = requests.get('https://dev.bitz-itc.com/ona/api/v1/charts/24.json?field_name=case_action' , headers= headers).json();
+
+    color = {"Closed":'#00a65a',"Escalate":'#f39c12',"Pending":'#00c0ef'}
+    stdata = []
+    for dt in  get_item(status_data,'data'):#status_data['data']:
+        lbl = str(dt['case_action'][0])
+        vl = str(dt['count'])
+        stdata.append({"label":str(lbl),"data":str(vl),"color":str(color[lbl])})
+
+
+   
+
     return render(request, 'helpline/home.html',
                   {'dashboard_stats': dashboard_stats,
                    'att': att,
@@ -110,7 +144,9 @@ def home(request):
                    'case_search_form': case_search_form,
                    'queue_form': queue_form,
                    'queue_pause_form': queue_pause_form,
-                   'status_count': status_count})
+                   'status_count': status_count,
+                   'gdata':gtdata,
+                   'dt':stdata})
 
 
 @login_required
@@ -361,7 +397,82 @@ def get_item(dictionary, key):
     return dictionary.get(key,"")
 
 @login_required
-def reports1(request, report, casetype='Call'):
+def caseview(request,form_name,case_id):
+    headers = {
+            'Authorization': 'Token 7331a310c46884d2643ca9805aaf0d420ebfc831'
+    }
+
+
+    """
+    Data Request and processing
+    """
+    #still need to determine service case_id_string dynamically for data/form url
+    service = Service.objects.get(id=2)
+    xform_det = service.walkin_xform
+    #instance_view_url = 'submission-instance' + owner.username + xform 
+    request_string = ''
+
+    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/24/' + case_id + request_string, headers= headers).json();
+    #form_details= requests.get('http://192.168.56.102:8000/ona/kemboicheru/forms/Case_Form/form.json',headers={'Authorization':'Token 68cf8a32a8f4af59333527fb58dbe1c2423249a0'})
+    history = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/24/' + case_id + '/history',headers=headers).json()
+
+    statrecords = []
+    recordkeys = []
+    history_rec = []
+
+    ##brings up data only for existing records
+    def get_records(recs):
+        return_obj = []
+        record = {}
+
+        for key,value in recs.items():
+            #if not (key.startswith('_') and key.endswith('_')):# str(key) == "_id":
+            key = str(key)
+            if key.find('/') != -1:
+                k = key.split('/')
+                l = len(k)
+                kk = str(k[l-1])
+            else:
+                kk = str(key)
+            if isinstance(value,dict) and len(value) >= 1:
+                record.update(get_records(value))
+            elif isinstance(value,list) and len(value) >= 1:
+                if isinstance(value[0],dict):
+                    record.update(get_records(value[0]))
+            else:
+                if not kk in recordkeys and not kk.endswith('ID') and str(value) != 'yes' and str(value) != 'no' and not (kk.startswith('_') and kk != '_id' and kk != '_submission_time'  and kk != '_last_edited'):
+                    recordkeys.append(kk)
+                record.update({kk : str(value).capitalize()})
+        return record
+
+
+    if isinstance(stat,dict) and len(stat) > 1:
+        statrecords.append(get_records(stat))
+
+    for hist in history:
+        if isinstance(hist,dict) and len(hist) > 1:
+            history_rec.append(get_records(hist))
+
+    if len(recordkeys) > 0:
+        recordkeys.append('Date Created')
+    else:
+        recordkeys = False
+
+    data = {
+        'stat':stat,
+        'statrecords':statrecords[0],
+        'recordkeys':recordkeys,
+        'history':history_rec,
+        'kemcount':0
+    }
+    htmltemplate = "helpline/instance.html"
+
+    return render(request, htmltemplate,data)
+
+
+
+@login_required
+def reports(request, report, casetype='Call'):
     headers = {
             'Authorization': 'Token 7331a310c46884d2643ca9805aaf0d420ebfc831'
     }
@@ -417,7 +528,7 @@ def reports1(request, report, casetype='Call'):
     xform_det = service.walkin_xform
     #instance_view_url = 'submission-instance' + owner.username + xform 
 
-    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/24' + request_string, headers= headers).json();
+    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/24?page=1&page_size=40&sort={"_id":1}' + request_string, headers= headers).json();
     #form_details= requests.get('https://dev.bitz-itc.com/ona/demoadmin/forms/Case_Form/form.json',headers=headers).json()
 
 
@@ -506,7 +617,7 @@ def reports1(request, report, casetype='Call'):
 
 
 @login_required
-def reports(request, report, casetype='Call'):
+def reports1(request, report, casetype='Call'):
     """Handle report rendering"""
     if report == 'nonanalysed':
         report = 'totalcases'
