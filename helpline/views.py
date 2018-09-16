@@ -31,6 +31,7 @@ from django.db.models import Sum
 from django.contrib.auth.views import login as django_login
 from django.contrib.auth.views import logout as django_logout
 from django.contrib import messages
+from django.contrib.sites.shortcuts import get_current_site
 from django.db.models.signals import post_save
 from django.conf import settings
 from django.utils.translation import gettext as _
@@ -97,7 +98,7 @@ def home(request):
         awt = request.user.HelplineUser.get_average_wait_time()
     except Exception as e:
         new = initialize_myaccount(request.user)
-        return redirect("/helpline/#%s" % (e))
+        return redirect("/helpline/#%s/new" % (e, new))
 
     dashboard_stats = get_dashboard_stats(request.user)
     status_count = get_status_count()
@@ -106,35 +107,50 @@ def home(request):
     queue_pause_form = QueuePauseForm()
     queues = get_data_queues()
 
-    """
-    Graph data
-    """
-    headers = {
-            'Authorization': 'Token 7331a310c46884d2643ca9805aaf0d420ebfc831'
-    }
-    
+    default_service = Service.objects.all().first()
+    default_service_xform = default_service.call_xform
+    default_service_auth_token = default_service_xform.user.auth_token
+    current_site = get_current_site(request)
 
-    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/charts/24.json?field_name=_submission_time' , headers= headers).json();
-        
+
+    url = 'https://%s/ona/api/v1/charts/%s.json?field_name=_submission_time' % (
+        current_site,
+        default_service_xform.pk
+    )
+
+    # Graph data
+    headers = {
+            'Authorization': 'Token %s' % (default_service_auth_token)
+    }
+
+    stat = requests.get(
+        url,
+        headers=headers
+    ).json()
     gtdata = []
-    
-    for dt in get_item(stat,'data'):
-        t = [str(get_item(dt,'_submission_time')),get_item(dt,'count')]
+
+    for dt in get_item(stat, 'data'):
+        t = [str(get_item(dt, '_submission_time')), get_item(dt, 'count')]
         gtdata.append(t)
 
+    # for case status
+    status_data = requests.get(
+        'https://%s/ona/api/v1/charts/7.json?field_name=case_action' % (
+            current_site),
+        headers=headers).json()
 
-    #for case status 
-    status_data = requests.get('https://dev.bitz-itc.com/ona/api/v1/charts/24.json?field_name=case_action' , headers= headers).json();
-
-    color = {"Closed":'#00a65a',"Escalate":'#f39c12',"Pending":'#00c0ef'}
+    color = {"Closed": '#00a65a', "Escalate": '#f39c12', "Pending": '#00c0ef'}
     stdata = []
-    for dt in  get_item(status_data,'data'):#status_data['data']:
+    for dt in get_item(status_data, 'data'):
         lbl = str(dt['case_action'][0])
         vl = str(dt['count'])
-        stdata.append({"label":str(lbl),"data":str(vl),"color":str(color[lbl])})
-
-
-   
+        stdata.append(
+            {
+                "label": str(lbl),
+                "data": str(vl),
+                "color": str(color[lbl])
+            }
+        )
 
     return render(request, 'helpline/home.html',
                   {'dashboard_stats': dashboard_stats,
@@ -145,8 +161,9 @@ def home(request):
                    'queue_form': queue_form,
                    'queue_pause_form': queue_pause_form,
                    'status_count': status_count,
-                   'gdata':gtdata,
-                   'dt':stdata})
+                   'gdata': gtdata,
+                   'dt': stdata
+                   })
 
 
 @login_required
@@ -396,25 +413,33 @@ def faq(request):
 def get_item(dictionary, key):
     return dictionary.get(key,"")
 
+
 @login_required
-def caseview(request,form_name,case_id):
+def caseview(request, form_name, case_id):
+    """View case or submission information"""
+
+    default_service = Service.objects.all().first()
+    default_service_xform = default_service.call_xform
+    default_service_auth_token = default_service_xform.user.auth_token
+    current_site = get_current_site(request)
+
+    url = 'https://%s/ona/api/v1/data/%s/' % (
+        current_site,
+        default_service_xform.pk
+    )
+
+    # Graph data
     headers = {
-            'Authorization': 'Token 7331a310c46884d2643ca9805aaf0d420ebfc831'
+            'Authorization': 'Token %s' % (default_service_auth_token)
     }
 
-
-    """
-    Data Request and processing
-    """
-    #still need to determine service case_id_string dynamically for data/form url
-    service = Service.objects.get(id=2)
-    xform_det = service.walkin_xform
-    #instance_view_url = 'submission-instance' + owner.username + xform 
+    # Data Request and processing
+    # Get default service
+    xform_det = default_service.walkin_xform
     request_string = ''
 
-    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/24/' + case_id + request_string, headers= headers).json();
-    #form_details= requests.get('http://192.168.56.102:8000/ona/kemboicheru/forms/Case_Form/form.json',headers={'Authorization':'Token 68cf8a32a8f4af59333527fb58dbe1c2423249a0'})
-    history = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/24/' + case_id + '/history',headers=headers).json()
+    stat = requests.get(url + case_id + request_string, headers=headers).json()
+    history = requests.get(url + case_id + '/history', headers=headers).json()
 
     statrecords = []
     recordkeys = []
@@ -473,18 +498,24 @@ def caseview(request,form_name,case_id):
 
 @login_required
 def reports(request, report, casetype='Call'):
+    """Report processing and rendering"""
+    default_service = Service.objects.all().first()
+    default_service_xform = default_service.call_xform
+    default_service_auth_token = default_service_xform.user.auth_token
+    current_site = get_current_site(request)
+
+
+    url = 'https://%s/ona/api/v1/data/%s' % (
+        current_site,
+        default_service_xform.pk
+    )
+
+    # Graph data
     headers = {
-            'Authorization': 'Token 7331a310c46884d2643ca9805aaf0d420ebfc831'
+            'Authorization': 'Token %s' % (default_service_auth_token)
     }
 
-    """
-    Data view displays submission data.
-    """
-    username = request.user.username
-    id_string = 'Case_Form'
-    owner = get_object_or_404(User, username__iexact=username)
-    xform = get_form({'id_string__iexact': id_string, 'user': owner})
-
+    # Data view displays submission data.
     query = request.GET.get('q', '')
     datetime_range = request.GET.get("datetime_range")
     agent = request.GET.get("agent")
@@ -518,18 +549,8 @@ def reports(request, report, casetype='Call'):
         request_string += '&date_created__year__gte=' + y_from
         request_string += '&date_created__year__lte=' + y_to
 
-
-
-    """
-    Data Request and processing
-    """
-    #still need to determine service case_id_string dynamically for data/form url
-    service = Service.objects.get(id=2)
-    xform_det = service.walkin_xform
-    #instance_view_url = 'submission-instance' + owner.username + xform 
-
-    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/24?page=1&page_size=40&sort={"_id":1}' + request_string, headers= headers).json();
-    #form_details= requests.get('https://dev.bitz-itc.com/ona/demoadmin/forms/Case_Form/form.json',headers=headers).json()
+    stat = requests.get('%s?page=1&page_size=40&sort={"_id":1}' % (
+        url) + request_string, headers=headers).json()
 
 
     statrecords = []
@@ -571,7 +592,7 @@ def reports(request, report, casetype='Call'):
         recordkeys = False
 
     sort = request.GET.get('sort')
-    report_title = {report :_(str(report).capitalize() + " Reports")}
+    report_title = {report: _(str(report).capitalize() + " Reports")}
     '''report_title = {
         'performance': _('Performance Reports'),
         'counsellor': _('Counsellor Reports'),
@@ -594,17 +615,22 @@ def reports(request, report, casetype='Call'):
         return exporter.response('table.{}'.format(export_format))
     table.paginate(page=request.GET.get('page', 1), per_page=10)
 
-    data = {'owner': owner, 'xform': xform,'title': report_title.get(report),
+    data = {
+        'owner': default_service_xform.user,
+        'xform': default_service_xform,
+        'title': report_title.get(report),
         'report': report,
         'form': form,
         'datetime_range': datetime_range,
         'dashboard_stats': dashboard_stats,
         'table': table,
         'query': query,
-        'statrecords':statrecords,
-        'recordkeys':recordkeys}
+        'statrecords': statrecords,
+        'recordkeys': recordkeys
+    }
 
-    callreports = ["missedcalls","voicemails","totalcalls","answeredcalls","abandonedcalls"]
+    callreports = ["missedcalls", "voicemails", "totalcalls",
+                   "answeredcalls", "abandonedcalls"]
 
     if report in callreports:
         htmltemplate = "helpline/reports.html"
@@ -613,7 +639,7 @@ def reports(request, report, casetype='Call'):
     else:
         htmltemplate = "helpline/report_body.html"
 
-    return render(request, htmltemplate,data)
+    return render(request, htmltemplate, data)
 
 
 @login_required
@@ -627,12 +653,6 @@ def reports1(request, report, casetype='Call'):
     category = request.GET.get("category", "")
     form = ReportFilterForm(request.GET)
     dashboard_stats = get_dashboard_stats(request.user)
-
-    '''headers = {
-            'Authorization': 'Token 7331a310c46884d2643ca9805aaf0d420ebfc831'
-    }
-
-    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/24',headers= headers).json();'''
 
     sort = request.GET.get('sort')
     report_title = {
@@ -658,7 +678,7 @@ def reports1(request, report, casetype='Call'):
 
     table.paginate(page=request.GET.get('page', 1), per_page=10)
 
-    return render(request, 'helpline/reports.html', { #dashboardreports
+    return render(request, 'helpline/reports.html', {
         'title': report_title.get(report),
         'report': report,
         'form': form,
