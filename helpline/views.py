@@ -488,11 +488,12 @@ def caseview(request, form_name, case_id):
         'statrecords':statrecords[0],
         'recordkeys':recordkeys,
         'history':history_rec,
+        'xform': default_service_xform,
         'kemcount':0
     }
     htmltemplate = "helpline/instance.html"
 
-    return render(request, htmltemplate,data)
+    return render(request, htmltemplate, data)
 
 
 
