@@ -382,8 +382,6 @@ audio{
 
   function receiveMessage(event)
   {
-      if (event.origin !== "{{ enketo_url }}")
-        return;
         var resp = JSON.parse(event.data)
       if(resp.enketoEvent == 'submissionsuccess'){
           // Show case action form after successful case submission
