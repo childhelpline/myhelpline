@@ -140,7 +140,7 @@ audio{
 
               var doc = iframe.contentWindow.document;
               var doc = iframe.contentDocument ? iframe.contentDocument: iframe.contentWindow.document;
-              var frmObj = doc.getElementsByTagName('form')
+              var frmObj = doc.getElementsByTagName('form')[0]
               //var id = frmObj.arr('id')
               //var frm = doc.forms[id]
               if(!kk.startsWith('_')){
