@@ -143,8 +143,11 @@ audio{
               var frmObj = doc.getElementsByTagName('form')
               //var id = frmObj.arr('id')
               //var frm = doc.forms[id]
-              console.log(kk + " :: " + movie[kk])
-              frmObj.elements[kk].value = movie[kk]
+              if(!kk.startsWith('_')){
+                console.log(kk + " :: " + movie[kk])
+                frmObj.elements[kk].value = movie[kk]
+              }
+              
 
 
           }
