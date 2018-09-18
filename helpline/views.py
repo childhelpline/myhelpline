@@ -99,7 +99,7 @@ def home(request):
         awt = request.user.HelplineUser.get_average_wait_time()
     except Exception as e:
         new = initialize_myaccount(request.user)
-        return redirect("/helpline/#%s/new" % (e, new))
+        return redirect("/helpline/#%s/new%s" % (e, new))
 
     dashboard_stats = get_dashboard_stats(request.user)
     status_count = get_status_count()
