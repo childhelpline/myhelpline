@@ -403,7 +403,7 @@ def caseview(request,form_name,case_id):
     Data Request and processing
     """
     #still need to determine service case_id_string dynamically for data/form url
-    service = Service.objects.get(id=2)
+    service = Service.objects.all().first()
     xform_det = service.walkin_xform
     #instance_view_url = 'submission-instance' + owner.username + xform 
     request_string = ''
@@ -520,7 +520,7 @@ def reports(request, report, casetype='Call'):
     Data Request and processing
     """
     #still need to determine service case_id_string dynamically for data/form url
-    service = Service.objects.get(id=2)
+    service = Service.objects.all().first()
     xform_det = service.walkin_xform
     #instance_view_url = 'submission-instance' + owner.username + xform 
 

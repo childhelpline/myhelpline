@@ -422,8 +422,6 @@ audio{
 
   function receiveMessage(event)
   {
-      if (event.origin !== "{{ enketo_url }}")
-        return;
         var resp = JSON.parse(event.data)
         console.log("CC: " + resp);
       if(resp.enketoEvent == 'submissionsuccess'){
