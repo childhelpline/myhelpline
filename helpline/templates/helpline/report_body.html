@@ -170,7 +170,7 @@
                       {% if not '_' == item_key|first %}
                       <td>
                         {% if item_key == 'case_id' %}
-                        <a href="{% url 'caseview' 'Case_Form' records|get_item:'_id' %}">{{  records | get_item:item_key }}</a>
+                        <a href="/helpline/forms/{{ xform.id_string }}/{{ records | get_item:'_id' }}">{{  records | get_item:item_key }}</a>
                         {% elif forloop.last %}
                         {{  records | get_item:'_submission_time' | slice:'10' }}
                         {% else %}
