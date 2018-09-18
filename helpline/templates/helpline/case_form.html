@@ -115,9 +115,49 @@ audio{
   }
 
   function contactSearch(){
-    var contact_search_form = '#contact-search-form';
 
-    $.ajax({
+    var contact_search_form = '#contact-search-form';
+    var form = $("#contact-search-form")[0]
+    var name = form['name'].value
+    var telephone = form['telephone'].value
+
+    // Create a request variable and assign a new XMLHttpRequest object to it.
+    var request = new XMLHttpRequest();
+
+    // Open a new connection, using the GET request on the URL endpoint
+    request.open('GET', 'https://dev.bitz-itc.com/ona/api/v1/data/24?query={"client_details/client_sex":{"$i":"male"}}&format=json', true);
+    request.setRequestHeader("Authorization", "Token 7331a310c46884d2643ca9805aaf0d420ebfc831");
+    //request.setRequestHeader("Content-type", "application/json");
+    request.onload = function (data) {
+      // Begin accessing JSON data here
+      var data = JSON.parse(this.response);
+      if (request.status >= 200 && request.status < 400) {
+        movie = data[0]
+        //data.forEach(movie => {
+          for(var kk in movie){
+              var iframe = document.getElementById("helpline-forms");
+              document.domain = "bitz-itc.com"
+
+              var doc = iframe.contentWindow.document;
+              var doc = iframe.contentDocument ? iframe.contentDocument: iframe.contentWindow.document;
+              var frmObj = doc.getElementsByTagName('form')
+              var id = frmObj.arr('id')
+              var frm = doc.forms[id]
+              console.log(kk + " :: " + movie[kk])
+              frm.elements[kk].value = movie[kk]
+
+
+          }
+        //});
+      }
+      }
+
+    // Send request
+    request.send();
+
+
+
+    /*$.ajax({
       url: "{% url 'contact_search_form' %}",
       type: "POST",
       data: $("#contact-search-form").serialize(),
@@ -138,7 +178,7 @@ audio{
         //$(case_form).find('.error-message').show()
         $("#error-message").html("Error");
       }
-    });
+    });*/
   }
 
   function saveContact(){
@@ -362,10 +402,10 @@ audio{
                                 </div>
                                 <!-- /.col -->
                               </div>
-                              <!-- /.row -->
+                              <!-- /.row {{ iframe_url }} -->
                             </div>
                 <div id="frame_iframe"  class="{% if form_name != 'webonline' and form_name != 'qa' %} hidden {% endif %}">
-                  <iframe src="{{ iframe_url }}" style="width: 100%; height: 80vh; border: none;"></iframe>
+                  <iframe src="https://enketo.bitz-itc.com/::iCsRcL9K" id="helpline-forms" style="width: 100%; height: 80vh; border: none;"></iframe>
                 </div>
               </div>
           </div>
@@ -385,6 +425,7 @@ audio{
       if (event.origin !== "{{ enketo_url }}")
         return;
         var resp = JSON.parse(event.data)
+        console.log("CC: " + resp);
       if(resp.enketoEvent == 'submissionsuccess'){
           // Show case action form after successful case submission
               $('#frame-case-action').removeClass('hidden');

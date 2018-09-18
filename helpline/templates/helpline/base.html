@@ -1042,6 +1042,27 @@ $('#example2').DataTable({
 });
 $('.dt-button').addClass("btn btn-md btn-primary btn-square");
 $('.dt-buttons, #example1_info').addClass("col-md-6 col-sm-12");
+
+function get_contact_to_iframe(){
+var iframe = document.getElementById("helpline-forms");
+document.domain = "bitz-itc.com"
+
+  var iframe = jQuery(this);
+  jQuery(window).resize(function() {
+    iframe.height(iframe[0].contentWindow.document.body.scrollHeight + 10);
+  });
+  jQuery(window).trigger('resize');
+
+var doc = iframe.contentWindow.document;
+var doc = iframe.contentDocument ? iframe.contentDocument: iframe.contentWindow.document;
+var frmObj = doc.getElementsByTagName('form')
+var frm = doc.forms['Case_Form_walkin']
+
+frm.elements["/Case_Form/additional_client_details/guardian_name"].value = "Kemboi Cheruiyot"
+
+}
+
+
 </script>
 
 
