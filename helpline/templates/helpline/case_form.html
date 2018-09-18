@@ -120,43 +120,7 @@ audio{
     var form = $("#contact-search-form")[0]
     var name = form['name'].value
     var telephone = form['telephone'].value
-
-    // Create a request variable and assign a new XMLHttpRequest object to it.
-    var request = new XMLHttpRequest();
-
-    // Open a new connection, using the GET request on the URL endpoint
-    request.open('GET', 'https://dev.bitz-itc.com/ona/api/v1/data/24?query={"client_details/client_sex":{"$i":"male"}}&format=json', true);
-    request.setRequestHeader("Authorization", "Token 7331a310c46884d2643ca9805aaf0d420ebfc831");
-    //request.setRequestHeader("Content-type", "application/json");
-    request.onload = function (data) {
-      // Begin accessing JSON data here
-      var data = JSON.parse(this.response);
-      if (request.status >= 200 && request.status < 400) {
-        movie = data[0]
-        //data.forEach(movie => {
-          for(var kk in movie){
-              var iframe = document.getElementById("helpline-forms");
-              document.domain = "bitz-itc.com"
-
-              var doc = iframe.contentWindow.document;
-              var doc = iframe.contentDocument ? iframe.contentDocument: iframe.contentWindow.document;
-              var frmObj = doc.getElementsByTagName('form')[0]
-              //var id = frmObj.arr('id')
-              //var frm = doc.forms[id]
-              if(!kk.startsWith('_')){
-                console.log(kk + " :: " + movie[kk])
-                frmObj.elements[kk].value = movie[kk]
-              }
-              
-
-
-          }
-        //});
-      }
-      }
-
-    // Send request
-    request.send();
+    prefill()
 
 
 
