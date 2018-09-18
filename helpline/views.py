@@ -34,6 +34,7 @@ from django.contrib import messages
 from django.db.models.signals import post_save
 from django.conf import settings
 from django.utils.translation import gettext as _
+from django.utils import timezone
 
 # Django 1.10 breaks reverse imports.
 try:
@@ -1063,7 +1064,7 @@ def case_form(request, form_name):
 
                 report, contact, address = get_case_info(case_number)
 
-                now = datetime.now()
+                now = timezone.now()
                 callstart = "%s:%s:%s" % (now.hour, now.minute, now.second)
                 notime = "00:00:00"
                 report = Report(case_id=my_case.hl_case,
@@ -1252,7 +1253,7 @@ def my_forms(request, form_name):
                                                                             hl_calls=0,
                                                                             hl_status='Available',
                                                                             hl_time=int(time.time()))
-                now = datetime.now()
+                now = timezone.now()
                 callstart = "%s:%s:%s" % (now.hour, now.minute, now.second)
                 notime = "00:00:00"
                 report = Report(case_id=my_case.hl_case,
@@ -1599,7 +1600,7 @@ def save_case_action(request):
         hl_user.save()
         report.casestatus = case_status
         report.escalatename = escalate_to.user.username if escalate_to else None
-        report.callend = datetime.now().strftime('%H:%M:%S.%f')
+##        report.callend = timezone.now().strftime('%H:%M:%S.%f')
         report.hl_time = calendar.timegm(time.gmtime())
         report.save()
 
@@ -1659,8 +1660,8 @@ def contact_create_case(request):
         case.hl_popup = 'No'
         case.save()
         report.case = case
-        report.callstart = datetime.now().strftime('%H:%M:%S.%f')
-        report.calldate = datetime.now().strftime('%d-%m-%Y')
+        report.callstart = timezone.now().strftime('%H:%M:%S.%f')
+        report.calldate = timezone.now().strftime('%d-%m-%Y')
         report.queuename = default_service.queue
         report.telephone = contact.hl_contact
         report.save()
@@ -1772,7 +1773,7 @@ def get_dashboard_stats(user, interval=None):
 
     midnight_string = datetime.combine(
         date.today(), datetime_time.min).strftime('%m/%d/%Y %I:%M %p')
-    now_string = datetime.now().strftime('%m/%d/%Y %I:%M %p')
+    now_string = timezone.now().strftime('%m/%d/%Y %I:%M %p')
     # Get the average seconds of hold time from last midnight.
 
     total_calls = Report.objects.filter(
