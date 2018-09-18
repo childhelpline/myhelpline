@@ -55,139 +55,92 @@ div.scrollmenu {
     {% trans "REPORT" %} <i class="fa fa-angle-right"></i> {{ title }}
   </h1>
 </section>
-<div class="row">
-  <div class="col-md-12">
-    <div class="box">
-      <div class="box-header with-border">
-        <!--h3 class="box-title">Filter Parameters:</h3-->
 
-        <div class="col-md-12 report-filters">
-          {% load django_tables2 %}
-          <div id="form_collapse" class="in" style="height: auto;">
-            {% block filterform %}
-              <!--div class="col-md-12">
-                <div class="box box-default">
-                  <div class="box-header with-border">
-                   <h3 class="box-title">Filter Parameters:</h3>
+<!-- Main content -->
+<section class="content">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="box">
+        <div class="box-header with-border">
+          <!--h3 class="box-title">Filter Parameters:</h3-->
 
-                </div>
-
-                <!--div class="box-body">
-                  <!-- Filter Form -->
-                  <form action="#">
-                    <!-- Date and time range -->
-
-                    <script>
-                      $(function() {
-                        $('#datetimerange').daterangepicker({
-                         opens: 'left',
-                         timePicker: true,
-                         locale: {
-                          format: 'MM/DD/YYYY h:mm A'
-                        }
-
-                      }, function(start, end, label) {
-                       console.log("A new date selection was made: " + start.format('M/DD hh:mm A') + ' to ' + end.format('M/DD hh:mm A'));
-                     });
-                      });
-                    </script>
-
-
-                    <div class="form-group col-md-4" style="padding-left: 0px;">
-                      <label>Choose Date and time Range:</label>
-                      <div class="input-group">
-                        <div class="input-group-addon">
-                         <i class="fa fa-calendar"></i>
-                       </div>
-                       {{ form.datetime_range }}
-                     </div><!-- /.input group -->
-                   </div><!-- /.form group -->
-                   <div class="form-group col-md-4">
-                    <label>Counsellor:</label>
-                    <div class="input-group">
-                      <div class="input-group-addon">
-                       <i class="fa fa-users"></i>
-                     </div>
-                     {{ form.agent }}
-                   </div><!-- /.input group -->
-                 </div><!-- /.form group -->
-                 <div class="form-group col-md-4">
-                  <label>Category:</label>
+          <div class="col-md-12 report-filters">
+            {% load django_tables2 %}
+            <div id="form_collapse" class="in" style="height: auto;">
+              {% block filterform %}
+              <!-- Filter Form -->
+              <form action="#">
+                <!-- Date and time range -->
+                <script>
+                  $(function() {
+                    $('#datetimerange').daterangepicker({
+                     opens: 'left',
+                     timePicker: true,
+                     locale: {
+                      format: 'MM/DD/YYYY h:mm A'
+                    }
+                  }, function(start, end, label) {
+                   console.log("A new date selection was made: " + start.format('M/DD hh:mm A') + ' to ' + end.format('M/DD hh:mm A'));
+                 });
+                  });
+                </script>
+                <div class="form-group col-md-4" style="padding-left: 0px;">
+                    <label>{% trans "Choose Date and time Range" %}:</label>
                   <div class="input-group">
                     <div class="input-group-addon">
-                     <i class="fa fa-th"></i>
+                      <i class="fa fa-calendar"></i>
+                    </div>
+                    {{ form.datetime_range }}
+                  </div><!-- /.input group -->
+                </div><!-- /.form group -->
+                <div class="form-group col-md-4">
+                    <label>{% trans "Agent" %}:</label>
+                  <div class="input-group">
+                    <div class="input-group-addon">
+                      <i class="fa fa-users"></i>
+                    </div>
+                    {{ form.agent }}
+                  </div><!-- /.input group -->
+                </div><!-- /.form group -->
 
-                   </div>
-                   {{ form.category }}
-                 </div><!-- /.input group -->
-               </div><!-- /.form group -->
-
-
-
-               <div class="form-group col-md-4">
-                <label>Case Status:</label>
-                <div class="input-group">
-                  <div class="input-group-addon">
-                   <i class="fa fa-th"></i>
-
-                 </div>
-                 {{ form.case_status }}
-               </div><!-- /.input group -->
-             </div><!-- /.form group -->
-
-
-               <div class="form-group col-md-4">
-                <label>Interventions:</label>
-                <div class="input-group">
-                  <div class="input-group-addon">
-                   <i class="fa fa-th"></i>
-
-                 </div>
-                 {{ form.interventions }}
-               </div><!-- /.input group -->
-             </div><!-- /.form group -->
-
-
-             {{ form.queueid }}
-             <br>
-               <div class="form-group col-md-4">
-                <div class="input-group pt-20">
-                 <input type="button" value="Fetch Reports" id="total-calls-search-btn" class="btn btn-success btn-sm btn-flat" onclick="sendtoReportFactory();">
-               </div><!-- /.input group -->
-             </div>
-           </form>
-             <!-- End Filter Form ->
-           </div>
-         </div-->
-       </div>
-       {% endblock filterform %}
-     </div>
-   </div>
-   <div class="box-body">
-    <div class="row">
-     <div class="scrollmenu col-md-12">
-      <div id="showustheresultsnow">
-        <div class="col-md-4">
-          {% for format in table.export_formats %}
-          <a class="btn btn-app"  href="{% querystring '_export'=format %}">
-           <i class="fa fa-save"></i> <strong>{% trans "Export" %} .{{ format }}</strong>
-         </a>
-         {% endfor %}
-       </div>
-
-       {% if table %}
-       {% render_table table %}
-       {% endif %}
-     </div>
-   </div>
- </div>
- <!-- /.col -->
-</div>
-<!-- /.row -->
-</div>
-<!-- ./box-body -->
-</div>
-</div>
+                {{ form.queueid }}
+                <br>
+                <div class="form-group col-md-4">
+                  <div class="input-group pt-20">
+                    <input type="button" value="Fetch Reports" id="total-calls-search-btn" class="btn btn-success btn-sm btn-flat" onclick="sendtoReportFactory();">
+                  </div><!-- /.input group -->
+                </div>
+              </form>
+              <!-- End Filter Form -->
+            </div>
+            {% endblock filterform %}
+          </div>
+        </div>
+        <div class="box-body">
+          <div class="row">
+            <div class="scrollmenu col-md-12">
+              <div id="showustheresultsnow">
+                <div class="col-md-4">
+                  {% for format in table.export_formats %}
+                  <a class="btn btn-app"  href="{% querystring '_export'=format %}">
+                    <i class="fa fa-save"></i> <strong>{% trans "Export" %} .{{ format }}</strong>
+                  </a>
+                  {% endfor %}
+                </div>
+                {% if table %}
+                {% render_table table %}
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          <!-- /.col -->
+        </div>
+        <!-- /.row -->
+      </div>
+      <!-- ./box-body -->
+    </div>
+  </div>
+</section>
 
 <script type="text/javascript">
   function sendtoReportFactory(){
@@ -196,9 +149,9 @@ div.scrollmenu {
     var agent = document.getElementById("agent").value;
     var c = document.getElementById("showustheresultsnow");
     var query = document.getElementById("navbar-search-input").value;
-    var category = document.getElementById("category").value;
-            //c.innerHTML = '<div align="center">Loading Report.. ';
-            $("#showustheresultsnow").fadeIn("slow");
-            $("#showustheresultsnow").load("{% url 'ajax_admin_report' report %}?datetime_range="+ encodeURIComponent(reservationtime) +'&sevc='+ encodeURIComponent(queueid) +'&agent='+ encodeURIComponent(agent)+'&q='+ encodeURIComponent(query)+'&category='+ encodeURIComponent(category));  }
-          </script>
-          {% endblock content %}
+    //c.innerHTML = '<div align="center">Loading Report.. ';
+    $("#showustheresultsnow").fadeIn("slow");
+    $("#showustheresultsnow").load("{% url 'ajax_admin_report' report %}?datetime_range="+ encodeURIComponent(reservationtime) +'&sevc='+ encodeURIComponent(queueid) +'&agent='+ encodeURIComponent(agent)+'&q='+ encodeURIComponent(query));  
+  }
+</script>
+{% endblock content %}

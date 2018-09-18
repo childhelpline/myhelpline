@@ -1,12 +1,6 @@
 {% extends 'helpline/base.html' %}
 {% load i18n %}
-
 {% block additional-headers %}
-<!--link href="/static/backgrid/lib/backgrid.css" rel="stylesheet"-->
-<link href="https://dev.bitz-itc.com/static/backgrid/lib/backgrid.css" rel="stylesheet">
-<link rel="stylesheet" href="/static/bower_components/backgrid-filter/backgrid-filter.min.css" />
-<link rel="stylesheet" href="/static/bower_components/backgrid-paginator/backgrid-paginator.min.css" />
-<link href="/static/css/data_view.css" rel="stylesheet">
 {% endblock %}
 {% block box %}{% endblock %}
 {% block navbar_nav %}
@@ -47,186 +41,179 @@
 
 {% endblock navbar_nav %}
 
+{% block content %}
+<section class="content-header">
+  <h1>
+    {% trans "REPORT" %} <i class="fa fa-angle-right"></i> {{ title }}<small>My Cases  [<a href="{% url "form-show" owner.username xform.id_string %}">{{ xform.title }}</a>]</small>
+  </h1>
+  <ol class="breadcrumb">
+    <li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
+    <li><a href="#">Cases</a></li>
+    <li class="active">{{ xform.title }}</li>
+  </ol>
+</section>
+<!-- Main content -->
+<section class="content"  id="data-view">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="box">
+        <div class="box-header with-border">
+          <div class="col-md-12 report-filters">
+            {% load django_tables2 %}
+            <div id="form_collapse" class="in" style="height: auto;">
+              {% block filterform %}
+              <!-- Filter Form -->
+              <form action="#">
+                <!-- Date and time range -->
+                <script>
+                  $(function() {
+                    $('#datetimerange').daterangepicker({
+                     opens: 'left',
+                     timePicker: true,
+                     locale: {
+                      format: 'MM/DD/YYYY h:mm A'
+                    }
+
+                  }, function(start, end, label) {
+                   console.log("A new date selection was made: " + start.format('M/DD hh:mm A') + ' to ' + end.format('M/DD hh:mm A'));
+                 });
+                  });
+                </script>
 
 
-<div class="col-md-12 report-filters">
-  {% load django_tables2 %}
-  <div id="form_collapse" class="in" style="height: auto;">
-    {% block filterform %}
-              <!--div class="col-md-12">
-                <div class="box box-default">
-                  <div class="box-header with-border">
-                   <h3 class="box-title">Filter Parameters:</h3>
-
-                </div>
-
-                <!--div class="box-body">
-                  <!-- Filter Form -->
-                  <form action="#">
-                    <!-- Date and time range -->
-
-                    <script>
-                      $(function() {
-                        $('#datetimerange').daterangepicker({
-                         opens: 'left',
-                         timePicker: true,
-                         locale: {
-                          format: 'MM/DD/YYYY h:mm A'
-                        }
-
-                      }, function(start, end, label) {
-                       console.log("A new date selection was made: " + start.format('M/DD hh:mm A') + ' to ' + end.format('M/DD hh:mm A'));
-                     });
-                      });
-                    </script>
+                <div class="form-group col-md-4" style="padding-left: 0px;">
+                  <label>Choose Date and time Range:</label>
+                  <div class="input-group">
+                    <div class="input-group-addon">
+                      <i class="fa fa-calendar"></i>
+                    </div>
+                    {{ form.datetime_range }}
+                  </div><!-- /.input group -->
+                </div><!-- /.form group -->
 
 
-                    <div class="form-group col-md-4" style="padding-left: 0px;">
-                      <label>Choose Date and time Range:</label>
-                      <div class="input-group">
-                        <div class="input-group-addon">
-                         <i class="fa fa-calendar"></i>
-                       </div>
-                       {{ form.datetime_range }}
-                     </div><!-- /.input group -->
-                   </div><!-- /.form group -->
-                   <div class="form-group col-md-4">
-                    <label>Counsellor:</label>
-                    <div class="input-group">
-                      <div class="input-group-addon">
-                       <i class="fa fa-users"></i>
-                     </div>
-                     {{ form.agent }}
-                   </div><!-- /.input group -->
-                 </div><!-- /.form group -->
-                 <div class="form-group col-md-4">
+                <!--div class="form-group col-md-4">
+                  <label>Counsellor:</label>
+                  <div class="input-group">
+                    <div class="input-group-addon">
+                      <i class="fa fa-users"></i>
+                    </div>
+                    {{ form.agent }}
+                  </div><!-- /.input group ->
+                </div><!-- /.form group -->
+
+
+                <!--div class="form-group col-md-4">
                   <label>Category:</label>
                   <div class="input-group">
                     <div class="input-group-addon">
-                     <i class="fa fa-th"></i>
+                      <i class="fa fa-th"></i>
+                    </div>
+                    {{ form.category }}
+                  </div><!-- /.input group ->
+                </div><!-- /.form group -->
 
-                   </div>
-                   {{ form.category }}
-                 </div><!-- /.input group -->
-               </div><!-- /.form group -->
+                <!--div class="form-group col-md-4">
+                  <label>Case Status:</label>
+                  <div class="input-group">
+                    <div class="input-group-addon">
+                      <i class="fa fa-th"></i>
+                    </div>
+                    {{ form.case_status }}
+                  </div><!-- /.input group ->
+                </div><!-- /.form group -->
 
-
-
-               <div class="form-group col-md-4">
-                <label>Case Status:</label>
-                <div class="input-group">
-                  <div class="input-group-addon">
-                   <i class="fa fa-th"></i>
-
-                 </div>
-                 {{ form.case_status }}
-               </div><!-- /.input group -->
-             </div><!-- /.form group -->
-
-
-             <div class="form-group col-md-4">
-              <label>Interventions:</label>
-              <div class="input-group">
-                <div class="input-group-addon">
-                 <i class="fa fa-th"></i>
-
-               </div>
-               {{ form.interventions }}
-             </div><!-- /.input group -->
-           </div><!-- /.form group -->
-
-
-           {{ form.queueid }}
-           <br>
-           <div class="form-group col-md-4">
-            <div class="input-group pt-20">
-             <input type="button" value="Fetch Reports" id="total-calls-search-btn" class="btn btn-success btn-sm btn-flat" onclick="sendtoReportFactory();">
-           </div><!-- /.input group -->
-         </div>
-       </form>
-             <!-- End Filter Form ->
-           </div>
-         </div-->
-       </div>
-       {% endblock filterform %}
-     </div>
-   </div>
-   
-   {% block content %}
-
-   <!-- Content Header (Page header) -->
-   <section class="content-header">
-    <h1>
-      Cases
-      <small>My Cases  [<a href="{% url "form-show" owner.username xform.id_string %}">{{ xform.title }}</a>]</small>
-    </h1>
-    <ol class="breadcrumb">
-      <li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
-      <li><a href="#">Cases</a></li>
-      <li class="active">My Cases</li>
-    </ol>
-  </section>
-
-  <!-- Main content -->
-  <section class="content"  id="data-view">
-    <div class="row">
-      <div class="col-xs-12">
-        <div class="box">
-          <!--div class="box-header">
-            <h3 class="box-title">{% trans "Data View" %}<small><a href="{% url "form-show" owner.username xform.id_string %}">{{ xform.title }}</a>
-            </small></h3>
-          </div-->
-          <!-- /.box-header -->
-          <div class="box-body">
-            <div class="row">
-              <span class="col-md-12">
-                <div class="data-table-container">
+                <!--div class="form-group col-md-4">
+                  <label>Interventions:</label>
+                  <div class="input-group">
+                    <div class="input-group-addon">
+                      <i class="fa fa-th"></i>
+                    </div>
+                    {{ form.interventions }}
+                  </div><!-- /.input group ->
+                </div><!-- /.form group -->
+                {{ form.queueid }}
+                <br>
+                <div class="form-group col-md-4">
+                  <div class="input-group" style="padding-top: 5px;">
+                    <input type="submit" value="Fetch Reports" id="total-calls-search-btn" class="btn btn-success btn-md btn-flat" onclick="sendtoReportFactory();">
+                  </div><!-- /.input group -->
                 </div>
-                <div style="clear: both;"></div>
-              </span>
-              <span class="col-md-12">
-                <div class="data-table-data table table-responsive">
-                  <table id="data-table-data">
-                    <tbody></tbody>
-                  </table>
-                </div>
-                <div style="clear: both;"></div>
-              </span>
+              </form>
+              <!-- End Filter Form -->
+            </div>
+            {% endblock filterform %}
+          </div>
+        </div>
+        <!-- /.box-header -->
+        <div class="box-body">
+          <div class="row">
+            <div class="col-md-12">
+              <div class="data-table-data table table-responsive">
+                <table id="example1" class="table table-bordered table-striped dataTable">
+                  {% if recordkeys %}
+                  <thead>
+                    <tr onclick="">
+                      <th>#</th>
+                      {% for item in recordkeys %}
+                      {% if not "_" == item|first %}
+                      <th>{{ item }}</th>
+                      {% endif %}
+                      {% endfor %}                    
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for records in statrecords %}
+                    <tr ondblclick="window.location.href = '{% url 'caseview' 'Case_Form' records|get_item:'_id' %}'">
+                      <td>{{ forloop.counter }}. </td>
+                      {% for item_key in recordkeys %}
+                      {% if not '_' == item_key|first %}
+                      <td>
+                        {% if item_key == 'case_id' %}
+                        <a href="{% url 'caseview' 'Case_Form' records|get_item:'_id' %}">{{  records | get_item:item_key }}</a>
+                        {% elif forloop.last %}
+                        {{  records | get_item:'_submission_time' | slice:'10' }}
+                        {% else %}
+                        {{  records | get_item:item_key }}
+                        {% endif %}
+                      </td>
+                      {% endif %}
+
+                      {% endfor %}
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                  <tfooter>
+                    <tr>
+                      <th>#</th>
+                      {% for recordkey in recordkeys %}
+                      {% if not "_" == recordkey|first %}
+                      <th>{{ recordkey }}</th>
+                      {% endif %}
+                      {% endfor %}                       
+                    </tr>
+                  </tfooter>
+                  {% else %}
+                  <thead>
+                    <tr>
+                      <th style="display: none;"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                  {% endif %}
+                </table>
+              </div>
+              <div style="clear: both;"></div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </section>
-  {% endblock %}
+  </div>
+</section>
+{% endblock %}
 
-  {% block javascripts %}
-  {{ block.super }}
-  <script type="text/javascript" src="/static/bower_components/underscore/underscore-min.js"></script>
-  <script type="text/javascript" src="/static/bower_components/backbone/backbone-min.js"></script>
-  <script type="text/javascript" src="/static/js/json2.js"></script>
-  <!--script type="text/javascript" src="/static/backgrid/lib/backgrid.js"></script-->
-  <script type="text/javascript" src="https://dev.bitz-itc.com/static/backgrid/lib/backgrid.js"></script>
-  <script type="text/javascript" src="/static/bower_components/lunr.js/lunr.min.js"></script>
-  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/backbone-pageable/1.4.8/backbone-pageable.min.js"></script>
-  <script type="text/javascript" src="/static/bower_components/backgrid-filter/backgrid-filter.min.js"></script>
-  <script type="text/javascript" src="/static/bower_components/backgrid-paginator/backgrid-paginator.min.js"></script>
-  <script type="text/javascript" src="/static/js/xform.js"></script>
-  <script src="/static/js/data_view.js" type="text/javascript"></script>
-  <script type="text/javascript">
-    var formJSONUrl = "{% url 'download_jsonform' owner.username xform.id_string %}";
-    var mongoAPIUrl = "https://dev.bitz-itc.com/ona/api/v1/data/24/26" /*"{% url 'mongo_view_api' owner.username xform.id_string %}";*/
-    var views, sideBarViews, multiView, slickView;
-        var numDefaultColumns = 30;//number of columns to show by default
-        var instance_view_url = "{% url 'submission-instance' owner.username xform.id_string %}";
-        var dataView;
-
-        $(document).ready(function () {
-          dataView = new FH.DataTableView({
-            el: '.data-table-container',
-            formUrl: formJSONUrl,
-            dataUrl: mongoAPIUrl
-          });
-        });
-      </script>
-      {% endblock %}
+{% block javascripts %}
+{{ block.super }}
+{% endblock %}

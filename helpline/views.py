@@ -22,6 +22,7 @@ from django.http import (HttpResponse, HttpResponseBadRequest,
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
 from django.template.context_processors import csrf
+from django.template.loader import render_to_string
 from django.db.models import Avg
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -67,14 +68,20 @@ from helpline.models import Report, HelplineUser,\
         Messaging
 
 from helpline.forms import QueueLogForm,\
-        CallForm, DispositionForm, CaseSearchForm, MyAccountForm, \
-        ReportFilterForm, QueuePauseForm
+        ContactForm, DispositionForm, CaseSearchForm, MyAccountForm, \
+        ReportFilterForm, QueuePauseForm, CaseActionForm, ContactSearchForm
 
 from helpline.qpanel.config import QPanelConfig
 from helpline.qpanel.backend import Backend
 if QPanelConfig().has_queuelog_config():
     from helpline.qpanel.model import queuelog_data_queue
 import json
+from django.template.defaulttags import register
+from onadata.apps.logger.models import Instance, XForm
+
+from onadata.libs.utils.chart_tools import build_chart_data
+from onadata.libs.utils.user_auth import (get_xform_and_perms, has_permission,
+                                          helper_auth_helper)
 
 
 cfg = QPanelConfig()
@@ -97,15 +104,45 @@ def home(request):
     case_search_form = CaseSearchForm()
     queue_form = QueueLogForm(request.POST)
     queue_pause_form = QueuePauseForm()
+    queues = get_data_queues()
+
+    """
+    Graph data
+    """
+    headers = {
+            'Authorization': 'Token 7331a310c46884d2643ca9805aaf0d420ebfc831'
+    }
+
+
+    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/charts/24.json?field_name=_submission_time' , headers= headers).json();
+    gtdata = []
+    
+    for dt in get_item(stat,'data'):
+        t = [str(get_item(dt,'_submission_time')),get_item(dt,'count')]
+        gtdata.append(t)
+    
+    #for case status 
+    status_data = requests.get('https://dev.bitz-itc.com/ona/api/v1/charts/24.json?field_name=case_action' , headers= headers).json();
+
+    color = {"Closed":'#00a65a',"Escalate":'#f39c12',"Pending":'#00c0ef'}
+    stdata = []
+    for dt in  get_item(status_data,'data'):#status_data['data']:
+        lbl = str(dt['case_action'][0])
+        vl = str(dt['count'])
+        stdata.append({"label":str(lbl),"data":str(vl),"color":str(color[lbl])})
 
     return render(request, 'helpline/home.html',
                   {'dashboard_stats': dashboard_stats,
                    'att': att,
                    'awt': awt,
+                   'queues': queues,
                    'case_search_form': case_search_form,
                    'queue_form': queue_form,
                    'queue_pause_form': queue_pause_form,
-                   'status_count': status_count})
+                   'status_count': status_count,
+                   'gdata':gtdata,
+                   'dt':stdata
+                   })
 
 
 @login_required
@@ -194,6 +231,7 @@ def queue_log(request):
                 hotdesk.jabber = 'helpline@jabber'
                 hotdesk.status = 'Available'
                 hotdesk.agent = request.user.HelplineUser.hl_key
+                hotdesk.user = request.user
 
                 agent = request.user.HelplineUser
                 agent.hl_status = 'Available'
@@ -335,7 +373,7 @@ def queue_unpause(request):
 
 def walkin(request):
     """Render CallForm manualy."""
-    form = CallForm()
+    form = ContactForm()
 
     return render(request, 'helpline/walkin.html',
                   {'form': form})
@@ -350,25 +388,90 @@ def faq(request):
     """Render FAQ app"""
     return render(request, 'helpline/callform.html')
 
+@register.filter
+def get_item(dictionary, key):
+    return dictionary.get(key,"")
+
+@login_required
+def caseview(request,form_name,case_id):
+    headers = {
+            'Authorization': 'Token 7331a310c46884d2643ca9805aaf0d420ebfc831'
+    }
+
+
+    """
+    Data Request and processing
+    """
+    #still need to determine service case_id_string dynamically for data/form url
+    service = Service.objects.all().first()
+    xform_det = service.walkin_xform
+    #instance_view_url = 'submission-instance' + owner.username + xform 
+    request_string = ''
+
+    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/24/' + case_id + request_string, headers= headers).json();
+    #form_details= requests.get('http://192.168.56.102:8000/ona/kemboicheru/forms/Case_Form/form.json',headers={'Authorization':'Token 68cf8a32a8f4af59333527fb58dbe1c2423249a0'})
+    history = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/24/' + case_id + '/history',headers=headers).json()
+
+    statrecords = []
+    recordkeys = []
+    history_rec = []
+
+    ##brings up data only for existing records
+    def get_records(recs):
+        return_obj = []
+        record = {}
+
+        for key,value in recs.items():
+            #if not (key.startswith('_') and key.endswith('_')):# str(key) == "_id":
+            key = str(key)
+            if key.find('/') != -1:
+                k = key.split('/')
+                l = len(k)
+                kk = str(k[l-1])
+            else:
+                kk = str(key)
+            if isinstance(value,dict) and len(value) >= 1:
+                record.update(get_records(value))
+            elif isinstance(value,list) and len(value) >= 1:
+                if isinstance(value[0],dict):
+                    record.update(get_records(value[0]))
+            else:
+                if not kk in recordkeys and not kk.endswith('ID') and str(value) != 'yes' and str(value) != 'no' and not (kk.startswith('_') and kk != '_id' and kk != '_submission_time'  and kk != '_last_edited'):
+                    recordkeys.append(kk)
+                record.update({kk : str(value).capitalize()})
+        return record
+
+
+    if isinstance(stat,dict) and len(stat) > 1:
+        statrecords.append(get_records(stat))
+
+    for hist in history:
+        if isinstance(hist,dict) and len(hist) > 1:
+            history_rec.append(get_records(hist))
+
+    if len(recordkeys) > 0:
+        recordkeys.append('Date Created')
+    else:
+        recordkeys = False
+
+    data = {
+        'stat':stat,
+        'statrecords':statrecords[0],
+        'recordkeys':recordkeys,
+        'history':history_rec,
+        'kemcount':0
+    }
+    htmltemplate = "helpline/instance.html"
+
+    return render(request, htmltemplate,data)
+
+
 
 @login_required
 def reports(request, report, casetype='Call'):
     headers = {
             'Authorization': 'Token 7331a310c46884d2643ca9805aaf0d420ebfc831'
     }
-
-    data = {
-    'name': "My DataView2",
-    'xform': 'https://dev.bitz-itc.com/ona/api/v1/forms/24',
-    'project':  'https://dev.bitz-itc.com/ona/api/v1/projects/1',
-    'columns': '[]',
-    'query': '[]'
-    }
-
-
-    #stat = requests.post('https://dev.bitz-itc.com/ona/api/v1/dataviews',data=data, headers= headers).json();
-    #stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/dataviews/7/data', headers= headers).json();
-    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/24/26', headers= headers).json();
 
     """
     Data view displays submission data.
@@ -385,14 +488,93 @@ def reports(request, report, casetype='Call'):
     form = ReportFilterForm(request.GET)
     dashboard_stats = get_dashboard_stats(request.user)
 
+    request_string = ''
+
+    if datetime_range == '':
+        start_date, end_date = [datetime_range.split(" - ")[0], datetime_range.split(" - ")[1]]
+        start_date = datetime.strptime(start_date, '%m/%d/%Y %I:%M %p')
+        end_date = datetime.strptime(end_date, '%m/%d/%Y %I:%M %p')
+
+
+        d_from = start_date.strftime('%d')
+        m_from = start_date.strftime('%m')
+        y_from = start_date.strftime('%Y')
+
+
+        d_to = end_date.strftime('%d')
+        m_to = end_date.strftime('%m')
+        y_to = end_date.strftime('%Y')
+
+        request_string += '?date_created__day__gte=' + d_from
+        request_string += '&date_created__day__lte=' + d_to
+
+        request_string += '&date_created__month__gte=' + m_from
+        request_string += '&date_created__month__lte=' + m_to
+
+        request_string += '&date_created__year__gte=' + y_from
+        request_string += '&date_created__year__lte=' + y_to
+
+
+
+    """
+    Data Request and processing
+    """
+    #still need to determine service case_id_string dynamically for data/form url
+    service = Service.objects.all().first()
+    xform_det = service.walkin_xform
+    #instance_view_url = 'submission-instance' + owner.username + xform 
+
+    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/24?page=1&page_size=40&sort={"_id":1}' + request_string, headers= headers).json();
+    #form_details= requests.get('https://dev.bitz-itc.com/ona/demoadmin/forms/Case_Form/form.json',headers=headers).json()
+
+
+    statrecords = []
+    recordkeys = []
+
+    ##brings up data only for existing records
+    def get_records(recs):
+        return_obj = []
+        record = {}
+
+        for key,value in recs.items():
+            #if not (key.startswith('_') and key.endswith('_')):# str(key) == "_id":
+            key = str(key)
+            if key.find('/') != -1:
+                k = key.split('/')
+                l = len(k)
+                kk = str(k[l-1])
+            else:
+                kk = str(key)
+            if isinstance(value,dict) and len(value) >= 1:
+                record.update(get_records(value))
+            elif isinstance(value,list) and len(value) >= 1:
+                if isinstance(value[0],dict):
+                    record.update(get_records(value[0]))
+            else:
+                if not kk in recordkeys and not kk.endswith('ID') and str(value) != 'yes' and str(value) != 'no':
+                    recordkeys.append(kk)
+                record.update({kk : str(value).capitalize()})
+        return record
+
+
+    for rec in stat:
+        if isinstance(rec,dict) and len(rec) > 1:
+            statrecords.append(get_records(rec))
+
+    if len(recordkeys) > 0:
+        recordkeys.append('Date Created')
+    else:
+        recordkeys = False
+
     sort = request.GET.get('sort')
-    report_title = {
+    report_title = {report :_(str(report).capitalize() + " Reports")}
+    '''report_title = {
         'performance': _('Performance Reports'),
         'counsellor': _('Counsellor Reports'),
         'case': _('Case Reports'),
         'call': _('Call Reports'),
         'service': _('Service Reports')
-    }
+    }'''
 
     table = report_factory(report=report,
                            datetime_range=datetime_range,
@@ -406,7 +588,8 @@ def reports(request, report, casetype='Call'):
     if TableExport.is_valid_format(export_format):
         exporter = TableExport(export_format, table)
         return exporter.response('table.{}'.format(export_format))
-    
+    table.paginate(page=request.GET.get('page', 1), per_page=10)
+
     data = {'owner': owner, 'xform': xform,'title': report_title.get(report),
         'report': report,
         'form': form,
@@ -414,18 +597,26 @@ def reports(request, report, casetype='Call'):
         'dashboard_stats': dashboard_stats,
         'table': table,
         'query': query,
-        'stat':stat}
+        'statrecords':statrecords,
+        'recordkeys':recordkeys}
 
-    htmltemplate = "helpline/reports.html"
+    callreports = ["missedcalls","voicemails","totalcalls","answeredcalls","abandonedcalls"]
 
-    if report == 'totalcases':
+    if report in callreports:
+        htmltemplate = "helpline/reports.html"
+    elif report == 'nonanalysed':
+        htmltemplate = "helpline/nonanalysed.html"
+    else:
         htmltemplate = "helpline/report_body.html"
 
     return render(request, htmltemplate,data)
+
+
 @login_required
 def reports1(request, report, casetype='Call'):
     """Handle report rendering"""
-
+    if report == 'nonanalysed':
+        report = 'totalcases'
     query = request.GET.get('q', '')
     datetime_range = request.GET.get("datetime_range")
     agent = request.GET.get("agent")
@@ -460,12 +651,10 @@ def reports1(request, report, casetype='Call'):
     if TableExport.is_valid_format(export_format):
         exporter = TableExport(export_format, table)
         return exporter.response('table.{}'.format(export_format))
-        
 
     table.paginate(page=request.GET.get('page', 1), per_page=10)
 
-
-    return render(request, htmltemplate, { #dashboardreports
+    return render(request, 'helpline/reports.html', { #dashboardreports
         'title': report_title.get(report),
         'report': report,
         'form': form,
@@ -710,7 +899,6 @@ def case_form(request, form_name):
     message = ''
     initial = {}
     data = {}
-
     data['enketo_url'] = settings.ENKETO_URL
 
     service = Service.objects.all().first()
@@ -742,8 +930,16 @@ def case_form(request, form_name):
     if request.method == 'GET':
         case_number = request.GET.get('case')
         username = xform.user.username
+        data['disposition_form'] = DispositionForm()
+        data['contact_form'] = ContactForm()
+        data['case_action_form'] = CaseActionForm()
+        data['contact_search_form'] = ContactSearchForm()
         if case_number:
-            my_case = Case.objects.get(hl_case=case_number)
+            try:
+                my_case = int(case_number)
+            except ValueError:
+                raise Http404(_("Case not found"))
+            my_case = get_object_or_404(Case, hl_case=case_number)
             report, contact, address = get_case_info(case_number)
             case_history = Report.objects.filter(
                 telephone=contact.hl_contact).order_by('-case')
@@ -755,12 +951,25 @@ def case_form(request, form_name):
             data['contact'] = contact
             data['address'] = address
             data['case_history_table'] = case_history_table
+            data['contact_form'] = ContactForm(
+                initial={
+                    'caller_name': address.hl_names,
+                    'phone_number': contact.hl_contact,
+                    'case_number': my_case
+                }
+            )
+            data['case_action_form'] = CaseActionForm(
+                initial={
+                    'case_number': my_case
+                }
+            )
 
             try:
                 case_history_table.paginate(page=request.GET.get('page', 1), per_page=10)
             except Exception as e:
                 # Do not paginate if there is an error
                 pass
+
         form_url = get_form_url(request, username, settings.ENKETO_PROTOCOL)
         # Check if we're looking for a case.
         if case_number:
@@ -810,9 +1019,9 @@ def case_form(request, form_name):
         # Process forms differently.
 
         if form_name == 'call':
-            form = CallForm(request.POST)
+            contact_form = ContactForm(request.POST)
         elif form_name == 'walkin':
-            form = CallForm(request.POST)
+            contact_form = ContactForm(request.POST)
 
         if form.is_valid():
             case_number = form.cleaned_data.get('case_number')
@@ -835,31 +1044,25 @@ def case_form(request, form_name):
                 except Exception as e:
                     # Do not paginate if there is an error
                     pass
+
+            # If no case number is given we create a new case
             else:
                 my_case = Case()
                 my_case.hl_data = form_name
-                my_case.hl_counsellor = request.user.HelplineUser.hl_key
+                my_case.user = request.user
                 my_case.popup = 'Done'
                 my_case.hl_time = int(time.time())
                 my_case.hl_status = form.cleaned_data.get('case_status')
                 my_case.hl_acategory = form.cleaned_data.get('category')
                 my_case.hl_notes = form.cleaned_data.get('notes')
                 my_case.hl_type = form.cleaned_data.get('case_type')
-                my_case.hl_subcategory = form.cleaned_data.get('sub_category')
-                my_case.hl_subsubcat = form.cleaned_data.get('sub_sub_category')
-                my_case.isrefferedfrom = form.cleaned_data.get('referred_from')
-                my_case.hl_details = form.cleaned_data.get('comment')
 
                 my_case.hl_priority = 'Non-Critical'
                 my_case.hl_creator = request.user.HelplineUser.hl_key
                 my_case.save()
-                address, address_created = Address.objects.get_or_create(hl_key=my_case.hl_key)
 
-                contact, contact_created = Contact.objects.get_or_create(hl_key=my_case.hl_key,
-                                                                            hl_type='Cell Phone',
-                                                                            hl_calls=0,
-                                                                            hl_status='Available',
-                                                                            hl_time=int(time.time()))
+                report, contact, address = get_case_info(case_number)
+
                 now = datetime.now()
                 callstart = "%s:%s:%s" % (now.hour, now.minute, now.second)
                 notime = "00:00:00"
@@ -882,33 +1085,10 @@ def case_form(request, form_name):
                     # Ignore pagination errors when a new contact with no case history is input.
                     pass
 
-            address.hl_names = form.cleaned_data['caller_name']
-            address.hl_gender = form.cleaned_data.get('gender')
-            address.hl_address1 = form.cleaned_data.get('address')
-            address.hl_email = form.cleaned_data.get('email')
-            address.hl_address4 = form.cleaned_data.get('physical_address')
-            address.hl_address3 = form.cleaned_data.get('region')
-            address.hl_language = form.cleaned_data.get('language')
-            address.hl_company = form.cleaned_data.get('company')
-            contact.hl_contact = form.cleaned_data['phone_number']
-            report.callernames = form.cleaned_data['caller_name']
-            report.casearea = form.cleaned_data.get('address')
-            report.casearea = form.cleaned_data.get('address')
-            report.telephone = form.cleaned_data['phone_number']
+            address.hl_names = form.cleaned_data.get('caller_name')
             report.counsellorname = request.user.username
+            report.user = request.user
             report.casetype = form_name
-
-            report.casestatus = form.cleaned_data['case_status']
-            report.escalatename = form.cleaned_data.get('escalate_to')
-            my_case.hl_status = form.cleaned_data.get('case_status')
-            my_case.hl_acategory = form.cleaned_data.get('category')
-            my_case.hl_notes = form.cleaned_data.get('notes')
-            my_case.hl_details = form.cleaned_data['comment']
-            my_case.isrefferedfrom = form.cleaned_data.get('referred_from')
-            my_case.hl_type = form.cleaned_data.get('case_type')
-            my_case.hl_subcategory = form.cleaned_data.get('sub_category')
-            my_case.hl_subsubcat = form.cleaned_data.get('sub_sub_category')
-            my_case.hl_escalateto = form.cleaned_data.get('escalate_to')
 
             my_case.save()
             address.save()
@@ -936,13 +1116,13 @@ def case_form(request, form_name):
 
     return render(
         request, 'helpline/case_form.html', {
-            'form': form,
             'contact': contact if contact else None,
             'initial': initial,
             'disposition_form': disposition_form,
             'case_history_table': case_history_table,
             'form_name': form_name,
-            'message': message
+            'message': message,
+            'contact_form': contact_form
         }
     )
 
@@ -1023,16 +1203,16 @@ def my_forms(request, form_name):
                                if my_case else ''}
         disposition_form = DispositionForm(initial=(initial_disposition))
 
-        form = CallForm(initial=initial)
+        contact_form = ContactForm(initial=initial)
 
     elif request.method == 'POST':
         contact, address = (None, None)
         # Process forms differently.
 
         if form_name == 'call':
-            form = CallForm(request.POST)
+            contact_form = ContactForm(request.POST)
         elif form_name == 'walkin':
-            form = CallForm(request.POST)
+            contact_form = ContactForm(request.POST)
 
         if form.is_valid():
             case_number = form.cleaned_data.get('case_number')
@@ -1164,7 +1344,7 @@ class DashboardTable(tables.Table):
     casetype = tables.TemplateColumn("<b>{{ record.get_call_type }}</b>",
                                      verbose_name="Call Type")
     case_id = tables.TemplateColumn(
-        '<a href="{{ record.get_absolute_url }}">{{record.case }}</a>')
+        '{% if record.case %}<a href="{{ record.get_absolute_url }}">{{record.case }}</a>{% else %}-{% endif %}')
     telephone = tables.TemplateColumn(
         '<a href="sip:{{record.telephone}}">{{record.telephone}}</a>')
     user_id = tables.TemplateColumn("{{ record.user }}", verbose_name="Agent")
@@ -1177,15 +1357,15 @@ class DashboardTable(tables.Table):
     class Meta:
         model = Report
         attrs = {'class': 'table table-bordered table-striped dataTable',
-                 'id': 'report_table'}
+                 'id': 'report_table example1'}
         unlocalise = ('holdtime', 'walkintime', 'talktime', 'callstart')
         fields = {'casetype', 'case_id', 'telephone', 'calldate',
-                  'service_id', 'callernames', 'user_id',
+                  'service_id', 'callernames', 'user_id', 'escalatename',
                   'calldate', 'callstart', 'callend', 'talktime', 'holdtime',
                   'calltype', 'disposition', 'casestatus'}
 
         sequence = ('casetype', 'case_id', 'calldate', 'callstart',
-                    'callend', 'user_id', 'telephone',
+                    'callend', 'user_id', 'telephone', 'escalatename',
                     'service_id', 'talktime', 'holdtime', 'calltype',
                     'disposition', 'casestatus')
 
@@ -1197,14 +1377,25 @@ class WebPresenceTable(tables.Table):
         attrs = {'class': 'table table-bordered table-striped dataTable'}
 
 
+class ContactTable(tables.Table):
+    """Contact list table"""
+    address = tables.Column(verbose_name= 'Name')
+    hl_contact = tables.Column(verbose_name= 'Phone')
+    action = tables.TemplateColumn('<a onClick="createCase({{ record.id }});"><i class="fa fa-plus"></i>Create Case</a>', verbose_name="Action")
+    class Meta:
+        model = Contact
+        fields = {'address', 'hl_contact'}
+        attrs = {'class': 'table table-bordered table-striped dataTable'}
+
+
 class CaseHistoryTable(tables.Table):
     """Show related Case form contact"""
-    case = tables.TemplateColumn('<a href="{{ record.get_absolute_url }}">{{record.case }}</a>')
+    case = tables.TemplateColumn('{% if record.case %}<a href="{{ record.get_absolute_url }}">{{record.case }}</a>{% else %}-{% endif %}')
     class Meta:
         model = Report
         attrs = {'class': 'table table-bordered table-striped dataTable'}
-        fields = {'case', 'counsellorname', 'calldate', 'calltype'}
-        sequence = ('case', 'counsellorname', 'calldate', 'calltype')
+        fields = {'case', 'user', 'calldate', 'calltype'}
+        sequence = ('case', 'user', 'calldate', 'calltype')
 
         unlocalise = ('holdtime', 'walkintime', 'talktime', 'callstart')
 
@@ -1351,11 +1542,67 @@ def get_case_info(case_number):
 
 
 @json_view
-def save_call_form(request):
-    """Save call form returns json status"""
-    form = CallForm(request.POST or None)
+def save_contact_form(request):
+    """Save contact/address form returns json status"""
+    contact_form = ContactForm(request.POST or None)
+    if contact_form.is_valid():
+        case_number = contact_form.cleaned_data.get('case_number')
+        report, contact, address = get_case_info(case_number)
+        contact.address.hl_names = contact_form.cleaned_data.get('caller_name')
+        contact.address.save()
+        return {'success': True}
+
+    ctx = {}
+    ctx.update(csrf(request))
+    form_html = render_crispy_form(form, context=ctx)
+    return {'success': False, 'form_html':form_html}
+
+
+@json_view
+def contact_search_form(request):
+    """Search contact/address and returns html contact list"""
+
+    form = ContactSearchForm(request.POST or None)
     if form.is_valid():
-        # form.save()
+        telephone = form.cleaned_data.get('telephone')
+        name = form.cleaned_data.get('name')
+        contacts = Contact.objects.filter(
+            Q(address__hl_names__icontains=name) |
+            Q(hl_contact=telephone)
+        )
+        table = ContactTable(contacts)
+        table_html = render_to_string(
+            'helpline/contacts.html',
+            {
+                'table': table
+            }, request
+        )
+        return {'success': True, 'table_html': table_html}
+
+    ctx = {}
+    ctx.update(csrf(request))
+    form_html = render_crispy_form(form, context=ctx)
+    return {'success': False, 'form_html':form_html}
+
+
+@json_view
+def save_case_action(request):
+    """Save case action returns json status"""
+    form = CaseActionForm(request.POST or None)
+    if form.is_valid():
+        case_number = form.cleaned_data.get('case_number')
+        report = Report.objects.get(case=case_number)
+        case_status = form.cleaned_data.get('case_status')
+        escalate_to = form.cleaned_data.get('escalate_to')
+        hl_user = request.user.HelplineUser
+        hl_user.hl_status = "Available"
+        hl_user.save()
+        report.casestatus = case_status
+        report.escalatename = escalate_to.user.username if escalate_to else None
+        report.callend = datetime.now().strftime('%H:%M:%S.%f')
+        report.hl_time = calendar.timegm(time.gmtime())
+        report.save()
+
         return {'success': True}
 
     ctx = {}
@@ -1379,6 +1626,52 @@ def save_disposition_form(request):
     ctx.update(csrf(request))
     form_html = render_crispy_form(form, context=ctx)
     return {'success': False, 'form_html': form_html}
+
+
+@json_view
+def save_disposition_form(request):
+    """Save disposition, uses AJAX and returns json status"""
+    form = DispositionForm(request.POST or None)
+    if form.is_valid():
+        case = Case.objects.get(hl_case=form.cleaned_data['case_number'])
+        case.hl_disposition = form.cleaned_data['disposition']
+        case.save()
+        request.user.HelplineUser.hl_status = 'Available'
+        request.user.HelplineUser.save()
+        return {'success': True}
+    ctx = {}
+    ctx.update(csrf(request))
+    form_html = render_crispy_form(form, context=ctx)
+    return {'success': False, 'form_html': form_html}
+
+
+@json_view
+def contact_create_case(request):
+    """Create a case for a contact and return the case url"""
+    contact_id = request.POST.get('contact_id', None)
+    default_service = Service.objects.all().first()
+    if contact_id:
+        contact = Contact.objects.get(id=contact_id)
+        case = Case()
+        report = Report()
+        case.contact = contact
+        case.user = request.user
+        case.hl_popup = 'No'
+        case.save()
+        report.case = case
+        report.callstart = datetime.now().strftime('%H:%M:%S.%f')
+        report.calldate = datetime.now().strftime('%d-%m-%Y')
+        report.queuename = default_service.queue
+        report.telephone = contact.hl_contact
+        report.save()
+        hl_user = request.user.HelplineUser
+        hl_user.case = case
+        hl_user.hl_status = 'Busy'
+        hl_user.save()
+        return {'success': True}
+    ctx = {}
+    ctx.update(csrf(request))
+    return {'success': False}
 
 
 @json_view
@@ -1495,12 +1788,12 @@ def get_dashboard_stats(user, interval=None):
 
     total_cases = Report.objects.filter(
         hl_time__gt=midnight).filter(casestatus__gt='')
-    closed_cases = Case.objects.filter(
-        hl_time__gt=midnight)
-    open_cases = Case.objects.filter(
-        hl_time__gt=midnight)
-    referred_cases = Case.objects.filter(
-        hl_time__gt=midnight)
+    closed_cases = Report.objects.filter(
+        hl_time__gt=midnight, casestatus__exact='Close')
+    open_cases = Report.objects.filter(
+        hl_time__gt=midnight, casestatus__exact='Pending')
+    referred_cases = Report.objects.filter(
+        hl_time__gt=midnight, casestatus__exact='Escalate')
 
     total_sms = Messaging.objects.filter(hl_time__gt=midnight)
 
@@ -1872,7 +2165,60 @@ def queues(request):
 
 
 @login_required
-@json_view
 def queue(request, name=None):
     data = get_data_queues(name)
-    return {'data': data}
+    return render(request, 'helpline/queue.html',
+                  {'data': data,
+                   'name': name
+                  })
+
+
+@login_required
+@json_view
+def queue_json(request, name=None):
+     data = get_data_queues(name)
+     return {'data': data}
+
+
+@login_required
+@json_view
+def spy(request):
+    channel = request.POST.get('channel', '')
+    to_exten = request.POST.get('to_exten', '')
+    r = backend.spy(channel, to_exten)
+    return r
+
+
+@login_required
+@json_view
+def whisper(request):
+    channel = request.POST.get('channel', '')
+    to_exten = request.POST.get('to_exten', '')
+    r = backend.whisper(channel, to_exten)
+    return r
+
+
+@login_required
+@json_view
+def barge(request):
+    channel = request.POST.get('channel', '')
+    to_exten = request.POST.get('to_exten', '')
+    r = backend.barge(channel, to_exten)
+    return r
+
+
+@login_required
+@json_view
+def hangup_call(request):
+    channel = request.POST.get('channel', '')
+    r = backend.hangup(channel)
+    return r
+
+
+@login_required
+@json_view
+def remove_from_queue(request):
+    queue = request.POST.get('queue', '')
+    agent = request.POST.get('agent', '')
+    r = backend.remove_from_queue(agent, queue)
+    return r
