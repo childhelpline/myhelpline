@@ -1059,7 +1059,7 @@ frm.elements["/Case_Form/additional_client_details/guardian_name"].value = "Kemb
 
 function prefill(){
 
-  
+
 
     // Create a request variable and assign a new XMLHttpRequest object to it.
     var request = new XMLHttpRequest();
@@ -1081,14 +1081,26 @@ function prefill(){
               var doc = iframe.contentWindow.document;
               var doc = iframe.contentDocument ? iframe.contentDocument: iframe.contentWindow.document;
               var frmObj = doc.getElementsByTagName('form')[0]
-              //var id = frmObj.arr('id')
-              //var frm = doc.forms[id]
-              if(!kk.startsWith('_')){
+              var id = frmObj.arr('id')
+              var frm = doc.forms[id]
+              var nn = "/" + id + "/" + kk
+              if(!kk.startsWith('_') && typeof(nn) != 'undefined'){
                 console.log(kk + " :: " + movie[kk])
-                frmObj.elements[kk].value = movie[kk]
+                frm.elements[nn].value = movie[kk]
               }
-              
 
+              var supervisors = []
+              $('#select').empty();
+              var super_select = doc.getElementsByName('/Case_Form/case_actions/supervisors')
+              super_select.empty()
+              //$.each(options, function(i, p) {
+              //$('#select').append($('<option></option>').val(p).html(p));
+
+              {% for supervisor in supervisors %}
+                var p = '{{ supervisor }}'
+                super_select.append($('<option></option>').val(p).html(p));
+                //supervisors[{{forloop.counter}}] = 
+              {% endfor %}
 
           }
         //});

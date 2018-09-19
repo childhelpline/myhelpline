@@ -917,6 +917,12 @@ def case_form(request, form_name):
     else:
         xform = service.call_xform
 
+
+    supervisors = HelplineUser.objects.all()#filter(hl_role='Supervisor').order_by('hl_names');
+    caseworkers = HelplineUser.objects.filter(hl_role='Caseworker').order_by('hl_names');
+    data['supervisors'] = supervisors if supervisors else {}
+    data['caseworkers'] = caseworkers[0] if caseworkers else {}
+
     # If no XForm is associated with the above cases
     if not xform:
             data['message'] = {
@@ -934,6 +940,8 @@ def case_form(request, form_name):
         data['contact_form'] = ContactForm()
         data['case_action_form'] = CaseActionForm()
         data['contact_search_form'] = ContactSearchForm()
+
+
         if case_number:
             try:
                 my_case = int(case_number)
