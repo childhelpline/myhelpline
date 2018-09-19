@@ -1050,7 +1050,7 @@ document.domain = "bitz-itc.com"
 var doc = iframe.contentWindow.document;
 var doc = iframe.contentDocument ? iframe.contentDocument: iframe.contentWindow.document;
 var frmObj = doc.getElementsByTagName('form')
-var id = frmObj.arr('id')
+var id = frmObj.id
 var frm = doc.forms[id]
 
 frm.elements["/Case_Form/additional_client_details/guardian_name"].value = "Kemboi Cheruiyot"
@@ -1081,7 +1081,7 @@ function prefill(){
               var doc = iframe.contentWindow.document;
               var doc = iframe.contentDocument ? iframe.contentDocument: iframe.contentWindow.document;
               var frmObj = doc.getElementsByTagName('form')[0]
-              var id = frmObj.arr('id')
+              var id = frmObj.id
               var frm = doc.forms[id]
               var nn = "/" + id + "/" + kk
               if(!kk.startsWith('_') && typeof(nn) != 'undefined'){
@@ -1090,8 +1090,8 @@ function prefill(){
               }
 
               var supervisors = []
-              $('#select').empty();
-              var super_select = doc.getElementsByName('/Case_Form/case_actions/supervisors')
+
+              var super_select = doc.getElementsByName("/" + id + '/case_actions/supervisors')
               super_select.empty()
               //$.each(options, function(i, p) {
               //$('#select').append($('<option></option>').val(p).html(p));
