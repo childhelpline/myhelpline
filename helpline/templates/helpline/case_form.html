@@ -120,7 +120,7 @@ audio{
     var form = $("#contact-search-form")[0]
     var name = form['name'].value
     var telephone = form['telephone'].value
-    prefill()
+    prefill(telephone)
 
 
 
@@ -390,7 +390,6 @@ audio{
   function receiveMessage(event)
   {
         var resp = JSON.parse(event.data)
-        console.log("CC: " + resp);
       if(resp.enketoEvent == 'submissionsuccess'){
           // Show case action form after successful case submission
               $('#frame-case-action').removeClass('hidden');
