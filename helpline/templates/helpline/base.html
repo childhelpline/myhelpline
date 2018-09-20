@@ -466,7 +466,7 @@ input:checked + .slider:before {
               </a></li>
               <li><a href="{% url 'dashboardreports' 'answeredcalls' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Answered Calls" %}
                 <span class="pull-right-container">
-                  <span class="label label-success pull-right">{{ dashboard_stats.open_cases }}</span>
+                  <span class="label label-success pull-right">{{ dashboard_stats.answered_calls }}</span>
                 </span>
               </a></li>
               <li><a href="{% url 'dashboardreports' 'voicemails' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Voice Mails" %}
@@ -663,7 +663,7 @@ input:checked + .slider:before {
       <b>{% trans "Version" %}</b> 1.0.0
     </div>
     {% now "Y" as current_year %}
-    <strong>{% blocktrans %}Copyright{% endblocktrans %} &copy; {{ current_year }} <a href="http://bitz-itc.com/">Bitz ITC Limited</a></strong>. {% blocktrans %}All rights reserved.{% endblocktrans %}
+    <strong>{% blocktrans %}Copyright{% endblocktrans %} &copy; {{ current_year }} </strong>. {% blocktrans %}All rights reserved.{% endblocktrans %}
   </footer>
   <!-- Control Sidebar -->
   <aside class="control-sidebar control-sidebar-dark">
