@@ -1766,7 +1766,7 @@ def report_factory(report='callsummary', datetime_range=None, agent=None,
         qset = (
             Q(telephone__icontains=query) |
             Q(callernames__icontains=query) |
-            Q(casestatus__icontains=query) |
+            Q(casestatus__icontains=query)
         )
         # Check if query is an integer for case id matching.
         # Ask for forgiveness if it's not.
