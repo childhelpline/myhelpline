@@ -631,7 +631,7 @@ def reports(request, report, casetype='Call'):
     }
 
     callreports = ["missedcalls", "voicemails", "totalcalls",
-                   "answeredcalls", "abandonedcalls"]
+                   "answeredcalls", "abandonedcalls", "callsummaryreport"]
 
     if report in callreports:
         htmltemplate = "helpline/reports.html"
