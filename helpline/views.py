@@ -1159,6 +1159,7 @@ class DashboardTable(tables.Table):
                                      verbose_name="Call Type")
     case_id = tables.TemplateColumn(
         '{% if record.case %}<a href="{{ record.get_absolute_url }}">{{record.case }}</a>{% else %}-{% endif %}')
+    callernames = tables.TemplateColumn("{{ record.case.contact.address.hl_names }}")
     telephone = tables.TemplateColumn(
         '<a href="sip:{{record.telephone}}">{{record.telephone}}</a>')
     user_id = tables.TemplateColumn("{{ record.user }}", verbose_name="Agent")
