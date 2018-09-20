@@ -538,8 +538,8 @@ def reports(request, report, casetype='Call'):
             for key,frm in xfrm.items():
                 xformx.update({str(key):str(frm)}) 
 
-    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/' + xformx['formid'] + '?page=1&page_size=50' + request_string + '&sort={"_id":-1}', headers= headers).json();
-
+    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/' + xformx['formid'] + '?page=1&page_size=50' + request_string, headers= headers).json();
+    # + '&sort={"_id":-1}'
     statrecords = []
     recordkeys = []
 
