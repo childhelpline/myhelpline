@@ -631,7 +631,8 @@ def reports(request, report, casetype='Call'):
     }
 
     callreports = ["missedcalls", "voicemails", "totalcalls",
-                   "answeredcalls", "abandonedcalls", "callsummaryreport"]
+                   "answeredcalls", "abandonedcalls", "callsummaryreport",
+                  "search"]
 
     if report in callreports:
         htmltemplate = "helpline/reports.html"
@@ -1766,7 +1767,6 @@ def report_factory(report='callsummary', datetime_range=None, agent=None,
             Q(telephone__icontains=query) |
             Q(callernames__icontains=query) |
             Q(casestatus__icontains=query) |
-            Q(counsellorname__icontains=query)
         )
         # Check if query is an integer for case id matching.
         # Ask for forgiveness if it's not.
