@@ -1058,14 +1058,13 @@ frm.elements["/Case_Form/additional_client_details/guardian_name"].value = "Kemb
 }
 
 function prefill(phone){
-
-
-
+    if(phone == 0 || phone == '')
+      return false
     // Create a request variable and assign a new XMLHttpRequest object to it.
     var request = new XMLHttpRequest();
 
     // Open a new connection, using the GET request on the URL endpoint
-    request.open('GET', 'https://dev.bitz-itc.com/ona/api/v1/data/24?query={"reporter_details/reporter_phone":{"$i":' + phone + '}}&format=json', true);
+    request.open('GET', 'https://dev.bitz-itc.com/ona/api/v1/data/24?query={"reporter_details/reporter_phone":{"$i":"' + phone + '"}}&format=json', true);
     request.setRequestHeader("Authorization", "Token 7331a310c46884d2643ca9805aaf0d420ebfc831");
     //request.setRequestHeader("Content-type", "application/json");
     request.onload = function (data) {
@@ -1083,16 +1082,18 @@ function prefill(phone){
 
               var frmObj = doc.getElementsByTagName('form')[0]
               var id = frmObj.id
-              var frm = doc.forms[id]
+              //var frm = doc.forms[id]
+              var frm = doc.getElementById(id);
+              //var xfrm = frm.getInstanceDocument(id)
 
               console.log("The id: " + id);
               var nn = "/Case_Form/" + kk
 
               if(kk.includes('reporter') && typeof(nn) != 'undefined'){
                 console.log(nn + " :: " + movie[kk])
-                frm.elements[nn].value = movie[kk]
-              }
+                frmObj.elements[nn].value = movie[kk]
 
+               }
               var supervisors = []
               var sname = "/Case_Form/case_actions/supervisors"
               var super_select = doc.getElementsByName(sname)[0]
@@ -1101,7 +1102,7 @@ function prefill(phone){
 
               {% for supervisor in supervisors %}
                 var p = '{{ supervisor }}'
-                super_select.innerHTML += "<option value='" + p + "'>" + p + "</option>" //append($('<option></option>'$                //supervisors[{{forloop.counter}}] =
+                super_select.innerHTML += "<option value='" + p + "'>" + p + "</option>" $
               {% endfor %}
 
           }

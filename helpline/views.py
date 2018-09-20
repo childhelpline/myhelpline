@@ -496,7 +496,7 @@ def reports(request, report, casetype='Call'):
         end_date = datetime.strptime(end_date, '%m/%d/%Y %I:%M %p')
 
 
-        d_from = start_date.strftime('%d')
+        '''d_from = start_date.strftime('%d')
         m_from = start_date.strftime('%m')
         y_from = start_date.strftime('%Y')
 
@@ -505,14 +505,21 @@ def reports(request, report, casetype='Call'):
         m_to = end_date.strftime('%m')
         y_to = end_date.strftime('%Y')
 
-        request_string += '?date_created__day__gte=' + d_from
+        request_string += '&date_created__day__gte=' + d_from
         request_string += '&date_created__day__lte=' + d_to
 
         request_string += '&date_created__month__gte=' + m_from
         request_string += '&date_created__month__lte=' + m_to
 
         request_string += '&date_created__year__gte=' + y_from
-        request_string += '&date_created__year__lte=' + y_to
+        request_string += '&date_created__year__lte=' + y_to'''
+    if report == 'pendingcases':
+        request_string = '&query={"case_actions/case_action":{"$i":"pending"}}'
+    elif report == 'today':
+        td_date = datetime.today()
+        request_string = '&date_created__day=' + td_date.strftime('%d')
+        request_string += '&date_created__month=' + td_date.strftime('%m')
+        request_string += '&date_created__year=' + td_date.strftime('%Y')
 
 
 
@@ -522,11 +529,16 @@ def reports(request, report, casetype='Call'):
     #still need to determine service case_id_string dynamically for data/form url
     service = Service.objects.all().first()
     xform_det = service.walkin_xform
-    #instance_view_url = 'submission-instance' + owner.username + xform 
+    xforms = requests.get('https://dev.bitz-itc.com/ona/api/v1/forms', headers= headers).json();
+    xformx = {}
 
-    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/24?page=1&page_size=40&sort={"_id":1}' + request_string, headers= headers).json();
-    #form_details= requests.get('https://dev.bitz-itc.com/ona/demoadmin/forms/Case_Form/form.json',headers=headers).json()
+    #split to get xform object
+    for xfrm in xforms:
+        if str(xfrm['id_string']) == str(xform_det):
+            for key,frm in xfrm.items():
+                xformx.update({str(key):str(frm)}) 
 
+    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/' + xformx['formid'] + '?page=1&page_size=50' + request_string + '&sort={"_id":-1}', headers= headers).json();
 
     statrecords = []
     recordkeys = []
@@ -551,7 +563,7 @@ def reports(request, report, casetype='Call'):
                 if isinstance(value[0],dict):
                     record.update(get_records(value[0]))
             else:
-                if not kk in recordkeys and not kk.endswith('ID') and str(value) != 'yes' and str(value) != 'no':
+                if not kk in recordkeys and not kk.endswith('ID') and str(value) != 'yes' and str(value) != 'no' and str(kk) != 'case_id'  and str(kk) != 'uuid':
                     recordkeys.append(kk)
                 record.update({kk : str(value).capitalize()})
         return record
@@ -598,7 +610,9 @@ def reports(request, report, casetype='Call'):
         'table': table,
         'query': query,
         'statrecords':statrecords,
-        'recordkeys':recordkeys}
+        'recordkeys':recordkeys,
+        'xformx':request_string
+        }
 
     callreports = ["missedcalls","voicemails","totalcalls","answeredcalls","abandonedcalls"]
 
