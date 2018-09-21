@@ -479,7 +479,7 @@ def reports(request, report, casetype='Call'):
     username = request.user.username
     id_string = 'Case_Form'
     owner = get_object_or_404(User, username__iexact=username)
-    xform = get_form({'id_string__iexact': id_string, 'user': owner})
+    xform = get_form({'id_string__iexact': id_string})
 
     query = request.GET.get('q', '')
     datetime_range = request.GET.get("datetime_range")
