@@ -476,8 +476,11 @@ def reports(request, report, casetype='Call'):
     """
     Data view displays submission data.
     """
+    #still need to determine service case_id_string dynamically for data/form url
+    service = Service.objects.all().first()
+    id_string = str(service.walkin_xform)
     username = request.user.username
-    id_string = 'Case_Form'
+
     owner = get_object_or_404(User, username__iexact=username)
     xform = get_form({'id_string__iexact': id_string})
 
@@ -521,20 +524,13 @@ def reports(request, report, casetype='Call'):
         request_string += '&date_created__month=' + td_date.strftime('%m')
         request_string += '&date_created__year=' + td_date.strftime('%Y')
 
-
-
-    """
-    Data Request and processing
-    """
-    #still need to determine service case_id_string dynamically for data/form url
-    service = Service.objects.all().first()
-    xform_det = service.walkin_xform
+    
     xforms = requests.get('https://dev.bitz-itc.com/ona/api/v1/forms', headers= headers).json();
     xformx = {}
 
     #split to get xform object
     for xfrm in xforms:
-        if str(xfrm['id_string']) == str(xform_det):
+        if str(xfrm['id_string']) == id_string:
             for key,frm in xfrm.items():
                 xformx.update({str(key):str(frm)}) 
 
@@ -610,11 +606,10 @@ def reports(request, report, casetype='Call'):
         'table': table,
         'query': query,
         'statrecords':statrecords,
-        'recordkeys':recordkeys,
-        'xformx':request_string
+        'recordkeys':recordkeys
         }
 
-    callreports = ["missedcalls","voicemails","totalcalls","answeredcalls","abandonedcalls"]
+    callreports = ["missedcalls","voicemails","totalcalls","answeredcalls","abandonedcalls","call"]
 
     if report in callreports:
         htmltemplate = "helpline/reports.html"
