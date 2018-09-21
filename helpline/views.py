@@ -1701,7 +1701,11 @@ def report_factory(report='callsummary', datetime_range=None, agent=None,
 
         return AgentSessionTable(clock)
 
-    service = settings.DEFAULT_SERVICE
+    # The first created service is considered our default service
+    # This will change in future to site based or config based views
+    default_service = Service.objects.all().first()
+    service = default_service
+
     reports = Report.objects.all()
     cdr = MainCDR.objects.all()
     user = HelplineUser.objects.get(hl_key__exact=agent).user if agent else None
@@ -1721,7 +1725,7 @@ def report_factory(report='callsummary', datetime_range=None, agent=None,
     # Retrun all case types Inbound and outbount for the following reports.
     if report != 'totalcases' and report != 'search':
         if casetype != 'all':
-            reports = reports.filter(casetype__exact=casetype)
+            reports = reports.filter(casetype__iexact=casetype)
 
     # Apply filters to queryset.
     if from_date and to_date:
@@ -1784,12 +1788,11 @@ def report_factory(report='callsummary', datetime_range=None, agent=None,
     total_talktime = str(timedelta(seconds=seconds)) if seconds else "00:00:00"
 
     # Count Answered, Abandoned and Voicemail calls for a specific queue.
-
-    total_answered = reports.filter(queuename__exact=service,
+    total_answered = reports.filter(service=service,
                                     calltype__exact='Answered').count()
-    total_abandoned = reports.filter(queuename__exact=service,
+    total_abandoned = reports.filter(service=service,
                                      calltype__exact='Abandoned').count()
-    total_voicemail = reports.filter(queuename__exact=service,
+    total_voicemail = reports.filter(service=service,
                                       calltype__exact='Voicemail').count()
 
     if total_offered.get('count'):
