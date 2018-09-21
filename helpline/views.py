@@ -1692,7 +1692,7 @@ def report_factory(report='callsummary', datetime_range=None, agent=None,
             to_date_epoch = calendar.timegm(to_date.timetuple())
             clock = clock.filter(hl_time__gt=from_date_epoch,hl_time__lt=to_date_epoch)
         if agent:
-            clock = clock.filter(hl_key__exact=agent)
+            clock = clock.filter(user=agent)
             filter_query['agent'] = agent
         # Filter actions. Queue Join etc.
         if query:
@@ -1708,7 +1708,7 @@ def report_factory(report='callsummary', datetime_range=None, agent=None,
 
     reports = Report.objects.all()
     cdr = MainCDR.objects.all()
-    user = HelplineUser.objects.get(hl_key__exact=agent).user if agent else None
+    user = agent
 
     calltype = {'answeredcalls': 'Answered',
                 'abandonedcalls': 'Abandoned',
