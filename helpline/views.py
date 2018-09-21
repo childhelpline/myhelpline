@@ -632,7 +632,7 @@ def reports(request, report, casetype='Call'):
 
     callreports = ["missedcalls", "voicemails", "totalcalls",
                    "answeredcalls", "abandonedcalls", "callsummaryreport",
-                  "search"]
+                  "search", "agentsessionreport"]
 
     if report in callreports:
         htmltemplate = "helpline/reports.html"
@@ -1257,20 +1257,7 @@ class ConnectedAgentsTable(tables.Table):
 class ReceievedColumn(tables.Column):
     """Return ctime from an epoch time stamp"""
     def render(self, value):
-        os.environ['TZ'] = 'Africa/Nairobi'
-        time.tzset()
         return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(value))
-
-
-class AgentColumn(tables.Column):
-    """Return the agent nick from the agent key"""
-    def render(self, value):
-        # Agent does not have a nickname
-        # Or does not extist.
-        try:
-            return HelplineUser.objects.get(hl_key=value).hl_nick
-        except Exception as e:
-            return value
 
 
 class ServiceColumn(tables.Column):
@@ -1281,9 +1268,7 @@ class ServiceColumn(tables.Column):
 
 class AgentSessionTable(tables.Table):
     """Show agent activity"""
-    hl_key = AgentColumn()
     hl_time = ReceievedColumn()
-    hl_service = ServiceColumn()
 
     class Meta:
         model = Clock
