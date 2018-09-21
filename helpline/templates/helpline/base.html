@@ -598,43 +598,27 @@ input:checked + .slider:before {
 
         <li class="treeview {% block treeview_reports %}{% endblock treeview_reports %}">
           <a href="{% url 'adminreports' 'callsummaryreport' %}">
-            <i class="fa fa-pie-chart"></i> <span>{% trans "Reports" %}</span>
-            <span class="pull-right-container">
-              <i class="fa fa-angle-left pull-right"></i>
-            </span>
+              <i class="fa fa-pie-chart"></i> <span>{% trans "Reports" %}</span>
+              <span class="pull-right-container">
+                  <i class="fa fa-angle-left pull-right"></i>
+              </span>
           </a>
           <ul class="treeview-menu">
-            <li><a href="{% url 'dashboardreports' 'performance' %}"><i class="fa fa-circle-o"></i>{% trans "Perfomance Reports" %}
+              <li><a href="{% url 'dashboardreports' 'totalcalls' %}"><i class="fa fa-circle-o"></i>{% trans "Total Calls" %}
             </a></li>
-            <li><a href="{% url 'dashboardreports' 'counsellor' %}"><i class="fa fa-circle-o"></i>{% trans "Counsellor Reports" %}
+              <li><a href="{% url 'dashboardreports' 'answeredcalls' %}"><i class="fa fa-circle-o"></i>{% trans "Answered Calls" %}
             </a></li>
-            <li><a href="{% url 'dashboardreports' 'case' %}"><i class="fa fa-circle-o"></i>{% trans "Case Reports" %}
+              <li><a href="{% url 'dashboardreports' 'abandonedcalls' %}"><i class="fa fa-circle-o"></i>{% trans "Abandoned Calls" %}
             </a></li>
-            <li><a href="{% url 'dashboardreports' 'call' %}"><i class="fa fa-circle-o"></i>{% trans "Call Reports" %}
-            </a></li>
-            <li><a href="{% url 'dashboardreports' 'service' %}"><i class="fa fa-circle-o"></i>{% trans "Service Reports" %}
-            </a></li>
-            <!--li><a href="{% url 'report_charts' 'callsummary' 'call' %}"><i class="fa fa-circle-o"></i>{% trans "Charts Inbound" %}
-            </a></li>
-            <li><a href="{% url 'adminreports' 'agentsessionreport' %}"><i class="fa fa-circle-o"></i>{% trans "Agent Session Report" %}
-            </a></li-->
-          </ul>
-          <!--ul class="treeview-menu">
-            <li><a href="{% url 'dashboardreports' 'totalcalls' %}"><i class="fa fa-circle-o"></i>{% trans "Total Calls" %}
-            </a></li>
-            <li><a href="{% url 'dashboardreports' 'answeredcalls' %}"><i class="fa fa-circle-o"></i>{% trans "Answered Calls" %}
-            </a></li>
-            <li><a href="{% url 'dashboardreports' 'abandonedcalls' %}"><i class="fa fa-circle-o"></i>{% trans "Abandoned Calls" %}
-            </a></li>
-            <li><a href="{% url 'dashboardreports' 'voicemail' %}"><i class="fa fa-circle-o"></i>{% trans "Voice Mail" %}
+              <li><a href="{% url 'dashboardreports' 'voicemail' %}"><i class="fa fa-circle-o"></i>{% trans "Voice Mail" %}
             </a></li>
             <li><a href="{% url 'adminreports' 'callsummaryreport' %}"><i class="fa fa-circle-o"></i>{% trans "Call Summary Report" %}
             </a></li>
             <li><a href="{% url 'report_charts' 'callsummary' 'call' %}"><i class="fa fa-circle-o"></i>{% trans "Charts Inbound" %}
-            </a></li>
+             </a></li>
             <li><a href="{% url 'adminreports' 'agentsessionreport' %}"><i class="fa fa-circle-o"></i>{% trans "Agent Session Report" %}
-            </a></li>
-          </ul-->
+             </a></li>
+          </ul>
         </li>
 
       </ul>
