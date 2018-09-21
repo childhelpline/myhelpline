@@ -155,23 +155,23 @@
                   <thead>
                     <tr onclick="">
                       <th>#</th>
-                      {% for item in recordkeys %}
-                      {% if not "_" == item|first %}
-                      <th>{{ item }}</th>
+                      <th style="white-space: nowrap;">Case ID</th>
+                      {% for itemx in recordkeys %}
+                      {% if not "_" == itemx|first %}
+                        <th>{{ itemx }}</th>
                       {% endif %}
                       {% endfor %}                    
                     </tr>
                   </thead>
                   <tbody>
                     {% for records in statrecords %}
-                    <tr ondblclick="window.open('/ona/demoadmin/forms/Case_Form/instance/#/' +  {{ records | get_item:'_id' }} )">
+                    <tr ondblclick="window.location.href = '{% url 'caseview' 'Case_Form' records|get_item:'_id' %}'">
                       <td>{{ forloop.counter }}. </td>
+                      <td><a href="{% url 'caseview' 'Case_Form' records|get_item:'_id' %}">{{  records | get_item:'case_id' }}</a></td>
                       {% for item_key in recordkeys %}
                       {% if not '_' == item_key|first %}
                       <td>
-                        {% if item_key == 'case_id' %}
-                        <a href="/ona/demoadmin/forms/Case_Form/instance/#/{{ records | get_item:'_id' }}">{{  records | get_item:item_key }}</a>
-                        {% elif forloop.last %}
+                        {% if forloop.last %}
                         {{  records | get_item:'_submission_time' | slice:'10' }}
                         {% else %}
                         {{  records | get_item:item_key }}
@@ -186,6 +186,7 @@
                   <tfooter>
                     <tr>
                       <th>#</th>
+                      <th>Case ID</th>
                       {% for recordkey in recordkeys %}
                       {% if not "_" == recordkey|first %}
                       <th>{{ recordkey }}</th>

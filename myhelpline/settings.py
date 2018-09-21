@@ -120,6 +120,7 @@ INSTALLED_APPS = (
     'corsheaders',
     'onadata.apps.messaging.apps.MessagingConfig',
     'helpline',
+    'mathfilters',
     )
 
 OAUTH2_PROVIDER = {
