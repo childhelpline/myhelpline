@@ -109,8 +109,8 @@ def home(request):
 
     default_service = Service.objects.all().first()
     default_service_xform = default_service.walkin_xform
-    default_service_auth_token = '7331a310c46884d2643ca9805aaf0d420ebfc831' #default_service_xform.user.auth_token
-    current_site = 'dev.bitz-itc.com' #get_current_site(request)
+    default_service_auth_token = default_service_xform.user.auth_token
+    current_site = get_current_site(request)
 
     """
     Graph data
@@ -406,8 +406,8 @@ def caseview(request,form_name,case_id):
 
     default_service = Service.objects.all().first()
     default_service_xform = default_service.walkin_xform
-    default_service_auth_token = '7331a310c46884d2643ca9805aaf0d420ebfc831' #default_service_xform.user.auth_token
-    current_site = 'dev.bitz-itc.com' #get_current_site(request)
+    default_service_auth_token = default_service_xform.user.auth_token
+    current_site = get_current_site(request)
     default_service_xform.pk = 24
 
     headers = {
@@ -477,8 +477,8 @@ def reports(request, report, casetype='Call'):
 
     default_service = Service.objects.all().first()
     default_service_xform = default_service.walkin_xform
-    default_service_auth_token = '7331a310c46884d2643ca9805aaf0d420ebfc831' #default_service_xform.user.auth_token
-    current_site = 'dev.bitz-itc.com' #get_current_site(request)
+    default_service_auth_token = default_service_xform.user.auth_token
+    current_site = get_current_site(request)
     default_service_xform.pk = 24
 
 
@@ -909,7 +909,7 @@ def case_form(request, form_name):
         xform = service.call_xform
 
 
-    supervisors = HelplineUser.objects.all()#filter(hl_role='Supervisor').order_by('hl_names');
+    supervisors = HelplineUser.objects.filter(hl_role='Supervisor').order_by('hl_names');#all()#
     caseworkers = HelplineUser.objects.filter(hl_role='Caseworker').order_by('hl_names');
     data['supervisors'] = supervisors if supervisors else {}
     data['caseworkers'] = caseworkers[0] if caseworkers else {}
