@@ -517,7 +517,14 @@ def reports(request, report, casetype='Call'):
             'Authorization': 'Token %s' % (default_service_auth_token)
     }
 
-    # Data view displays submission data.
+    #still need to determine service case_id_string dynamically for data/form url
+    service = Service.objects.all().first()
+    id_string = str(service.walkin_xform)
+    username = request.user.username
+
+    owner = get_object_or_404(User, username__iexact=username)
+    xform = get_form({'id_string__iexact': id_string})
+
     query = request.GET.get('q', '')
     datetime_range = request.GET.get("datetime_range")
     agent = request.GET.get("agent")
@@ -533,27 +540,26 @@ def reports(request, report, casetype='Call'):
         end_date = datetime.strptime(end_date, '%m/%d/%Y %I:%M %p')
 
 
-        d_from = start_date.strftime('%d')
-        m_from = start_date.strftime('%m')
-        y_from = start_date.strftime('%Y')
+    if report == 'pendingcases':
+        request_string = '&query={"case_actions/case_action":{"$i":"pending"}}'
+    elif report == 'today':
+        td_date = datetime.today()
+        request_string = '&date_created__day=' + td_date.strftime('%d')
+        request_string += '&date_created__month=' + td_date.strftime('%m')
+        request_string += '&date_created__year=' + td_date.strftime('%Y')
 
 
-        d_to = end_date.strftime('%d')
-        m_to = end_date.strftime('%m')
-        y_to = end_date.strftime('%Y')
+    xforms = requests.get('https://%s/ona/api/v1/forms' % (current_site), headers= headers).json();
+    xformx = {}
 
-        request_string += '?date_created__day__gte=' + d_from
-        request_string += '&date_created__day__lte=' + d_to
+    #split to get xform object
+    for xfrm in xforms:
+        if str(xfrm['id_string']) == id_string:
+            for key,frm in xfrm.items():
+                xformx.update({str(key):str(frm)})
 
-        request_string += '&date_created__month__gte=' + m_from
-        request_string += '&date_created__month__lte=' + m_to
-
-        request_string += '&date_created__year__gte=' + y_from
-        request_string += '&date_created__year__lte=' + y_to
-
-    stat = requests.get('%s?page=1&page_size=40&sort={"_id":1}' % (
-        url) + request_string, headers=headers).json()
-
+    stat = requests.get('https://%s/ona/api/v1/data/' % (current_site) + xformx['formid'] + '?page=1&page_size=50' + request_string, headers= headers).json();
+    # + '&sort={"_id":-1}'
     statrecords = []
     recordkeys = []
 
@@ -577,7 +583,7 @@ def reports(request, report, casetype='Call'):
                 if isinstance(value[0],dict):
                     record.update(get_records(value[0]))
             else:
-                if not kk in recordkeys and not kk.endswith('ID') and str(value) != 'yes' and str(value) != 'no':
+                if not kk in recordkeys and not kk.endswith('ID') and str(value) != 'yes' and str(value) != 'no' and str(kk) != 'case_id'  and str(kk) != 'uuid':
                     recordkeys.append(kk)
                 record.update({kk : str(value).capitalize()})
         return record
@@ -943,6 +949,12 @@ def case_form(request, form_name):
     else:
         xform = service.call_xform
 
+
+    supervisors = HelplineUser.objects.all()#filter(hl_role='Supervisor').order_by('hl_names');
+    caseworkers = HelplineUser.objects.filter(hl_role='Caseworker').order_by('hl_names');
+    data['supervisors'] = supervisors if supervisors else {}
+    data['caseworkers'] = caseworkers[0] if caseworkers else {}
+
     # If no XForm is associated with the above cases
     if not xform:
             data['message'] = {
@@ -960,6 +972,8 @@ def case_form(request, form_name):
         data['contact_form'] = ContactForm()
         data['case_action_form'] = CaseActionForm()
         data['contact_search_form'] = ContactSearchForm()
+
+
         if case_number:
             try:
                 my_case = int(case_number)
