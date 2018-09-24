@@ -31,6 +31,7 @@ from django.db.models import Sum
 from django.contrib.auth.views import login as django_login
 from django.contrib.auth.views import logout as django_logout
 from django.contrib import messages
+from django.contrib.sites.shortcuts import get_current_site
 from django.db.models.signals import post_save
 from django.conf import settings
 from django.utils.translation import gettext as _
@@ -106,23 +107,31 @@ def home(request):
     queue_pause_form = QueuePauseForm()
     queues = get_data_queues()
 
+    default_service = Service.objects.all().first()
+    default_service_xform = default_service.walkin_xform
+    default_service_auth_token = '7331a310c46884d2643ca9805aaf0d420ebfc831' #default_service_xform.user.auth_token
+    current_site = 'dev.bitz-itc.com' #get_current_site(request)
+
     """
     Graph data
     """
     headers = {
-            'Authorization': 'Token 7331a310c46884d2643ca9805aaf0d420ebfc831'
+            'Authorization': 'Token %s' %(default_service_auth_token)
     }
 
+    url = 'https://%s/ona/api/v1/charts/%s.json?field_name=_submission_time' %(current_site,default_service_xform.pk)
 
-    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/charts/24.json?field_name=_submission_time' , headers= headers).json();
+    stat = requests.get(url, headers= headers).json();
     gtdata = []
     
     for dt in get_item(stat,'data'):
         t = [str(get_item(dt,'_submission_time')),get_item(dt,'count')]
         gtdata.append(t)
+
+    url = 'https://%s/ona/api/v1/charts/%s.json?field_name=case_action' %(current_site,default_service_xform.pk)
     
     #for case status 
-    status_data = requests.get('https://dev.bitz-itc.com/ona/api/v1/charts/24.json?field_name=case_action' , headers= headers).json();
+    status_data = requests.get(url, headers= headers).json();
 
     color = {"Closed":'#00a65a',"Escalate":'#f39c12',"Pending":'#00c0ef'}
     stdata = []
@@ -394,23 +403,22 @@ def get_item(dictionary, key):
 
 @login_required
 def caseview(request,form_name,case_id):
+
+    default_service = Service.objects.all().first()
+    default_service_xform = default_service.walkin_xform
+    default_service_auth_token = '7331a310c46884d2643ca9805aaf0d420ebfc831' #default_service_xform.user.auth_token
+    current_site = 'dev.bitz-itc.com' #get_current_site(request)
+    default_service_xform.pk = 24
+
     headers = {
-            'Authorization': 'Token 7331a310c46884d2643ca9805aaf0d420ebfc831'
+            'Authorization': 'Token %s' %(default_service_auth_token)
     }
 
-
-    """
-    Data Request and processing
-    """
-    #still need to determine service case_id_string dynamically for data/form url
-    service = Service.objects.all().first()
-    xform_det = service.walkin_xform
-    #instance_view_url = 'submission-instance' + owner.username + xform 
     request_string = ''
 
-    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/24/' + case_id + request_string, headers= headers).json();
+    stat = requests.get('https://%s/ona/api/v1/data/%s/' %(current_site,default_service_xform.pk) + case_id + request_string, headers= headers).json();
     #form_details= requests.get('http://192.168.56.102:8000/ona/kemboicheru/forms/Case_Form/form.json',headers={'Authorization':'Token 68cf8a32a8f4af59333527fb58dbe1c2423249a0'})
-    history = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/24/' + case_id + '/history',headers=headers).json()
+    history = requests.get('https://%s/ona/api/v1/data/%s/%s/history'%(current_site,default_service_xform.pk,case_id),headers=headers).json()
 
     statrecords = []
     recordkeys = []
@@ -458,31 +466,29 @@ def caseview(request,form_name,case_id):
         'stat':stat,
         'statrecords':statrecords[0],
         'recordkeys':recordkeys,
-        'history':history_rec,
-        'kemcount':0
+        'history':history_rec
     }
     htmltemplate = "helpline/instance.html"
 
     return render(request, htmltemplate,data)
 
-
-
 @login_required
 def reports(request, report, casetype='Call'):
-    headers = {
-            'Authorization': 'Token 7331a310c46884d2643ca9805aaf0d420ebfc831'
-    }
 
-    """
-    Data view displays submission data.
-    """
-    #still need to determine service case_id_string dynamically for data/form url
-    service = Service.objects.all().first()
-    id_string = str(service.walkin_xform)
+    default_service = Service.objects.all().first()
+    default_service_xform = default_service.walkin_xform
+    default_service_auth_token = '7331a310c46884d2643ca9805aaf0d420ebfc831' #default_service_xform.user.auth_token
+    current_site = 'dev.bitz-itc.com' #get_current_site(request)
+    default_service_xform.pk = 24
+
+
+    headers = {
+            'Authorization': 'Token %s' %(default_service_auth_token)
+    }
     username = request.user.username
 
     owner = get_object_or_404(User, username__iexact=username)
-    xform = get_form({'id_string__iexact': id_string})
+    xform = get_form({'id_string__iexact': str(default_service.walkin_xform)})
 
     query = request.GET.get('q', '')
     datetime_range = request.GET.get("datetime_range")
@@ -498,24 +504,6 @@ def reports(request, report, casetype='Call'):
         start_date = datetime.strptime(start_date, '%m/%d/%Y %I:%M %p')
         end_date = datetime.strptime(end_date, '%m/%d/%Y %I:%M %p')
 
-
-        '''d_from = start_date.strftime('%d')
-        m_from = start_date.strftime('%m')
-        y_from = start_date.strftime('%Y')
-
-
-        d_to = end_date.strftime('%d')
-        m_to = end_date.strftime('%m')
-        y_to = end_date.strftime('%Y')
-
-        request_string += '&date_created__day__gte=' + d_from
-        request_string += '&date_created__day__lte=' + d_to
-
-        request_string += '&date_created__month__gte=' + m_from
-        request_string += '&date_created__month__lte=' + m_to
-
-        request_string += '&date_created__year__gte=' + y_from
-        request_string += '&date_created__year__lte=' + y_to'''
     if report == 'pendingcases':
         request_string = '&query={"case_actions/case_action":{"$i":"pending"}}'
     elif report == 'today':
@@ -524,17 +512,11 @@ def reports(request, report, casetype='Call'):
         request_string += '&date_created__month=' + td_date.strftime('%m')
         request_string += '&date_created__year=' + td_date.strftime('%Y')
 
-    
-    xforms = requests.get('https://dev.bitz-itc.com/ona/api/v1/forms', headers= headers).json();
-    xformx = {}
+    if request.user.HelplineUser.hl_role == 'Counsellor':
+        request_string += '&submitted_by__username=%s' %(username)
 
-    #split to get xform object
-    for xfrm in xforms:
-        if str(xfrm['id_string']) == id_string:
-            for key,frm in xfrm.items():
-                xformx.update({str(key):str(frm)}) 
 
-    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/' + xformx['formid'] + '?page=1&page_size=50' + request_string, headers= headers).json();
+    stat = requests.get('https://%s/ona/api/v1/data/%s?page=1&page_size=50' %(current_site,default_service_xform.pk) + request_string, headers= headers).json();
     # + '&sort={"_id":-1}'
     statrecords = []
     recordkeys = []
@@ -1925,8 +1907,8 @@ def report_factory(report='callsummary', datetime_range=None, agent=None,
     user = HelplineUser.objects.get(hl_key__exact=agent).user if agent else None
 
     calltype = {'answeredcalls': 'Answered',
-                'abandonedcalls': 'Abandoned',
-                'voicemail': 'Voicemail'}
+                'missedcalls': 'Abandoned',
+                'voicemails': 'Voicemail'}
 
     casestatus = {'pendingcases': 'Pending',
                   'closedcases': 'Close',
