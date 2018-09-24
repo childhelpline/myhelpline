@@ -119,6 +119,7 @@ def home(request):
             'Authorization': 'Token %s' %(default_service_auth_token)
     }
 
+    #charts
     url = 'https://%s/ona/api/v1/charts/%s.json?field_name=_submission_time' %(current_site,default_service_xform.pk)
 
     stat = requests.get(url, headers= headers).json();
@@ -128,17 +129,32 @@ def home(request):
         t = [str(get_item(dt,'_submission_time')),get_item(dt,'count')]
         gtdata.append(t)
 
-    url = 'https://%s/ona/api/v1/charts/%s.json?field_name=case_action' %(current_site,default_service_xform.pk)
+    stype = 'case_action'
+
+    if request.user.HelplineUser.hl_role == 'Caseworker':
+        url = 'https://%s/ona/api/v1/charts/%s.json?field_name=client_state' %(current_site,default_service_xform.pk)
+        color = ['#00a65a','#00c0ef','#f39c12','#808000','#C7980A', '#F4651F', '#82D8A7', '#CC3A05', '#575E76', '#156943', '#0BD055', '#ACD338']
+        stype = 'client_state'
+    else:
+        url = 'https://%s/ona/api/v1/charts/%s.json?field_name=case_action' %(current_site,default_service_xform.pk)
+        color = ['#00a65a','#00c0ef','#f39c12']
     
     #for case status 
     status_data = requests.get(url, headers= headers).json();
 
-    color = {"Closed":'#00a65a',"Escalate":'#f39c12',"Pending":'#00c0ef'}
     stdata = []
+    ic = 0
     for dt in  get_item(status_data,'data'):#status_data['data']:
-        lbl = str(dt['case_action'][0])
+        lbl = dt[str(stype)]
+        if not stype == 'case_action':#isinstance(lbl,list):
+            lbl = str(lbl) if not len(lbl) == 0 else "Others"
+        else:
+            str(lbl[0])
+
         vl = str(dt['count'])
-        stdata.append({"label":str(lbl),"data":str(vl),"color":str(color[lbl])})
+        cl = str(color[ic]) #list(random.choice(range(256), size=3));
+        ic += 1
+        stdata.append({"label":lbl,"data":str(vl),"color":str(cl)})
 
     return render(request, 'helpline/home.html',
                   {'dashboard_stats': dashboard_stats,
@@ -406,8 +422,8 @@ def caseview(request,form_name,case_id):
 
     default_service = Service.objects.all().first()
     default_service_xform = default_service.walkin_xform
-    default_service_auth_token = default_service_xform.user.auth_token
-    current_site = get_current_site(request)
+    default_service_auth_token = '7331a310c46884d2643ca9805aaf0d420ebfc831' #default_service_xform.user.auth_token
+    current_site = 'dev.bitz-itc.com' #get_current_site(request)
     default_service_xform.pk = 24
 
     headers = {
@@ -477,8 +493,8 @@ def reports(request, report, casetype='Call'):
 
     default_service = Service.objects.all().first()
     default_service_xform = default_service.walkin_xform
-    default_service_auth_token = default_service_xform.user.auth_token
-    current_site = get_current_site(request)
+    default_service_auth_token = '7331a310c46884d2643ca9805aaf0d420ebfc831' #default_service_xform.user.auth_token
+    current_site = 'dev.bitz-itc.com' #get_current_site(request)
     default_service_xform.pk = 24
 
 
@@ -909,7 +925,7 @@ def case_form(request, form_name):
         xform = service.call_xform
 
 
-    supervisors = HelplineUser.objects.filter(hl_role='Supervisor').order_by('hl_names');#all()#
+    supervisors = HelplineUser.objects.all()#filter(hl_role='Supervisor').order_by('hl_names');
     caseworkers = HelplineUser.objects.filter(hl_role='Caseworker').order_by('hl_names');
     data['supervisors'] = supervisors if supervisors else {}
     data['caseworkers'] = caseworkers[0] if caseworkers else {}
