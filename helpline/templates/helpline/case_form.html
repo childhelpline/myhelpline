@@ -234,13 +234,13 @@ audio{
     <div class="modal-content">
         <div class="modal-header bg-light-blue-active">
           <!--button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button-->
+          <a href="{% url 'dashboard_home' %}" class="close" style="color:#ffffff;"><span aria-hidden="true">&times;</span></a>
           <h4 class="modal-title" id="myModalLabel">{% trans "Form" %} > {{ form_name }}| Case ID 
               <span id="caseid">{{ case }}</span>
               > <span id="contact_details_step" onclick="$('#frame-contact').removeClass('hidden');$('#frame_iframe').addClass('hidden');$('#frame-case-action').addClass('hidden');">Contact Details</span>
               > <span id="case_details_step">Case Details</span>
               > <span id="case_action_step" onclick="$('#frame-case-action').removeClass('hidden');$('#frame_iframe').addClass('hidden');$('#frame-contact').addClass('hidden');">Case Action</span>
             <span id="editedBadge"></span>
-            <span class="pull-right" id="formTimer" style="font-size: 24px; color: #fff;">00:00:00</span>
             {% if form_name == 'qa' %}
             <span class="pull-right">
               <audio controls autoplay="autoplay">
@@ -248,6 +248,8 @@ audio{
                 <source src="http://soundbible.com/mp3/Tyrannosaurus%20Rex%20Roar-SoundBible.com-807702404.mp3" type="audio/mpeg" />
               </audio> 
             </span>
+            {% else %}
+            <span class="pull-right" id="formTimer" style="font-size: 24px; color: #fff; margin-right: 30px;">00:00:00</span>
             {% endif %}
           <h4>
 
