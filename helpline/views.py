@@ -1915,6 +1915,36 @@ def helpline_home(request):
     return redirect("/helpline/")
 
 
+def report_save_handler(sender, instance, created, **kwargs):
+    """Notify relevant users when a report is saved."""
+
+    # Only notify if report is marked as open
+    if instance.escalatename != "":
+        user = instance.user
+        verb = "Escalted case %s. Telephone number: %s Status: %s" % (
+            instance.case, instance.telephone, instance.casestatus)
+        case = instance.case
+        address = instance.address
+        names = address.hl_names if address else None
+
+
+        level = 'info'
+
+        description = """
+        Customer Details
+        Name: %s
+        Phone Number: %s
+        """ % (
+               names,
+               instance.telephone
+)
+
+        escalate_to = User.objects.get(username=instance.escalatename)
+
+        notify.send(user, recipient=user,
+            verb=verb, level=level, description=description)
+
+
 @json_view
 def asterisk_alert(request, auth, dialstatus, case_id):
     """Accept user alerts from Asterisk"""
@@ -2046,3 +2076,5 @@ def remove_from_queue(request):
     agent = request.POST.get('agent', '')
     r = backend.remove_from_queue(agent, queue)
     return r
+
+post_save.connect(report_save_handler, sender=Report)
