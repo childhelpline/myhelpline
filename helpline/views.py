@@ -144,17 +144,16 @@ def home(request):
 
     stdata = []
     ic = 0
-    for dt in  get_item(status_data,'data'):#status_data['data']:
-        lbl = dt[str(stype)]
-        if not stype == 'case_action':#isinstance(lbl,list):
+    for dt in  status_data['data']:
+        lbl = str(dt[str(stype)])
+        if not isinstance(lbl,list):
             lbl = str(lbl) if not len(lbl) == 0 else "Others"
         else:
             str(lbl[0])
 
-        vl = str(dt['count'])
-        cl = str(color[ic]) #list(random.choice(range(256), size=3));
+        col = str(color[ic])
         ic += 1
-        stdata.append({"label":lbl,"data":str(vl),"color":str(cl)})
+        stdata.append({"label":str(lbl),"data":str(dt['count']),"color":str(col)})
 
     return render(request, 'helpline/home.html',
                   {'dashboard_stats': dashboard_stats,
