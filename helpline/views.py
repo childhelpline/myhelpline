@@ -134,24 +134,32 @@ def home(request):
         t = [str(get_item(dt, '_submission_time')), get_item(dt, 'count')]
         gtdata.append(t)
 
-    # for case status
-    status_data = requests.get(
-        'https://%s/ona/api/v1/charts/7.json?field_name=case_action' % (
-            current_site),
-        headers=headers).json()
+    stype = 'case_action'
 
-    color = {"Closed": '#00a65a', "Escalate": '#f39c12', "Pending": '#00c0ef'}
+    if request.user.HelplineUser.hl_role == 'Caseworker':
+        url = 'https://%s/ona/api/v1/charts/%s.json?field_name=client_state' %(current_site,default_service_xform.pk)
+        color = ['#00a65a','#00c0ef','#f39c12','#808000','#C7980A', '#F4651F', '#82D8A7', '#CC3A05', '#575E76', '#156943', '#0BD055', '#ACD338']
+        stype = 'client_state'
+    else:
+        url = 'https://%s/ona/api/v1/charts/%s.json?field_name=case_action' %(current_site,default_service_xform.pk)
+        color = ['#00a65a','#00c0ef','#f39c12']
+
+    #for case status 
+    status_data = requests.get(url, headers= headers).json();
+
     stdata = []
-    for dt in get_item(status_data, 'data'):
-        lbl = str(dt['case_action'][0])
+    ic = 0
+    for dt in  get_item(status_data,'data'):#status_data['data']:
+        lbl = dt[str(stype)]
+        if not stype == 'case_action':#isinstance(lbl,list):
+            lbl = str(lbl) if not len(lbl) == 0 else "Others"
+        else:
+            str(lbl[0])
+
         vl = str(dt['count'])
-        stdata.append(
-            {
-                "label": str(lbl),
-                "data": str(vl),
-                "color": str(color[lbl])
-            }
-        )
+        cl = str(color[ic]) #list(random.choice(range(256), size=3));
+        ic += 1
+        stdata.append({"label":lbl,"data":str(vl),"color":str(cl)})
 
     return render(request, 'helpline/home.html',
                   {'dashboard_stats': dashboard_stats,
@@ -496,8 +504,6 @@ def caseview(request, form_name, case_id):
 
     return render(request, htmltemplate, data)
 
-
-
 @login_required
 def reports(request, report, casetype='Call'):
     """Report processing and rendering"""
@@ -523,7 +529,7 @@ def reports(request, report, casetype='Call'):
     username = request.user.username
 
     owner = get_object_or_404(User, username__iexact=username)
-    xform = get_form({'id_string__iexact': id_string})
+    xform = get_form({'id_string__iexact': str(default_service.walkin_xform)})
 
     query = request.GET.get('q', '')
     datetime_range = request.GET.get("datetime_range")
@@ -539,7 +545,6 @@ def reports(request, report, casetype='Call'):
         start_date = datetime.strptime(start_date, '%m/%d/%Y %I:%M %p')
         end_date = datetime.strptime(end_date, '%m/%d/%Y %I:%M %p')
 
-
     if report == 'pendingcases':
         request_string = '&query={"case_actions/case_action":{"$i":"pending"}}'
     elif report == 'today':
@@ -547,7 +552,6 @@ def reports(request, report, casetype='Call'):
         request_string = '&date_created__day=' + td_date.strftime('%d')
         request_string += '&date_created__month=' + td_date.strftime('%m')
         request_string += '&date_created__year=' + td_date.strftime('%Y')
-
 
     xforms = requests.get('https://%s/ona/api/v1/forms' % (current_site), headers= headers).json();
     xformx = {}
@@ -559,6 +563,11 @@ def reports(request, report, casetype='Call'):
                 xformx.update({str(key):str(frm)})
 
     stat = requests.get('https://%s/ona/api/v1/data/' % (current_site) + xformx['formid'] + '?page=1&page_size=50' + request_string, headers= headers).json();
+    if request.user.HelplineUser.hl_role == 'Counsellor':
+        request_string += '&submitted_by__username=%s' %(username)
+
+
+    stat = requests.get('https://%s/ona/api/v1/data/%s?page=1&page_size=50' %(current_site,default_service_xform.pk) + request_string, headers= headers).json();
     # + '&sort={"_id":-1}'
     statrecords = []
     recordkeys = []
@@ -1725,8 +1734,8 @@ def report_factory(report='callsummary', datetime_range=None, agent=None,
     user = agent
 
     calltype = {'answeredcalls': 'Answered',
-                'abandonedcalls': 'Abandoned',
-                'voicemail': 'Voicemail'}
+                'missedcalls': 'Abandoned',
+                'voicemails': 'Voicemail'}
 
     casestatus = {'pendingcases': 'Pending',
                   'closedcases': 'Close',
