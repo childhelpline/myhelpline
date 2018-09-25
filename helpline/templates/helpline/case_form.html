@@ -115,9 +115,16 @@ audio{
   }
 
   function contactSearch(){
-    var contact_search_form = '#contact-search-form';
 
-    $.ajax({
+    var contact_search_form = '#contact-search-form';
+    var form = $("#contact-search-form")[0]
+    var name = form['name'].value
+    var telephone = form['telephone'].value
+    prefill(telephone)
+
+
+
+    /*$.ajax({
       url: "{% url 'contact_search_form' %}",
       type: "POST",
       data: $("#contact-search-form").serialize(),
@@ -138,7 +145,7 @@ audio{
         //$(case_form).find('.error-message').show()
         $("#error-message").html("Error");
       }
-    });
+    });*/
   }
 
   function saveContact(){
@@ -227,7 +234,7 @@ audio{
     <div class="modal-content">
         <div class="modal-header bg-light-blue-active">
           <!--button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button-->
-          <h4 class="modal-title" id="myModalLabel">{% trans "Form" %} > {{ form_name }} | Case ID 
+          <h4 class="modal-title" id="myModalLabel">{% trans "Form" %} > {{ form_name }}| Case ID 
               <span id="caseid">{{ case }}</span>
               > <span id="contact_details_step" onclick="$('#frame-contact').removeClass('hidden');$('#frame_iframe').addClass('hidden');$('#frame-case-action').addClass('hidden');">Contact Details</span>
               > <span id="case_details_step">Case Details</span>
@@ -363,10 +370,10 @@ audio{
                                 </div>
                                 <!-- /.col -->
                               </div>
-                              <!-- /.row -->
+                              <!-- /.row {{ iframe_url }} -->
                             </div>
                 <div id="frame_iframe"  class="{% if form_name != 'webonline' and form_name != 'qa' %} hidden {% endif %}">
-                  <iframe src="{{ iframe_url }}" style="width: 100%; height: 80vh; border: none;"></iframe>
+                  <iframe src="{{ iframe_url }}" id="helpline-forms" style="width: 100%; height: 80vh; border: none;"></iframe>
                 </div>
               </div>
           </div>
@@ -383,8 +390,6 @@ audio{
 
   function receiveMessage(event)
   {
-      if (event.origin !== "{{ enketo_url }}")
-        return;
         var resp = JSON.parse(event.data)
       if(resp.enketoEvent == 'submissionsuccess'){
           // Show case action form after successful case submission
