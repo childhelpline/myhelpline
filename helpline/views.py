@@ -1106,7 +1106,7 @@ def case_form(request, form_name):
                 my_case.hl_notes = form.cleaned_data.get('notes')
                 my_case.hl_type = form.cleaned_data.get('case_type')
 
-                my_case.hl_priority = 'Non-Critical'
+                my_case.priority = 'Non-Critical'
                 my_case.hl_creator = request.user.HelplineUser.hl_key
                 my_case.save()
 

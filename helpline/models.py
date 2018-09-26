@@ -122,6 +122,7 @@ class Case(models.Model):
     hl_time = models.IntegerField(blank=True, null=True)
     instance = models.ManyToManyField(Instance)
     status = models.CharField(max_length=25, blank=True, null=True)
+    priority = models.CharField(max_length=25, blank=True, null=True)
 
     def __unicode__(self):
         return str(self.hl_case)
