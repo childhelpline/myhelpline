@@ -103,6 +103,14 @@ input:checked + .slider:before {
 .slider.round:before {
   border-radius: 50%;
 }
+.ml-0{
+  margin-left: 0px !important;
+}
+.iw img{
+  width: auto !important;
+  border-radius: 50%;
+  border: solid 0.2em #eee;
+}
 </style>
 
 <body class="hold-transition skin-blue sidebar-mini fixed">
@@ -438,11 +446,11 @@ input:checked + .slider:before {
                   <span class="label label-success pull-right">{{ dashboard_stats.total_cases }}</span>
                 </span>
               </a></li>
-              <li><a href="{% url 'dashboardreports' 'pendingcases' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Pending Cases" %}
+              <!--li><a href="{% url 'dashboardreports' 'pendingcases' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Pending Cases" %}
                 <span class="pull-right-container">
                   <span class="label label-warning pull-right">{{ dashboard_stats.open_cases }}</span>
                 </span>
-              </a></li>
+              </a></li-->
               <li><a href="{% url 'dashboardreports' 'totalcases' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "All Cases" %}
                 <span class="pull-right-container">
                   <span class="label label-info pull-right">{{ dashboard_stats.total_cases }}</span>
@@ -578,6 +586,14 @@ input:checked + .slider:before {
         {% endif %}
         <li>
           <a href="/admin/auth/user/">
+            <i class="fa fa-users"></i> <span>{% trans "Users" %}</span>
+            <!--span class="pull-right-container">
+              <small class="label pull-right bg-green">new</small>
+            </span-->
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'manageusers' %}">
             <i class="fa fa-users"></i> <span>{% trans "Users" %}</span>
             <!--span class="pull-right-container">
               <small class="label pull-right bg-green">new</small>
@@ -1064,8 +1080,8 @@ function prefill(phone){
     var request = new XMLHttpRequest();
 
     // Open a new connection, using the GET request on the URL endpoint
-    request.open('GET', 'https://dev.bitz-itc.com/ona/api/v1/data/24?query={"reporter_details/reporter_phone":{"$i":"' + phone + '"}}&format=json', true);
-    request.setRequestHeader("Authorization", "Token 7331a310c46884d2643ca9805aaf0d420ebfc831");
+    request.open('GET', '{{ data_url |safe }}?query={"reporter_details/reporter_phone":{"$i":"' + phone + '"}}&format=json', true);
+    request.setRequestHeader("Authorization", "Token {{ data_token }}");
     //request.setRequestHeader("Content-type", "application/json");
     request.onload = function (data) {
       // Begin accessing JSON data here

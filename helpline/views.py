@@ -109,8 +109,9 @@ def home(request):
 
     default_service = Service.objects.all().first()
     default_service_xform = default_service.walkin_xform
-    default_service_auth_token = default_service_xform.user.auth_token
-    current_site = get_current_site(request)
+    default_service_auth_token = '7331a310c46884d2643ca9805aaf0d420ebfc831' #default_service_xform.user.auth_token
+    current_site = 'dev.bitz-itc.com' #get_current_site(request)
+    default_service_xform.pk = 24
 
     """
     Graph data
@@ -144,16 +145,16 @@ def home(request):
 
     stdata = []
     ic = 0
-    for dt in  status_data['data']:
-        lbl = str(dt[str(stype)])
-        if not isinstance(lbl,list):
-            lbl = str(lbl) if not len(lbl) == 0 else "Others"
+    for dt in get_item(status_data,'data'):#  status_data['data']:
+        lbl = dt[str(stype)]
+        if isinstance(lbl,list):
+            lbl = lbl[0].encode('UTF8') if not len(lbl) == 0 else "Others"
         else:
-            str(lbl[0])
+            lbl if not len(lbl) == 0 else "Others"
 
-        col = str(color[ic])
+        col = color[ic]
         ic += 1
-        stdata.append({"label":str(lbl),"data":str(dt['count']),"color":str(col)})
+        stdata.append({"label":str(lbl),"data":str(str(dt['count'])),"color":str(col)})
 
     return render(request, 'helpline/home.html',
                   {'dashboard_stats': dashboard_stats,
@@ -237,7 +238,8 @@ def myaccount(request):
 @login_required
 def manage_users(request):
     """View user management page"""
-    return render(request, 'helpline/myaccount.html')
+    userlist  = HelplineUser.objects.all()
+    return render(request, 'helpline/users.html',{'systemusers':userlist})
 
 
 @login_required
@@ -902,10 +904,29 @@ def queue_manager(user, extension, action):
 @login_required
 def case_form(request, form_name):
     """Handle Walkin and CallForm POST and GET Requests"""
+
+
+    default_service = Service.objects.all().first()
+    default_service_xform = default_service.walkin_xform
+    default_service_auth_token = default_service_xform.user.auth_token
+    current_site = get_current_site(request)
+
+    """
+    Graph data
+    """
+    headers = {
+            'Authorization': 'Token %s' %(default_service_auth_token)
+    }
+
+    #charts
+    url = 'https://%s/ona/api/v1/data/%s' %(current_site,default_service_xform.pk)
+
     message = ''
     initial = {}
     data = {}
     data['enketo_url'] = settings.ENKETO_URL
+    data['data_url'] = url
+    data['data_token'] = default_service_auth_token
 
     service = Service.objects.all().first()
     if(form_name == 'walkin'):
@@ -924,7 +945,7 @@ def case_form(request, form_name):
         xform = service.call_xform
 
 
-    supervisors = HelplineUser.objects.all()#filter(hl_role='Supervisor').order_by('hl_names');
+    supervisors = HelplineUser.objects.filter(hl_role='Supervisor').order_by('hl_names');
     caseworkers = HelplineUser.objects.filter(hl_role='Caseworker').order_by('hl_names');
     data['supervisors'] = supervisors if supervisors else {}
     data['caseworkers'] = caseworkers[0] if caseworkers else {}
