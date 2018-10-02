@@ -35,6 +35,7 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.db.models.signals import post_save
 from django.conf import settings
 from django.utils.translation import gettext as _
+from django.utils import timezone
 
 # Django 1.10 breaks reverse imports.
 try:
@@ -98,7 +99,7 @@ def home(request):
         awt = request.user.HelplineUser.get_average_wait_time()
     except Exception as e:
         new = initialize_myaccount(request.user)
-        return redirect("/helpline/#%s" % (e))
+        return redirect("/helpline/#%s/new%s" % (e, new))
 
     dashboard_stats = get_dashboard_stats(request.user)
     status_count = get_status_count()
@@ -108,26 +109,29 @@ def home(request):
     queues = get_data_queues()
 
     default_service = Service.objects.all().first()
-    default_service_xform = default_service.walkin_xform
-    default_service_auth_token = '7331a310c46884d2643ca9805aaf0d420ebfc831' #default_service_xform.user.auth_token
-    current_site = 'dev.bitz-itc.com' #get_current_site(request)
-    default_service_xform.pk = 24
+    default_service_xform = default_service.call_xform
+    default_service_auth_token = default_service_xform.user.auth_token
+    current_site = get_current_site(request)
 
-    """
-    Graph data
-    """
+
+    url = 'https://%s/ona/api/v1/charts/%s.json?field_name=_submission_time' % (
+        current_site,
+        default_service_xform.pk
+    )
+
+    # Graph data
     headers = {
-            'Authorization': 'Token %s' %(default_service_auth_token)
+            'Authorization': 'Token %s' % (default_service_auth_token)
     }
 
-    #charts
-    url = 'https://%s/ona/api/v1/charts/%s.json?field_name=_submission_time' %(current_site,default_service_xform.pk)
-
-    stat = requests.get(url, headers= headers).json();
+    stat = requests.get(
+        url,
+        headers=headers
+    ).json()
     gtdata = []
-    
-    for dt in get_item(stat,'data'):
-        t = [str(get_item(dt,'_submission_time')),get_item(dt,'count')]
+
+    for dt in get_item(stat, 'data'):
+        t = [str(get_item(dt, '_submission_time')), get_item(dt, 'count')]
         gtdata.append(t)
 
     stype = 'case_action'
@@ -139,7 +143,7 @@ def home(request):
     else:
         url = 'https://%s/ona/api/v1/charts/%s.json?field_name=case_action' %(current_site,default_service_xform.pk)
         color = ['#00a65a','#00c0ef','#f39c12']
-    
+
     #for case status 
     status_data = requests.get(url, headers= headers).json();
 
@@ -165,8 +169,8 @@ def home(request):
                    'queue_form': queue_form,
                    'queue_pause_form': queue_pause_form,
                    'status_count': status_count,
-                   'gdata':gtdata,
-                   'dt':stdata
+                   'gdata': gtdata,
+                   'dt': stdata
                    })
 
 
@@ -418,24 +422,33 @@ def faq(request):
 def get_item(dictionary, key):
     return dictionary.get(key,"")
 
+
 @login_required
-def caseview(request,form_name,case_id):
+def caseview(request, form_name, case_id):
+    """View case or submission information"""
 
     default_service = Service.objects.all().first()
-    default_service_xform = default_service.walkin_xform
-    default_service_auth_token = '7331a310c46884d2643ca9805aaf0d420ebfc831' #default_service_xform.user.auth_token
-    current_site = 'dev.bitz-itc.com' #get_current_site(request)
-    default_service_xform.pk = 24
+    default_service_xform = default_service.call_xform
+    default_service_auth_token = default_service_xform.user.auth_token
+    current_site = get_current_site(request)
 
+    url = 'https://%s/ona/api/v1/data/%s/' % (
+        current_site,
+        default_service_xform.pk
+    )
+
+    # Graph data
     headers = {
-            'Authorization': 'Token %s' %(default_service_auth_token)
+            'Authorization': 'Token %s' % (default_service_auth_token)
     }
 
+    # Data Request and processing
+    # Get default service
+    xform_det = default_service.walkin_xform
     request_string = ''
 
-    stat = requests.get('https://%s/ona/api/v1/data/%s/' %(current_site,default_service_xform.pk) + case_id + request_string, headers= headers).json();
-    #form_details= requests.get('http://192.168.56.102:8000/ona/kemboicheru/forms/Case_Form/form.json',headers={'Authorization':'Token 68cf8a32a8f4af59333527fb58dbe1c2423249a0'})
-    history = requests.get('https://%s/ona/api/v1/data/%s/%s/history'%(current_site,default_service_xform.pk,case_id),headers=headers).json()
+    stat = requests.get(url + case_id + request_string, headers=headers).json()
+    history = requests.get(url + case_id + '/history', headers=headers).json()
 
     statrecords = []
     recordkeys = []
@@ -483,25 +496,36 @@ def caseview(request,form_name,case_id):
         'stat':stat,
         'statrecords':statrecords[0],
         'recordkeys':recordkeys,
-        'history':history_rec
+        'history':history_rec,
+        'xform': default_service_xform,
+        'kemcount':0
     }
     htmltemplate = "helpline/instance.html"
 
-    return render(request, htmltemplate,data)
+    return render(request, htmltemplate, data)
 
 @login_required
 def reports(request, report, casetype='Call'):
-
+    """Report processing and rendering"""
     default_service = Service.objects.all().first()
-    default_service_xform = default_service.walkin_xform
-    default_service_auth_token = '7331a310c46884d2643ca9805aaf0d420ebfc831' #default_service_xform.user.auth_token
-    current_site = 'dev.bitz-itc.com' #get_current_site(request)
-    default_service_xform.pk = 24
+    default_service_xform = default_service.call_xform
+    default_service_auth_token = default_service_xform.user.auth_token
+    current_site = get_current_site(request)
 
 
+    url = 'https://%s/ona/api/v1/data/%s' % (
+        current_site,
+        default_service_xform.pk
+    )
+
+    # Graph data
     headers = {
-            'Authorization': 'Token %s' %(default_service_auth_token)
+            'Authorization': 'Token %s' % (default_service_auth_token)
     }
+
+    #still need to determine service case_id_string dynamically for data/form url
+    service = Service.objects.all().first()
+    id_string = str(service.walkin_xform)
     username = request.user.username
 
     owner = get_object_or_404(User, username__iexact=username)
@@ -529,6 +553,16 @@ def reports(request, report, casetype='Call'):
         request_string += '&date_created__month=' + td_date.strftime('%m')
         request_string += '&date_created__year=' + td_date.strftime('%Y')
 
+    xforms = requests.get('https://%s/ona/api/v1/forms' % (current_site), headers= headers).json();
+    xformx = {}
+
+    #split to get xform object
+    for xfrm in xforms:
+        if str(xfrm['id_string']) == id_string:
+            for key,frm in xfrm.items():
+                xformx.update({str(key):str(frm)})
+
+    stat = requests.get('https://%s/ona/api/v1/data/' % (current_site) + xformx['formid'] + '?page=1&page_size=50' + request_string, headers= headers).json();
     if request.user.HelplineUser.hl_role == 'Counsellor':
         request_string += '&submitted_by__username=%s' %(username)
 
@@ -574,7 +608,7 @@ def reports(request, report, casetype='Call'):
         recordkeys = False
 
     sort = request.GET.get('sort')
-    report_title = {report :_(str(report).capitalize() + " Reports")}
+    report_title = {report: _(str(report).capitalize() + " Reports")}
     '''report_title = {
         'performance': _('Performance Reports'),
         'counsellor': _('Counsellor Reports'),
@@ -597,18 +631,23 @@ def reports(request, report, casetype='Call'):
         return exporter.response('table.{}'.format(export_format))
     table.paginate(page=request.GET.get('page', 1), per_page=10)
 
-    data = {'owner': owner, 'xform': xform,'title': report_title.get(report),
+    data = {
+        'owner': default_service_xform.user,
+        'xform': default_service_xform,
+        'title': report_title.get(report),
         'report': report,
         'form': form,
         'datetime_range': datetime_range,
         'dashboard_stats': dashboard_stats,
         'table': table,
         'query': query,
-        'statrecords':statrecords,
-        'recordkeys':recordkeys
-        }
+        'statrecords': statrecords,
+        'recordkeys': recordkeys
+    }
 
-    callreports = ["missedcalls","voicemails","totalcalls","answeredcalls","abandonedcalls","call"]
+    callreports = ["missedcalls", "voicemails", "totalcalls",
+                   "answeredcalls", "abandonedcalls", "callsummaryreport",
+                  "search", "agentsessionreport"]
 
     if report in callreports:
         htmltemplate = "helpline/reports.html"
@@ -617,7 +656,7 @@ def reports(request, report, casetype='Call'):
     else:
         htmltemplate = "helpline/report_body.html"
 
-    return render(request, htmltemplate,data)
+    return render(request, htmltemplate, data)
 
 
 @login_required
@@ -631,12 +670,6 @@ def reports1(request, report, casetype='Call'):
     category = request.GET.get("category", "")
     form = ReportFilterForm(request.GET)
     dashboard_stats = get_dashboard_stats(request.user)
-
-    '''headers = {
-            'Authorization': 'Token 7331a310c46884d2643ca9805aaf0d420ebfc831'
-    }
-
-    stat = requests.get('https://dev.bitz-itc.com/ona/api/v1/data/24',headers= headers).json();'''
 
     sort = request.GET.get('sort')
     report_title = {
@@ -662,7 +695,7 @@ def reports1(request, report, casetype='Call'):
 
     table.paginate(page=request.GET.get('page', 1), per_page=10)
 
-    return render(request, 'helpline/reports.html', { #dashboardreports
+    return render(request, 'helpline/reports.html', {
         'title': report_title.get(report),
         'report': report,
         'form': form,
@@ -1092,13 +1125,13 @@ def case_form(request, form_name):
                 my_case.hl_notes = form.cleaned_data.get('notes')
                 my_case.hl_type = form.cleaned_data.get('case_type')
 
-                my_case.hl_priority = 'Non-Critical'
+                my_case.priority = 'Non-Critical'
                 my_case.hl_creator = request.user.HelplineUser.hl_key
                 my_case.save()
 
                 report, contact, address = get_case_info(case_number)
 
-                now = datetime.now()
+                now = timezone.now()
                 callstart = "%s:%s:%s" % (now.hour, now.minute, now.second)
                 notime = "00:00:00"
                 report = Report(case_id=my_case.hl_case,
@@ -1162,224 +1195,13 @@ def case_form(request, form_name):
     )
 
 
-
-
-@login_required
-def my_forms(request, form_name):
-    """Handle Walkin and CallForm POST and GET Requests"""
-    message = ''
-
-    if(form_name == 'walkin'):
-        loaded_form = {'url':'https://enketo.bitz-itc.com/i/::4n1oArZH',
-                        'name':'walkin'}
-    elif(form_name == 'qa'):
-        loaded_form = {'url':'https://enketo.bitz-itc.com/i/::Bkyb35PE',
-                        'name':'qa'}
-
-
-    initial = {}
-    if request.method == 'GET':
-        case_number = request.GET.get('case')
-        #return redirect('/ona/' + request.user.username + '/forms/Case_Form/enter-data')#"Cheru: %s",form_name)
-        # Check if we're looking for a case.
-        if case_number:
-            my_case = Case.objects.get(hl_case=case_number)
-            report, contact, address = get_case_info(case_number)
-            initial = {
-                'case_number': case_number,
-                'phone_number': contact.hl_contact if contact else '',
-                'calls': contact.hl_calls if contact else '',
-                'caller_name': address.hl_names if address else '',
-                'company': address.hl_company if address else '',
-                'gender': address.hl_gender if address else '',
-                'region': address.hl_address3 if address else '',
-                'language': address.hl_language if address else '',
-                'district': address.hl_address2 if address else '',
-                'address': address.hl_address1 if address else '',
-                'current': address.hl_current if address else '',
-                'occupation': address.hl_headoccupation if address else '',
-                'age_group': address.hl_ageclass if address else '',
-                'email': address.hl_email if address else '',
-                'data': my_case.hl_data if my_case else '',
-                'comment': my_case.hl_details if my_case else '',
-                'notes': my_case.hl_notes if my_case else '',
-                'partner': my_case.hl_registry if my_case else '',
-                'category': my_case.hl_acategory if my_case else '',
-                'referred_from': my_case.isrefferedfrom if my_case else '',
-                'sub_category': my_case.hl_subcategory if my_case else '',
-                'sub_sub_category': my_case.hl_subsubcat if my_case else '',
-                'case_status': report.casestatus if report else '',
-                'case_type': my_case.hl_type if my_case else '',
-                'escalate_to': my_case.hl_escalateto if my_case else '',
-                'date_of_birth': address.hl_dob if address else '',
-                'national_registration_card': address.hl_adultnumber if address else '',
-                'physical_address': address.hl_address4 if address else '',
-
-            }
-            case_history = Report.objects.filter(telephone=contact.hl_contact).order_by('-case')
-            case_history_table = CaseHistoryTable(case_history)
-            try:
-                case_history_table.paginate(page=request.GET.get('page', 1), per_page=10)
-            except Exception as e:
-                # Ignore pagination error.
-                pass
-        else:
-            initial = {}
-            my_case = None
-
-            # Case history table will display all records when initialized.
-            case_history = Report.objects.all().order_by('-case_id')
-            report, contact, address = (None, None, None)
-            case_history_table = CaseHistoryTable(case_history)
-            case_history_table.paginate(page=request.GET.get('page', 1), per_page=10)
-
-        initial_disposition = {'case_number': case_number,
-                               'disposition': my_case.hl_disposition
-                               if my_case else ''}
-        disposition_form = DispositionForm(initial=(initial_disposition))
-
-        contact_form = ContactForm(initial=initial)
-
-    elif request.method == 'POST':
-        contact, address = (None, None)
-        # Process forms differently.
-
-        if form_name == 'call':
-            contact_form = ContactForm(request.POST)
-        elif form_name == 'walkin':
-            contact_form = ContactForm(request.POST)
-
-        if form.is_valid():
-            case_number = form.cleaned_data.get('case_number')
-            if case_number:
-                my_case = Case.objects.get(hl_case=case_number)
-                report, contact, address = get_case_info(case_number)
-                case_history = Report.objects.filter(
-                    telephone=contact.hl_contact).order_by('-case')
-                case_history_table = CaseHistoryTable(case_history)
-                try:
-                    case_history_table.paginate(page=request.GET.get('page', 1), per_page=10)
-                except Exception as e:
-                    # Do not paginate if there is an error
-                    pass
-            else:
-                my_case = Case()
-                my_case.hl_data = form_name
-                my_case.hl_counsellor = request.user.HelplineUser.hl_key
-                my_case.popup = 'Done'
-                my_case.hl_time = int(time.time())
-                my_case.hl_status = form.cleaned_data.get('case_status')
-                my_case.hl_acategory = form.cleaned_data.get('category')
-                my_case.hl_notes = form.cleaned_data.get('notes')
-                my_case.hl_type = form.cleaned_data.get('case_type')
-                my_case.hl_subcategory = form.cleaned_data.get('sub_category')
-                my_case.hl_subsubcat = form.cleaned_data.get('sub_sub_category')
-                my_case.isrefferedfrom = form.cleaned_data.get('referred_from')
-                my_case.hl_details = form.cleaned_data.get('comment')
-
-                my_case.hl_priority = 'Non-Critical'
-                my_case.hl_creator = request.user.HelplineUser.hl_key
-                my_case.save()
-                address, address_created = Address.objects.get_or_create(hl_key=my_case.hl_key)
-
-                contact, contact_created = Contact.objects.get_or_create(hl_key=my_case.hl_key,
-                                                                            hl_type='Cell Phone',
-                                                                            hl_calls=0,
-                                                                            hl_status='Available',
-                                                                            hl_time=int(time.time()))
-                now = datetime.now()
-                callstart = "%s:%s:%s" % (now.hour, now.minute, now.second)
-                notime = "00:00:00"
-                report = Report(case_id=my_case.hl_case,
-                                callstart=callstart,
-                                callend=callstart,
-                                talktime=notime,
-                                holdtime=notime,
-                                walkintime=callstart,
-                                hl_time=int(time.time()),
-                                calldate=time.strftime('%d-%b-%y'))
-                case_number = my_case.hl_case
-                case_history = Report.objects.filter(telephone=contact.hl_contact).order_by('-case_id')
-                case_history_table = CaseHistoryTable(case_history)
-                try:
-                    case_history_table.paginate(
-                        page=request.GET.get('page', 1), per_page=10)
-                except Exception as e:
-                    # Bad idea.
-                    # Ignore pagination errors when a new contact with no case history is input.
-                    pass
-
-            address.hl_names = form.cleaned_data['caller_name']
-            address.hl_gender = form.cleaned_data.get('gender')
-            address.hl_address1 = form.cleaned_data.get('address')
-            address.hl_email = form.cleaned_data.get('email')
-            address.hl_address4 = form.cleaned_data.get('physical_address')
-            address.hl_address3 = form.cleaned_data.get('region')
-            address.hl_language = form.cleaned_data.get('language')
-            address.hl_company = form.cleaned_data.get('company')
-            contact.hl_contact = form.cleaned_data['phone_number']
-            report.callernames = form.cleaned_data['caller_name']
-            report.casearea = form.cleaned_data.get('address')
-            report.casearea = form.cleaned_data.get('address')
-            report.telephone = form.cleaned_data['phone_number']
-            report.counsellorname = request.user.username
-            report.casetype = form_name
-
-            report.casestatus = form.cleaned_data['case_status']
-            report.escalatename = form.cleaned_data.get('escalate_to')
-            my_case.hl_status = form.cleaned_data.get('case_status')
-            my_case.hl_acategory = form.cleaned_data.get('category')
-            my_case.hl_notes = form.cleaned_data.get('notes')
-            my_case.hl_details = form.cleaned_data['comment']
-            my_case.isrefferedfrom = form.cleaned_data.get('referred_from')
-            my_case.hl_type = form.cleaned_data.get('case_type')
-            my_case.hl_subcategory = form.cleaned_data.get('sub_category')
-            my_case.hl_subsubcat = form.cleaned_data.get('sub_sub_category')
-            my_case.hl_escalateto = form.cleaned_data.get('escalate_to')
-
-            my_case.save()
-            address.save()
-            contact.save()
-            report.save()
-            message = 'Success'
-            disposition_form = DispositionForm(
-                initial={'case_number': case_number})
-        else:
-            case_number = form.cleaned_data.get('case_number')
-            disposition_form = DispositionForm()
-
-            if case_number:
-                report, contact, address = get_case_info(case_number)
-                case_history = Report.objects.filter(
-                    telephone=contact.hl_contact).order_by('-case_id')
-                case_history_table = CaseHistoryTable(case_history)
-            else:
-                report, contact, address = (None, None, None)
-                case_history = Report.objects.all().order_by('-case_id')
-                case_history_table = CaseHistoryTable(case_history)
-
-    request.user.HelplineUser.hl_case = 0
-    request.user.HelplineUser.save()
-
-    return render(
-        request, 'helpline/my_form.html', {
-            'form': form,
-            'contact': contact if contact else None,
-            'initial': initial,
-            'disposition_form': disposition_form,
-            'case_history_table': case_history_table,
-            'form_name': form_name,
-            'message': message,
-            'loaded_form':loaded_form}
-    )
-
-
 class DashboardTable(tables.Table):
     """Where most of the dashboard reporting happens"""
     casetype = tables.TemplateColumn("<b>{{ record.get_call_type }}</b>",
                                      verbose_name="Call Type")
     case_id = tables.TemplateColumn(
         '{% if record.case %}<a href="{{ record.get_absolute_url }}">{{record.case }}</a>{% else %}-{% endif %}')
+    callernames = tables.TemplateColumn("{{ record.case.contact.address.hl_names }}")
     telephone = tables.TemplateColumn(
         '<a href="sip:{{record.telephone}}">{{record.telephone}}</a>')
     user_id = tables.TemplateColumn("{{ record.user }}", verbose_name="Agent")
@@ -1477,20 +1299,7 @@ class ConnectedAgentsTable(tables.Table):
 class ReceievedColumn(tables.Column):
     """Return ctime from an epoch time stamp"""
     def render(self, value):
-        os.environ['TZ'] = 'Africa/Nairobi'
-        time.tzset()
         return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(value))
-
-
-class AgentColumn(tables.Column):
-    """Return the agent nick from the agent key"""
-    def render(self, value):
-        # Agent does not have a nickname
-        # Or does not extist.
-        try:
-            return HelplineUser.objects.get(hl_key=value).hl_nick
-        except Exception as e:
-            return value
 
 
 class ServiceColumn(tables.Column):
@@ -1501,9 +1310,7 @@ class ServiceColumn(tables.Column):
 
 class AgentSessionTable(tables.Table):
     """Show agent activity"""
-    hl_key = AgentColumn()
     hl_time = ReceievedColumn()
-    hl_service = ServiceColumn()
 
     class Meta:
         model = Clock
@@ -1634,7 +1441,6 @@ def save_case_action(request):
         hl_user.save()
         report.casestatus = case_status
         report.escalatename = escalate_to.user.username if escalate_to else None
-        report.callend = datetime.now().strftime('%H:%M:%S.%f')
         report.hl_time = calendar.timegm(time.gmtime())
         report.save()
 
@@ -1694,8 +1500,8 @@ def contact_create_case(request):
         case.hl_popup = 'No'
         case.save()
         report.case = case
-        report.callstart = datetime.now().strftime('%H:%M:%S.%f')
-        report.calldate = datetime.now().strftime('%d-%m-%Y')
+        report.callstart = timezone.now().strftime('%H:%M:%S.%f')
+        report.calldate = timezone.now().strftime('%d-%m-%Y')
         report.queuename = default_service.queue
         report.telephone = contact.hl_contact
         report.save()
@@ -1807,7 +1613,7 @@ def get_dashboard_stats(user, interval=None):
 
     midnight_string = datetime.combine(
         date.today(), datetime_time.min).strftime('%m/%d/%Y %I:%M %p')
-    now_string = datetime.now().strftime('%m/%d/%Y %I:%M %p')
+    now_string = timezone.now().strftime('%m/%d/%Y %I:%M %p')
     # Get the average seconds of hold time from last midnight.
 
     total_calls = Report.objects.filter(
@@ -1928,7 +1734,7 @@ def report_factory(report='callsummary', datetime_range=None, agent=None,
             to_date_epoch = calendar.timegm(to_date.timetuple())
             clock = clock.filter(hl_time__gt=from_date_epoch,hl_time__lt=to_date_epoch)
         if agent:
-            clock = clock.filter(hl_key__exact=agent)
+            clock = clock.filter(user=agent)
             filter_query['agent'] = agent
         # Filter actions. Queue Join etc.
         if query:
@@ -1937,10 +1743,14 @@ def report_factory(report='callsummary', datetime_range=None, agent=None,
 
         return AgentSessionTable(clock)
 
-    service = settings.DEFAULT_SERVICE
+    # The first created service is considered our default service
+    # This will change in future to site based or config based views
+    default_service = Service.objects.all().first()
+    service = default_service
+
     reports = Report.objects.all()
     cdr = MainCDR.objects.all()
-    user = HelplineUser.objects.get(hl_key__exact=agent).user if agent else None
+    user = agent
 
     calltype = {'answeredcalls': 'Answered',
                 'missedcalls': 'Abandoned',
@@ -1957,7 +1767,7 @@ def report_factory(report='callsummary', datetime_range=None, agent=None,
     # Retrun all case types Inbound and outbount for the following reports.
     if report != 'totalcases' and report != 'search':
         if casetype != 'all':
-            reports = reports.filter(casetype__exact=casetype)
+            reports = reports.filter(casetype__iexact=casetype)
 
     # Apply filters to queryset.
     if from_date and to_date:
@@ -1987,9 +1797,8 @@ def report_factory(report='callsummary', datetime_range=None, agent=None,
     if query:
         qset = (
             Q(telephone__icontains=query) |
-            Q(callernames__icontains=query) |
-            Q(casestatus__icontains=query) |
-            Q(counsellorname__icontains=query)
+            Q(case__contact__address__hl_names__icontains=query) |
+            Q(casestatus__icontains=query)
         )
         # Check if query is an integer for case id matching.
         # Ask for forgiveness if it's not.
@@ -2021,12 +1830,11 @@ def report_factory(report='callsummary', datetime_range=None, agent=None,
     total_talktime = str(timedelta(seconds=seconds)) if seconds else "00:00:00"
 
     # Count Answered, Abandoned and Voicemail calls for a specific queue.
-
-    total_answered = reports.filter(queuename__exact=service,
+    total_answered = reports.filter(service=service,
                                     calltype__exact='Answered').count()
-    total_abandoned = reports.filter(queuename__exact=service,
+    total_abandoned = reports.filter(service=service,
                                      calltype__exact='Abandoned').count()
-    total_voicemail = reports.filter(queuename__exact=service,
+    total_voicemail = reports.filter(service=service,
                                       calltype__exact='Voicemail').count()
 
     if total_offered.get('count'):
@@ -2124,6 +1932,36 @@ def logout(request, template_name="helpline/loggedout.html"):
 def helpline_home(request):
     """Helpline home"""
     return redirect("/helpline/")
+
+
+def report_save_handler(sender, instance, created, **kwargs):
+    """Notify relevant users when a report is saved."""
+
+    # Only notify if report is marked as open
+    if instance.escalatename != "":
+        user = instance.user
+        verb = "Escalted case %s. Telephone number: %s Status: %s" % (
+            instance.case, instance.telephone, instance.casestatus)
+        case = instance.case
+        address = instance.address
+        names = address.hl_names if address else None
+
+
+        level = 'info'
+
+        description = """
+        Customer Details
+        Name: %s
+        Phone Number: %s
+        """ % (
+               names,
+               instance.telephone
+)
+
+        escalate_to = User.objects.get(username=instance.escalatename)
+
+        notify.send(user, recipient=user,
+            verb=verb, level=level, description=description)
 
 
 @json_view
@@ -2257,3 +2095,5 @@ def remove_from_queue(request):
     agent = request.POST.get('agent', '')
     r = backend.remove_from_queue(agent, queue)
     return r
+
+post_save.connect(report_save_handler, sender=Report)

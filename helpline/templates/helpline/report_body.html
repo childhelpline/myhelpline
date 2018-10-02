@@ -171,7 +171,9 @@
                       {% for item_key in recordkeys %}
                       {% if not '_' == item_key|first %}
                       <td>
-                        {% if forloop.last %}
+                        {% if item_key == 'case_id' %}
+                        <a href="/helpline/forms/{{ xform.id_string }}/{{ records | get_item:'_id' }}">{{  records | get_item:item_key }}</a>
+                        {% elif forloop.last %}
                         {{  records | get_item:'_submission_time' | slice:'10' }}
                         {% else %}
                         {{  records | get_item:item_key }}

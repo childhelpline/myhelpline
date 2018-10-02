@@ -164,6 +164,7 @@ audio{
             // Here you can show the user a success message or do whatever you need
             //$(example_form).find('.success-message').show();
             $("#success-message").html("Success");
+            $('#contactDet').trigger('reinitialize.areYouSure');
 
           }
         },
@@ -399,5 +400,16 @@ audio{
               $('#frame-contact').addClass('hidden');
     }
   }
+</script>
+<script>
+  $(function() {
+    $('#contactDet').areYouSure(
+      {
+        message: 'It looks like you have been editing something. '
+               + 'If you leave before saving, your changes will be lost.'
+      }
+    );
+  });
+
 </script>
 {% endblock content %}
