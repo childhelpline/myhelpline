@@ -1084,7 +1084,7 @@ function get_submissions(phone,name,param=true){
         return false
       }
       param ? selected_cases = data : ''
-      
+
       data.forEach(function(usr_case,casekey){
         var user = {}
         for(usr_key in usr_case){
@@ -1133,17 +1133,17 @@ function get_submissions(phone,name,param=true){
   }
 
   function fill_reporter(){
-
         ///after user selected
         //var selected_case = data[0]
         var url_str = ''
         console.log("The selected contact is: " + JSON.stringify(selected_contact));
+        selected_contact = selected_contact[0]
         for(var kk in selected_contact){
           var iframe = document.getElementById("helpline-forms");
           document.domain = "bitz-itc.com"
 
           if(kk.includes('reporter')){
-            url_str += url_str == '' ? '?d['+ kk +']=' + selected_case[kk] : '?d['+ kk +']=' + selected_case[kk]
+            url_str += url_str == '' ? '?d['+ kk +']=' + selected_contact[kk] : '?d['+ kk +']=' + selected_contact[kk]
           }
           iframe.src += iframe.src + url_str
           var doc = iframe.contentWindow.document;
