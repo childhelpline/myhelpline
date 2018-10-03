@@ -1142,9 +1142,10 @@ function get_submissions(phone,name,param=true){
           var iframe = document.getElementById("helpline-forms");
           document.domain = "bitz-itc.com"
 
-          if(kk.includes('reporter')){
+          if(kk.startsWith('reporter')){
             url_str += url_str == '' ? '?d['+ kk +']=' + selected_contact[kk] : '?d['+ kk +']=' + selected_contact[kk]
           }
+        }
           iframe.src += iframe.src + url_str
           var doc = iframe.contentWindow.document;
           var doc = iframe.contentDocument ? iframe.contentDocument: iframe.contentWindow.document;
@@ -1163,9 +1164,8 @@ function get_submissions(phone,name,param=true){
           var p = '{{ supervisor }}'
           super_select.innerHTML += "<option value='" + p + "'>" + p + "</option>"
           {% endfor %}
-          frmObj.closeChanges
 
-        }
+        
       }
 
 </script>
