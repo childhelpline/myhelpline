@@ -120,7 +120,8 @@ audio{
     var form = $("#contact-search-form")[0]
     var name = form['name'].value
     var telephone = form['telephone'].value
-    prefill(telephone)
+
+    get_submissions(telephone,name)
 
 
 
@@ -279,7 +280,7 @@ audio{
 
                                   <div class="box-footer" style="background-color: transparent;">
                                     <button type="button" class="btn btn-primary" onclick="contactSearch();$('.contact-search').removeClass('col-md-12');$('.contact-results').removeClass('hidden');">Search Contact</button>
-                                    <button type="button" class="btn btn-primary pull-right" onclick="$('#contact-search').addClass('hidden');$('.contact-cases').removeClass('hidden');">New Reporter</button>
+                                    <button type="button" class="btn btn-primary pull-right" onclick="$('#contact-search').addClass('hidden');$('#frame_iframe').removeClass('hidden');$('#frame-contact').addClass('hidden');">New Reporter</button>
                                   </div>
                               </div>
                             </div>
@@ -287,7 +288,7 @@ audio{
                             <div class="col-xs-6 contact-results hidden">
                               <p class="lead">Contact Search Results</p>
 
-                              <div class="table-responsive text-muted well well-sm no-shadow" style="min-height: 242px;">
+                              <div class="table-responsive text-muted well-sm no-shadow" style="min-height: 242px;">
                                   <div id="contact-search-results"></div>
                               </div>
                             </div>
@@ -302,34 +303,38 @@ audio{
 
                           <div class="row">
                             <!-- accepted payments column -->
-                            <div class="col-xs-6 contact-search">
-                              <p class="lead">Reporter Details: {{ contact.hl_contact }}</p>
+                            <div class="col-xs-12 contact-search">
+
+                                    <button type="button" class="btn btn-primary pull-right btn-lg btn-flat" onclick="fill_reporter();$('.contact-search').removeClass('col-md-12');$('#frame-contact').addClass('hidden');$('#frame_iframe').removeClass('hidden');">New Case</button>
+
+                              <!--p class="lead">Reporter Details: {{ contact.hl_contact }}</p>
                               <div class="text-muted well well-sm no-shadow">
-                                <!-- form start -->
-                                  <div class="box-body">
-                                    <div class="row">
+                                <!-- form start ->
+                                <div class="box-body">
+                                  <div class="row">
 
-            {% crispy contact_form contact_form.helper %}
+                                    {% crispy contact_form contact_form.helper %}
 
-                                    </div>
-                                  </div>
-                                  <!-- /.box-body -->
-
-                                  <div class="box-footer" style="background-color: transparent;">
-                                    <button type="button" class="btn btn-primary pull-right btn-lg btn-flat" onclick="saveContact();$('.contact-search').removeClass('col-md-12');$('#frame-contact').addClass('hidden');$('#frame_iframe').removeClass('hidden');">Next</button->
-                                      </div>
                                   </div>
                                 </div>
-                                <!-- /.col -->
-                                <div class="col-xs-6 contact-results">
-                                  <p class="lead">Historical Cases</p>
+                                <!-- /.box-body ->
 
-                                  <div class="table-responsive text-muted well well-sm no-shadow" style="min-height: 242px;">
+                                <div class="box-footer" style="background-color: transparent;">
+                                  <button type="button" class="btn btn-primary pull-right btn-lg btn-flat" onclick="saveContact();$('.contact-search').removeClass('col-md-12');$('#frame-contact').addClass('hidden');$('#frame_iframe').removeClass('hidden');">New Case</button>
+                                </div>
+                              </div-->
+                            </div>
+                                <!-- /.col -->
+                                <div class="col-xs-12">
+                                  <p class="lead">Historical Cases</p>
+                                  <div id="historical-cases" class="table-responsive"></div>
+
+                                  <!--div class="table-responsive text-muted well well-sm no-shadow" style="min-height: 242px;">
                                     {% if case %}
                                     {% load django_tables2 %}
                                     {% render_table case_history_table %}
                                     {% endif %}
-                                  </div>
+                                  </div-->
                                 </div>
                                 <!-- /.col -->
                               </div>
@@ -392,12 +397,14 @@ audio{
 
   function receiveMessage(event)
   {
-        var resp = JSON.parse(event.data)
+    if(event.data){
+      var resp = JSON.parse(event.data)
       if(resp.enketoEvent == 'submissionsuccess'){
-          // Show case action form after successful case submission
-              $('#frame-case-action').removeClass('hidden');
-              $('#frame_iframe').addClass('hidden');
-              $('#frame-contact').addClass('hidden');
+        // Show case action form after successful case submission
+        $('#frame-case-action').removeClass('hidden');
+        $('#frame_iframe').addClass('hidden');
+        $('#frame-contact').addClass('hidden');
+      }
     }
   }
 </script>

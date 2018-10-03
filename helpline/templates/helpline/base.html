@@ -1041,77 +1041,132 @@ $('#example2').DataTable({
 $('.dt-button').addClass("btn btn-md btn-primary btn-square");
 $('.dt-buttons, #example1_info').addClass("col-md-6 col-sm-12");
 
-function get_contact_to_iframe(){
-var iframe = document.getElementById("helpline-forms");
-document.domain = "bitz-itc.com"
+///define global variables to hold fetched cases and filtered contact
+var selected_cases = []
+var selected_contact = []
 
-var doc = iframe.contentWindow.document;
-var doc = iframe.contentDocument ? iframe.contentDocument: iframe.contentWindow.document;
-var frmObj = doc.getElementsByTagName('form')
-var id = frmObj.id
-var frm = doc.forms[id]
+////function to search contacts and get related case submissions #param true if searching for reporters
+function get_submissions(phone,name,param=true){
 
-frm.elements["/Case_Form/additional_client_details/guardian_name"].value = "Kemboi Cheruiyot"
-
-}
-
-function prefill(phone){
-    if(phone == 0 || phone == '')
+  if((phone == 0 || phone == '') && (name == '' || name == '')){
+      $(load_to).html('<h4><div class="alert alert-danger"><i class="icon fa fa-ban"></i> Error: Invalid search parameters, try again!</h4></div>');
       return false
-    // Create a request variable and assign a new XMLHttpRequest object to it.
-    var request = new XMLHttpRequest();
+    }
 
-    // Open a new connection, using the GET request on the URL endpoint
-    request.open('GET', '{{ data_url |safe }}?query={"reporter_details/reporter_phone":{"$i":"' + phone + '"}}&format=json', true);
-    request.setRequestHeader("Authorization", "Token {{ data_token }}");
-    //request.setRequestHeader("Content-type", "application/json");
-    request.onload = function (data) {
-      // Begin accessing JSON data here
-      var data = JSON.parse(this.response);
-      if (request.status >= 200 && request.status < 400) {
-        movie = data[0]
-        //data.forEach(movie => {
-          for(var kk in movie){
-              var iframe = document.getElementById("helpline-forms");
-              document.domain = "bitz-itc.com"
+  var load_to = param ? '#contact-search-results':'#historical-cases'
 
-              var doc = iframe.contentWindow.document;
-              var doc = iframe.contentDocument ? iframe.contentDocument: iframe.contentWindow.document;
+  //if fetching cases, fill selected contact
+  selected_contact = !param ? selected_cases.filter(function(selected_case){ return selected_case['reporter_details/reporter_phone'] === phone}):[]
 
-              var frmObj = doc.getElementsByTagName('form')[0]
-              var id = frmObj.id
-              //var frm = doc.forms[id]
-              var frm = doc.getElementById(id);
-              //var xfrm = frm.getInstanceDocument(id)
+  $(load_to).html('<div class="overlay" style="width:100%" align="center"><h1><i class="fa fa-refresh fa-spin"></i></h1></div>');
+  // Create a request variable and assign a new XMLHttpRequest object to it.
+  var request = new XMLHttpRequest();
 
-              console.log("The id: " + id);
-              var nn = "/Case_Form/" + kk
+  //create query string [optional] based on the passed parameters
+  query_str = ''
+  query_str += phone != '' ? (param ? 'query={"reporter_details/reporter_phone":{"$i":"' + phone + '"}}&limit=1':'query={"reporter_details/reporter_phone":{"$i":"' + phone + '"}}') : ''
+  query_str += name != '' ? (query_str == '' ? 'query={"reporter_details/name":{"$i":"' + name + '"}}' :'&{"reporter_details/name":{"$i":"' + name + '"}}'):''
+  query_str += '&format=json'
 
-              if(kk.includes('reporter') && typeof(nn) != 'undefined'){
-                console.log(nn + " :: " + movie[kk])
-                frmObj.elements[nn].value = movie[kk]
+  // Open a new connection, using the GET request on the URL endpoint
+  request.open('GET', '{{ data_url |safe }}?' + query_str, true);
+  request.setRequestHeader("Authorization", "Token {{ data_token }}");
 
-               }
-              var supervisors = []
-              var sname = "/Case_Form/case_actions/supervisors"
-              var super_select = doc.getElementsByName(sname)[0]
+  request.onload = function (data) {
+    // Begin accessing JSON data here
+    var data = JSON.parse(this.response);
+    if (request.status >= 200 && request.status < 400) {
+      var users = []
+      var user_headers = param ? [] : ['Action']
+      var i =0;
+      if(data.length < 1){
+        $("#contact-search-results").html('<h4><div class="alert alert-warning"><i class="icon fa fa-info"></i> No available Data</h4></div>');
+        return false
+      }
+      param ? selected_cases = data : ''
+      
+      data.forEach(function(usr_case,casekey){
+        var user = {}
+        for(usr_key in usr_case){
+          var if_str = param ? usr_key.startsWith('reporter') : !usr_key.startsWith('_')
+          if(if_str){
+            var item_head = usr_key.split('/')
+            var key = item_head[(item_head.length - 1)]
+            user = $.extend(user,{[key]:usr_case[usr_key]})
+            if(user_headers.indexOf(key) == -1){
+              user_headers.push(key)
+            }
+                //console.log("users: " + JSON.stringify(users))
+              }
+            }
+            users[casekey] = user
+          })
+      var table = '<table id="example2" class="table table-bordered table-striped"><thead><tr><th>'
+      var tblhead = user_headers.reduce(function(accum,item){
+        return accum + '<th>' + item + '</th>';
+      })
+      tblhead += '</tr><thead>'
+      tbody = '<tbody>'
 
-              super_select.options.length = 0;
-
-              {% for supervisor in supervisors %}
-                var p = '{{ supervisor }}'
-                super_select.innerHTML += "<option value='" + p + "'>" + p + "</option>"
-              {% endfor %}
-              frmObj.closeChanges
-
+      users.forEach(function(user){
+        tbody += '<tr>'
+        tbody += !param ? '<td><a href="/edit">Edit Case</a></td>':''
+        user_headers.forEach(function(header){
+          if(typeof(user[header]) == 'undefined'){
+            $.extend(user,{[header]:''})
           }
-        //});
-      }
-      }
+
+          tbody += header == 'Action' ? '' : (header == 'reporter_phone' && param ? '<td><a href="javascript:void(0)" onclick=\'$("#contact-search").addClass("hidden");$(".contact-cases").removeClass("hidden");get_submissions("' + user[header] + '","",false)\'>' + user[header] + '</a></td>':'<td>' + user[header] + '</td>')
+        })
+        tbody += '</tr>'
+      })
+      tbody += '</tbody></table>'
+
+      table += tblhead;
+      table += tbody 
+      $(load_to).html(table)
+    }
+  }
 
     // Send request
     request.send();
-}
+  }
+
+  function fill_reporter(){
+
+        ///after user selected
+        //var selected_case = data[0]
+        var url_str = ''
+        console.log("The selected contact is: " + JSON.stringify(selected_contact));
+        for(var kk in selected_contact){
+          var iframe = document.getElementById("helpline-forms");
+          document.domain = "bitz-itc.com"
+
+          if(kk.includes('reporter')){
+            url_str += url_str == '' ? '?d['+ kk +']=' + selected_case[kk] : '?d['+ kk +']=' + selected_case[kk]
+          }
+          iframe.src += iframe.src + url_str
+          var doc = iframe.contentWindow.document;
+          var doc = iframe.contentDocument ? iframe.contentDocument: iframe.contentWindow.document;
+
+          var frmObj = doc.getElementsByTagName('form')[0]
+          var id = frmObj.id
+          var frm = doc.getElementById(id);
+
+          var supervisors = []
+          var sname = "/Case_Form/case_actions/supervisors"
+          var super_select = doc.getElementsByName(sname)[0]
+
+          super_select.options.length = 0;
+
+          {% for supervisor in supervisors %}
+          var p = '{{ supervisor }}'
+          super_select.innerHTML += "<option value='" + p + "'>" + p + "</option>"
+          {% endfor %}
+          frmObj.closeChanges
+
+        }
+      }
 
 </script>
 

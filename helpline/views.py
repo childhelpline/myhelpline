@@ -109,7 +109,7 @@ def home(request):
     queues = get_data_queues()
 
     default_service = Service.objects.all().first()
-    default_service_xform = default_service.call_xform
+    default_service_xform = default_service.walkin_xform
     default_service_auth_token = default_service_xform.user.auth_token
     current_site = get_current_site(request)
 
@@ -124,10 +124,7 @@ def home(request):
             'Authorization': 'Token %s' % (default_service_auth_token)
     }
 
-    stat = requests.get(
-        url,
-        headers=headers
-    ).json()
+    stat = requests.get(url,headers=headers).json()
     gtdata = []
 
     for dt in get_item(stat, 'data'):
