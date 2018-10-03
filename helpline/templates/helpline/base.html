@@ -1047,13 +1047,13 @@ var selected_contact = []
 
 ////function to search contacts and get related case submissions #param true if searching for reporters
 function get_submissions(phone,name,param=true){
+  var load_to = param ? '#contact-search-results':'#historical-cases'
 
-  if((phone == 0 || phone == '') && (name == '' || name == '')){
+  if((phone == 0 || phone == '') && (name == 0 || name == '')){
       $(load_to).html('<h4><div class="alert alert-danger"><i class="icon fa fa-ban"></i> Error: Invalid search parameters, try again!</h4></div>');
       return false
     }
 
-  var load_to = param ? '#contact-search-results':'#historical-cases'
 
   //if fetching cases, fill selected contact
   selected_contact = !param ? selected_cases.filter(function(selected_case){ return selected_case['reporter_details/reporter_phone'] === phone}):[]
@@ -1133,21 +1133,17 @@ function get_submissions(phone,name,param=true){
   }
 
   function fill_reporter(){
-
     var iframe = document.getElementById("helpline-forms");
-    ///after user selected
-    //var selected_case = data[0]
+
     var url_str = ''
     selected_contact = selected_contact[0]
-    //console.log("The KK is: " + JSON.stringify(selected_contact[0]));
-    //selected_contact.forEach(function(contact_index,contact){
-      for(contact_key in selected_contact){
-        if(contact_key.startsWith('reporter')){
-          url_str += url_str == '' && !iframe.src.includes('?') ? '?d['+ contact_key +']=' + selected_contact[contact_key] : '&d['+ contact_key +']=' + selected_contact[contact_key]
-        }
-      }      
-    //})
-    console.log("The string: " + url_str)
+
+    for(contact_key in selected_contact){
+      if(contact_key.startsWith('reporter')){
+        url_str += url_str == '' && !iframe.src.includes('?') ? '?d['+ contact_key +']=' + selected_contact[contact_key] : '&d['+ contact_key +']=' + selected_contact[contact_key]
+      }
+    }      
+
     document.domain = "bitz-itc.com"
 
     iframe.src += iframe.src + url_str
