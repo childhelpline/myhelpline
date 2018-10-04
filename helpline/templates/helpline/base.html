@@ -1088,7 +1088,7 @@ function get_submissions(phone,name,param=true){
       data.forEach(function(usr_case,casekey){
         var user = {}
         for(usr_key in usr_case){
-          var if_str = param ? usr_key.startsWith('reporter') : !usr_key.startsWith('_')
+          var if_str = param ? usr_key.startsWith('reporter') : true
           if(if_str){
             var item_head = usr_key.split('/')
             var key = item_head[(item_head.length - 1)]
@@ -1110,7 +1110,7 @@ function get_submissions(phone,name,param=true){
 
       users.forEach(function(user){
         tbody += '<tr>'
-        tbody += !param ? '<td><a href="/edit">Edit Case</a></td>':''
+        tbody += !param ? '<td><a href="' + user['_id'] + '/edit/">Edit Case</a></td>':''
         user_headers.forEach(function(header){
           if(typeof(user[header]) == 'undefined'){
             $.extend(user,{[header]:''})
@@ -1144,7 +1144,7 @@ function get_submissions(phone,name,param=true){
       }
     }      
 
-    document.domain = "bitz-itc.com"
+    document.domain = '{{ base_domain}}'
 
     iframe.src += iframe.src + url_str
     var doc = iframe.contentWindow.document;

@@ -49,6 +49,7 @@ urlpatterns = [
     url(r'^reports/(?P<report>\w+)/(?P<casetype>\w+)/$', views.reports,
         name='dashboardreports'),
     url(r'^form/(?P<form_name>\w+)/$', views.case_form, name='case_form'),
+    url(r'^form/(?P<form_name>\w+)/(?P<case_id>\w+)/edit/$', views.case_edit, name='case_edit'),
     url(r'^forms/(?P<form_name>\w+)/(?P<case_id>\w+)/$', views.caseview, name='caseview'),
     url('^ajax/get_subcategory/(?P<category>.+)/$', views.ajax_get_subcategory,
         name='get_subcategory'),

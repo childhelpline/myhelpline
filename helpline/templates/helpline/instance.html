@@ -46,7 +46,7 @@
             </tbody>
           </table>
           <hr style="clear: both;" />
-          <a href="/ona/{{ xform.user }}/forms/{{ xform.id_string }}/edit-data/{{ statrecords|get_item:'_id' }}" class="btn btn-md btn-primary btn-flat pull-right" style="margin-right: 50px;">Edit</a>
+          <a href="{% url 'case_edit' xform.id_string statrecords|get_item:'_id' %}" class="btn btn-md btn-primary btn-flat pull-right" style="margin-right: 50px;">Edit</a>
         </div>
       </div>
     </div>

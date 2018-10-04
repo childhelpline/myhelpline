@@ -955,6 +955,7 @@ def case_form(request, form_name):
     initial = {}
     data = {}
     data['enketo_url'] = settings.ENKETO_URL
+    data['base_domain'] = settings.BASE_DOMAIN
     data['data_url'] = url
     data['data_token'] = default_service_auth_token
 
@@ -1191,6 +1192,22 @@ def case_form(request, form_name):
         }
     )
 
+def case_edit(request, form_name, case_id):
+    default_service = Service.objects.all().first()
+    default_service_xform = default_service.walkin_xform
+    default_service_auth_token = default_service_xform.user.auth_token
+    current_site = get_current_site(request)
+
+    """
+    Graph data
+    """
+    headers = {
+            'Authorization': 'Token %s' %(default_service_auth_token)
+    }
+
+    url = 'https://%s/ona/api/v1/data/%s/%s/enketo?return_url=https://%s&format=json' % (current_site,default_service_xform.pk,case_id,current_site)
+    req = requests.get(url,headers=headers).json()
+    return render(request,'helpline/case_form_edit.html',{'case':case_id,'iframe_url':get_item(req,'url')})
 
 class DashboardTable(tables.Table):
     """Where most of the dashboard reporting happens"""
