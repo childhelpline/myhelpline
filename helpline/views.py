@@ -1974,7 +1974,7 @@ def report_save_handler(sender, instance, created, **kwargs):
 
         escalate_to = User.objects.get(username=instance.escalatename)
 
-        notify.send(user, recipient=user,
+        notify.send(user, recipient=escalate_to,
             verb=verb, level=level, description=description)
 
 
