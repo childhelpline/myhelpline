@@ -51,15 +51,9 @@ Add the following lines to the end of each of the corresponding files.
 ```
     #include /opt/asterisk/helpline/app/func_odbc.conf
 ```
-```
-   /etc/asterisk/queues.conf
-   
-    ADD
-sudo cp -rpv PATH_TO_MYHELPLINE/script/opt/asterisk/helpline/ 
-```
 
 ```
-On 
+On
 
 /etc/asterisk/queues.conf
 
@@ -67,8 +61,6 @@ ADD
 
 #include /opt/asterisk/helpline/app/queues.conf
 ```
-  
-   
 
 
 ## Example odbc.ini config.
@@ -84,7 +76,7 @@ Description = PostgreSQL Connection to Asterisk database
 Database    = helpline
 ; This should match your helpline application database
 Servername  = 127.0.0.1
-; OR IP of your database server 
+; OR IP of your database server
 User        = helplineuser
 Password    = MYSUPERSECRETPASSWORD 
 Port        = 5432

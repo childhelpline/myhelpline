@@ -211,7 +211,7 @@
 
           <!-- Messages: style can be found in dropdown.less-->
           <li class="dropdown messages-menu">
-              <a href="{% url 'my_forms' 'walkin' %}">
+              <a href="{% url 'case_form' 'walkin' %}">
                   <i class="fa fa-file"></i>{% trans "New Walk In" %}
             </a>
           </li>
@@ -1013,7 +1013,7 @@ $(document).ready(function(){
     setInterval(function () {
         $.get("{% url "check_call" %}",function(data){
             if(data.my_case){
-                window.location = "{% url "my_forms" "call" %}?case="+data.my_case;
+                window.location = "{% url "case_form" "call" %}?case="+data.my_case;
                 clearInterval();
             }
         });
