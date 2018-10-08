@@ -23,4 +23,5 @@ before_install:
 
 # command to run tests
 script:
+  - cp helpline/config.ini-dist helpline/config.ini
   - python manage.py test helpline
