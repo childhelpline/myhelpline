@@ -1453,6 +1453,7 @@ def save_case_action(request):
         hl_user = request.user.HelplineUser
         hl_user.hl_status = "Available"
         hl_user.save()
+        report.user =request.user
         report.casestatus = case_status
         report.escalatename = escalate_to.user.username if escalate_to else None
         report.hl_time = calendar.timegm(time.gmtime())
