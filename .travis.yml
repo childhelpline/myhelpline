@@ -24,4 +24,8 @@ before_install:
 # command to run tests
 script:
   - cp helpline/config.ini-dist helpline/config.ini
-  - python manage.py test helpline
+  - python manage.py test helpline api
+
+# send coverage report to coveralls
+after_success:
+  - coveralls
