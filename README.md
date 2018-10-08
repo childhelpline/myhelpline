@@ -1,9 +1,11 @@
-[![Build Status](https://travis-ci.com/Kirembu/myhelpline.svg?branch=master)](https://travis-ci.com/Kirembu/myhelpline)
-[![Coverage Status](https://coveralls.io/repos/github/Kirembu/myhelpline/badge.svg?branch=master)](https://coveralls.io/github/Kirembu/myhelpline?branch=master)
-
 # MyHelpline
 
 MyHelpline is a communication framework for support call centers.
+
+[![Build Status](https://travis-ci.com/Kirembu/myhelpline.svg?branch=master)](https://travis-ci.com/Kirembu/myhelpline)
+[![Coverage Status](https://coveralls.io/repos/github/Kirembu/myhelpline/badge.svg?branch=master)](https://coveralls.io/github/Kirembu/myhelpline?branch=master)
+[![Documentation Status](https://readthedocs.org/projects/myhelpline/badge/?version=latest)](https://myhelpline.readthedocs.io/en/latest/?badge=latest)
+
 
 ## Requirements
 
