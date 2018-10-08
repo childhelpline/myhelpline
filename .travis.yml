@@ -1,37 +1,9 @@
-language: python # => 1
-    python: # => 2
-      - "2.7"
-    services: # => 3
-      - postgresql
-    env: # => 4
-      -DJANGO=1.11.15 DB=postgresql
-    install: # => 5
-      - pip install -r requirements.txt
-    before_script: # => 6
-      - psql -c 'create database travis_ci_test;' -U postgres
-    script: # => 7
-      - python manage.py test
-	test:
-	  adapter: postgresql
-	  database: travis_ci_test
-	addons:
-	  postgresql: 9.6
-	  apt:
-		packages:
-		- postgresql-9.6-postgis-2.3
-	before_script:
-	  - psql -U postgres -c "create extension postgis"
-before_install:
-  - sudo apt-get update
-  - sudo apt install python-dev
-  - sudo apt install npm
-  - sudo apt install gettext
-  - sudo npm install -g bower
-  - sudo apt install python-gdal
-  - sudo apt install libmemcached-dev
-  - sudo apt-get install libz-dev
-  - sudo apt-get install postgis
-  - npm install -g bower
-  - sudo apt-get install language-pack-es
-  - sudo /etc/init.d/postgresql stop
-  - sudo /etc/init.d/postgresql start
+language: python
+python:
+  - "2.7"
+# command to install dependencies
+install:
+  - pip install -r requirements.txt
+# command to run tests
+script:
+  - python manage.py test
