@@ -4,6 +4,23 @@ python:
 # command to install dependencies
 install:
   - pip install -r requirements.txt
+before_script:
+  - psql -U postgres -c "create extension postgis"
+before_install:
+  - sudo apt-get update
+  - sudo apt install python-dev
+  - sudo apt install npm
+  - sudo apt install gettext
+  - sudo npm install -g bower
+  - sudo apt install python-gdal
+  - sudo apt install libmemcached-dev
+  - sudo apt-get install libz-dev
+  - sudo apt-get install postgis
+  - npm install -g bower
+  - sudo apt-get install language-pack-es
+  - sudo /etc/init.d/postgresql stop
+  - sudo /etc/init.d/postgresql start
+
 # command to run tests
 script:
   - python manage.py test
