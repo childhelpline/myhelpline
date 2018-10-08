@@ -611,6 +611,8 @@ SHORT_DATETIME_FORMAT = 'Y N j, H:i:s.u'
 DATETIME_FORMAT = 'Y N j, H:i:s.u'
 TIME_FORMAT = 'H:i:s'
 
+ADMIN_SITE_HEADER = 'Administration'
+
 # Login URLs
 LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/'
