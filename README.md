@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.com/Kirembu/myhelpline.svg?branch=master)](https://travis-ci.com/Kirembu/myhelpline)
+[![Coverage Status](https://coveralls.io/repos/github/Kirembu/myhelpline/badge.svg?branch=master)](https://coveralls.io/github/Kirembu/myhelpline?branch=master)
+
 # MyHelpline
 
 MyHelpline is a communication framework for support call centers.
@@ -151,4 +154,3 @@ Go to url of the machine http://IP:8000
  * Commit your changes (git commit -m "add my feature")
  * Push to the branch (git push origin my-feature)
  * Create a pull request
-
