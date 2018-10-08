@@ -2,7 +2,7 @@ language: python # => 1
     python: # => 2
       - "2.7"
     services: # => 3
-      - postgresql 
+      - postgresql
     env: # => 4
       -DJANGO=1.11.15 DB=postgresql
     install: # => 5
