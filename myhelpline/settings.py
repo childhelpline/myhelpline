@@ -513,15 +513,14 @@ WSGI_APPLICATION = 'myhelpline.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'NAME': 'helpline',
-        'USER': 'root',
-        'PASSWORD': 'root',
-        'HOST': '127.0.0.1',
+        'USER': 'helplineuser',
+        'PASSWORD': 'helplinepasswd',
+        'HOST': 'localhost',
         'PORT': '',
     }
 }
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
