@@ -5,7 +5,9 @@ python:
 install:
   - pip install -r requirements.txt
 before_script:
-  - psql -U postgres -c "create extension postgis"
+  - psql -U postgres -c "create user helplineuser with password 'helplinepasswd';"
+  - psql -U postgres -c "alter role helplineuser superuser;"
+  - psql -U postgres -c "create extension postgis;"
 before_install:
   - sudo apt-get update
   - sudo apt install python-dev
