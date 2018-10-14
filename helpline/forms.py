@@ -3,6 +3,7 @@
 
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.models import User
 from django.forms import ModelForm
 from django.conf import settings
 
@@ -248,8 +249,8 @@ class ReportFilterForm(forms.Form):
         required=False,
     )
     agent = forms.ModelChoiceField(
-        label='Counsellor:',
-        queryset=HelplineUser.objects.all().order_by('hl_names'),
+        label='Agent:',
+        queryset=User.objects.all().order_by('username'),
         required=False,
         widget=forms.Select(attrs={'class': 'form-control pull-right',
                                    'id': 'agent',

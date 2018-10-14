@@ -21,4 +21,4 @@ class HelplineUserSerializer(serializers.HyperlinkedModelSerializer):
 class HelplineCaseSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Case
-        fields = ('url', 'hl_time', 'hl_priority', 'hl_data', 'hl_popup')
+        fields = ('url', 'hl_time', 'priority', 'hl_data', 'hl_popup')

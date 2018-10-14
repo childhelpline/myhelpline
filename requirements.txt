@@ -15,7 +15,7 @@ croniter==0.3.24
 datapackage==1.2.6
 defusedxml==0.5.0
 dict2xml==1.6
-Django==1.11.13
+Django==1.11.15
 django-activity-stream==0.6.5
 django-admin-tools==0.8.1
 django-admin-tools-stats==0.9.0
@@ -95,7 +95,7 @@ isodate==0.6.0
 itsdangerous==0.24
 jdcal==1.4
 Jinja2==2.10
-jsonfield==0.9.23
+jsonfield==1.0.3
 jsonlines==1.2.0
 jsonpickle==0.9.6
 jsonpointer==1.14
@@ -124,7 +124,6 @@ paho-mqtt==1.3.1
 path.py==11.0.1
 pbr==4.0.4
 Pillow==5.1.0
-pkg-resources==0.0.0
 psycopg2==2.7.5
 psycopg2-binary==2.7.5
 py-Asterisk==0.5.17

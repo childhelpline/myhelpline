@@ -8,7 +8,7 @@
 
 <!-- Content Header (Page header) -->
 <section class="content-header">
-    <h1>{% trans "Publish a Form" %}<small>Case Details</small></h1>
+    <h1>{% trans "Publish a Form" %}<small>Case Details </small></h1>
     <ol class="breadcrumb">
         <li><a href="#"><i class="fa fa-dashboard"></i> Forms</a></li>
         <li class="active">Publish Forms</li>
@@ -46,7 +46,7 @@
             </tbody>
           </table>
           <hr style="clear: both;" />
-          <a href="https://dev.bitz-itc.com/ona/demoadmin/forms/Case_Form/edit-data/{{ statrecords|get_item:'_id' }}" class="btn btn-md btn-primary btn-flat pull-right" style="margin-right: 50px;">Edit</a>
+          <a href="{% url 'case_edit' xform.id_string statrecords|get_item:'_id' %}" class="btn btn-md btn-primary btn-flat pull-right" style="margin-right: 50px;">Edit</a>
         </div>
       </div>
     </div>

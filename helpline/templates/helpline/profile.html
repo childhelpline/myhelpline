@@ -10,74 +10,119 @@
 {% endblock box %}
 
 {% block content %}
+<!-- Content Header (Page header) -->
+<section class="content-header">
+  <h1>
+    Helpline
+    <small>System Users</small>
+</h1>
+<ol class="breadcrumb">
+    <li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
+    <li><a href="#"><i class="fa fa-users"></i> System Users</a></li>
+    <li class="active">My Profile</li>
+</ol>
+</section>
 
-<div style="margin:20px 15% 0px 15%;" align="center">
-        <!-- header logo: style can be found in header.less -->
-        <header class="header">
-            {% avatar user %}
-            <nav class="header">
-            <a  href="{% url 'avatar_change' %}"><i class="fa fa-edit"></i>{% trans "Change your avatar" %}</a>
-            </nav>
-        </header>
-        <div>
-            <br />
-            <a class="btn btn-block btn-primary btn-xs" data-toggle="modal" data-target="#user-modal"><i class="fa fa-edit"></i>{% trans "Edit Details" %}</a>
-        </div>
-                                               
-                                            <!-- Navigation - folders-->
-                                            <div>
-                                                <table class="table table-bordered table-striped"><tr><th colspan="2">{% trans "Profile" %}</th></tr>
-                                                    <tr><td width="17%">{% trans "Name" %}:</td><td width="83%" class="text-primary">{{ request.user.get_full_name }}</td></tr>
-                                                    <tr><td>{% trans "Email" %}:</td><td class="text-primary">{{ request.user.email }}</td></tr>
-                                                    <tr><td>{% trans "Auth ID" %}:</td><td class="text-primary">{{ request.user.chlusers.chlauth }}</td></tr>
-                                                    <tr><td>{% trans "Role" %}:</td><td class="text-primary">{{ request.user.chlusers.chlrole }}</td></tr>
-                                                    <tr><td>{% trans "Branch" %}:</td><td class="text-primary">{{ request.user.chlusers.chlbranch }}</td></tr>
-                                            </table>
-  </div>
-</div><!-- /.col (LEFT) -->
-        
-        <!-- COMPOSE MESSAGE MODAL -->
-        <div class="modal fade" id="user-modal" tabindex="-1" role="dialog" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                        <h4 class="modal-title"><i class="fa fa-envelope-o"></i>{% trans "Update" %}</h4>
+<!-- Main content -->
+<section class="content">
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <!-- /.box-header -->
+                <div class="box-body">
+
+
+                    <!-- Widget: user widget style 1 -->
+                    <div class="box box-widget widget-user-2">
+                        <div class="row" style="padding: 10px;">
+                            <div class="col-md-4">
+                                <!-- Add the bg color to the header using any of the bg-* classes -->
+                                <div class="widget-user-header bg-yellow">
+                                    <div class="widget-user-image iw">
+                                        {% avatar user %}
+                                        <!--img class="img-circle" src="img/user7-128x128.jpg" alt="User Avatar"-->
+                                    </div>
+                                    <div class="clearfix"></div>
+                                    <hr />
+                                    <div>
+                                        <!-- /.widget-user-image -->
+                                        <h3 class="widget-user-username ml-0">{{ request.user.get_full_name }}</h3>
+                                        <h5 class="widget-user-desc ml-0">{{ request.user.role }}</h5>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+                            <div class="col-md-8">
+                                <div class="box-footer no-padding">
+                                    <ul class="nav nav-stacked">
+                                        <li><a href="#">Email: {{ request.user.email }}</a></li>
+                                        <li><a href="#">phone: {{ request.user.phone }}</a></li>
+                                        <li><a href="#">Role: {{ request.user.chlusers.chlrole }}</a></li>                                    
+                                        <li><a href="#">Branch: {{ request.user.chlusers.chlbranch }}</a></li>
+                                    </ul>
+                                    <span><a href="" class="btn btn-square btn-primary"  data-toggle="modal" data-target="#user-modal">{% trans 'Edit Profile' %}</a></span>
+                                </div>
+
+                            </div>
+                        </div>
                     </div>
-                    <form id="frmUpdate" action="{% url "edit_myaccount" %}" method="post" enctype="multipart/form-data">
-                        <div class="modal-body">
-                            <div class="form-group">
-                                <div class="input-group">
-                                    <span class="input-group-addon">{% trans "First Name" %}:</span>
-                                    <input name="txtFirstName" type="text" class="form-control" id="txtFirstName" value="{{ request.user.first_name }}">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <div class="input-group">
-                                    <span class="input-group-addon">{% trans "Last Name" %}:</span>
-                                    <input name="txtName" type="text" class="form-control" id="txtName" value="{{ request.user.last_name }}">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <div class="input-group">
-                                    <span class="input-group-addon">{% trans "Email" %}:</span>
-                                    <input name="txtEmail" type="email" class="form-control" id="txtEmail" value="{{ request.user.email }}">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                        
+                    <!-- /.widget-user -->
+                </div>
+                <!-- /.box-body -->
+            </div>
+            <!-- /.box -->
+        </div>
+        <!-- /.col -->
+    </div>
+    <!-- /.row -->
+</section>
+<!-- /.content -->
+
+
+<!-- COMPOSE MESSAGE MODAL -->
+<div class="modal fade" id="user-modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title"><i class="fa fa-envelope-o"></i>{% trans "Update" %}</h4>
+            </div>
+            <form id="frmUpdate" action="{% url "edit_myaccount" %}" method="post" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div class="input-group">
+                            <span class="input-group-addon">{% trans "First Name" %}:</span>
+                            <input name="txtFirstName" type="text" class="form-control" id="txtFirstName" value="{{ request.user.first_name }}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="input-group">
+                            <span class="input-group-addon">{% trans "Last Name" %}:</span>
+                            <input name="txtName" type="text" class="form-control" id="txtName" value="{{ request.user.last_name }}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="input-group">
+                            <span class="input-group-addon">{% trans "Email" %}:</span>
+                            <input name="txtEmail" type="email" class="form-control" id="txtEmail" value="{{ request.user.email }}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+
                       <div class="modal-footer clearfix">
 
                           <button type="button" class="btn btn-danger" data-dismiss="modal"><i class="fa fa-times"></i>{% trans "Discard" %}</button>
 
                           <button type="submit" id="updateUser" name="updateUser" class="btn btn-primary pull-left"><i class="fa fa-envelope"></i>{% trans "Save" %}</button>
-                        </div>
-                         {% csrf_token %} 
-                    </form>
-                </div><!-- /.modal-content -->
-            </div><!-- /.modal-dialog -->
-        </div><!-- /.modal -->
-    </div>
+                      </div>
+                      {% csrf_token %} 
+                  </form>
+              </div><!-- /.modal-content -->
+          </div><!-- /.modal-dialog -->
+      </div><!-- /.modal -->
+  </div>
 </div>
 
 {% endblock content %}
