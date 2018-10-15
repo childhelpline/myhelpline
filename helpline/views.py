@@ -1605,6 +1605,7 @@ def save_case_action(request):
         hl_user = request.user.HelplineUser
         hl_user.hl_status = "Available"
         hl_user.save()
+        report.user =request.user
         report.casestatus = case_status
         report.escalatename = escalate_to.user.username if escalate_to else None
         report.hl_time = calendar.timegm(time.gmtime())
@@ -2128,7 +2129,7 @@ def report_save_handler(sender, instance, created, **kwargs):
 
         escalate_to = User.objects.get(username=instance.escalatename)
 
-        notify.send(user, recipient=user,
+        notify.send(user, recipient=escalate_to,
             verb=verb, level=level, description=description)
 
 
