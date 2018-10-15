@@ -118,6 +118,11 @@ INTERVENTIONS = (
     ('resettlement', 'Resettlement'),
     ('others', 'Others'),
 )
+USER_ROLES = (
+    ('Counsellor','Counsellor'),
+    ('Caseworker','Caseworker'),
+    ('Supervisor', 'Supervisor'),
+)
 
 def get_dialects():
     """Return list of languages."""
@@ -316,6 +321,29 @@ class LoginForm(forms.Form):
     password = forms.CharField(label="Password", max_length=30,
                                widget=forms.TextInput(attrs={'class': 'form-control', 'name': 'password'}))
 
+
+class RegisterUserForm(forms.Form):
+    useremail = forms.EmailField(label="Email:", max_length=30,
+                               widget=forms.EmailInput(attrs={'class': 'form-control', 'name': 'useremail'}))
+    names = forms.CharField(label="Name", max_length=30,
+                               widget=forms.TextInput(attrs={'class': 'form-control', 'name': 'names'}))
+    username = forms.CharField(label="Username", max_length=30,
+                               widget=forms.TextInput(attrs={'class': 'form-control', 'name': 'username'}))
+
+    userrole = forms.ChoiceField(label="Role",
+                                widget=forms.Select(
+                                    attrs={
+                                        'name': 'userrole',
+                                        'class': 'form-control',
+                                    }
+                                ),
+                                choices=USER_ROLES,
+                                required=False)
+
+    phone = forms.CharField(label="Phone", max_length=30,
+                               widget=forms.TextInput(attrs={'class': 'form-control', 'name': 'phone'}))
+
+    avatar = forms.ImageField(label="Picture:", max_length=30)
 
 class QueuePauseForm(forms.Form):
     """Queue pause form"""

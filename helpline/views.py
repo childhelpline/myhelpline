@@ -36,6 +36,7 @@ from django.db.models.signals import post_save
 from django.conf import settings
 from django.utils.translation import gettext as _
 from django.utils import timezone
+from django.core.files.storage import FileSystemStorage
 
 # Django 1.10 breaks reverse imports.
 try:
@@ -70,7 +71,7 @@ from helpline.models import Report, HelplineUser,\
         Messaging
 
 from helpline.forms import QueueLogForm,\
-        ContactForm, DispositionForm, CaseSearchForm, MyAccountForm, \
+        ContactForm, DispositionForm, CaseSearchForm, MyAccountForm,RegisterUserForm, \
         ReportFilterForm, QueuePauseForm, CaseActionForm, ContactSearchForm
 
 from helpline.qpanel.config import QPanelConfig
@@ -89,7 +90,9 @@ from onadata.libs.utils.user_auth import (get_xform_and_perms, has_permission,
 cfg = QPanelConfig()
 backend = Backend()
 
-
+def success():
+    return render('helpline/success.html');
+    
 @login_required
 def home(request):
     "Dashboard home"
@@ -240,7 +243,96 @@ def myaccount(request):
 def manage_users(request):
     """View user management page"""
     userlist  = HelplineUser.objects.all()
-    return render(request, 'helpline/users.html',{'systemusers':userlist})
+    message = ""
+    return render(request, 'helpline/users.html',{'systemusers':userlist,'message':message})
+
+@login_required
+def new_user(request):
+    message = ''
+    if request.method == 'POST':
+        form = RegisterUserForm(request.POST,request.FILES)
+        if form.is_valid():
+            user = HelplineUser()
+            try:
+                user.hl_key = randint(123456789, 999999999)
+                user.hl_auth = randint(1234, 9999)
+                user.user_id = 2
+                user.hl_role = form.cleaned_data['userrole']
+                user.hl_names = form.cleaned_data['names']
+                user.hl_nick = form.cleaned_data['username']
+                user.hl_email = form.cleaned_data['useremail']
+                user.hl_phone = form.cleaned_data['phone']
+
+                uploaded_file_url = ''
+                filename = ''
+                if request.FILES['avatar']:
+                    myfile = request.FILES['avatar']
+                    fs = FileSystemStorage()
+                    filename = fs.save(myfile.name, myfile)
+                    uploaded_file_url = fs.url(filename)
+
+                
+
+                user.hl_avatar = uploaded_file_url
+                user.hl_time = time.time()
+                user.save()
+                message = "User saved succeefully"
+                form = RegisterUserForm()
+
+            except Exception as e:
+                message = 'Error saving user: %s' % e
+        else:
+            messages.error(request, "Error")
+            message = "Invalid form"
+    else:
+        form = RegisterUserForm()
+        message = 'Not posted'
+    return render(request, 'helpline/user.html',{'form':form,'message':message})
+
+
+@login_required
+def user_profile(request,user_id):
+    user_edit = get_object_or_404(HelplineUser,user_id)
+    message = ''
+
+    if request.method == 'POST':
+        form = RegisterUserForm(request.POST,request.FILES,instance=user_edit)
+        if form.is_valid():
+            user = HelplineUser()
+            try:
+                user.hl_key = randint(123456789, 999999999)
+                user.hl_auth = randint(1234, 9999)
+                user.user_id = 2
+                user.hl_role = form.cleaned_data['userrole']
+                user.hl_names = form.cleaned_data['names']
+                user.hl_nick = form.cleaned_data['username']
+                user.hl_email = form.cleaned_data['useremail']
+                user.hl_phone = form.cleaned_data['phone']
+
+                uploaded_file_url = ''
+                filename = ''
+                if request.FILES['avatar']:
+                    myfile = request.FILES['avatar']
+                    fs = FileSystemStorage()
+                    filename = fs.save(myfile.name, myfile)
+                    uploaded_file_url = fs.url(filename)
+
+                
+
+                user.hl_avatar = uploaded_file_url
+                user.hl_time = time.time()
+                user.save()
+                message = "User saved succeefully"
+
+            except Exception as e:
+                message = 'Error saving user: %s' % e
+        else:
+            messages.error(request, "Error")
+            message = "Invalid form"
+    else:
+        form = RegisterUserForm(instance=user_edit)
+
+    return render(request, 'helpline/user.html',{'form':user_edit,'message':message})
 
 
 @login_required
@@ -505,7 +597,7 @@ def caseview(request, form_name, case_id):
 def reports(request, report, casetype='Call'):
     """Report processing and rendering"""
     default_service = Service.objects.all().first()
-    default_service_xform = default_service.call_xform
+    default_service_xform = default_service.walkin_xform
     default_service_auth_token = default_service_xform.user.auth_token
     current_site = get_current_site(request)
 
@@ -520,9 +612,7 @@ def reports(request, report, casetype='Call'):
             'Authorization': 'Token %s' % (default_service_auth_token)
     }
 
-    #still need to determine service case_id_string dynamically for data/form url
-    service = Service.objects.all().first()
-    id_string = str(service.walkin_xform)
+    id_string = str(default_service_xform)
     username = request.user.username
 
     owner = get_object_or_404(User, username__iexact=username)
@@ -559,7 +649,7 @@ def reports(request, report, casetype='Call'):
             for key,frm in xfrm.items():
                 xformx.update({str(key):str(frm)})
 
-    stat = requests.get('https://%s/ona/api/v1/data/' % (current_site) + xformx['formid'] + '?page=1&page_size=50' + request_string, headers= headers).json();
+   #  stat = requests.get('https://%s/ona/api/v1/data/' % (current_site) + xformx['formid'] + '?page=1&page_size=50' + request_string, headers= headers).json();
     if request.user.HelplineUser.hl_role == 'Counsellor':
         request_string += '&submitted_by__username=%s' %(username)
 
@@ -657,49 +747,109 @@ def reports(request, report, casetype='Call'):
 
 
 @login_required
-def reports1(request, report, casetype='Call'):
-    """Handle report rendering"""
-    if report == 'nonanalysed':
-        report = 'totalcases'
-    query = request.GET.get('q', '')
-    datetime_range = request.GET.get("datetime_range")
-    agent = request.GET.get("agent")
-    category = request.GET.get("category", "")
-    form = ReportFilterForm(request.GET)
-    dashboard_stats = get_dashboard_stats(request.user)
+def analysed_qa(request,report='analysed'):
+    """
+    Process QA result reports for the current service case form
+    """
+    default_service = Service.objects.all().first()
+    default_service_xform = default_service.qa_xform
+    default_service_auth_token = default_service_xform.user.auth_token
+    current_site =  get_current_site(request)
 
-    sort = request.GET.get('sort')
-    report_title = {
-        'performance': _('Performance Reports'),
-        'counsellor': _('Counsellor Reports'),
-        'case': _('Case Reports'),
-        'call': _('Call Reports'),
-        'service': _('Service Reports')
+
+    url = 'https://%s/ona/api/v1/data/%s' % (
+        current_site,
+        default_service_xform.pk
+    )
+
+    # Graph data
+    headers = {
+            'Authorization': 'Token %s' % (default_service_auth_token)
     }
 
-    table = report_factory(report=report,
-                           datetime_range=datetime_range,
-                           agent=agent,
-                           query=query, sort=sort,
-                           category=category,
-                           casetype=casetype)
+    id_string = str(default_service_xform)
+    username = request.user.username
 
-    # Export table to csv
-    export_format = request.GET.get('_export', None)
-    if TableExport.is_valid_format(export_format):
-        exporter = TableExport(export_format, table)
-        return exporter.response('table.{}'.format(export_format))
+    owner = get_object_or_404(User, username__iexact=username)
+    xform = get_form({'id_string__iexact': str(id_string)})
 
-    table.paginate(page=request.GET.get('page', 1), per_page=10)
 
-    return render(request, 'helpline/reports.html', {
-        'title': report_title.get(report),
+    request_string = ''
+
+    # if datetime_range == '':
+    #    start_date, end_date = [datetime_range.split(" - ")[0], datetime_range.split(" - ")[1]]
+    #    start_date = datetime.strptime(start_date, '%m/%d/%Y %I:%M %p')
+    #    end_date = datetime.strptime(end_date, '%m/%d/%Y %I:%M %p')
+
+    td_date = datetime.today()
+    request_string = '&date_created__day=' + td_date.strftime('%d')
+    request_string += '&date_created__month=' + td_date.strftime('%m')
+    request_string += '&date_created__year=' + td_date.strftime('%Y')
+
+    xforms = requests.get('https://%s/ona/api/v1/forms' % (current_site), headers= headers).json();
+    xformx = {}
+
+    #split to get xform object, this will allow us to obtain xform fields
+    for xfrm in xforms:
+        if str(xfrm['id_string']) == id_string:
+            for key,frm in xfrm.items():
+                xformx.update({str(key):str(frm)})
+
+    #stat = requests.get('https://%s/ona/api/v1/data/' % (current_site) + xformx['formid'] + '?page=1&page_size=50' + request_string, headers= headers).json();
+    
+    if request.user.HelplineUser.hl_role == 'Counsellor':
+        request_string += '&submitted_by__username=%s' %(username)
+
+
+    stat = requests.get('https://%s/ona/api/v1/data/%s?page=1&page_size=50' %(current_site,default_service_xform.pk), headers= headers).json();
+    # + '&sort={"_id":-1}'
+    statrecords = []
+    recordkeys = []
+
+    ##brings up data only for existing records
+    def get_records(recs):
+        return_obj = []
+        record = {}
+
+        for key,value in recs.items():
+            #if not (key.startswith('_') and key.endswith('_')):# str(key) == "_id":
+            key = str(key)
+            if key.find('/') != -1:
+                k = key.split('/')
+                l = len(k)
+                kk = str(k[l-1])
+            else:
+                kk = str(key)
+            if isinstance(value,dict) and len(value) >= 1:
+                record.update(get_records(value))
+            elif isinstance(value,list) and len(value) >= 1:
+                if isinstance(value[0],dict):
+                    record.update(get_records(value[0]))
+            else:
+                if not kk in recordkeys and not kk.endswith('ID') and str(value) != 'yes' and str(value) != 'no' and str(kk) != 'case_id'  and str(kk) != 'uuid':
+                    recordkeys.append(kk)
+                record.update({kk : str(value).capitalize()})
+        return record
+
+
+    for rec in stat:
+        if isinstance(rec,dict) and len(rec) > 1:
+            statrecords.append(get_records(rec))
+
+    if len(recordkeys) > 0:
+        recordkeys.append('Date Created')
+    else:
+        recordkeys = False
+
+    return render(request, 'helpline/analysed_qa.html', {
+        'title': 'Analysed QA Results',
         'report': report,
-        'form': form,
-        'datetime_range': datetime_range,
-        'dashboard_stats': dashboard_stats,
-        'table': table,
-        'query': query})
+        'xform':id_string,
+        'form': 'Qa Form',
+        'dashboard_stats': '',
+        'statrecords': statrecords,
+        'recordkeys': recordkeys
+        })
 
 
 def pairwise(iterable):
@@ -930,7 +1080,9 @@ def queue_manager(user, extension, action):
         )
     return data
 
-
+def home_direct():
+    return Redirect('/helpline/')
+    
 @login_required
 def case_form(request, form_name):
     """Handle Walkin and CallForm POST and GET Requests"""
@@ -1205,7 +1357,7 @@ def case_edit(request, form_name, case_id):
             'Authorization': 'Token %s' %(default_service_auth_token)
     }
 
-    url = 'https://%s/ona/api/v1/data/%s/%s/enketo?return_url=https://%s&format=json' % (current_site,default_service_xform.pk,case_id,current_site)
+    url = 'https://%s/ona/api/v1/data/%s/%s/enketo?return_url=https://%s/home&format=json' % (current_site,default_service_xform.pk,case_id,current_site)
     req = requests.get(url,headers=headers).json()
     return render(request,'helpline/case_form_edit.html',{'case':case_id,'iframe_url':get_item(req,'url')})
 
@@ -1673,6 +1825,8 @@ def get_dashboard_stats(user, interval=None):
 
     att = user.HelplineUser.get_average_talk_time()
     awt = user.HelplineUser.get_average_wait_time()
+
+    # get QA score
 
     dashboard_stats = {'midnight': midnight,
                        'midnight_string': midnight_string,
