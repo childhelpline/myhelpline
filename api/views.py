@@ -5,19 +5,12 @@ from api.serializers import UserSerializer, GroupSerializer,\
         HelplineUserSerializer, HelplineCaseSerializer
 from helpline.models import HelplineUser, Case
 
-
-from drf_renderer_xlsx.mixins import XLSXFileMixin
-from drf_renderer_xlsx.renderers import XLSXRenderer
-
-class UserViewSet(XLSXFileMixin,viewsets.ReadOnlyModelViewSet,viewsets.ModelViewSet):
+class UserViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows users to be viewed or edited.
     """
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
-
-    filename = 'users.xlsx'
-
 
 
 class GroupViewSet(viewsets.ModelViewSet):
