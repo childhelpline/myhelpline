@@ -130,6 +130,18 @@ Make sure PostgreSQl is running and the cridentials for the  database are availa
 python manage.py makemigrations
 python manage.py migrate
    ```
+   
+## Load initial default data using fixtures
+
+Use django fixtures we are able to load the initial default data that make setup easier.
+This data includes "Hotdesks", which are a list of Soft Phone extension that can be used.
+Also, we include a default service to help you get started.
+
+```
+python manage.py loaddata helpline
+```
+
+
 ## Install components using bower
  ```
  python manage.py bower install
