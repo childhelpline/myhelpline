@@ -655,7 +655,6 @@ input:checked + .slider:before {
 
   <!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
-
     <!-- Main content -->
 
     {% block message %}
@@ -1158,24 +1157,6 @@ function get_submissions(phone,name,param=true){
     document.domain = '{{ base_domain}}'
 
     iframe.src += iframe.src + url_str
-    var doc = iframe.contentWindow.document;
-    var doc = iframe.contentDocument ? iframe.contentDocument: iframe.contentWindow.document;
-
-    var frmObj = doc.getElementsByTagName('form')[0]
-    var id = frmObj.id
-    var frm = doc.getElementById(id);
-
-    var supervisors = []
-    var sname = "/Case_Form/case_actions/supervisors"
-    var super_select = doc.getElementsByName(sname)[0]
-
-    super_select.options.length = 0;
-
-    {% for supervisor in supervisors %}
-    var p = '{{ supervisor }}'
-    super_select.innerHTML += "<option value='" + p + "'>" + p + "</option>"
-    {% endfor %}
-
 
   }
 

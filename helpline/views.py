@@ -1128,11 +1128,6 @@ def case_form(request, form_name):
         xform = service.call_xform
 
 
-    supervisors = HelplineUser.objects.filter(hl_role='Supervisor').order_by('hl_names');
-    caseworkers = HelplineUser.objects.filter(hl_role='Caseworker').order_by('hl_names');
-    data['supervisors'] = supervisors[0] if supervisors else {}
-    data['caseworkers'] = caseworkers[0] if caseworkers else {}
-
     # If no XForm is associated with the above cases
     if not xform:
             data['message'] = {
