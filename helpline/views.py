@@ -198,10 +198,11 @@ def sync_sms(request):
     state = True
     try:
         if request.method == 'POST':
+            data = request.POST.copy()
             sms = SMSCDR()
-            sms.contact = request.POST.get('from')
-            sms.msg     = request.POST.get('message')
-            sms.time    = request.POST.get('sent_timestamp')
+            sms.contact = data.get('from')
+            sms.msg     = data.get('message')
+            sms.time    = data.get('sent_timestamp')
             sms.type    = 'INBOX'
             sms.save()
 
