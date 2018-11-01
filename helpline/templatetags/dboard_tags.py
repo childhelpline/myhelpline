@@ -13,11 +13,12 @@ def timestamp(value):
         return e
 
 def increment_case_number():
-    last_case_number = Cases.objects.all().last().case_number
-    if not last_case_number:
+    case = Cases.objects.all().last()
+
+    if not case:
         return 1000001
     else:
-        return int(last_case_number) + 1
+        return int(case.case_number) + 1
 
 @register.assignment_tag
 def case_id(case_source):
