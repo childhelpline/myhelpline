@@ -1157,24 +1157,28 @@ function get_submissions(phone,name,param=true){
     It entails prefilling contact details for an existing reporter
     */
     var iframe = document.getElementById("helpline-forms");
+    var caseid = ''
+    $.get('/helpline/caseid/walkin',function(data){
+      caseid = data
 
-    var caseid = {% case_id 'walkin' %}
+      var url_str = !iframe.src.includes('?') ? '?d[caseid=' + caseid + ']':'d[caseid=' + caseid + ']'
 
-    var url_str = !iframe.src.includes('?') ? '?d[caseid=' + caseid + ']':'d[caseid=' + caseid + ']'
-
-    if(!newreporter){
-      selected_contact = selected_contact[0]
-      for(contact_key in selected_contact){
-        if(contact_key.startsWith('reporter')){
-          url_str += '&d['+ contact_key +']=' + selected_contact[contact_key]
+      if(!newreporter){
+        selected_contact = selected_contact[0]
+        for(contact_key in selected_contact){
+          if(contact_key.startsWith('reporter')){
+            url_str += '&d['+ contact_key +']=' + selected_contact[contact_key]
+          }
         }
       }
-    }
-    
-    alert("url_str: " + url_str);
-    document.domain = '{{ base_domain}}'
+      
+      alert("url_str: " + url_str);
+      document.domain = '{{ base_domain}}'
 
-    iframe.src += iframe.src + url_str
+      iframe.src += iframe.src + url_str
+    })
+
+    
 
   }
 

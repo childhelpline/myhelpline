@@ -13,6 +13,7 @@ urlpatterns = [
     url('^wall/$', views.wall, name='wall'),
     url('^leta/$', views.leta, name='leta'),
     url('^success/$', views.success, name='success'),
+    url('^caseid/(?P<case_source>\w+)$', views.case_number, name='case_number'),
     url('^mails/$', views.sync_emails, name='sync_emails'),
     url('^sms/$', views.sync_sms, name='sync_sms'),
     url('^call/check/$', views.check_call, name='check_call'),
