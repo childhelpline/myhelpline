@@ -2,11 +2,15 @@ from django.contrib.auth.models import User, Group
 from rest_framework import serializers
 
 from helpline.models import HelplineUser, Case
+from helpdesk.models import Ticket
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
+
+    name = serializers.IntegerField(source='pk')
+    label = serializers.CharField(source='username')
     class Meta:
         model = User
-        fields = ('url', 'username', 'first_name', 'last_name', 'email', 'groups')
+        fields = ('label','name')
 
 class GroupSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:

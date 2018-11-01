@@ -4,6 +4,7 @@
 {% load humanize %}
 {% load crispy_forms_tags %}
 {% load avatar_tags %}
+{% load dboard_tags %}
 {% notifications_unread as unread_count %}
 
 <!DOCTYPE html>
@@ -513,6 +514,14 @@ input:checked + .slider:before {
             </span>
           </a>
         </li>-->
+        <li>
+            <a href="http://159.89.21.204/mibew/index.php/operator">
+                <i class="fa fa-comments"></i> <span>chat</span>
+            <span class="pull-right-container">
+              <small class="label pull-right bg-green" id="sms-notify-badge"></small>
+            </span>
+          </a>
+        </li>
 
         <li class="treeview">
           <a href="javascript:void(0)">
@@ -1142,18 +1151,27 @@ function get_submissions(phone,name,param=true){
     request.send();
   }
 
-  function fill_reporter(){
+  function create_case(newreporter=true){ 
+    /*
+    this is a new case function
+    It entails prefilling contact details for an existing reporter
+    */
     var iframe = document.getElementById("helpline-forms");
 
-    var url_str = ''
-    selected_contact = selected_contact[0]
+    var caseid = {% case_id 'walkin' %}
 
-    for(contact_key in selected_contact){
-      if(contact_key.startsWith('reporter')){
-        url_str += url_str == '' && !iframe.src.includes('?') ? '?d['+ contact_key +']=' + selected_contact[contact_key] : '&d['+ contact_key +']=' + selected_contact[contact_key]
+    var url_str = !iframe.src.includes('?') ? '?d[caseid=' + caseid + ']':'d[caseid=' + caseid + ']'
+
+    if(!newreporter){
+      selected_contact = selected_contact[0]
+      for(contact_key in selected_contact){
+        if(contact_key.startsWith('reporter')){
+          url_str += '&d['+ contact_key +']=' + selected_contact[contact_key]
+        }
       }
-    }      
-
+    }
+    
+    alert("url_str: " + url_str);
     document.domain = '{{ base_domain}}'
 
     iframe.src += iframe.src + url_str

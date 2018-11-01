@@ -8,6 +8,10 @@ import time
 from random import randint
 import hashlib
 import urllib
+
+import imaplib
+import email
+
 from itertools import tee
 
 from datetime import timedelta, datetime, date, time as datetime_time
@@ -37,6 +41,8 @@ from django.conf import settings
 from django.utils.translation import gettext as _
 from django.utils import timezone
 from django.core.files.storage import FileSystemStorage
+
+from django.core import serializers
 
 # Django 1.10 breaks reverse imports.
 try:
@@ -68,7 +74,7 @@ from helpline.models import Report, HelplineUser,\
         Schedule, Case, Postcode,\
         Service, Hotdesk, Category, Clock,\
         MainCDR, Recorder, Address, Contact,\
-        Messaging
+        Messaging,Emails,SMSCDR
 
 from helpline.forms import QueueLogForm,\
         ContactForm, DispositionForm, CaseSearchForm, MyAccountForm,RegisterUserForm, \
@@ -87,11 +93,12 @@ from onadata.libs.utils.user_auth import (get_xform_and_perms, has_permission,
                                           helper_auth_helper)
 
 
+
 cfg = QPanelConfig()
 backend = Backend()
 
-def success():
-    return render('helpline/success.html');
+def success(request):
+    return render(request,'helpline/success.html');
     
 @login_required
 def home(request):
@@ -113,52 +120,54 @@ def home(request):
 
     default_service = Service.objects.all().first()
     default_service_xform = default_service.walkin_xform
-    default_service_auth_token = default_service_xform.user.auth_token
+    default_service_auth_token = '7331a310c46884d2643ca9805aaf0d420ebfc831' # default_service_xform.user.auth_token
     current_site = get_current_site(request)
+    default_service_xform.pk = 29
 
-
-    url = 'https://%s/ona/api/v1/charts/%s.json?field_name=_submission_time' % (
-        current_site,
-        default_service_xform.pk
-    )
-
-    # Graph data
-    headers = {
-            'Authorization': 'Token %s' % (default_service_auth_token)
-    }
-
-    stat = requests.get(url,headers=headers).json()
     gtdata = []
-
-    for dt in get_item(stat, 'data'):
-        t = [str(get_item(dt, '_submission_time')), get_item(dt, 'count')]
-        gtdata.append(t)
-
-    stype = 'case_action'
-
-    if request.user.HelplineUser.hl_role == 'Caseworker':
-        url = 'https://%s/ona/api/v1/charts/%s.json?field_name=client_state' %(current_site,default_service_xform.pk)
-        color = ['#00a65a','#00c0ef','#f39c12','#808000','#C7980A', '#F4651F', '#82D8A7', '#CC3A05', '#575E76', '#156943', '#0BD055', '#ACD338']
-        stype = 'client_state'
-    else:
-        url = 'https://%s/ona/api/v1/charts/%s.json?field_name=case_action' %(current_site,default_service_xform.pk)
-        color = ['#00a65a','#00c0ef','#f39c12']
-
-    #for case status 
-    status_data = requests.get(url, headers= headers).json();
-
     stdata = []
-    ic = 0
-    for dt in get_item(status_data,'data'):#  status_data['data']:
-        lbl = dt[str(stype)]
-        if isinstance(lbl,list):
-            lbl = lbl[0].encode('UTF8') if not len(lbl) == 0 else "Others"
-        else:
-            lbl if not len(lbl) == 0 else "Others"
+    if default_service != '' and default_service != 0 and default_service_xform:
+        url = 'https://%s/ona/api/v1/charts/%s.json?field_name=_submission_time' % (
+            current_site,
+            default_service_xform.pk
+        )
 
-        col = color[ic]
-        ic += 1
-        stdata.append({"label":str(lbl),"data":str(str(dt['count'])),"color":str(col)})
+        # Graph data
+        headers = {
+                'Authorization': 'Token %s' % (default_service_auth_token)
+        }
+
+        stat = requests.get(url,headers=headers).json()
+
+
+        for dt in get_item(stat, 'data'):
+            t = [str(get_item(dt, '_submission_time')), get_item(dt, 'count')]
+            gtdata.append(t)
+
+        stype = 'case_action'
+
+        if request.user.HelplineUser.hl_role == 'Caseworker':
+            url = 'https://%s/ona/api/v1/charts/%s.json?field_name=client_state' %(current_site,default_service_xform.pk)
+            color = ['#00a65a','#00c0ef','#f39c12','#808000','#C7980A', '#F4651F', '#82D8A7', '#CC3A05', '#575E76', '#156943', '#0BD055', '#ACD338']
+            stype = 'client_state'
+        else:
+            url = 'https://%s/ona/api/v1/charts/%s.json?field_name=case_action' %(current_site,default_service_xform.pk)
+            color = ['#00a65a','#00c0ef','#f39c12']
+
+        #for case status 
+        status_data = requests.get(url, headers= headers).json();
+
+        ic = 0
+        for dt in get_item(status_data,'data'):#  status_data['data']:
+            lbl = dt[str(stype)]
+            if isinstance(lbl,list):
+                lbl = lbl[0].encode('UTF8') if not len(lbl) == 0 else "Others"
+            else:
+                lbl if not len(lbl) == 0 else "Others"
+
+            col = color[ic]
+            ic += 1
+            stdata.append({"label":str(lbl),"data":str(str(dt['count'])),"color":str(col)})
 
     return render(request, 'helpline/home.html',
                   {'dashboard_stats': dashboard_stats,
@@ -183,6 +192,64 @@ def leta(request):
                   {'ld': login_duration,
                    'ready': ready})
 
+def sync_sms(request):
+    if request.method == 'POST':
+        sms = SMSCDR()
+        sms.contact = request.POST.get('phone')
+        sms.msg     = request.POST.get('msg')
+        sms.time    = request.POST.get('time')
+        sms.type    = 'INBOX'
+        sms.save()
+    else:
+        sms_list = SMSCDR.objects.all().order_by('sms_time')
+        return HttpResponse(serializers.serialize('json', sms_list), content_type="application/json")
+
+def sync_emails(request):
+    FROM_EMAIL  = "support@" + settings.BASE_DOMAIN
+    SMTP_PORT   = 993
+
+    message = {'message':'','count':0}
+    try:
+        mail = imaplib.IMAP4_SSL(settings.SMTP_SERVER)
+        mail.login(FROM_EMAIL,settings.SUPPORT_PASS)
+        mail.select('inbox')
+
+        type, data = mail.search(None, 'UNSEEN')
+        mail_ids = data[0]
+
+        id_list = mail_ids.split() 
+        mail_count = len(id_list)
+
+        if(mail_count > 1):
+            first_email_id = int(id_list[0])
+            latest_email_id = int(id_list[-1])
+        elif mail_count == 1:
+            first_email_id = int(id_list[0])
+            latest_email_id = int(id_list[0])
+        elif mail_count == 0:
+            return HttpResponse("No new mails found ")
+
+
+
+        for i in range(latest_email_id,first_email_id-1, -1):
+            typ, data = mail.fetch(i, '(RFC822)' )
+            for response_part in data:
+                model_mail = Emails()
+                if isinstance(response_part, tuple):
+                    msg = email.message_from_string(response_part[1])
+                    model_mail.email_idkey    = i
+                    model_mail.email_from     = msg['from']
+                    model_mail.email_body     = str(msg.get_payload())
+                    model_mail.email_subject  = msg['subject']
+                    model_mail.email_date     = msg['date']
+                    model_mail.save()
+                    message['count'] += 1
+                    message['message'] = "Fetch complete"
+
+    except Exception, e:
+        message['message'] = "Could not complete fetch: %s" %e
+
+    return HttpResponse(message['message'])
 
 @login_required
 def check(request):
@@ -252,16 +319,26 @@ def new_user(request):
     if request.method == 'POST':
         form = RegisterUserForm(request.POST,request.FILES)
         if form.is_valid():
-            user = HelplineUser()
+            user = User()
             try:
-                user.hl_key = randint(123456789, 999999999)
-                user.hl_auth = randint(1234, 9999)
-                user.user_id = 2
-                user.hl_role = form.cleaned_data['userrole']
-                user.hl_names = form.cleaned_data['names']
-                user.hl_nick = form.cleaned_data['username']
-                user.hl_email = form.cleaned_data['useremail']
-                user.hl_phone = form.cleaned_data['phone']
+                names = str(form.cleaned_data['names']).split(" ");
+                user.password = md5("Cheruiyot")
+                user.username = form.cleaned_data['username']
+                user.first_name = str(names[0]) if names[0] else None
+                user.last_name = str(names[1]) if names[1] else None
+                user.email = form.cleaned_data['useremail']
+                user.is_active = True
+
+                user.save()
+
+                user.HelplineUser.hl_key   = randint(123456789, 999999999)
+                user.HelplineUser.hl_auth  = randint(1234, 9999)
+                user.HelplineUser.hl_role  = form.cleaned_data['userrole']
+                user.HelplineUser.hl_names = form.cleaned_data['names']
+                user.HelplineUser.hl_nick  = form.cleaned_data['username']
+                user.HelplineUser.hl_email = form.cleaned_data['useremail']
+                user.HelplineUser.hl_phone = form.cleaned_data['phone']
+
 
                 uploaded_file_url = ''
                 filename = ''
@@ -273,8 +350,8 @@ def new_user(request):
 
                 
 
-                user.hl_avatar = uploaded_file_url
-                user.hl_time = time.time()
+                user.HelplineUser.hl_avatar = uploaded_file_url
+                user.HelplineUser.hl_time = time.time()
                 user.save()
                 message = "User saved succeefully"
                 form = RegisterUserForm()
@@ -1082,7 +1159,7 @@ def queue_manager(user, extension, action):
 
 def home_direct():
     return Redirect('/helpline/')
-    
+
 @login_required
 def case_form(request, form_name):
     """Handle Walkin and CallForm POST and GET Requests"""
@@ -1092,11 +1169,13 @@ def case_form(request, form_name):
     default_service_xform = default_service.walkin_xform
     default_service_auth_token = default_service_xform.user.auth_token
     current_site = get_current_site(request)
+    default_service_xform.pk = 29
 
+    
     """
     Graph data
     """
-    headers = {
+    headers = { 
             'Authorization': 'Token %s' %(default_service_auth_token)
     }
 
@@ -1143,7 +1222,6 @@ def case_form(request, form_name):
         username = xform.user.username
         data['disposition_form'] = DispositionForm()
         data['contact_form'] = ContactForm()
-        data['case_action_form'] = CaseActionForm()
         data['contact_search_form'] = ContactSearchForm()
 
 
@@ -1352,7 +1430,7 @@ def case_edit(request, form_name, case_id):
             'Authorization': 'Token %s' %(default_service_auth_token)
     }
 
-    url = 'https://%s/ona/api/v1/data/%s/%s/enketo?return_url=https://%s/home&format=json' % (current_site,default_service_xform.pk,case_id,current_site)
+    url = 'https://%s/ona/api/v1/data/%s/%s/enketo?return_url=https://%s/helpline/success/&format=json' % (current_site,default_service_xform.pk,case_id,current_site)
     req = requests.get(url,headers=headers).json()
     return render(request,'helpline/case_form_edit.html',{'case':case_id,'iframe_url':get_item(req,'url')})
 
@@ -2180,8 +2258,14 @@ def wall(request):
 @login_required
 def sources(request, source=None):
     """Display data source"""
+    data_messages = ''
+    if source == 'email':
+        data_messages  = Emails.objects.all()
+    if source == 'sms':
+        data_messages = SMSCDR.objects.all().order_by('sms_time')
+        
     template = 'helpline/%s.html' % (source)
-    return render(request, template)
+    return render(request, template,{'data_messages':data_messages})
 
 
 def get_data_queues(queue=None):

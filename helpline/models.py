@@ -168,6 +168,9 @@ class ClockBit(models.Model):
 
 
 class Country(models.Model):
+    """
+    Gives the details and attributes of an object country which can be used at different instances within the system
+    """
     hl_category = models.CharField(max_length=100)
     hl_code = models.CharField(max_length=2)
     hl_country = models.CharField(max_length=250)
@@ -175,6 +178,10 @@ class Country(models.Model):
 
 
 class Dialect(models.Model):
+    """
+    An object model of the different languages and/or dialects identifiable within a region of the system use. These can be used
+    for clients being registered into the system or identify agents 
+    """
     hl_category = models.CharField(max_length=100, blank=True, null=True)
     hl_dialect = models.CharField(max_length=100, verbose_name="Language")
     hl_status = models.IntegerField(blank=True, null=True)
@@ -188,7 +195,8 @@ class Dialect(models.Model):
 
 
 class Hotdesk(models.Model):
-    """A hotdesk references the workstation an agent seats."""
+    """A hotdesk references the workstation an agent seats. Normally marked by the SIP configurations on the soft phone
+     and mostly set static"""
     SIP = 'SIP'
     AVAILABLE = 'Available'
     UNAVAILABLE = 'Unavailable'
@@ -229,6 +237,7 @@ class Hotdesk(models.Model):
         self.save()
 
 class IMregistry(models.Model):
+    """Instant Messaging, as it dictates, a set of received or sent short message and/or instant communication channels"""
     hl_index = models.AutoField(primary_key=True)
     hl_chat = models.CharField(max_length=300)
     hl_mandatory = models.CharField(max_length=300)
@@ -238,6 +247,7 @@ class IMregistry(models.Model):
 
 
 class MainCDR(models.Model):
+    """Raw Call details """
     hl_unique = models.CharField(unique=True, max_length=32)
     hl_start = models.BigIntegerField()
     hl_end = models.IntegerField()
@@ -270,6 +280,7 @@ class MatrixQA(models.Model):
 
 
 class MenuLog(models.Model):
+    """A list of user menu details based on user authorization"""
     hl_user = models.IntegerField()
     hl_key = models.IntegerField()
     hl_status = models.IntegerField()
@@ -297,6 +308,7 @@ class Offered(models.Model):
 
 
 class Partner(models.Model):
+    """Contact and address details of partner organizations and institutions"""
     tempid = models.IntegerField(blank=True, null=True)
     keyservices = models.CharField(max_length=100, blank=True, null=True)
     referralpartner = models.CharField(max_length=100, blank=True, null=True)
@@ -618,17 +630,14 @@ class Search(models.Model):
 
 
 class SMSCDR(models.Model):
-    sender = models.CharField(max_length=30)
-    receiver = models.CharField(max_length=30)
-    msg = models.CharField(max_length=320, blank=True, null=True)
-    time = models.DateTimeField(db_column='Time', blank=True, null=True)
-    uniqueid = models.CharField(max_length=50)
-    received = models.IntegerField()
-    processing = models.IntegerField()
-    processing_by = models.IntegerField()
-    dateprocessed = models.DateTimeField()
-    processed_by = models.IntegerField()
-    link_id = models.CharField(max_length=300)
+    contact     = models.CharField(max_length=30)
+    msg         = models.CharField(max_length=320, blank=True, null=True)
+    sms_status  = models.IntegerField(default=0)
+    time        = models.DateTimeField(db_column='Time', blank=True, null=True)
+    thread      = models.IntegerField()
+    sms_type    = models.CharField(blank=False,max_length=8,default="INBOX")
+    sms_case    = models.IntegerField(blank=True)
+    sms_time    = models.DateTimeField(auto_now_add=True,editable=False)
 
 
 class HelplineUser(models.Model):
@@ -824,26 +833,47 @@ class Cdr(models.Model):
     """A CDR consists of a unique identifier and several
     fields of information about a call"""
     accountcode = models.IntegerField(blank=True, null=True)
-    calldate = models.DateTimeField(auto_now_add=True, blank=True)
-    clid = models.CharField(max_length=80, blank=True, null=True)
-    src = models.CharField(max_length=80, blank=True, null=True)
-    dst = models.CharField(max_length=80, blank=True, null=True)
-    dcontext = models.CharField(max_length=80, blank=True, null=True)
-    channel = models.CharField(max_length=80, blank=True, null=True)
-    dstchannel = models.CharField(max_length=80, blank=True, null=True)
-    lastapp = models.CharField(max_length=80, blank=True, null=True)
+    calldate    = models.DateTimeField(auto_now_add=True, blank=True)
+    clid        = models.CharField(max_length=80, blank=True, null=True)
+    src         = models.CharField(max_length=80, blank=True, null=True)
+    dst         = models.CharField(max_length=80, blank=True, null=True)
+    dcontext    = models.CharField(max_length=80, blank=True, null=True)
+    channel     = models.CharField(max_length=80, blank=True, null=True)
+    dstchannel  = models.CharField(max_length=80, blank=True, null=True)
+    lastapp     = models.CharField(max_length=80, blank=True, null=True)
 
-    lastdata = models.CharField(max_length=80, blank=True, null=True)
-    duration = models.IntegerField(blank=True, null=True)
-    billsec = models.IntegerField(blank=True, null=True)
+    lastdata    = models.CharField(max_length=80, blank=True, null=True)
+    duration    = models.IntegerField(blank=True, null=True)
+    billsec     = models.IntegerField(blank=True, null=True)
     disposition = models.CharField(max_length=45, blank=True, null=True)
-    amaflags = models.IntegerField(blank=True, null=True)
+    amaflags    = models.IntegerField(blank=True, null=True)
     accountcode = models.CharField(max_length=20, blank=True, null=True)
-    uniqueid = models.CharField(max_length=32, blank=True, null=True)
-    userfield = models.CharField(max_length=255, blank=True, null=True)
+    uniqueid    = models.CharField(max_length=32, blank=True, null=True)
+    userfield   = models.CharField(max_length=255, blank=True, null=True)
     peeraccount = models.CharField(max_length=20, blank=True, null=True)
-    linkedid = models.CharField(max_length=20, blank=True, null=True)
-    sequence = models.CharField(max_length=20, blank=True, null=True)
+    linkedid    = models.CharField(max_length=20, blank=True, null=True)
+    sequence    = models.CharField(max_length=20, blank=True, null=True)
 
     def __unicode__(self):
         return "%s -> %s" % (self.src, self.dst)
+
+class Emails(models.Model):
+    """
+    Model for emails synchronized from the public
+    """
+    email_idkey     = models.CharField(max_length=250)
+    email_from      = models.CharField(max_length=100,blank=True, null=True)
+    email_status    = models.IntegerField(default=0)
+    email_body      = models.TextField(blank=True, null=True)
+    email_subject   = models.CharField(max_length=300, blank=True, null=True)
+    email_date      = models.CharField(max_length=50,blank=True, null=True)
+    email_time      = models.DateTimeField(auto_now_add=True)
+
+
+class Cases(models.Model):
+    """model for Case Numbers to track case numbers"""
+    case_number = models.IntegerField(default=0)
+    case_source = models.CharField(max_length = 7, editable=False)
+    case_time   = models.DateTimeField(auto_now_add=True)
+
+        
