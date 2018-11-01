@@ -193,16 +193,31 @@ def leta(request):
                    'ready': ready})
 
 def sync_sms(request):
-    if request.method == 'POST':
-        sms = SMSCDR()
-        sms.contact = request.POST.get('phone')
-        sms.msg     = request.POST.get('msg')
-        sms.time    = request.POST.get('time')
-        sms.type    = 'INBOX'
-        sms.save()
-    else:
-        sms_list = SMSCDR.objects.all().order_by('sms_time')
-        return HttpResponse(serializers.serialize('json', sms_list), content_type="application/json")
+    
+    error_message = None
+    state = True
+    try:
+        if request.method == 'POST':
+            sms = SMSCDR()
+            sms.contact = request.POST.get('from')
+            sms.msg     = request.POST.get('message')
+            sms.time    = request.POST.get('sent_timestamp')
+            sms.type    = 'INBOX'
+            sms.save()
+
+        else:
+            sms_list = SMSCDR.objects.all().order_by('sms_time')
+    except Exception, e:
+        error_message = "Error: %s" %e
+        state = False
+
+    payload = {
+                'payload':{
+                        'success':state,
+                        'error':error_message
+                }
+            }
+    return JsonResponse(payload) #serializers.serialize('json', payload), content_type="application/json")
 
 def sync_emails(request):
     FROM_EMAIL  = "support@" + settings.BASE_DOMAIN

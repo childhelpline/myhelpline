@@ -65,7 +65,7 @@
               				</td>
               				<td class="mailbox-attachment"></td>
               				<td class="mailbox-date">{{ mess.sms_time}}</td>
-              				<td class="mailbox-date">Reply | <a href="">Create Case</a></td>
+              				<td class="mailbox-date">Reply | <a href="{% url "case_form" "sms" %}">Create Case</a></td>
               			</tr>
               			{% endfor %}
               		</tbody>
