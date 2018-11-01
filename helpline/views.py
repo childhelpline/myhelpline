@@ -197,17 +197,21 @@ def sync_sms(request):
     error_message = None
     state = True
     try:
-        if request.method == 'POST':
-            data = request.POST.copy()
-            sms = SMSCDR()
-            sms.contact = data.get('from')
-            sms.msg     = data.get('message')
-            sms.time    = data.get('sent_timestamp')
-            sms.type    = 'INBOX'
-            sms.save()
+        #if request.method == 'POST':
+        # data = request.POST.copy()
+        sms = SMSCDR()
+        sms.contact = '0727647431' # data.get('from')
+        sms.msg     = 'This is the message' # data.get('message')
+        sms.time    = datetime.now() # data.get('sent_timestamp')
+        sms.type    = 'INBOX'
+        sms.thread  = 1 
+        sms.status  = 1
+        sms.sms_case = 1
+        sms.sms_time = datetime.now()
 
-        else:
-            sms_list = SMSCDR.objects.all().order_by('sms_time')
+        sms.save()
+        #else:
+        #   sms_list = SMSCDR.objects.all().order_by('sms_time')
     except Exception, e:
         error_message = "Error: %s" %e
         state = False
@@ -1312,8 +1316,9 @@ def case_form(request, form_name):
             # Poor mans iframe url gen
             parent_window_origin = urllib.quote_plus(uri)
             iframe_url = url[:url.find("::")] + "i/" + url[url.find("::"):]+\
-              "?d[/%s/case_id]=%s&parentWindowOrigin=" % (xform.id_string, case_number) + parent_window_origin
+              "?&parentWindowOrigin=" + parent_window_origin
             data['iframe_url'] = iframe_url
+            data['xform_id_string'] = xform.id_string
             if not url:
                 return HttpResponseRedirect(
                     reverse(
