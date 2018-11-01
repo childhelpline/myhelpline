@@ -1161,7 +1161,7 @@ function get_submissions(phone,name,param=true){
     $.get('/helpline/caseid/walkin',function(data){
       caseid = data
 
-      var url_str = !iframe.src.includes('?') ? '?d[/{{ xform_id_string }}/case_id=' + caseid + ']':'d[/{{ xform_id_string }}/case_id=' + caseid + ']'
+      var url_str = !iframe.src.includes('?') ? '?d[/Case_Form/case_id=' + caseid + ']':'d[/Case_Form/case_id=' + caseid + ']'
 
       if(!newreporter){
         selected_contact = selected_contact[0]
