@@ -237,11 +237,11 @@ audio{
         <div class="modal-header bg-light-blue-active">
           <!--button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button-->
           <a href="{% url 'dashboard_home' %}" class="close" style="color:#ffffff;"><span aria-hidden="true">&times;</span></a>
-          <h4 class="modal-title" id="myModalLabel">{% trans "Form" %} > {{ form_name }}| Case ID
+          <h4 class="modal-title" id="myModalLabel">{% trans "Form" %} > {{ form_name }} 
               <span id="caseid">{{ case }}</span>
-              > <span id="contact_details_step" onclick="$('#frame-contact').removeClass('hidden');$('#frame_iframe').addClass('hidden');$('#frame-case-action').addClass('hidden');">Contact Details</span>
+              <!-- > <span id="contact_details_step" onclick="$('#frame-contact').removeClass('hidden');$('#frame_iframe').addClass('hidden');$('#frame-case-action').addClass('hidden');">Contact Details</span>
               > <span id="case_details_step">Case Details</span>
-              > <span id="case_action_step" onclick="$('#frame-case-action').removeClass('hidden');$('#frame_iframe').addClass('hidden');$('#frame-contact').addClass('hidden');">Case Action</span>
+              > <span id="case_action_step" onclick="$('#frame-case-action').removeClass('hidden');$('#frame_iframe').addClass('hidden');$('#frame-contact').addClass('hidden');">Case Action</span-->
             <span id="editedBadge"></span>
             {% if form_name == 'qa' %}
             <span class="pull-right">
@@ -307,22 +307,6 @@ audio{
 
                                     <button type="button" class="btn btn-primary pull-right btn-lg btn-flat" onclick="create_case(true);$('.contact-search').removeClass('col-md-12');$('#frame-contact').addClass('hidden');$('#frame_iframe').removeClass('hidden');">New Case</button>
 
-                              <!--p class="lead">Reporter Details: {{ contact.hl_contact }}</p>
-                              <div class="text-muted well well-sm no-shadow">
-                                <!-- form start ->
-                                <div class="box-body">
-                                  <div class="row">
-
-                                    {% crispy contact_form contact_form.helper %}
-
-                                  </div>
-                                </div>
-                                <!-- /.box-body ->
-
-                                <div class="box-footer" style="background-color: transparent;">
-                                  <button type="button" class="btn btn-primary pull-right btn-lg btn-flat" onclick="saveContact();$('.contact-search').removeClass('col-md-12');$('#frame-contact').addClass('hidden');$('#frame_iframe').removeClass('hidden');">New Case</button>
-                                </div>
-                              </div-->
                             </div>
                                 <!-- /.col -->
                                 <div class="col-xs-12">
@@ -400,9 +384,9 @@ audio{
       var resp = JSON.parse(event.data)
       if(resp.enketoEvent == 'submissionsuccess'){
         // Show case action form after successful case submission
-        $('#frame-case-action').removeClass('hidden');
+        /*$('#frame-case-action').removeClass('hidden');
         $('#frame_iframe').addClass('hidden');
-        $('#frame-contact').addClass('hidden');
+        $('#frame-contact').addClass('hidden');*/
       }
     }
   }

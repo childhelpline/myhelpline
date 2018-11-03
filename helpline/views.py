@@ -120,9 +120,8 @@ def home(request):
 
     default_service = Service.objects.all().first()
     default_service_xform = default_service.walkin_xform
-    default_service_auth_token = '7331a310c46884d2643ca9805aaf0d420ebfc831' # default_service_xform.user.auth_token
+    default_service_auth_token = default_service_xform.user.auth_token
     current_site = get_current_site(request)
-    default_service_xform.pk = 29
 
     gtdata = []
     stdata = []
@@ -197,21 +196,17 @@ def sync_sms(request):
     error_message = None
     state = True
     try:
-        #if request.method == 'POST':
-        # data = request.POST.copy()
-        sms = SMSCDR()
-        sms.contact = '0727647431' # data.get('from')
-        sms.msg     = 'This is the message' # data.get('message')
-        sms.time    = datetime.now() # data.get('sent_timestamp')
-        sms.type    = 'INBOX'
-        sms.thread  = 1 
-        sms.status  = 1
-        sms.sms_case = 1
-        sms.sms_time = datetime.now()
+        if request.method == 'POST':
+            data = request.POST.copy()
+            sms = SMSCDR()
+            sms.contact = data.get('from')
+            sms.msg     = data.get('message')
+            sms.time    = data.get('sent_timestamp')
+            sms.sms_time = timezone.now()
 
-        sms.save()
-        #else:
-        #   sms_list = SMSCDR.objects.all().order_by('sms_time')
+            sms.save()
+        else:
+           sms_list = SMSCDR.objects.filter(sms_type='OUTBOX').order_by('-sms_time')
     except Exception, e:
         error_message = "Error: %s" %e
         state = False
@@ -343,14 +338,17 @@ def increment_case_number():
         return 100001
     else:
         return int(case) + int(1)
-
-@login_required
-def case_number(request,case_source):
+def get_case_number(case_source):
     case = Cases()
     caseid = increment_case_number()
     case.case_number = caseid
     case.case_source = case_source
     case.save()
+    return caseid;
+
+@login_required
+def case_number(request,case_source):
+    caseid = get_case_number(case_source)
     return HttpResponse(caseid)
 
 @login_required
@@ -1209,7 +1207,6 @@ def case_form(request, form_name):
     default_service_xform = default_service.walkin_xform
     default_service_auth_token = default_service_xform.user.auth_token
     current_site = get_current_site(request)
-    default_service_xform.pk = 29
 
     
     """
@@ -1244,7 +1241,9 @@ def case_form(request, form_name):
         xform = service.web_online_xform
         data['form_name'] = 'webonline'
     else:
-        xform = service.call_xform
+        xform = service.walkin_xform
+        data['form_name'] = form_name
+        caseid = get_case_number(form_name)
 
 
     # If no XForm is associated with the above cases
@@ -1265,47 +1264,8 @@ def case_form(request, form_name):
         data['contact_search_form'] = ContactSearchForm()
 
 
-        if case_number:
-            try:
-                my_case = int(case_number)
-            except ValueError:
-                raise Http404(_("Case not found"))
-            my_case = get_object_or_404(Case, hl_case=case_number)
-            report, contact, address = get_case_info(case_number)
-            case_history = Report.objects.filter(
-                telephone=contact.hl_contact).order_by('-case')
-            case_history_table = CaseHistoryTable(case_history)
-
-            # Initial case data
-            data['case'] = my_case
-            data['report'] = report
-            data['contact'] = contact
-            data['address'] = address
-            data['case_history_table'] = case_history_table
-            data['contact_form'] = ContactForm(
-                initial={
-                    'caller_name': address.hl_names,
-                    'phone_number': contact.hl_contact,
-                    'case_number': my_case
-                }
-            )
-            data['case_action_form'] = CaseActionForm(
-                initial={
-                    'case_number': my_case
-                }
-            )
-
-            try:
-                case_history_table.paginate(page=request.GET.get('page', 1), per_page=10)
-            except Exception as e:
-                # Do not paginate if there is an error
-                pass
-
         form_url = get_form_url(request, username, settings.ENKETO_PROTOCOL)
-        # Check if we're looking for a case.
-        if case_number:
-            my_case = Case.objects.get(hl_case=case_number)
-            report, contact, address = get_case_info(case_number)
+
         try:
             url = enketo_url(form_url, xform.id_string)
             uri = request.build_absolute_uri()
@@ -1313,10 +1273,11 @@ def case_form(request, form_name):
             # Use https for the iframe parent window uri, always.
             uri = uri.replace('http://', 'https://')
 
+            caseid_str = '&d[/%s/case_id]=%s'% (xform.id_string, caseid) if caseid else ''
             # Poor mans iframe url gen
             parent_window_origin = urllib.quote_plus(uri)
             iframe_url = url[:url.find("::")] + "i/" + url[url.find("::"):]+\
-              "?&parentWindowOrigin=" + parent_window_origin
+              "?&parentWindowOrigin=" + parent_window_origin + caseid_str
             data['iframe_url'] = iframe_url
             data['xform_id_string'] = xform.id_string
             if not url:
@@ -2303,7 +2264,7 @@ def sources(request, source=None):
     if source == 'email':
         data_messages  = Emails.objects.all()
     if source == 'sms':
-        data_messages = SMSCDR.objects.all().order_by('sms_time')
+        data_messages = SMSCDR.objects.all().order_by('-sms_time')
 
     template = 'helpline/%s.html' % (source)
     return render(request, template,{'data_messages':data_messages})

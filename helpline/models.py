@@ -630,13 +630,16 @@ class Search(models.Model):
 
 
 class SMSCDR(models.Model):
+    """
+    This acts as an SMS log where both received and sent SMS are stored, when a case is created, its number is marked against the sms
+    """
     contact     = models.CharField(max_length=30)
     msg         = models.CharField(max_length=320, blank=True, null=True)
     sms_status  = models.IntegerField(default=0)
     time        = models.DateTimeField(db_column='Time', blank=True, null=True)
-    thread      = models.IntegerField()
+    thread      = models.IntegerField(default=0)
     sms_type    = models.CharField(blank=False,max_length=8,default="INBOX")
-    sms_case    = models.IntegerField(blank=True)
+    sms_case    = models.IntegerField(blank=True,default=0)
     sms_time    = models.DateTimeField(auto_now_add=True,editable=False)
 
 
