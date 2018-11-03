@@ -1207,7 +1207,6 @@ def case_form(request, form_name):
     default_service_xform = default_service.walkin_xform
     default_service_auth_token =  default_service_xform.user.auth_token
     current_site = get_current_site(request)
-    
     """
     Graph data
     """
@@ -1244,7 +1243,19 @@ def case_form(request, form_name):
         xform = service.walkin_xform
         data['form_name'] = form_name
         caseid = get_case_number(form_name)
+        sourceid = request.GET.get('sourceid')
 
+        if form_name == 'email':
+            email = get_object_or_404(Emails,pk__exact=sourceid);
+            email.email_case = caseid
+            caseid_str = '&d[/%s/reporter_details/email_adress]=%s' % (xform.id_string,email.email_from) + '&d[/%s/case_narratives/case_narrative]=%s' %(xform.id_string,email.email_body)
+            email.save()
+
+        if form_name == 'sms':
+            sms = get_object_or_404(SMSCDR,pk__exact=sourceid);
+            sms.sms_case = caseid
+            caseid_str = '&d[/%s/reporter_details/reporter_phone]=%s' % (xform.id_string,sms.contact) + '&d[/%s/case_narratives/case_narrative]=%s' %(xform.id_string,sms.msg)
+            sms.save()
 
     # If no XForm is associated with the above cases
     if not xform:
@@ -1273,7 +1284,7 @@ def case_form(request, form_name):
             # Use https for the iframe parent window uri, always.
             uri = uri.replace('http://', 'https://')
 
-            caseid_str = '&d[/case_id]=%s'% caseid if caseid else ''
+            caseid_str = caseid_str + '&d[/%s/case_id]=%s'% (xform.id_string,caseid) if caseid else ''
             # Poor mans iframe url gen
             parent_window_origin = urllib.quote_plus(uri)
             iframe_url = url[:url.find("::")] + "i/" + url[url.find("::"):]+\
@@ -1286,7 +1297,7 @@ def case_form(request, form_name):
                         'form-show',
                         kwargs={'username': username,
                                 'id_string': xform.id_string}))
-#            return HttpResponseRedirect(iframe_url)
+            # return HttpResponseRedirect(iframe_url)
         except EnketoError as e:
             data = {}
             owner = User.objects.get(username__iexact=username)

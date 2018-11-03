@@ -31,6 +31,7 @@
                       <th>#</th>
                       <th>#</th>
                       <th>#</th>
+                      <th>#</th>
                     </tr>
               		</thead>
               		<tbody>
@@ -40,7 +41,8 @@
               				<td class="mailbox-name"> <a href="read-mail.html">{{ mess.email_from }}</a> </td>
               				<td class="mailbox-subject"> <b>{{ mess.email_subject }}</b> <td>
               				<td class="mailbox-date">{{ mess.email_date}} </td>
-              				<td class="mailbox-date"> Reply | <a href='{% url "case_form" "email" %}'>Create Case</a></td>
+                      <td>{{ mess.email_case }}</td>
+              				<td class="mailbox-date"> Reply | {%  if mess.email_case !== 0 %} <a href='{% url "case_form" "email" %}?sourceid={{mess.pk}}'>Create Case</a> {% endif %}</td>
               			</tr>
               			{% endfor %}
               		</tbody>

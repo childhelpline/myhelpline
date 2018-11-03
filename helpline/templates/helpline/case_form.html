@@ -44,52 +44,52 @@ audio{
     $('select[name=sub_category]').prepend('<option value="Not selected" selected disabled>Select Category...</option>');
     $('select[name=sub_sub_category]').empty();
     $('select[name=sub_sub_category]').prepend('<option value="Not selected" selected disabled>Select a Sub-Category...</option>');
-  // called when category field changes from initial value
-  $('select[name=category]').change(function(){
+    // called when category field changes from initial value
+    $('select[name=category]').change(function(){
 
-    if($("#id_category option:selected").text()) {
-      category_id = $('select[name=category]').val();
+      if($("#id_category option:selected").text()) {
+        category_id = $('select[name=category]').val();
 
-      request_url = '/helpline/ajax/get_subcategory/' + category_id + '/';
-      $.ajax({
-        url: request_url,
-        type: "GET",
-        success: function(data){
-          $('select[name=sub_category]').empty();
-          $.each(data.data, function(key, value){
-            $('select[name=sub_category]').append('<option value="' + value.chlsubcategory + '">' + value.chlsubcategory + '</option>');
-          });
-        }
-      })
-    }
-  })
-  $('select[name=sub_category]').change(function(){
+        request_url = '/helpline/ajax/get_subcategory/' + category_id + '/';
+        $.ajax({
+          url: request_url,
+          type: "GET",
+          success: function(data){
+            $('select[name=sub_category]').empty();
+            $.each(data.data, function(key, value){
+              $('select[name=sub_category]').append('<option value="' + value.chlsubcategory + '">' + value.chlsubcategory + '</option>');
+            });
+          }
+        })
+      }
+    })
+    $('select[name=sub_category]').change(function(){
 
-    if($("#id_sub_category option:selected").text()) {
-      sub_category_id = $('select[name=sub_category]').val();
+      if($("#id_sub_category option:selected").text()) {
+        sub_category_id = $('select[name=sub_category]').val();
 
-      request_url = '/helpline/ajax/get_sub_subcategory/' + sub_category_id + '/';
-      $.ajax({
-        url: request_url,
-        type: "GET",
-        success: function(data){
-          $('select[name=sub_sub_category]').empty();
-          $.each(data.data, function(key, value){
-            $('select[name=sub_sub_category]').append('<option value="' + value.chlsubsubcat + '">' + value.chlsubsubcat + '</option>');
-          });
-        }
-      })
-    }
-  })
-});
+        request_url = '/helpline/ajax/get_sub_subcategory/' + sub_category_id + '/';
+        $.ajax({
+          url: request_url,
+          type: "GET",
+          success: function(data){
+            $('select[name=sub_sub_category]').empty();
+            $.each(data.data, function(key, value){
+              $('select[name=sub_sub_category]').append('<option value="' + value.chlsubsubcat + '">' + value.chlsubsubcat + '</option>');
+            });
+          }
+        })
+      }
+    })
+  });
 </script>
 
 <script type="text/javascript">
 
   function createCase(contact_id){
     var values = {
-        'csrfmiddlewaretoken': '{{ csrf_token }}',
-        'contact_id': contact_id
+      'csrfmiddlewaretoken': '{{ csrf_token }}',
+      'contact_id': contact_id
     }
     $.ajax({
       url: "{% url 'contact_create_case' %}",
@@ -123,30 +123,6 @@ audio{
 
     get_submissions(telephone,name)
 
-
-
-    /*$.ajax({
-      url: "{% url 'contact_search_form' %}",
-      type: "POST",
-      data: $("#contact-search-form").serialize(),
-      success: function(data) {
-        if (!(data['success'])) {
-            // Here we replace the form, for the
-            $("#contact-search-form").html(data['form_html']);
-          }
-          else {
-            // Here you can show the user a success message or do whatever you need
-            //$(example_form).find('.success-message').show();
-            $("#success-message").html("Success");
-            $("#contact-search-results").html(data['table_html']);
-
-          }
-        },
-        error: function () {
-        //$(case_form).find('.error-message').show()
-        $("#error-message").html("Error");
-      }
-    });*/
   }
 
   function saveContact(){
@@ -197,9 +173,9 @@ audio{
           }
         },
         error: function () {
-        $("#error-message").html("Error");
-      }
-    });
+          $("#error-message").html("Error");
+        }
+      });
   }
 
 
@@ -234,40 +210,31 @@ audio{
 <div class="modal fade"  id="case_form_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
   <div class="modal-dialog" role="document" style="width: 80%;">
     <div class="modal-content">
-        <div class="modal-header bg-light-blue-active">
-          <!--button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button-->
-          <a href="{% url 'dashboard_home' %}" class="close" style="color:#ffffff;"><span aria-hidden="true">&times;</span></a>
-          <h4 class="modal-title" id="myModalLabel">{% trans "Form" %} > {{ form_name }} 
-              <span id="caseid">{{ case }}</span>
-              <!-- > <span id="contact_details_step" onclick="$('#frame-contact').removeClass('hidden');$('#frame_iframe').addClass('hidden');$('#frame-case-action').addClass('hidden');">Contact Details</span>
-              > <span id="case_details_step">Case Details</span>
-              > <span id="case_action_step" onclick="$('#frame-case-action').removeClass('hidden');$('#frame_iframe').addClass('hidden');$('#frame-contact').addClass('hidden');">Case Action</span-->
-            <span id="editedBadge"></span>
-            {% if form_name == 'qa' %}
-            <span class="pull-right">
-              <audio controls autoplay="autoplay">
-                <source src="horse.ogg" type="audio/ogg" />
-                <source src="http://soundbible.com/mp3/Tyrannosaurus%20Rex%20Roar-SoundBible.com-807702404.mp3" type="audio/mpeg" />
-              </audio> 
-            </span>
-            {% else %}
-            <span class="pull-right" id="formTimer" style="font-size: 24px; color: #fff; margin-right: 30px;">00:00:00</span>
-            {% endif %}
+      <div class="modal-header bg-light-blue-active">
+        <!--button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button-->
+        <a href="{% url 'dashboard_home' %}" class="close" style="color:#ffffff;"><span aria-hidden="true">&times;</span></a>
+        <h4 class="modal-title" id="myModalLabel">{% trans "Form" %} > {{ form_name }} 
+          <span id="caseid">{{ case }}</span>
+          <span id="editedBadge"></span>
+          {% if form_name == 'qa' %}
+          <span class="pull-right">
+            <audio controls autoplay="autoplay">
+              <source src="horse.ogg" type="audio/ogg" />
+              <source src="http://soundbible.com/mp3/Tyrannosaurus%20Rex%20Roar-SoundBible.com-807702404.mp3" type="audio/mpeg" />
+            </audio> 
+          </span>
+          {% else %}
+          <span class="pull-right" id="formTimer" style="font-size: 24px; color: #fff; margin-right: 30px;">00:00:00</span>
+          {% endif %}
           <h4>
-
           </div>
           <div class="modal-body" style="padding: 0px; height: 80vh;" ><!-- -->
-          <div id="frame_iframes">
-            <div id="frame-contact" class="{% if form_name == 'webonline' or form_name == 'qa' %} hidden {% endif %}" >
-
-
-              <section class="content" style="background-color: #fff;">
-                <div class="row">
-                  <div class="col-sm-12">
-                    <div class="modal-body" style="padding: 0px;"><!-- height: 80vh; -->
-
-
-                      <section class="invoice">
+            <div id="frame_iframes">
+              <div id="frame-contact" class="{% if form_name != 'walkin' and form_name != 'call' %} hidden {% endif %}" >
+                <section class="content" style="background-color: #fff;">
+                  <div class="row">
+                    <div class="col-sm-12">
+                      <div class="modal-body" style="padding: 0px;">
                         <div id="contact-search" class={% if form_name == 'call' %} hidden {% endif %}>
                           <div class="row">
                             <!-- accepted payments column -->
@@ -276,12 +243,12 @@ audio{
                               <div class="text-muted well well-sm no-shadow">
                                 <!-- form start -->
                                 {% crispy contact_search_form contact_search_form.helper %}
-                                  <!-- /.box-body -->
+                                <!-- /.box-body -->
 
-                                  <div class="box-footer" style="background-color: transparent;">
-                                    <button type="button" class="btn btn-primary" onclick="contactSearch();$('.contact-search').removeClass('col-md-12');$('.contact-results').removeClass('hidden');">Search Contact</button>
-                                    <button type="button" class="btn btn-primary pull-right" onclick="create_case();$('#contact-search').addClass('hidden');$('#frame_iframe').removeClass('hidden');$('#frame-contact').addClass('hidden');">New Reporter</button>
-                                  </div>
+                                <div class="box-footer" style="background-color: transparent;">
+                                  <button type="button" class="btn btn-primary" onclick="contactSearch();$('.contact-search').removeClass('col-md-12');$('.contact-results').removeClass('hidden');">Search Contact</button>
+                                  <button type="button" class="btn btn-primary pull-right" onclick="create_case();$('#contact-search').addClass('hidden');$('#frame_iframe').removeClass('hidden');$('#frame-contact').addClass('hidden');">New Reporter</button>
+                                </div>
                               </div>
                             </div>
                             <!-- /.col -->
@@ -289,7 +256,7 @@ audio{
                               <p class="lead">Contact Search Results</p>
 
                               <div class="table-responsive text-muted well-sm no-shadow" style="min-height: 242px;">
-                                  <div id="contact-search-results"></div>
+                                <div id="contact-search-results"></div>
                               </div>
                             </div>
                             <!-- /.col -->
@@ -305,101 +272,54 @@ audio{
                             <!-- accepted payments column -->
                             <div class="col-xs-12 contact-search">
 
-                                    <button type="button" class="btn btn-primary pull-right btn-lg btn-flat" onclick="create_case(false);$('#frame-contact').addClass('hidden');$('#frame_iframe').removeClass('hidden');">New Case</button>
+                              <button type="button" class="btn btn-primary pull-right btn-lg btn-flat" onclick="create_case(false);$('#frame-contact').addClass('hidden');$('#frame_iframe').removeClass('hidden');">New Case</button>
 
                             </div>
-                                <!-- /.col -->
-                                <div class="col-xs-12">
-                                  <p class="lead">Historical Cases</p>
-                                  <div id="historical-cases" class="table-responsive"></div>
-
-                                  <!--div class="table-responsive text-muted well well-sm no-shadow" style="min-height: 242px;">
-                                    {% if case %}
-                                    {% load django_tables2 %}
-                                    {% render_table case_history_table %}
-                                    {% endif %}
-                                  </div-->
-                                </div>
-                                <!-- /.col -->
-                              </div>
-                              <!-- /.row -->
+                            <!-- /.col -->
+                            <div class="col-xs-12">
+                              <p class="lead">Historical Cases</p>
+                              <div id="historical-cases" class="table-responsive"></div>
                             </div>
-
-                        <!-- Table row -->
-
-                            <!-- this row will not appear when printing -->
-                          </section>
-
+                            <!-- /.col -->
+                          </div>
+                          <!-- /.row -->
                         </div>
                       </div>
                     </div>
-                  </section>
-
-
-                </div>
-                        <!--div id="frame-case-action" class="hidden">
-
-                          <div class="row">
-                            <!-- accepted payments column ->
-                            <div class="col-xs-6 case-action">
-                              <p class="lead">Case Action</p>
-                              <div class="text-muted well well-sm no-shadow">
-                                <!-- form start->
-                                  <div class="box-body">
-                                    <div class="row">
-
-
-                                    </div>
-                                  </div>
-                                  <!-- /.box-body ->
-
-                                  <div class="box-footer" style="background-color: transparent;">
-                                    <button type="button" class="btn btn-primary pull-right btn-lg btn-flat" onclick="saveCaseAction();">Save</button->
-                                      </div>
-                                  </div>
-                                </div>
-                                <!-- /.col ->
-                              </div>
-                              <!-- /.row {{ iframe_url }} ->
-                            </div-->
-                <div id="frame_iframe"  class="{% if form_name != 'webonline' and form_name != 'qa' %} hidden {% endif %}">
-                  <iframe src="{{ iframe_url }}" id="helpline-forms" style="width: 100%; height: 80vh; border: none;"></iframe>
-                </div>
+                  </div>
+                </section>
               </div>
+              <div id="frame_iframe"  class="{% if form_name == 'walkin' or form_name == 'call' %} hidden {% endif %}">
+                <iframe src="{{ iframe_url }}" id="helpline-forms" style="width: 100%; height: 80vh; border: none;"></iframe>
+              </div>
+            </div>
           </div>
         </div>
       </div>
+      <!--END FORMs-->
 
+    </div>
+    <script>
+      window.addEventListener("message", receiveMessage, false);
 
-
-<!--END FORMs-->
-
-</div>
-<script>
-  window.addEventListener("message", receiveMessage, false);
-
-  function receiveMessage(event)
-  {
-    if(event.data){
-      var resp = JSON.parse(event.data)
-      if(resp.enketoEvent == 'submissionsuccess'){
-        // Show case action form after successful case submission
-        /*$('#frame-case-action').removeClass('hidden');
-        $('#frame_iframe').addClass('hidden');
-        $('#frame-contact').addClass('hidden');*/
-      }
-    }
-  }
-</script>
-<script>
-  $(function() {
-    $('#contactDet').areYouSure(
+      function receiveMessage(event)
       {
-        message: 'It looks like you have been editing something. '
-               + 'If you leave before saving, your changes will be lost.'
+        if(event.data){
+          var resp = JSON.parse(event.data)
+          if(resp.enketoEvent == 'submissionsuccess'){
+          }
+        }
       }
-    );
-  });
+    </script>
+    <script>
+      $(function() {
+        $('#contactDet').areYouSure(
+        {
+          message: 'It looks like you have been editing something. '
+          + 'If you leave before saving, your changes will be lost.'
+        }
+        );
+      });
 
-</script>
-{% endblock content %}
+    </script>
+    {% endblock content %}

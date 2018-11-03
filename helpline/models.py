@@ -862,7 +862,7 @@ class Cdr(models.Model):
 
 class Emails(models.Model):
     """
-    Model for emails synchronized from the public
+    Model for emails synchronized from the public, when a case is created from one, the email_case is filled with the caseid
     """
     email_idkey     = models.CharField(max_length=250)
     email_from      = models.CharField(max_length=100,blank=True, null=True)
@@ -871,6 +871,7 @@ class Emails(models.Model):
     email_subject   = models.CharField(max_length=300, blank=True, null=True)
     email_date      = models.CharField(max_length=50,blank=True, null=True)
     email_time      = models.DateTimeField(auto_now_add=True)
+    email_case      = models.IntegerField(default=0)
 
 
 class Cases(models.Model):
