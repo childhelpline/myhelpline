@@ -1222,6 +1222,7 @@ def case_form(request, form_name):
     message = ''
     initial = {}
     data = {}
+    caseid = ''
     data['enketo_url'] = settings.ENKETO_URL
     data['base_domain'] = settings.BASE_DOMAIN
     data['data_url'] = url
