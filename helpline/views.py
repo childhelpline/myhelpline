@@ -1205,9 +1205,8 @@ def case_form(request, form_name):
 
     default_service = Service.objects.all().first()
     default_service_xform = default_service.walkin_xform
-    default_service_auth_token = default_service_xform.user.auth_token
+    default_service_auth_token =  default_service_xform.user.auth_token
     current_site = get_current_site(request)
-
     
     """
     Graph data
@@ -1274,7 +1273,7 @@ def case_form(request, form_name):
             # Use https for the iframe parent window uri, always.
             uri = uri.replace('http://', 'https://')
 
-            caseid_str = '&d[/%s/case_id]=%s'% (xform.id_string, caseid) if caseid else ''
+            caseid_str = '&d[/case_id]=%s'% caseid if caseid else ''
             # Poor mans iframe url gen
             parent_window_origin = urllib.quote_plus(uri)
             iframe_url = url[:url.find("::")] + "i/" + url[url.find("::"):]+\
