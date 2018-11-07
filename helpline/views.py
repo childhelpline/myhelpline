@@ -1247,13 +1247,13 @@ def case_form(request, form_name):
         sourceid = request.GET.get('sourceid')
 
         if form_name == 'email':
-            email = get_object_or_404(Emails,pk__exact=sourceid);
+            email = get_object_or_404(Emails,pk__exact=sourceid,email_case__gt=0);
             email.email_case = caseid
             caseid_str = '&d[/Case_Form/reporter_details/email_adress]=%s' % (email.email_from) + '&d[/Case_Form/case_narratives/case_narrative]=%s' %(email.email_body)
             email.save()
 
         if form_name == 'sms':
-            sms = get_object_or_404(SMSCDR,pk__exact=sourceid);
+            sms = get_object_or_404(SMSCDR,pk__exact=sourceid,sms_case__gt=0);
             sms.sms_case = caseid
             caseid_str = '&d[/Case_Form/reporter_details/reporter_phone]=%s' % (sms.contact) + '&d[/Case_Form/case_narratives/case_narrative]=%s' %(sms.msg)
             sms.save()

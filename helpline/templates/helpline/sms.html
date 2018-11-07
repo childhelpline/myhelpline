@@ -38,7 +38,7 @@
               				<td class="mailbox-name"><a href="read-mail.html">{{ mess.contact }}</a></td>
               				<td class="mailbox-subject"><b>{{ mess.msg }}              				</td>
               				<td class="mailbox-date">{{ mess.sms_time}}</td>
-              				<td class="mailbox-date">Reply | <a href="{% url "case_form" "sms" %}">Create Case</a></td>
+              				<td class="mailbox-date">Reply | <a href="{% url "case_form" "sms" %}?sourceid={{ mess.pk }}">Create Case</a></td>
               			</tr>
               			{% endfor %}
               		</tbody>

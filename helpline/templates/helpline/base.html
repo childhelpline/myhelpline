@@ -1174,7 +1174,7 @@ function get_submissions(phone,name,param=true){
       }
       
       //document.domain = '{{ base_domain}}'
-      iframe.src += iframe.src + url_str
+      iframe.src += iframe.src + encodeURI(url_str)
 
     })
 
