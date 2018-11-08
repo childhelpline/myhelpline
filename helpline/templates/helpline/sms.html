@@ -40,7 +40,7 @@
               				<td class="mailbox-subject"><b>{{ mess.msg }}              				</td>
                       <td class="mailbox-date">{{ mess.sms_case}}</td>
                       <td class="mailbox-date">{{ mess.sms_time}}</td>
-              				<td class="mailbox-date"><!---Reply |-->{%  if mess.sms_case == 0 %} <a href="{% url "case_form" "sms" %}?sourceid={{ mess.pk }}">Create Case</a></td>
+              				<td class="mailbox-date"><!---Reply |-->{%  if mess.sms_case > 1 %} <a href="{% url "case_form" "sms" %}?sourceid={{ mess.pk }}">Create Case</a>{% endif %}</td>
               			</tr>
               			{% endfor %}
               		</tbody>
