@@ -307,6 +307,9 @@ audio{
         if(event.data){
           var resp = JSON.parse(event.data)
           if(resp.enketoEvent == 'submissionsuccess'){
+            setInterval(function(){
+              $('#case_form_modal').hide()
+            },500)
           }
         }
       }
