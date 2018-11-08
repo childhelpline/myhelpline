@@ -794,7 +794,7 @@ def reports(request, report, casetype='Call'):
                 if isinstance(value[0],dict):
                     record.update(get_records(value[0]))
             else:
-                if not kk in recordkeys and not kk.endswith('ID') and str(value) != 'yes' and str(value) != 'no' and str(kk) != 'case_id'  and str(kk) != 'uuid':
+                if not kk in recordkeys and not kk.endswith('ID') and str(value) != 'yes' and str(value) != 'no' and str(kk) != 'case_number'  and str(kk) != 'uuid':
                     recordkeys.append(kk)
                 record.update({kk : str(value).capitalize()})
         return record
@@ -941,7 +941,7 @@ def analysed_qa(request,report='analysed'):
                 if isinstance(value[0],dict):
                     record.update(get_records(value[0]))
             else:
-                if not kk in recordkeys and not kk.endswith('ID') and str(value) != 'yes' and str(value) != 'no' and str(kk) != 'case_id'  and str(kk) != 'uuid':
+                if not kk in recordkeys and not kk.endswith('ID') and str(value) != 'yes' and str(value) != 'no' and str(kk) != 'case_number'  and str(kk) != 'uuid':
                     recordkeys.append(kk)
                 record.update({kk : str(value).capitalize()})
         return record
@@ -1285,7 +1285,7 @@ def case_form(request, form_name):
             # Use https for the iframe parent window uri, always.
             uri = uri.replace('http://', 'https://')
 
-            caseid_str = caseid_str + '&d[/Case_Form/case_id]=%s'% (caseid) if caseid else ''
+            caseid_str = caseid_str + '&d[case_number]=%s'% (caseid) if caseid else ''
             # Poor mans iframe url gen
             parent_window_origin = urllib.quote_plus(uri)
             iframe_url = url[:url.find("::")] + "i/" + url[url.find("::"):]+\

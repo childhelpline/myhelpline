@@ -1162,7 +1162,7 @@ function get_submissions(phone,name,param=true){
     $.get('/helpline/caseid/walkin',function(data){
       caseid = data
 
-      var url_str = !iframe.src.includes('?') ? '?d[/Case_Form/case_id]=' + caseid + '':'&d[/Case_Form/case_id]=' + caseid 
+      var url_str = !iframe.src.includes('?') ? '?d[case_number]=' + caseid + '':'&d[case_number]=' + caseid 
 
       if(!newreporter){
         selected_contact = selected_contact[0]
@@ -1174,7 +1174,7 @@ function get_submissions(phone,name,param=true){
       }
       
       //document.domain = '{{ base_domain}}'
-      iframe.src += iframe.src + encodeURI(url_str)
+      iframe.src += encodeURI(url_str)
 
     })
 
