@@ -1006,9 +1006,8 @@ function get_submissions(phone,name,param=true){
   var request = new XMLHttpRequest();
 
   //create query string [optional] based on the passed parameters
-  query_str = ''
-  query_str += phone != '' ? (param ? 'query={"reporter_details/reporter_phone":{"$i":"' + phone + '"}}&limit=1':'query={"reporter_details/reporter_phone":{"$i":"' + phone + '"}}') : ''
-  query_str += name != '' ? (query_str == '' ? 'query={"reporter_details/name":{"$i":"' + name + '"}}' :'&{"reporter_details/name":{"$i":"' + name + '"}}'):''
+  query_str = phone !== '' && name !== '' ? 'query={"reporter_details/reporter_phone":' + phone + ',"reporter_details/name":{"$i":"' + name + '"}}':(phone != '' && name == '' ? 'query={"reporter_details/reporter_phone":{"$i":"' + phone + '"}}&limit=1':(phone == '' && name !== '' ? 'query={"reporter_details/name":{"$i":"' + name + '"}}' : ''))
+
   query_str += '&format=json'
 
   // Open a new connection, using the GET request on the URL endpoint
