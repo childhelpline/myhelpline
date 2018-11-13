@@ -215,6 +215,7 @@ audio{
         <a href="{% url 'dashboard_home' %}" class="close" style="color:#ffffff;"><span aria-hidden="true">&times;</span></a>
         <h4 class="modal-title" id="myModalLabel">{% trans "Form" %} > {{ form_name }} 
           <span id="caseid">{{ case }}</span>
+          {% if form_name == 'call' %}<span id="phone">Caller Number: {{ caller }}</span>{% endif %}
           <span id="editedBadge"></span>
           {% if form_name == 'qa' %}
           <span class="pull-right">
@@ -324,5 +325,9 @@ audio{
         );
       });
 
+      if(typeof(params.get("callcase")) !== undefined && params.get("callcase") !== null){
+        get_submissions({{phone}})
+        create_case(false)
+      }
     </script>
     {% endblock content %}

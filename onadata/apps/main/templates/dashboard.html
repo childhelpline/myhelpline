@@ -58,10 +58,10 @@
                                 </form>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <!-- Widget: user widget style 1 -->
+                        <!--div class="col-md-6">
+                            <!-- Widget: user widget style 1 ->
                             <div class="box box-widget widget-user-2">
-                                <!-- Add the bg color to the header using any of the bg-* classes -->
+                                <!-- Add the bg color to the header using any of the bg-* classes ->
                                 <div class="widget-user-header bg-blue">
                                     <div class="widget-user-image">
 
@@ -72,9 +72,9 @@
                                             {% if not profile.gravatar_exists %}
                                         </a>
                                         {% endif %}
-                                        <!--img class="img-circle" src="../dist/img/user7-128x128.jpg" alt="User Avatar"-->
+                                        <!--img class="img-circle" src="../dist/img/user7-128x128.jpg" alt="User Avatar"->
                                     </div>
-                                    <!-- /.widget-user-image -->
+                                    <!-- /.widget-user-image ->
                                     <h3 class="widget-user-username">
                                         <a href="{% url "public_profile" content_user.username %}" style=" color: #fff;">{{ content_user.username }}</a>
                                         {% if profile.name %}
@@ -85,15 +85,15 @@
                                 </div>
                                 <div class="box-footer no-padding">
                                     <ul class="nav nav-stacked">
-                                        <!--li><a href="#">Projects <span class="pull-right badge bg-blue">31</span></a></li-->
+                                        <!--li><a href="#">Projects <span class="pull-right badge bg-blue">31</span></a></li->
                                         <li><a href="#">{% trans "FORMS" %} <span class="pull-right badge bg-aqua">{{ all_forms|intcomma }}</span></a></li>
                                         <li><a href="#">{% trans "SHARED FORMS" %} <span class="pull-right badge bg-green">{{ num_forms|intcomma }}</span></a></li>
                                         <li><a href="#">{% trans "SUBMISSIONS" %} <span class="pull-right badge bg-blue">{{ user_instances|intcomma }}</span></a></li>
                                     </ul>
                                 </div>
                             </div>
-                            <!-- /.widget-user -->
-                        </div>
+                            <!-- /.widget-user ->
+                        </div-->
                     </div>
                 </div>
                 <div class="box-body">
