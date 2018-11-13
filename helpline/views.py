@@ -935,10 +935,8 @@ def analysed_qa(request,report='analysed'):
             for key,frm in xfrm.items():
                 xformx.update({str(key):str(frm)})
 
-    #stat = requests.get('https://%s/ona/api/v1/data/' % (current_site) + xformx['formid'] + '?page=1&page_size=50' + request_string, headers= headers).json();
-    
     if request.user.HelplineUser.hl_role == 'Counsellor':
-        request_string += '&submitted_by__username=%s' %(username)
+        request_string += '&case_owner__username=%s' %(request.user.username)
 
 
     stat = requests.get('https://%s/ona/api/v1/data/%s?page=1&page_size=50' %(current_site,default_service_xform.pk), headers= headers).json();
