@@ -396,6 +396,11 @@ input:checked + .slider:before {
                   <span class="label label-success pull-right">{{ dashboard_stats.total_cases }}</span>
                 </span>
               </a></li>
+              <li><a href="{% url 'dashboardreports' 'escalated' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Escalated Cases" %}
+                <span class="pull-right-container">
+                  <span class="label label-warning pull-right">{{ dashboard_stats.open_cases }}</span>
+                </span>
+              </a></li>
               <!--li><a href="{% url 'dashboardreports' 'pendingcases' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Pending Cases" %}
                 <span class="pull-right-container">
                   <span class="label label-warning pull-right">{{ dashboard_stats.open_cases }}</span>
@@ -573,6 +578,23 @@ input:checked + .slider:before {
             <li><a href="{% url 'report_charts' 'callsummary' 'call' %}"><i class="fa fa-circle-o"></i>{% trans "Charts Inbound" %}
             </a></li>
             <li><a href="{% url 'adminreports' 'agentsessionreport' %}"><i class="fa fa-circle-o"></i>{% trans "Agent Session Report" %}
+            </a></li>
+          </ul>
+        </li>
+
+
+
+        <li class="treeview">
+          <a href="{% url 'adminreports' 'callsummaryreport' %}">
+            <i class="fa fa-pie-chart"></i> <span>{% trans "Settings" %}</span>
+            <span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+          </a>
+          <ul class="treeview-menu">
+            <li><a href="{% url 'dashboardreports' 'totalcalls' %}"><i class="fa fa-circle-o"></i>{% trans "Services" %}
+            </a></li>
+            <li><a href="{% url 'dashboardreports' 'answeredcalls' %}"><i class="fa fa-circle-o"></i>{% trans "Hot Desk" %}
             </a></li>
           </ul>
         </li>
@@ -1006,7 +1028,7 @@ function get_submissions(phone,name,param=true){
   var request = new XMLHttpRequest();
 
   //create query string [optional] based on the passed parameters
-  query_str = phone !== '' && name !== '' ? 'query={"reporter_details/reporter_phone":' + phone + ',"reporter_details/name":{"$i":"' + name + '"}}':(phone != '' && name == '' ? 'query={"reporter_details/reporter_phone":{"$i":"' + phone + '"}}&limit=1':(phone == '' && name !== '' ? 'query={"reporter_details/name":{"$i":"' + name + '"}}' : ''))
+  query_str = phone !== '' && name !== '' ? 'query={"reporter_details/reporter_phone":"' + phone + '","reporter_details/name":{"$i":"' + name + '"}}':(phone != '' && name == '' ? 'query={"reporter_details/reporter_phone":{"$i":"' + phone + '"}}&limit=1':(phone == '' && name !== '' ? 'query={"reporter_details/name":{"$i":"' + name + '"}}' : ''))
 
   query_str += '&format=json'
 

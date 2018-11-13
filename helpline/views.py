@@ -42,6 +42,9 @@ from django.utils.translation import gettext as _
 from django.utils import timezone
 from django.core.files.storage import FileSystemStorage
 
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
 from django.core import serializers
 
 # Django 1.10 breaks reverse imports.
@@ -196,22 +199,25 @@ def leta(request):
                   {'ld': login_duration,
                    'ready': ready})
 
+@api_view(['GET','POST'])
 def sync_sms(request):
     
     error_message = None
     state = True
     try:
         if request.method == 'POST':
-            data = request.POST.copy()
+            # data = request.POST.copy()
             sms = SMSCDR()
-            sms.contact = data.get('from_phone')
-            sms.msg     = data.get('message')
-            sms.time    = data.get('sent_timestamp')
+            sms.contact = data.POST.get('from_phone')
+            sms.msg     = data.POST.get('message')
+            sms.time    = data.POST.get('sent_timestamp')
             sms.sms_time = timezone.now()
 
             sms.save()
+            print "Saving SMS"
         else:
            sms_list = SMSCDR.objects.filter(sms_type='OUTBOX').order_by('-sms_time')
+           print "Fetching SMS"
     except Exception, e:
         error_message = "Error: %s" %e
         state = False
@@ -222,7 +228,8 @@ def sync_sms(request):
                         'error':error_message
                 }
             }
-    return JsonResponse(payload) #serializers.serialize('json', payload), content_type="application/json")
+    print "This is it: " + str(payload)
+    return Response(payload) #serializers.serialize('json', payload), content_type="application/json")
 
 def sync_emails(request):
     FROM_EMAIL  = "support@" + settings.BASE_DOMAIN
@@ -457,7 +464,7 @@ def user_profile(request,user_id):
 
 
 @login_required
-def queue_log(request):
+def queue_logx(request):
     """Join Asterisk queues."""
     services = Service.objects.all()
     if request.method == 'POST':
@@ -465,9 +472,21 @@ def queue_log(request):
         if queue_form.is_valid():
             extension = queue_form.cleaned_data['softphone']
             try:
-                queue_status = true # requests.post('%s/api/v1/call/login?login=%s&exten=%s' %(settings.CALL_API_URL,request.user.HelplineUser.hl_key,extension)).json()
+                queue_status = True # requests.post('%s/api/v1/call/login?login=%s&exten=%s' %(settings.CALL_API_URL,request.user.HelplineUser.hl_key,extension)).json()
                 if queue_status:
-                    request.user.HelplineUser.hl_status = 'Available'
+                    # Get the hotline object from the extension.
+                    hotdesk = Hotdesk.objects.get(extension=extension)
+
+                    hotdesk.jabber = 'helpline@jabber'
+                    hotdesk.status = 'Available'
+                    hotdesk.agent = request.user.HelplineUser.hl_key
+                    hotdesk.user = request.user
+
+                    agent = request.user.HelplineUser
+                    agent.hl_status = 'Available'
+                    agent.hl_exten = "%s/%s" % (hotdesk.extension_type, hotdesk.extension)
+                    agent.save()
+
                     message = "Successfully joined queue"
                 else:
                     message = "Could not successfully join queue, try again!"
@@ -476,7 +495,7 @@ def queue_log(request):
             return redirect("/helpline/#%s" % message)
 
 @login_required
-def queue_log_ex(request):
+def queue_log(request):
     """Join Asterisk queues."""
     services = Service.objects.all()
     if request.method == 'POST':
@@ -772,8 +791,15 @@ def reports(request, report, casetype='Call'):
         start_date = datetime.strptime(start_date, '%m/%d/%Y %I:%M %p')
         end_date = datetime.strptime(end_date, '%m/%d/%Y %I:%M %p')
 
-    if report == 'pendingcases':
-        request_string = '&query={"case_actions/case_action":{"$i":"pending"}}'
+    if report == 'escalated':
+        if request.user.HelplineUser.hl_role == 'Counsellor':
+            request_string = '&query={"case_actions/case_action":{"$i":"escalated"}}'
+        elif request.user.HelplineUser.hl_role == 'Caseworker':
+            request_string = '&query={"case_actions/case_action":"escalated","case_actions/escalate_caseworker":"%s"}' %(request.user.HelplineUser.pk)
+        elif request.user.HelplineUser.hl_role == 'Supervisor':
+            request_string = '&query={"case_actions/case_action":"escalated","case_actions/escalate_supervisor":"%s"}' %(request.user.HelplineUser.pk)
+
+
     elif report == 'today':
         td_date = datetime.today()
         request_string = '&date_created__day=' + td_date.strftime('%d')
