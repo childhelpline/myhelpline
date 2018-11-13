@@ -118,6 +118,8 @@ def home(request):
     queue_pause_form = QueuePauseForm()
     queues = get_data_queues()
 
+
+
     default_service = Service.objects.all().first()
     default_service_xform = default_service.walkin_xform
     default_service_auth_token = default_service_xform.user.auth_token
@@ -137,6 +139,8 @@ def home(request):
         }
 
         stat = requests.get(url,headers=headers).json()
+
+        call_statistics = '' # requests.post('%s/api/v1/call/cdrdata' %(settings.CALL_API_URL)).json() # ?cdr=5be47b4779c4db3be727b7bc&case=100067&dispose=Complete').json()
 
 
         for dt in get_item(stat, 'data'):
@@ -178,7 +182,8 @@ def home(request):
                    'queue_pause_form': queue_pause_form,
                    'status_count': status_count,
                    'gdata': gtdata,
-                   'dt': stdata
+                   'dt': stdata,
+                   'call_stat':call_statistics
                    })
 
 
@@ -199,7 +204,7 @@ def sync_sms(request):
         if request.method == 'POST':
             data = request.POST.copy()
             sms = SMSCDR()
-            sms.contact = data.get('from')
+            sms.contact = data.get('from_phone')
             sms.msg     = data.get('message')
             sms.time    = data.get('sent_timestamp')
             sms.sms_time = timezone.now()
@@ -450,8 +455,28 @@ def user_profile(request,user_id):
     return render(request, 'helpline/user.html',{'form':user_edit,'message':message})
 
 
+
 @login_required
 def queue_log(request):
+    """Join Asterisk queues."""
+    services = Service.objects.all()
+    if request.method == 'POST':
+        queue_form = QueueLogForm(request.POST)
+        if queue_form.is_valid():
+            extension = queue_form.cleaned_data['softphone']
+            try:
+                queue_status = true # requests.post('%s/api/v1/call/login?login=%s&exten=%s' %(settings.CALL_API_URL,request.user.HelplineUser.hl_key,extension)).json()
+                if queue_status:
+                    request.user.HelplineUser.hl_status = 'Available'
+                    message = "Successfully joined queue"
+                else:
+                    message = "Could not successfully join queue, try again!"
+            except Exception as e:
+                message = e
+            return redirect("/helpline/#%s" % message)
+
+@login_required
+def queue_log_ex(request):
     """Join Asterisk queues."""
     services = Service.objects.all()
     if request.method == 'POST':
@@ -766,7 +791,7 @@ def reports(request, report, casetype='Call'):
 
    #  stat = requests.get('https://%s/ona/api/v1/data/' % (current_site) + xformx['formid'] + '?page=1&page_size=50' + request_string, headers= headers).json();
     if request.user.HelplineUser.hl_role == 'Counsellor':
-        request_string += '&submitted_by__username=%s' %(username)
+        request_string += '&case_owner__username=%s' %(username)
 
 
     stat = requests.get('https://%s/ona/api/v1/data/%s?page=1&page_size=50' %(current_site,default_service_xform.pk) + request_string, headers= headers).json();
@@ -1234,6 +1259,9 @@ def case_form(request, form_name):
     elif(form_name == 'call'):
         xform = service.call_xform
         data['form_name'] = 'call'
+        data['caller'] = request.GET.get('phone')
+        data['cdr'] = request.GET.get('callcase')
+        data['api_url'] = settings.CALL_API_URL + '/api/v1'
     elif(form_name == 'qa'):
         xform = service.qa_xform
         data['form_name'] = 'qa'
@@ -1285,13 +1313,16 @@ def case_form(request, form_name):
             # Use https for the iframe parent window uri, always.
             uri = uri.replace('http://', 'https://')
 
-            caseid_str = caseid_str + '&d[case_number]=%s'% (caseid) if caseid else ''
+            caseid_str = '&d[case_owner]=%s' % (request.user.username)
+
+            caseid_str = caseid_str + '&d[case_number]=%s&d[case_number]=%s'% (caseid) if caseid else ''
             # Poor mans iframe url gen
             parent_window_origin = urllib.quote_plus(uri)
             iframe_url = url[:url.find("::")] + "i/" + url[url.find("::"):]+\
               "?&parentWindowOrigin=" + parent_window_origin + caseid_str
             data['iframe_url'] = iframe_url
             data['xform_id_string'] = xform.id_string
+
             if not url:
                 return HttpResponseRedirect(
                     reverse(

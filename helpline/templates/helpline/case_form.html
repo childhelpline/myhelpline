@@ -309,7 +309,7 @@ audio{
           var resp = JSON.parse(event.data)
           if(resp.enketoEvent == 'submissionsuccess'){
             setInterval(function(){
-              $('#case_form_modal').modal('hide')
+              window.location = '/helpline'
             },500)
           }
         }
