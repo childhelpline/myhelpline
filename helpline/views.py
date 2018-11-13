@@ -789,12 +789,7 @@ def reports(request, report, casetype='Call'):
             for key,frm in xfrm.items():
                 xformx.update({str(key):str(frm)})
 
-   #  stat = requests.get('https://%s/ona/api/v1/data/' % (current_site) + xformx['formid'] + '?page=1&page_size=50' + request_string, headers= headers).json();
-    if request.user.HelplineUser.hl_role == 'Counsellor':
-        request_string += '&case_owner__username=%s' %(username)
-
-
-    stat = requests.get('https://%s/ona/api/v1/data/%s?page=1&page_size=50' %(current_site,default_service_xform.pk) + request_string, headers= headers).json();
+    stat = requests.get('https://%s/ona/api/v1/data/%s?page=1&page_size=50%s' %(current_site,default_service_xform.pk,request_string) + , headers= headers).json();
     # + '&sort={"_id":-1}'
     statrecords = []
     recordkeys = []
@@ -804,6 +799,9 @@ def reports(request, report, casetype='Call'):
         return_obj = []
         record = {}
 
+        filter_string = ''
+        if request.user.HelplineUser.hl_role == 'Counsellor':
+            filter_string += 'case_owner==%s && ' %(username)
         for key,value in recs.items():
             #if not (key.startswith('_') and key.endswith('_')):# str(key) == "_id":
             key = str(key)
@@ -819,7 +817,7 @@ def reports(request, report, casetype='Call'):
                 if isinstance(value[0],dict):
                     record.update(get_records(value[0]))
             else:
-                if not kk in recordkeys and not kk.endswith('ID') and str(value) != 'yes' and str(value) != 'no' and str(kk) != 'case_number'  and str(kk) != 'uuid':
+                if filter_string not kk in recordkeys and not kk.endswith('ID') and str(value) != 'yes' and str(value) != 'no' and str(kk) != 'case_number'  and str(kk) != 'uuid':
                     recordkeys.append(kk)
                 record.update({kk : str(value).capitalize()})
         return record
@@ -936,10 +934,10 @@ def analysed_qa(request,report='analysed'):
                 xformx.update({str(key):str(frm)})
 
     if request.user.HelplineUser.hl_role == 'Counsellor':
-        request_string += '&case_owner__username=%s' %(request.user.username)
+        request_string += '&case_owner=%s' %(request.user.username)
 
 
-    stat = requests.get('https://%s/ona/api/v1/data/%s?page=1&page_size=50' %(current_site,default_service_xform.pk), headers= headers).json();
+    stat = requests.get('https://%s/ona/api/v1/data/%s?page=1&page_size=50%s' %(current_site,default_service_xform.pk,request_string), headers= headers).json();
     # + '&sort={"_id":-1}'
     statrecords = []
     recordkeys = []
