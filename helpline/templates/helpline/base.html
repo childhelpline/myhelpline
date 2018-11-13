@@ -1030,7 +1030,7 @@ function get_submissions(phone,name,param=true){
   //create query string [optional] based on the passed parameters
   query_str = phone !== '' && name !== '' ? 'query={"reporter_details/reporter_phone":"' + phone + '","reporter_details/name":{"$i":"' + name + '"}}':(phone != '' && name == '' ? 'query={"reporter_details/reporter_phone":{"$i":"' + phone + '"}}&limit=1':(phone == '' && name !== '' ? 'query={"reporter_details/name":{"$i":"' + name + '"}}' : ''))
 
-  query_str += 'group="reporter_details/reporter_phone"&format=json'
+  query_str += '&group="reporter_details/reporter_phone"&format=json'
 
   // Open a new connection, using the GET request on the URL endpoint
   request.open('GET', '{{ data_url |safe }}?' + query_str, true);
