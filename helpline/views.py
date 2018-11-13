@@ -789,7 +789,7 @@ def reports(request, report, casetype='Call'):
             for key,frm in xfrm.items():
                 xformx.update({str(key):str(frm)})
 
-    stat = requests.get('https://%s/ona/api/v1/data/%s?page=1&page_size=50%s' %(current_site,default_service_xform.pk,request_string) + , headers= headers).json();
+    stat = requests.get('https://%s/ona/api/v1/data/%s?page=1&page_size=50%s' %(current_site,default_service_xform.pk,request_string), headers= headers).json();
     # + '&sort={"_id":-1}'
     statrecords = []
     recordkeys = []
@@ -799,27 +799,26 @@ def reports(request, report, casetype='Call'):
         return_obj = []
         record = {}
 
-        filter_string = ''
-        if request.user.HelplineUser.hl_role == 'Counsellor':
-            filter_string += 'case_owner==%s && ' %(username)
+        filter_string = True
         for key,value in recs.items():
-            #if not (key.startswith('_') and key.endswith('_')):# str(key) == "_id":
-            key = str(key)
-            if key.find('/') != -1:
-                k = key.split('/')
-                l = len(k)
-                kk = str(k[l-1])
-            else:
-                kk = str(key)
-            if isinstance(value,dict) and len(value) >= 1:
-                record.update(get_records(value))
-            elif isinstance(value,list) and len(value) >= 1:
-                if isinstance(value[0],dict):
-                    record.update(get_records(value[0]))
-            else:
-                if filter_string not kk in recordkeys and not kk.endswith('ID') and str(value) != 'yes' and str(value) != 'no' and str(kk) != 'case_number'  and str(kk) != 'uuid':
-                    recordkeys.append(kk)
-                record.update({kk : str(value).capitalize()})
+            if request.user.HelplineUser.hl_role != 'Counsellor' or (request.user.HelplineUser.hl_role == 'Counsellor' and recs['case_owner'] == username):
+                #if not (key.startswith('_') and key.endswith('_')):# str(key) == "_id":
+                key = str(key)
+                if key.find('/') != -1:
+                    k = key.split('/')
+                    l = len(k)
+                    kk = str(k[l-1])
+                else:
+                    kk = str(key)
+                if isinstance(value,dict) and len(value) >= 1:
+                    record.update(get_records(value))
+                elif isinstance(value,list) and len(value) >= 1:
+                    if isinstance(value[0],dict):
+                        record.update(get_records(value[0]))
+                else:
+                    if not kk in recordkeys and not kk.endswith('ID') and str(value) != 'yes' and str(value) != 'no' and str(kk) != 'case_number'  and str(kk) != 'uuid':
+                        recordkeys.append(kk)
+                    record.update({kk : str(value).capitalize()})
         return record
 
 
