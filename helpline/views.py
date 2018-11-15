@@ -143,7 +143,7 @@ def home(request):
 
         stat = requests.get(url,headers=headers).json()
 
-        call_statistics = '' # requests.post('%s/api/v1/call/cdrdata' %(settings.CALL_API_URL)).json() # ?cdr=5be47b4779c4db3be727b7bc&case=100067&dispose=Complete').json()
+        call_statistics = requests.post('%s/api/v1/index' %(settings.CALL_API_URL)).json() # ?cdr=5be47b4779c4db3be727b7bc&case=100067&dispose=Complete').json()
 
 
         for dt in get_item(stat, 'data'):
@@ -502,36 +502,40 @@ def queue_log(request):
         queue_form = QueueLogForm(request.POST)
         if queue_form.is_valid():
             extension = queue_form.cleaned_data['softphone']
-            try:
-                # Get the hotline object from the extension.
-                hotdesk = Hotdesk.objects.get(extension=extension)
+            queue_status = requests.post('%s/api/v1/call/agent?login=%s&exten=%s' %(settings.CALL_API_URL,request.user.HelplineUser.hl_key,extension)).json()
+            if queue_status:
+                try:
+                    # Get the hotline object from the extension.
+                    hotdesk = Hotdesk.objects.get(extension=extension)
 
-                hotdesk.jabber = 'helpline@jabber'
-                hotdesk.status = 'Available'
-                hotdesk.agent = request.user.HelplineUser.hl_key
-                hotdesk.user = request.user
+                    hotdesk.jabber = 'helpline@jabber'
+                    hotdesk.status = 'Available'
+                    hotdesk.agent = request.user.HelplineUser.hl_key
+                    hotdesk.user = request.user
 
-                agent = request.user.HelplineUser
-                agent.hl_status = 'Available'
-                agent.hl_exten = "%s/%s" % (hotdesk.extension_type, hotdesk.extension)
+                    agent = request.user.HelplineUser
+                    agent.hl_status = 'Available'
+                    agent.hl_exten = "%s/%s" % (hotdesk.extension_type, hotdesk.extension)
 
-                hotdesk.save()
-                agent.save()
+                    hotdesk.save()
+                    agent.save()
 
-                message = backend.add_to_queue(
-                    queue='Q718874580',
-                    interface=agent.hl_exten,
-                    member_name=request.user.get_full_name()
-                )
+                    message = backend.add_to_queue(
+                        queue='Q718874580',
+                        interface=agent.hl_exten,
+                        member_name=request.user.get_full_name()
+                    )
 
-                request.session['queuejoin'] = 'join'
-                request.session['queuestatus'] = 'queuepause'
-                request.session['extension'] = extension
+                    request.session['queuejoin'] = 'join'
+                    request.session['queuestatus'] = 'queuepause'
+                    request.session['extension'] = extension
 
-            except Exception as e:
-                message = e
+                except Exception as e:
+                    message = e
 
-            return redirect("/helpline/#%s" % (message))
+                return redirect("/helpline/#%s" % (message))
+            else:
+                return redirect("/helpline/#%s" % ("Error: Ensure you are not logged in elsewhere"))
     else:
         queue_form = QueueLogForm()
 
@@ -760,7 +764,6 @@ def reports(request, report, casetype='Call'):
     default_service_auth_token = default_service_xform.user.auth_token
     current_site = get_current_site(request)
 
-
     url = 'https://%s/ona/api/v1/data/%s' % (
         current_site,
         default_service_xform.pk
@@ -793,11 +796,11 @@ def reports(request, report, casetype='Call'):
 
     if report == 'escalated':
         if request.user.HelplineUser.hl_role == 'Counsellor':
-            request_string = '&query={"case_actions/case_action":{"$i":"escalated"}}'
+            request_string = '"case_actions/case_action":{"$i":"escalated"}'
         elif request.user.HelplineUser.hl_role == 'Caseworker':
-            request_string = '&query={"case_actions/case_action":"escalated","case_actions/escalate_caseworker":"%s"}' %(request.user.HelplineUser.pk)
+            request_string = '"case_actions/case_action":"escalated","case_actions/escalate_caseworker":"%s"' %(request.user.HelplineUser.pk)
         elif request.user.HelplineUser.hl_role == 'Supervisor':
-            request_string = '&query={"case_actions/case_action":"escalated","case_actions/escalate_supervisor":"%s"}' %(request.user.HelplineUser.pk)
+            request_string = '"case_actions/case_action":"escalated","case_actions/supervisors":"%s"' %(request.user.HelplineUser.pk)
 
 
     elif report == 'today':
@@ -815,7 +818,6 @@ def reports(request, report, casetype='Call'):
             for key,frm in xfrm.items():
                 xformx.update({str(key):str(frm)})
 
-   #  stat = requests.get('https://%s/ona/api/v1/data/' % (current_site) + xformx['formid'] + '?page=1&page_size=50' + request_string, headers= headers).json();
     if request.user.HelplineUser.hl_role == 'Counsellor':
         request_string += 'case_owner:%s' %(username)
 

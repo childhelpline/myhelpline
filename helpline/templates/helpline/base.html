@@ -954,8 +954,8 @@ $(document).ready(function(){
 
   if(params.get('callcase') == null){
     var call = setInterval(function () {
-      $.get("{% url "check_call" %}",function(data){
-      //$.post({{settings.CALL_API_URL}}"/api/v1/call/agent?poll=1233",function(data){
+      //$.get("{% url "check_call" %}",function(data){
+      $.post({{settings.CALL_API_URL}}"/api/v1/call/agent?poll=1233",function(data){
         if(data.data){
           window.location = "{% url "case_form" "call"  %}?callcase="+ data.data + '&phone=' + data.phone;
           $('#phone').html("Caller Number: " + data.phone)
