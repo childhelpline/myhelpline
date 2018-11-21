@@ -474,12 +474,12 @@ input:checked + .slider:before {
                   <span>{% trans "Web Online" %}</span><span class="label label-info pull-right"></span>
                 </a>
               </li>
-              <li class="treeview">
+              <!--li class="treeview">
                 <a href="{% url 'mysources' 'twitter' %}">
                   <i class="fa fa-twitter"></i>
                   <span>{% trans "Twitter" %}</span><span class="label label-info pull-right"></span>
                 </a>
-              </li>
+              </li-->
             </ul>
           </li>
           {% if request.user.HelplineUser.hl_role == 'Supervisor' %}
@@ -955,14 +955,18 @@ $(document).ready(function(){
   if(params.get('callcase') == null){
     var call = setInterval(function () {
       //$.get("{% url "check_call" %}",function(data){
-      $.post({{settings.CALL_API_URL}}"/api/v1/call/agent?poll=1233",function(data){
-        if(data.data){
+      $.post("{% setting "CALL_API_URL" %}/api/v1/call/agent?poll={{request.user.HelplineUser.hl_key | safe}}",function(data){
+        if(data.status == 'oncall'){
           window.location = "{% url "case_form" "call"  %}?callcase="+ data.data + '&phone=' + data.phone;
           $('#phone').html("Caller Number: " + data.phone)
           clearInterval(call);    
         }
       });
     }, 1000);
+  }
+
+  if(typeof(params.get("callcase")) !== undefined && params.get("callcase") !== null){
+    get_submissions('{{caller}}')
   }
 });
 

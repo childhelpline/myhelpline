@@ -172,7 +172,7 @@ div.scrollmenu {
                   <td>{{rep.date}}</td>
                   <td>{{rep.start}}</td>
                   <td>{{rep.end}}</td>
-                  <td><a href=""><i class="fa fa-volume-up"></i></a></td>
+                  <td><a href="url/api/v1/media/voicemail/{{rep.id}}">Listen</a> {% if rep.caseid <= 1 %} | <a href="{% url 'case_form' 'voicemail' %}?id={{rep.id}}">Create Case</a>{% endif %}</td>
                 </tr>
                 {% endfor %}
 

@@ -143,7 +143,7 @@ def home(request):
 
         stat = requests.get(url,headers=headers).json()
 
-        call_statistics = requests.post('%s/api/v1/index' %(settings.CALL_API_URL)).json() # ?cdr=5be47b4779c4db3be727b7bc&case=100067&dispose=Complete').json()
+        call_statistics = "" # requests.post('%s/api/v1/index' %(settings.CALL_API_URL)).json() # ?cdr=5be47b4779c4db3be727b7bc&case=100067&dispose=Complete').json()
 
 
         for dt in get_item(stat, 'data'):
@@ -503,29 +503,29 @@ def queue_log(request):
         if queue_form.is_valid():
             extension = queue_form.cleaned_data['softphone']
             queue_status = requests.post('%s/api/v1/call/agent?login=%s&exten=%s' %(settings.CALL_API_URL,request.user.HelplineUser.hl_key,extension)).json()
-            if queue_status:
+            if queue_status.data:
                 try:
                     # Get the hotline object from the extension.
-                    hotdesk = Hotdesk.objects.get(extension=extension)
+                    # hotdesk = Hotdesk.objects.get(extension=extension)
 
-                    hotdesk.jabber = 'helpline@jabber'
-                    hotdesk.status = 'Available'
-                    hotdesk.agent = request.user.HelplineUser.hl_key
-                    hotdesk.user = request.user
+                    # hotdesk.jabber = 'helpline@jabber'
+                    # hotdesk.status = 'Available'
+                    # hotdesk.agent = request.user.HelplineUser.hl_key
+                    # hotdesk.user = request.user
 
-                    agent = request.user.HelplineUser
-                    agent.hl_status = 'Available'
-                    agent.hl_exten = "%s/%s" % (hotdesk.extension_type, hotdesk.extension)
+                    # agent = request.user.HelplineUser
+                    # agent.hl_status = 'Available'
+                    # agent.hl_exten = "%s/%s" % (hotdesk.extension_type, hotdesk.extension)
 
-                    hotdesk.save()
-                    agent.save()
+                    # hotdesk.save()
+                    # agent.save()
 
-                    message = backend.add_to_queue(
-                        queue='Q718874580',
-                        interface=agent.hl_exten,
-                        member_name=request.user.get_full_name()
-                    )
-
+                    # message = backend.add_to_queue(
+                    #     queue='Q718874580',
+                    #     interface=agent.hl_exten,
+                    #     member_name=request.user.get_full_name()
+                    # )
+                    request.session['cdr_key'] = queue_status['data']
                     request.session['queuejoin'] = 'join'
                     request.session['queuestatus'] = 'queuepause'
                     request.session['extension'] = extension
@@ -674,6 +674,10 @@ def faq(request):
 def get_item(dictionary, key):
     return dictionary.get(key,"")
 
+@register.simple_tag
+def setting(setting_item):
+    return getattr(settings, setting_item, "")
+
 
 @login_required
 def caseview(request, form_name, case_id):
@@ -764,11 +768,6 @@ def reports(request, report, casetype='Call'):
     default_service_auth_token = default_service_xform.user.auth_token
     current_site = get_current_site(request)
 
-    url = 'https://%s/ona/api/v1/data/%s' % (
-        current_site,
-        default_service_xform.pk
-    )
-
     # Graph data
     headers = {
             'Authorization': 'Token %s' % (default_service_auth_token)
@@ -786,6 +785,18 @@ def reports(request, report, casetype='Call'):
     category = request.GET.get("category", "")
     form = ReportFilterForm(request.GET)
     dashboard_stats = get_dashboard_stats(request.user)
+    report_title = {report: _(str(report).capitalize() + " Reports")}
+
+    data = {
+        'owner': default_service_xform.user,
+        'xform': default_service_xform,
+        'title': report_title.get(report),
+        'report': report,
+        'form': form,
+        'datetime_range': datetime_range,
+        'dashboard_stats': dashboard_stats,
+        'query': query
+    }
 
     request_string = ''
 
@@ -798,117 +809,115 @@ def reports(request, report, casetype='Call'):
         if request.user.HelplineUser.hl_role == 'Counsellor':
             request_string = '"case_actions/case_action":{"$i":"escalated"}'
         elif request.user.HelplineUser.hl_role == 'Caseworker':
-            request_string = '"case_actions/case_action":"escalated","case_actions/escalate_caseworker":"%s"' %(request.user.HelplineUser.pk)
+            request_string = '"case_actions/case_action":"escalated","case_actions/escalate_caseworker":"%s"' %(request.user.pk)
         elif request.user.HelplineUser.hl_role == 'Supervisor':
-            request_string = '"case_actions/case_action":"escalated","case_actions/supervisors":"%s"' %(request.user.HelplineUser.pk)
+            request_string = '"case_actions/case_action":"escalated","case_actions/supervisors":"%s"' %(request.user.pk)
 
 
     elif report == 'today':
         td_date = datetime.today()
-        request_string = '&date_created__day=' + td_date.strftime('%d')
+        request_string += '&date_created__day=' + td_date.strftime('%d')
         request_string += '&date_created__month=' + td_date.strftime('%m')
         request_string += '&date_created__year=' + td_date.strftime('%Y')
 
-    xforms = requests.get('https://%s/ona/api/v1/forms' % (current_site), headers= headers).json();
-    xformx = {}
+    htmltemplate = ''
 
-    #split to get xform object
-    for xfrm in xforms:
-        if str(xfrm['id_string']) == id_string:
-            for key,frm in xfrm.items():
-                xformx.update({str(key):str(frm)})
+    if casetype.lower() == 'call':
+        """For call reports"""
+        callreports = ["missedcalls", "voicemails", "totalcalls",
+                       "answeredcalls", "abandonedcalls", "callsummaryreport",
+                      "search", "agentsessionreport"]
+        
+        if report in callreports:
+            htmltemplate = "helpline/reports.html"
+        
+        call_data = requests.post("%s/api/v1/call/cdrdata" %(settings.CALL_API_URL)).json()
+        # sort = request.GET.get('sort')
 
-    if request.user.HelplineUser.hl_role == 'Counsellor':
-        request_string += 'case_owner:%s' %(username)
+        # table = report_factory(report=report,
+        #                        datetime_range=datetime_range,
+        #                        agent=agent,
+        #                        query=query, sort=sort,
+        #                        category=category,
+        #                        casetype=casetype)
 
+        # # Export table to csv
+        # export_format = request.GET.get('_export', None)
+        # if TableExport.is_valid_format(export_format):
+        #     exporter = TableExport(export_format, table)
+        #     return exporter.response('table.{}'.format(export_format))
+        # table.paginate(page=request.GET.get('page', 1), per_page=10)
 
-    stat = requests.get('https://%s/ona/api/v1/data/%s?query={%s}&page=1&page_size=50' %(current_site,default_service_xform.pk,request_string), headers= headers).json();
-    # + '&sort={"_id":-1}'
-    statrecords = []
-    recordkeys = []
+        # data['table']=  table 
 
-    ##brings up data only for existing records
-    def get_records(recs):
-        return_obj = []
-        record = {}
-
-        for key,value in recs.items():
-            #if not (key.startswith('_') and key.endswith('_')):# str(key) == "_id":
-            key = str(key)
-            if key.find('/') != -1:
-                k = key.split('/')
-                l = len(k)
-                kk = str(k[l-1])
-            else:
-                kk = str(key)
-            if isinstance(value,dict) and len(value) >= 1:
-                record.update(get_records(value))
-            elif isinstance(value,list) and len(value) >= 1:
-                if isinstance(value[0],dict):
-                    record.update(get_records(value[0]))
-            else:
-                if not kk in recordkeys and not kk.endswith('ID') and str(value) != 'yes' and str(value) != 'no' and str(kk) != 'case_number'  and str(kk) != 'uuid':
-                    recordkeys.append(kk)
-                record.update({kk : str(value).capitalize()})
-        return record
-
-
-    for rec in stat:
-        if isinstance(rec,dict) and len(rec) > 1:
-            statrecords.append(get_records(rec))
-
-    if len(recordkeys) > 0:
-        recordkeys.append('Date Created')
+        data['report_data'] = call_data # [{u'start': '17:02:22', u'phone': u'FC7716882915', u'voicemail': False, u'caseid': False, u'agent': False, u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be441ee79c4db3214b1bd96'}, {u'start': u'17:10:45', u'phone': u'FC7735571653', u'voicemail': False, u'caseid': False, u'agent': False, u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be443e579c4db3b6ac352cb'}, {u'start': u'17:18:05', u'phone': u'FC7714791487', u'voicemail': False, u'caseid': False, u'agent': False, u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be4459d79c4db430f360ab9'}, {u'start': u'17:20:02', u'phone': u'FC7757870842', u'voicemail': False, u'caseid': False, u'agent': u'1233', u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be4461279c4db4513f0b5c4'}, {u'start': u'17:28:10', u'phone': u'FC7708464320', u'voicemail': False, u'caseid': False, u'agent': False, u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be447fa79c4db4dd0c72440'}, {u'start': u'17:33:44', u'phone': u'FC7792042081', u'voicemail': False, u'caseid': False, u'agent': False, u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be4494879c4db53706948d2'}, {u'start': u'17:36:50', u'phone': u'FC7796379410', u'voicemail': False, u'caseid': False, u'agent': False, u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be44a0279c4db56aa33a54d'}, {u'start': u'17:41:39', u'phone': u'FC7796399654', u'voicemail': False, u'caseid': False, u'agent': u'1233', u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be44b2379c4db5c703778cb'}, {u'start': u'17:43:00', u'phone': u'FC7715956990', u'voicemail': False, u'caseid': False, u'agent': False, u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be44b7479c4db5dd7f550bf'}, {u'start': u'18:14:04', u'phone': u'FC7719277674', u'voicemail': False, u'caseid': False, u'agent': False, u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be452bc79c4db7ecb23af6c'}, {u'start': u'18:15:21', u'phone': u'FC7794194943', u'voicemail': False, u'caseid': False, u'agent': False, u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be4530979c4db01ee85f393'}, {u'start': u'19:27:46', u'phone': u'FC7757178854', u'voicemail': False, u'caseid': False, u'agent': False, u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be4640279c4db4e3d8bb25b'}, {u'start': u'19:29:08', u'phone': u'FC7761776099', u'voicemail': False, u'caseid': False, u'agent': u'1233', u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be4645479c4db4fcf2d3bea'}, {u'start': u'19:59:29', u'phone': u'FC7740943303', u'voicemail': False, u'caseid': False, u'agent': False, u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be46b7179c4db6f01dc18f0'}, {u'start': u'20:02:00', u'phone': u'FC7701239729', u'voicemail': False, u'caseid': False, u'agent': False, u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be46c0879c4db71b88d2ead'}, {u'start': u'20:04:36', u'phone': u'FC7797879858', u'voicemail': False, u'caseid': False, u'agent': u'1233', u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be46ca479c4db749ba83667'}, {u'start': u'20:14:50', u'phone': u'FC7757703220', u'voicemail': False, u'caseid': False, u'agent': False, u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be46f0a79c4db7e79ae32a0'}, {u'start': u'20:15:49', u'phone': u'FC7754967749', u'voicemail': False, u'caseid': False, u'agent': False, u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be46f4579c4db01ea8f4667'}, {u'start': u'20:23:16', u'phone': u'FC7761596858', u'voicemail': False, u'caseid': False, u'agent': False, u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be4710479c4db0a7b3ff77b'}, {u'start': u'20:25:38', u'phone': u'FC7786383360', u'voicemail': False, u'caseid': False, u'agent': False, u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be4719279c4db0d57e2e742'}, {u'start': u'20:27:23', u'phone': u'FC7782109129', u'voicemail': False, u'caseid': False, u'agent': False, u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be471fb79c4db0f89849ada'}, {u'start': u'20:28:58', u'phone': u'FC7713995561', u'voicemail': False, u'caseid': False, u'agent': False, u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be4725a79c4db11508c9aa3'}, {u'start': u'20:33:56', u'phone': u'FC7776905021', u'voicemail': False, u'caseid': False, u'agent': False, u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be4738479c4db169f071b19'}, {u'start': u'20:41:28', u'phone': u'FC7769331365', u'voicemail': False, u'caseid': False, u'agent': False, u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be4754879c4db1f44b0bb0f'}, {u'start': u'20:42:42', u'phone': u'FC7786639969', u'voicemail': False, u'caseid': False, u'agent': False, u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be4759279c4db20ae943117'}, {u'start': u'20:46:13', u'phone': u'FC7741827842', u'voicemail': False, u'caseid': False, u'agent': False, u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be4766579c4db2586f3c986'}, {u'start': u'20:50:33', u'phone': u'FC7722964596', u'voicemail': False, u'caseid': False, u'agent': False, u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be4776979c4db2a2faae642'}, {u'start': u'20:58:29', u'phone': u'FC7773960304', u'voicemail': False, u'caseid': False, u'agent': False, u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be4794579c4db3264181965'}, {u'start': u'21:00:01', u'phone': u'FC7745981808', u'voicemail': False, u'caseid': False, u'agent': False, u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be479a179c4db342f3c46bd'}, {u'start': u'21:02:03', u'phone': u'FC7794655443', u'voicemail': False, u'caseid': False, u'agent': False, u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be47a1b79c4db36b25cc2cb'}, {u'start': u'21:07:03', u'phone': u'FC7782317571', u'voicemail': False, u'caseid': u'100067', u'agent': u'1233', u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be47b4779c4db3be727b7bc'}, {u'start': u'21:16:01', u'phone': u'FC7759950376', u'voicemail': False, u'caseid': False, u'agent': u'1233', u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be47d6179c4db45abff5032'}, {u'start': u'21:17:48', u'phone': u'FC7775263616', u'voicemail': False, u'caseid': False, u'agent': u'1233', u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be47dcc79c4db47c65915fb'}, {u'start': u'21:25:20', u'phone': u'FC7763001752', u'voicemail': False, u'caseid': False, u'agent': False, u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be47f9079c4db4f922b8aed'}, {u'start': u'21:33:38', u'phone': u'FC7761528346', u'voicemail': False, u'caseid': False, u'agent': u'1233', u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be4818279c4db5807e8b119'}, {u'start': u'21:36:01', u'phone': u'FC7711822690', u'voicemail': u'5be4825379c4db5a99d0bd31', u'caseid': False, u'agent': False, u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be4821179c4db5a99d0bd01'}, {u'start': u'21:38:53', u'phone': u'FC7770383831', u'voicemail': u'5be4830079c4db5db6c6cf25', u'caseid': False, u'agent': False, u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be482bd79c4db5db6c6cef5'}, {u'start': u'21:48:57', u'phone': u'FC7719758712', u'voicemail': u'5be4855c79c4db686bc2e917', u'caseid': False, u'agent': False, u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be4851979c4db686bc2e8e7'}, {u'start': u'21:54:23', u'phone': u'FC7718069642', u'voicemail': u'5be486a279c4db6e2a4c9f15', u'caseid': False, u'agent': False, u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be4865f79c4db6e2a4c9ee5'}, {u'start': u'21:58:03', u'phone': u'FC7748960748', u'voicemail': u'5be4877e79c4db7229587dfb', u'caseid': False, u'agent': False, u'qa': False, u'ended': u'00:00:00', u'date': u'08-11-2018', u'id': u'5be4873b79c4db7229587dcb'}]
+       
     else:
-        recordkeys = False
+        """For case reports"""
 
-    sort = request.GET.get('sort')
-    report_title = {report: _(str(report).capitalize() + " Reports")}
-    '''report_title = {
-        'performance': _('Performance Reports'),
-        'counsellor': _('Counsellor Reports'),
-        'case': _('Case Reports'),
-        'call': _('Call Reports'),
-        'service': _('Service Reports')
-    }'''
+        xforms = requests.get('https://%s/ona/api/v1/forms' % (current_site), headers= headers).json();
+        xformx = {}
 
-    table = report_factory(report=report,
-                           datetime_range=datetime_range,
-                           agent=agent,
-                           query=query, sort=sort,
-                           category=category,
-                           casetype=casetype)
+        #split to get xform object
+        for xfrm in xforms:
+            if str(xfrm['id_string']) == id_string:
+                for key,frm in xfrm.items():
+                    xformx.update({str(key):str(frm)})
 
-    # Export table to csv
-    export_format = request.GET.get('_export', None)
-    if TableExport.is_valid_format(export_format):
-        exporter = TableExport(export_format, table)
-        return exporter.response('table.{}'.format(export_format))
-    table.paginate(page=request.GET.get('page', 1), per_page=10)
+        if request.user.HelplineUser.hl_role == 'Counsellor':
+            request_string += 'case_owner:%s' %(username)
 
-    data = {
-        'owner': default_service_xform.user,
-        'xform': default_service_xform,
-        'title': report_title.get(report),
-        'report': report,
-        'form': form,
-        'datetime_range': datetime_range,
-        'dashboard_stats': dashboard_stats,
-        'table': table,
-        'query': query,
-        'statrecords': statrecords,
-        'recordkeys': recordkeys
-    }
 
-    callreports = ["missedcalls", "voicemails", "totalcalls",
-                   "answeredcalls", "abandonedcalls", "callsummaryreport",
-                  "search", "agentsessionreport"]
+        stat = requests.get('https://%s/ona/api/v1/data/%s?query={%s}&page=1&page_size=50' %(current_site,default_service_xform.pk,request_string), headers= headers).json();
+        # + '&sort={"_id":-1}'
+        statrecords = []
+        recordkeys = []
 
-    if report in callreports:
-        htmltemplate = "helpline/reports.html"
-    elif report == 'nonanalysed':
+        ##brings up data only for existing records
+        def get_records(recs):
+            return_obj = []
+            record = {}
+
+            for key,value in recs.items():
+                #if not (key.startswith('_') and key.endswith('_')):# str(key) == "_id":
+                key = str(key)
+                if key.find('/') != -1:
+                    k = key.split('/')
+                    l = len(k)
+                    kk = str(k[l-1])
+                else:
+                    kk = str(key)
+                if isinstance(value,dict) and len(value) >= 1:
+                    record.update(get_records(value))
+                elif isinstance(value,list) and len(value) >= 1:
+                    if isinstance(value[0],dict):
+                        record.update(get_records(value[0]))
+                else:
+                    if not kk in recordkeys and not kk.endswith('ID') and str(value) != 'yes' and str(value) != 'no' and str(kk) != 'case_number'  and str(kk) != 'uuid':
+                        recordkeys.append(kk)
+                    record.update({kk : str(value).capitalize()})
+            return record
+
+
+        for rec in stat:
+            if isinstance(rec,dict) and len(rec) > 1:
+                statrecords.append(get_records(rec))
+
+        if len(recordkeys) > 0:
+            recordkeys.append('Date Created')
+        else:
+            recordkeys = False
+
+
+        data['statrecords'] = statrecords
+        data['recordkeys'] = recordkeys
+
+    
+    if report == 'nonanalysed':
         htmltemplate = "helpline/nonanalysed.html"
-    else:
+    elif report == 'voicemails':
+        htmltemplate = "helpline/voicemails.html"
+    elif htmltemplate == '':
         htmltemplate = "helpline/report_body.html"
 
     return render(request, htmltemplate, data)
@@ -1294,6 +1303,9 @@ def case_form(request, form_name):
     elif(form_name == 'webonline'):
         xform = service.web_online_xform
         data['form_name'] = 'webonline'
+    elif(form_name == 'voicemail'):
+        xform = service.walkin_xform
+        data['form_name'] = 'webonline'
     else:
         xform = service.walkin_xform
         data['form_name'] = form_name
@@ -1542,7 +1554,6 @@ class WebPresenceTable(tables.Table):
     class Meta:
         model = HelplineUser
         attrs = {'class': 'table table-bordered table-striped dataTable'}
-
 
 class ContactTable(tables.Table):
     """Contact list table"""
