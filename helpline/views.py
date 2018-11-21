@@ -143,7 +143,7 @@ def home(request):
 
         stat = requests.get(url,headers=headers).json()
 
-        call_statistics = "" # requests.post('%s/api/v1/index' %(settings.CALL_API_URL)).json() # ?cdr=5be47b4779c4db3be727b7bc&case=100067&dispose=Complete').json()
+        call_statistics = requests.post('%s/api/v1/index' %(settings.CALL_API_URL)).json() # ?cdr=5be47b4779c4db3be727b7bc&case=100067&dispose=Complete').json()
 
 
         for dt in get_item(stat, 'data'):
