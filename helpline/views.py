@@ -45,8 +45,9 @@ from django.core.files.storage import FileSystemStorage
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from django.core import serializers
+from django.db import transaction
 
+from django.core import serializers
 # Django 1.10 breaks reverse imports.
 try:
     from django.urls import reverse
@@ -80,7 +81,7 @@ from helpline.models import Report, HelplineUser,\
         Messaging,Emails,SMSCDR,Cases
 
 from helpline.forms import QueueLogForm,\
-        ContactForm, DispositionForm, CaseSearchForm, MyAccountForm,RegisterUserForm, \
+        ContactForm, DispositionForm, CaseSearchForm, RegisterProfileForm,RegisterUserForm, \
         ReportFilterForm, QueuePauseForm, CaseActionForm, ContactSearchForm
 
 from helpline.qpanel.config import QPanelConfig
@@ -174,7 +175,6 @@ def home(request):
             col = color[ic]
             ic += 1
             stdata.append({"label":str(lbl),"data":str(str(dt['count'])),"color":str(col)})
-
     return render(request, 'helpline/home.html',
                   {'dashboard_stats': dashboard_stats,
                    'att': att,
@@ -228,7 +228,6 @@ def sync_sms(request):
                         'error':error_message
                 }
             }
-    print "This is it: " + str(payload)
     return Response(payload) #serializers.serialize('json', payload), content_type="application/json")
 
 def sync_emails(request):
@@ -365,30 +364,32 @@ def case_number(request,case_source):
 
 @login_required
 def new_user(request):
-    message = ''
+    messages = []
     if request.method == 'POST':
         form = RegisterUserForm(request.POST,request.FILES)
-        if form.is_valid():
+        profile_form = RegisterProfileForm(request.POST,request.FILES)
+        if form.is_valid() and profile_form.is_valid():
             user = User()
             try:
-                names = str(form.cleaned_data['names']).split(" ");
-                user.password = md5("Cheruiyot")
-                user.username = form.cleaned_data['username']
-                user.first_name = str(names[0]) if names[0] else None
-                user.last_name = str(names[1]) if names[1] else None
-                user.email = form.cleaned_data['useremail']
-                user.is_active = True
+                user = form.save()
+                user.refresh_from_db()
 
-                user.save()
+                user.HelplineUser.hl_names = "%s %s" %(form.cleaned_data.get('first_name'),form.cleaned_data.get('first_name'))
+                user.HelplineUser.hl_nick = form.cleaned_data.get('username')
+                user.HelplineUser.hl_calls = 0
+                user.HelplineUser.hl_email = "%s" % profile_form.cleaned_data.get('useremail')
 
-                user.HelplineUser.hl_key   = randint(123456789, 999999999)
-                user.HelplineUser.hl_auth  = randint(1234, 9999)
-                user.HelplineUser.hl_role  = form.cleaned_data['userrole']
-                user.HelplineUser.hl_names = form.cleaned_data['names']
-                user.HelplineUser.hl_nick  = form.cleaned_data['username']
-                user.HelplineUser.hl_email = form.cleaned_data['useremail']
-                user.HelplineUser.hl_phone = form.cleaned_data['phone']
+                user.HelplineUser.hl_area = ''
+                user.HelplineUser.hl_phone = profile_form.cleaned_data.get('phone')
+                user.HelplineUser.hl_branch = ''
+                user.HelplineUser.hl_case = 0
 
+                user.HelplineUser.hl_status = 'Idle'
+                user.HelplineUser.hl_jabber = "" # "%s@%s" % (user.username, settings.BASE_DOMAIN)
+                user.HelplineUser.hl_pass = hashlib.md5("1234").hexdigest()
+
+                user.HelplineUser.hl_role  = "%s" % profile_form.cleaned_data.get('userrole')
+                # user.save()
 
                 uploaded_file_url = ''
                 filename = ''
@@ -402,19 +403,38 @@ def new_user(request):
 
                 user.HelplineUser.hl_avatar = uploaded_file_url
                 user.HelplineUser.hl_time = time.time()
-                user.save()
-                message = "User saved succeefully"
+
+                user.HelplineUser.save()
+
+                # share case form
+                default_service = Service.objects.all().first()
+                default_service_xform = default_service.walkin_xform
+                default_service_auth_token = default_service_xform.user.auth_token
+                current_site = get_current_site(request)
+
+                if default_service != '' and default_service != 0 and default_service_xform:
+                    url = 'https://%s/ona/api/v1/%s/share/?role=dataentry&username=%s' % (
+                        current_site,
+                        default_service_xform.pk,
+                        user.username
+                    )
+                
+
+                messages.append("User saved successfully")
                 form = RegisterUserForm()
+                profile_form = RegisterProfileForm()
 
             except Exception as e:
-                message = 'Error saving user: %s' % e
+                form = RegisterUserForm(request.POST)
+                profile_form = RegisterProfileForm(request.POST,request.FILES)
+                messages.append('Error saving user: %s' % (e))
         else:
             messages.error(request, "Error")
-            message = "Invalid form"
+            messages.append("Invalid form")
     else:
         form = RegisterUserForm()
-        message = 'Not posted'
-    return render(request, 'helpline/user.html',{'form':form,'message':message})
+        profile_form = RegisterProfileForm()
+    return render(request, 'helpline/user.html',{'form':form,'profileform':profile_form,'messs':messages})
 
 
 @login_required
@@ -497,79 +517,50 @@ def queue_logx(request):
 @login_required
 def queue_log(request):
     """Join Asterisk queues."""
-    services = Service.objects.all()
-    if request.method == 'POST':
-        queue_form = QueueLogForm(request.POST)
-        if queue_form.is_valid():
-            extension = queue_form.cleaned_data['softphone']
-            queue_status = requests.post('%s/api/v1/call/agent?login=%s&exten=%s' %(settings.CALL_API_URL,request.user.HelplineUser.hl_key,extension)).json()
-            if queue_status.data:
-                try:
-                    # Get the hotline object from the extension.
-                    # hotdesk = Hotdesk.objects.get(extension=extension)
-
-                    # hotdesk.jabber = 'helpline@jabber'
-                    # hotdesk.status = 'Available'
-                    # hotdesk.agent = request.user.HelplineUser.hl_key
-                    # hotdesk.user = request.user
-
-                    # agent = request.user.HelplineUser
-                    # agent.hl_status = 'Available'
-                    # agent.hl_exten = "%s/%s" % (hotdesk.extension_type, hotdesk.extension)
-
-                    # hotdesk.save()
-                    # agent.save()
-
-                    # message = backend.add_to_queue(
-                    #     queue='Q718874580',
-                    #     interface=agent.hl_exten,
-                    #     member_name=request.user.get_full_name()
-                    # )
-                    request.session['cdr_key'] = queue_status['data']
-                    request.session['queuejoin'] = 'join'
-                    request.session['queuestatus'] = 'queuepause'
-                    request.session['extension'] = extension
-
-                except Exception as e:
-                    message = e
-
-                return redirect("/helpline/#%s" % (message))
-            else:
-                return redirect("/helpline/#%s" % ("Error: Ensure you are not logged in elsewhere"))
-    else:
-        queue_form = QueueLogForm()
-
-    return redirect("dashboard_home")
+    agent = request.user.HelplineUser
+    agent.hl_status = 'Available'
+    agent.save()
+    # request.session['cdr_key'] = queue_status['data']
+    request.session['queuejoin'] = 'join'
+    request.session['queuestatus'] = 'queuepause'
+    # request.session['extension'] = extension
+    return JSONResponse({'status':'200'})
 
 
 def queue_leave(request):
     """Leave Asterisk queues."""
-    services = Service.objects.all()
-    queue_form = QueueLogForm()
-    user_id = request.user.pk
-    HelplineUser.objects.filter(user_id=user_id).update(hl_status='Idle')
+    queue_status = requests.post('%s/api/v1/call/agent?logout=%s' %(settings.CALL_API_URL,request.user.HelplineUser.hl_key)).json()
+    hl_user = HelplineUser.objects.get(hl_key=request.user.HelplineUser.hl_key)
+    hl_user.hl_exten = ''
+    hl_user.hl_jabber = ''
+    hl_user.hl_status = 'Unavailable'
+    hl_user.save()
+    # services = Service.objects.all()
+    # queue_form = QueueLogForm()
+    # user_id = request.user.pk
+    # HelplineUser.objects.filter(user_id=user_id).update(hl_status='Idle')
 
-    try:
-        hotdesk = Hotdesk.objects.filter(agent__exact=request.user.HelplineUser.hl_key)
-        hl_user = HelplineUser.objects.get(hl_key=request.user.HelplineUser.hl_key)
-        hotdesk.update(agent=0)
+    # try:
+    #     hotdesk = Hotdesk.objects.filter(agent__exact=request.user.HelplineUser.hl_key)
+    #     hl_user = HelplineUser.objects.get(hl_key=request.user.HelplineUser.hl_key)
+    #     hotdesk.update(agent=0)
 
-        request.session['queuejoin'] = 'out'
-        request.session['status'] = 'out'
-        request.session['jabber'] = ''
-        request.session['queuestatus'] = 'queueunpause'
-        message = backend.remove_from_queue(
-            agent=hl_user.hl_exten,
-            queue='Q718874580'
-        )
-        hl_user.hl_exten = ''
-        hl_user.hl_jabber = ''
-        hl_user.hl_status = 'Unavailable'
-        hl_user.save()
+    #     request.session['queuejoin'] = 'out'
+    #     request.session['status'] = 'out'
+    #     request.session['jabber'] = ''
+    #     request.session['queuestatus'] = 'queueunpause'
+    #     message = backend.remove_from_queue(
+    #         agent=hl_user.hl_exten,
+    #         queue='Q718874580'
+    #     )
+    #     hl_user.hl_exten = ''
+    #     hl_user.hl_jabber = ''
+    #     hl_user.hl_status = 'Unavailable'
+    #     hl_user.save()
 
-    except Exception as e:
-        message = e
-
+    # except Exception as e:
+    #    message = e
+    message = "The message"
     return redirect("/helpline/#%s" % (message))
 
 
@@ -822,7 +813,10 @@ def reports(request, report, casetype='Call'):
 
     htmltemplate = ''
 
-    if casetype.lower() == 'call':
+    if casetype.lower() == 'qa':
+        call_data = requests.post("%s/api/v1/call/qa?data=true" %(settings.CALL_API_URL)).json()
+        print "Data: %s" %str(call_data)
+    elif casetype.lower() == 'call':
         """For call reports"""
         callreports = ["missedcalls", "voicemails", "totalcalls",
                        "answeredcalls", "abandonedcalls", "callsummaryreport",
@@ -914,15 +908,60 @@ def reports(request, report, casetype='Call'):
 
     
     if report == 'nonanalysed':
+        data['report_data'] = filter(lambda _call_data: not _call_data['length'] and _call_data['length'] <= 1, call_data)
         htmltemplate = "helpline/nonanalysed.html"
     elif report == 'voicemails':
-        htmltemplate = "helpline/voicemails.html"
+        data['report_data'] = filter(lambda _call_data: _call_data['voicemail'], call_data)
     elif htmltemplate == '':
         htmltemplate = "helpline/report_body.html"
 
     return render(request, htmltemplate, data)
 
 
+@login_required
+def qa(request, report='analysed'):
+    service = Service.objects.all().first()
+    xform = service.qa_xform
+    username = xform.user.username
+
+    
+    form = ReportFilterForm(request.POST)
+
+    data = {
+        'form': form}
+
+    form_url = get_form_url(request, username, settings.ENKETO_PROTOCOL)
+
+    try:
+        url = enketo_url(form_url, xform.id_string)
+        uri = request.build_absolute_uri()
+
+        # Use https for the iframe parent window uri, always.
+        uri = uri.replace('http://', 'https://')
+        # Poor mans iframe url gen
+        parent_window_origin = urllib.quote_plus(uri)
+        iframe_url = url[:url.find("::")] + "i/" + url[url.find("::"):]+\
+          "?&parentWindowOrigin=" + parent_window_origin
+        data['iframe_url'] = iframe_url
+    except Exception as e:
+        data['iframe_url'] = "URL Error: %s" % e
+
+
+    query_string = ''
+    # if(report == 'analysis'):
+    if request.method == 'POST':
+        category = request.POST.get('contact_id', None)
+        datetime_range = request.POST.get('datetime_range', None)
+        if datetime_range == '':
+            start_date, end_date = [datetime_range.split(" - ")[0], datetime_range.split(" - ")[1]]
+            start_date = datetime.strptime(start_date, '%m/%d/%Y %I:%M %p')
+            end_date = datetime.strptime(end_date, '%m/%d/%Y %I:%M %p')
+
+    call_data = [{ "agent": False, "date": "22-11-2018", "length": False, "media": "/opt/asterisk/helpline/media/bridge/5bf69baf79c4db757298d02c.wav", "phone": "254733123456", "time": "15:06:07" }] # requests.post("%s/api/v1/call/qa?data=true" %(settings.CALL_API_URL) + query_string).json()
+    data['report_data'] = call_data
+    data['report'] = report
+    htmltemplate = "helpline/nonanalysed.html"
+    return render(request, htmltemplate, data)
 @login_required
 def analysed_qa(request,report='analysed'):
     """
@@ -1263,7 +1302,7 @@ def case_form(request, form_name):
     """Handle Walkin and CallForm POST and GET Requests"""
 
 
-    default_service = Service.objects.all().first()
+    service = Service.objects.all().first()
     default_service_xform = default_service.walkin_xform
     default_service_auth_token =  default_service_xform.user.auth_token
     current_site = get_current_site(request)
@@ -1276,7 +1315,7 @@ def case_form(request, form_name):
     }
 
     #charts
-    url = 'https://%s/ona/api/v1/data/%s' %(current_site,default_service_xform.pk)
+    url = 'https://%s/ona/api/v1/data/%s' %(current_site,service.pk)
 
     message = ''
     initial = {}
@@ -1287,7 +1326,6 @@ def case_form(request, form_name):
     data['data_url'] = url
     data['data_token'] = default_service_auth_token
 
-    service = Service.objects.all().first()
     if(form_name == 'walkin'):
         xform = service.walkin_xform
         data['form_name'] = 'walkin'
@@ -1300,11 +1338,10 @@ def case_form(request, form_name):
     elif(form_name == 'qa'):
         xform = service.qa_xform
         data['form_name'] = 'qa'
+        sourceid = request.GET.get('sourceid')
+        data['sourceid'] = sourceid
     elif(form_name == 'webonline'):
         xform = service.web_online_xform
-        data['form_name'] = 'webonline'
-    elif(form_name == 'voicemail'):
-        xform = service.walkin_xform
         data['form_name'] = 'webonline'
     else:
         xform = service.walkin_xform

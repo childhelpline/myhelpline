@@ -41,7 +41,7 @@ urlpatterns = [
     url('^walkin/$', views.walkin, name='walkin'),
     url('^call/$', views.callform, name='callform'),
     url('^faq/$', views.faq, name='faq'),
-    url(r'^reports/analysed/$', views.analysed_qa, name='analysed_qa'),
+    url(r'^qa/(?P<report>\w+)/$', views.qa, name='qa'),
     url(r'^reports/(?P<report>\w+)/$', views.reports, name='dashboardreports'),
     url(r'^reports/(?P<report>\w+)/$', views.reports, name='adminreports'),
     url(r'^reports/(?P<report>\w+)/(?P<casetype>\w+)/$', views.reports,

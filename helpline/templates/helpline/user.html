@@ -1,3 +1,4 @@
+
 {% extends 'helpline/base.html' %}
 {% load i18n %}
 {% load staticfiles %}
@@ -21,44 +22,25 @@
       <div class="row">
         <div class="col-md-12 col-xs-12">
           <div class="box">
-            <div class="box-header">
+            <!-- <div class="box-header">
               <a href="" class="btn btn-success pull-right" style="border-radius: 0px;" data-backdrop="static"  data-toggle="modal" data-target="#user-modal">{% trans 'User Profile' %}</a>
-            </div>
+            </div> -->
             <!-- /.box-header -->
             <div class="box-body">
-              <div class="alert alert-info">{{ message }}</div>
-              <div>
-                {% if messages %}
-                  {% for message in messages %}
-                    {{ message }}
-                  {% endfor %}
-                {% endif %}
-              </div>
-            </div>
-            <!-- /.box-body -->
-          </div>
-          <!-- /.box -->
-        </div>
-        <!-- /.col -->
-      </div>
-      <!-- /.row -->
-
-
-
-      <div class="row">
-        <div class="col-md-12 col-xs-12">
-          <div class="box">
-            <div class="box-header">
-              <a href="" class="btn btn-success pull-right" style="border-radius: 0px;" data-backdrop="static"  data-toggle="modal" data-target="#user-modal">{% trans 'User Profile' %}</a>
-            </div>
-            <!-- /.box-header -->
-            <div class="box-body">
-              <div class="alert alert-info">{{ message }}</div>
-
+                
+                  {% if messs %}
+                  <div class="alert alert-info"> 
+                    {% for mess in messs %}
+                      {{ mess }}
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+               
                 <form method="POST" action="" enctype="multipart/form-data">
                   {% csrf_token %}
                   <div class="modal-body">
                     {{ form.as_p }}
+                    {{ profileform.as_p }}
                     <div class="form-group">
                       <div class="input-group col-md-12">
                         <button type="submit" class="save btn btn-flat btn-primary">{% trans 'Save' %}</button>
@@ -79,31 +61,4 @@
     </section>
     <!-- /.content -->
 
-
-
-
-<!-- COMPOSE MESSAGE MODAL -->
-<div class="modal fade" id="user-modal" tabindex="-1" role="dialog" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h4 class="modal-title"><i class="fa fa-user-o"></i> {% trans "Create User" %}</h4>
-      </div>
-      <form method="POST" action="?" enctype="multipart/form-data">
-        {% csrf_token %}
-        <div class="modal-body">
-          {{ form.as_p }}
-          <div class="form-group">
-            <div class="input-group col-md-12">
-              <button type="submit" class="save btn btn-flat btn-primary">{% trans 'Save' %}</button>
-              <button type="reset" class="save btn btn-flat btn-default pull-right">{% trans 'Cancel' %}</button>
-            </div>
-          </div>
-        </div>
-
-      </form>
-    </div><!-- /.modal-content -->
-  </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
   {% endblock content %}

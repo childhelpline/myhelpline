@@ -164,6 +164,7 @@ div.scrollmenu {
                   <th>Action</th>
                 </thead>
                 {% for rep in report_data %}
+                {% if rep.voicemail %}
                 <tr>
                   <td>{{ forloop.counter}}.</td>
                   <td>{{rep.caseid | default:''}}</td>
@@ -174,6 +175,7 @@ div.scrollmenu {
                   <td>{{rep.end}}</td>
                   <td><a href="url/api/v1/media/voicemail/{{rep.id}}">Listen</a> {% if rep.caseid <= 1 %} | <a href="{% url 'case_form' 'voicemail' %}?id={{rep.id}}">Create Case</a>{% endif %}</td>
                 </tr>
+                {% endif%}
                 {% endfor %}
 
               </table>

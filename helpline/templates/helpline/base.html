@@ -201,19 +201,19 @@ input:checked + .slider:before {
               <!-- Leave queue -->
             </ul>
             {% else %}
-            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+            <a href="#" class="dropdown-toggle" onclick="join_queue()" data-toggle="dropdown">
               <i class="fa fa-phone"></i>{% trans "Join Queue" %}
             </a>
 
-            <ul class="dropdown-menu">
-              <!-- Join queue -->
+            <!--ul class="dropdown-menu">
+              <!-- Join queue ->
               <form name = 'queue' method = 'POST' action = '{% url 'queue_log' %}'>
                 {% csrf_token %}
                 {{ queue_form.softphone }}
                 <input id = 'b' type = 'submit' value = 'LogIn'>
               </form>
-              <!-- Join queue -->
-            </ul>
+              <!-- Join queue ->
+            </ul-->
             {% endif %}
 
           </li>
@@ -495,12 +495,12 @@ input:checked + .slider:before {
           <!--li>
             <a href="{% url "case_form" "qa" %}" role="button"><i class="fa fa-circle-o"></i> {% trans "New QA Form" %}
             </a></li ?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }} -->
-            <li><a href="{% url 'dashboardreports' 'nonanalysed' %}"><i class="fa fa-circle-o"></i> {% trans "Cases" %}
+            <li><a href="{% url 'qa' 'analysis' %}"><i class="fa fa-circle-o"></i> {% trans "Call Cases" %}
               <span class="pull-right-container">
                 <span class="label label-info pull-right">{{ dashboard_stats.total_cases }}</span>
               </span>
             </a></li>
-            <li><a href="{% url 'analysed_qa' %}"><i class="fa fa-circle-o"></i> {% trans "Analysed Cases" %}
+            <li><a href="{% url 'qa' 'analysed' %}"><i class="fa fa-circle-o"></i> {% trans "Analysed Cases" %}
               <span class="pull-right-container">
                 <span class="label label-success pull-right">{{ dashboard_stats.open_cases }}</span>
               </span>
@@ -571,14 +571,14 @@ input:checked + .slider:before {
             </a></li>
             <li><a href="{% url 'dashboardreports' 'abandonedcalls' %}"><i class="fa fa-circle-o"></i>{% trans "Abandoned Calls" %}
             </a></li>
-            <li><a href="{% url 'dashboardreports' 'voicemail' %}"><i class="fa fa-circle-o"></i>{% trans "Voice Mail" %}
+            <li><a href="{% url 'dashboardreports' 'voicemails' %}"><i class="fa fa-circle-o"></i>{% trans "Voice Mail" %}
             </a></li>
             <li><a href="{% url 'adminreports' 'callsummaryreport' %}"><i class="fa fa-circle-o"></i>{% trans "Call Summary Report" %}
             </a></li>
-            <li><a href="{% url 'report_charts' 'callsummary' 'call' %}"><i class="fa fa-circle-o"></i>{% trans "Charts Inbound" %}
+            <!--li><a href="{% url 'report_charts' 'callsummary' 'call' %}"><i class="fa fa-circle-o"></i>{% trans "Charts Inbound" %}
             </a></li>
             <li><a href="{% url 'adminreports' 'agentsessionreport' %}"><i class="fa fa-circle-o"></i>{% trans "Agent Session Report" %}
-            </a></li>
+            </a></li-->
           </ul>
         </li>
 
@@ -950,30 +950,43 @@ $(document).ready(function(){
       updateClock();
     }
 
-  }, 1000);
+  }, 10000);
 
+  {% if request.user.HelplineUser.hl_status == 'Available' %}
   if(params.get('callcase') == null){
     var call = setInterval(function () {
-      //$.get("{% url "check_call" %}",function(data){
       $.post("{% setting "CALL_API_URL" %}/api/v1/call/agent?poll={{request.user.HelplineUser.hl_key | safe}}",function(data){
         if(data.status == 'oncall'){
           window.location = "{% url "case_form" "call"  %}?callcase="+ data.data + '&phone=' + data.phone;
           $('#phone').html("Caller Number: " + data.phone)
           clearInterval(call);    
+        }else if(data.status == 'offline'){
+          clearInterval(call);
         }
       });
-    }, 1000);
+    }, 3000);
   }
+ {% endif %}
 
   if(typeof(params.get("callcase")) !== undefined && params.get("callcase") !== null){
     get_submissions('{{caller}}')
   }
 });
 
-function access(iframee){
-  /*var iframe = document.getElementsByTagName('iframe')[0];
-  iframe.style.background = 'white';
-  iframe.contentWindow.document.body.style.backgroundColor = 'white';*/
+function join_queue(){
+  var csrftoken = jQuery("[name=csrfmiddlewaretoken]").val(); //getCookie('csrftoken')
+  $.ajaxSetup({ headers: { 'csrftoken' :  csrftoken} });
+  $.get('/helpline/log/',{'status':'Available'},function(response){
+        alert("DDDD: " + response)
+      })
+  return false
+  $.post("{% setting "CALL_API_URL" %}/api/v1/call/agent?login={{request.user.HelplineUser.hl_key | safe}}",function(data){
+    if(data.status == 'online'){
+      $.post('/helpline/log/',{'status':'Available'},function(response){
+        alert("")
+      })
+    }
+  })
 }
 
 var timer = new Timer();

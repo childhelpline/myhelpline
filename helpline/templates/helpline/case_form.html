@@ -221,7 +221,7 @@ audio{
           <span class="pull-right">
             <audio controls autoplay="autoplay">
               <source src="horse.ogg" type="audio/ogg" />
-              <source src="http://soundbible.com/mp3/Tyrannosaurus%20Rex%20Roar-SoundBible.com-807702404.mp3" type="audio/mpeg" />
+              <source src="/opt/asterisk/helpline/media/bridge/{{sourceid}}.wav" type="audio/mpeg" />
             </audio> 
           </span>
           {% else %}
@@ -231,7 +231,8 @@ audio{
           </div>
           <div class="modal-body" style="padding: 0px; height: 80vh;" ><!-- -->
             <div id="frame_iframes">
-              <div id="frame-contact" class="{% if form_name != 'walkin' and form_name != 'call' %} hidden {% endif %}" >
+              {% if form_name == 'walkin' or form_name == 'call' %}
+              <div id="frame-contact">
                 <section class="content" style="background-color: #fff;">
                   <div class="row">
                     <div class="col-sm-12">
@@ -290,6 +291,7 @@ audio{
                   </div>
                 </section>
               </div>
+              {% endif %}
               <div id="frame_iframe"  class="{% if form_name == 'walkin' or form_name == 'call' %} hidden {% endif %}">
                 <iframe src="{{ iframe_url }}" id="helpline-forms" style="width: 100%; height: 80vh; border: none;"></iframe>
               </div>
