@@ -3,6 +3,7 @@
 
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.forms import ModelForm
 from django.conf import settings
@@ -239,10 +240,10 @@ class CaseSearchForm(forms.Form):
     query = forms.CharField()
 
 
-class MyAccountForm(ModelForm):
-    class Meta:
-        model = HelplineUser
-        fields = ['hl_names', 'hl_phone', 'hl_phone']
+# class MyAccountForm(ModelForm):
+#     class Meta:
+#         model = HelplineUser
+#         fields = ['hl_names', 'hl_phone', 'hl_phone']
 
 class ReportFilterForm(forms.Form):
     datetime_range = forms.CharField(
@@ -322,14 +323,15 @@ class LoginForm(forms.Form):
                                widget=forms.TextInput(attrs={'class': 'form-control', 'name': 'password'}))
 
 
-class RegisterUserForm(forms.Form):
+class RegisterUserForm(UserCreationForm):
+    class Meta:
+        model = User
+        fields = ('first_name','last_name','username', 'password1', 'password2', )
+
+class RegisterProfileForm(ModelForm):
     useremail = forms.EmailField(label="Email:", max_length=30,
                                widget=forms.EmailInput(attrs={'class': 'form-control', 'name': 'useremail'}))
-    names = forms.CharField(label="Name", max_length=30,
-                               widget=forms.TextInput(attrs={'class': 'form-control', 'name': 'names'}))
-    username = forms.CharField(label="Username", max_length=30,
-                               widget=forms.TextInput(attrs={'class': 'form-control', 'name': 'username'}))
-
+    avatar = forms.ImageField(label="Picture:", max_length=30)
     userrole = forms.ChoiceField(label="Role",
                                 widget=forms.Select(
                                     attrs={
@@ -339,11 +341,9 @@ class RegisterUserForm(forms.Form):
                                 ),
                                 choices=USER_ROLES,
                                 required=False)
-
-    phone = forms.CharField(label="Phone", max_length=30,
-                               widget=forms.TextInput(attrs={'class': 'form-control', 'name': 'phone'}))
-
-    avatar = forms.ImageField(label="Picture:", max_length=30)
+    class Meta:
+        model = HelplineUser
+        fields = ('useremail','hl_phone', 'userrole', 'avatar')
 
 class QueuePauseForm(forms.Form):
     """Queue pause form"""
