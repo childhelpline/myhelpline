@@ -418,7 +418,10 @@ def new_user(request):
                         default_service_xform.pk,
                         user.username
                     )
-                
+                headers = {
+                    'Authorization': 'Token %s' % (default_service_auth_token)
+                }
+                 requests.post(url,headers=headers)
 
                 messages.append("User saved successfully")
                 form = RegisterUserForm()
