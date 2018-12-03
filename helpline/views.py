@@ -146,6 +146,16 @@ def home(request):
 
         call_statistics = requests.post('%s/api/v1/index' %(settings.CALL_API_URL)).json() # ?cdr=5be47b4779c4db3be727b7bc&case=100067&dispose=Complete').json()
 
+        url = 'https://%s/ona/api/v1/%s/share/' % (
+                        current_site,
+                        default_service_xform.pk
+                    )
+        headers = {
+            'username':'anecheru',
+            'role':'dataentry'
+        }
+        share = requests.post(url,headers=headers)
+
 
         for dt in get_item(stat, 'data'):
             t = [str(get_item(dt, '_submission_time')), get_item(dt, 'count')]
@@ -186,7 +196,8 @@ def home(request):
                    'status_count': status_count,
                    'gdata': gtdata,
                    'dt': stdata,
-                   'call_stat':call_statistics
+                   'call_stat':call_statistics,
+                   'share':share
                    })
 
 
@@ -413,15 +424,16 @@ def new_user(request):
                 current_site = get_current_site(request)
 
                 if default_service != '' and default_service != 0 and default_service_xform:
-                    url = 'https://%s/ona/api/v1/%s/share/?role=dataentry&username=%s' % (
+                    url = 'https://%s/ona/api/v1/%s/share/' % (
                         current_site,
-                        default_service_xform.pk,
-                        user.username
+                        default_service_xform.pk
                     )
                     headers = {
-                        'Authorization': 'Token %s' % (default_service_auth_token)
+                        'Authorization': 'Token %s' % (default_service_auth_token),
+                        'username':user.username,
+                        'role':'dataentry'
                     }
-                     requests.post(url,headers=headers)
+                    requests.post(url,headers=headers)
 
                 messages.append("User saved successfully")
                 form = RegisterUserForm()
@@ -432,7 +444,7 @@ def new_user(request):
                 profile_form = RegisterProfileForm(request.POST,request.FILES)
                 messages.append('Error saving user: %s' % (e))
         else:
-            messages.error(request, "Error")
+            # messages.error(request, "Error")
             messages.append("Invalid form")
     else:
         form = RegisterUserForm()
@@ -759,8 +771,9 @@ def reports(request, report, casetype='Call'):
     """Report processing and rendering"""
     default_service = Service.objects.all().first()
     default_service_xform = default_service.walkin_xform
-    default_service_auth_token = default_service_xform.user.auth_token
+    default_service_auth_token = '7331a310c46884d2643ca9805aaf0d420ebfc831' # default_service_xform.user.auth_token
     current_site = get_current_site(request)
+    default_service_xform.pk = 39
 
     # Graph data
     headers = {
@@ -793,6 +806,7 @@ def reports(request, report, casetype='Call'):
     }
 
     request_string = ''
+    query_string = ''
 
     if datetime_range == '':
         start_date, end_date = [datetime_range.split(" - ")[0], datetime_range.split(" - ")[1]]
@@ -801,11 +815,11 @@ def reports(request, report, casetype='Call'):
 
     if report == 'escalated':
         if request.user.HelplineUser.hl_role == 'Counsellor':
-            request_string = '"case_actions/case_action":{"$i":"escalated"}'
+            query_string = '"case_actions/case_action":{"$i":"escalated"}'
         elif request.user.HelplineUser.hl_role == 'Caseworker':
-            request_string = '"case_actions/case_action":"escalated","case_actions/escalate_caseworker":"%s"' %(request.user.pk)
+            query_string = '"case_actions/case_action":"escalated","case_actions/escalate_caseworker":"%s"' %(request.user.pk)
         elif request.user.HelplineUser.hl_role == 'Supervisor':
-            request_string = '"case_actions/case_action":"escalated","case_actions/supervisors":"%s"' %(request.user.pk)
+            query_string = '"case_actions/case_action":"escalated","case_actions/supervisors":"%s"' %(request.user.pk)
 
 
     elif report == 'today':
@@ -860,13 +874,18 @@ def reports(request, report, casetype='Call'):
             if str(xfrm['id_string']) == id_string:
                 for key,frm in xfrm.items():
                     xformx.update({str(key):str(frm)})
-
+                    
         if request.user.HelplineUser.hl_role == 'Counsellor':
-            request_string += 'case_owner:%s' %(username)
+            if query_string == '':
+                query_string = '"case_owner":{"$i":"%s"}' %(username)
+            else:
+                query_string += ',"case_owner":{"$i":"%s"}' %(username)
 
-
-        stat = requests.get('https://%s/ona/api/v1/data/%s?query={%s}&page=1&page_size=50' %(current_site,default_service_xform.pk,request_string), headers= headers).json();
+        ur = 'https://%s/ona/api/v1/data/%s?query={%s}%s&page=1&page_size=50' %(current_site,default_service_xform.pk,query_string,request_string)
+        stat = requests.get('https://%s/ona/api/v1/data/%s?query={%s}%s&page=1&page_size=50' %(current_site,default_service_xform.pk,query_string,request_string), headers= headers).json();
         # + '&sort={"_id":-1}'
+        data['statss'] = "Cheru Data: %s" % stat
+        data['ur'] = ur
         statrecords = []
         recordkeys = []
 
@@ -1306,7 +1325,7 @@ def case_form(request, form_name):
 
 
     service = Service.objects.all().first()
-    default_service_xform = default_service.walkin_xform
+    default_service_xform = service.walkin_xform
     default_service_auth_token =  default_service_xform.user.auth_token
     current_site = get_current_site(request)
     """

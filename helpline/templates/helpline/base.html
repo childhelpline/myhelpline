@@ -391,12 +391,12 @@ input:checked + .slider:before {
             <li>
               <a href="{% url "case_form" "walkin" %}" role="button"><i class="fa fa-circle-o"></i> {% trans "New WalkIn" %}
               </a></li>
-              <li><a href="{% url 'dashboardreports' 'today' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Today's Cases" %}
+              <li><a href="{% url 'dashboardreports' 'today' 'case' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Today's Cases" %}
                 <span class="pull-right-container">
                   <span class="label label-success pull-right">{{ dashboard_stats.total_cases }}</span>
                 </span>
               </a></li>
-              <li><a href="{% url 'dashboardreports' 'escalated' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Escalated Cases" %}
+              <li><a href="{% url 'dashboardreports' 'escalated' 'case' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Escalated Cases" %}
                 <span class="pull-right-container">
                   <span class="label label-warning pull-right">{{ dashboard_stats.open_cases }}</span>
                 </span>
@@ -406,7 +406,7 @@ input:checked + .slider:before {
                   <span class="label label-warning pull-right">{{ dashboard_stats.open_cases }}</span>
                 </span>
               </a></li-->
-              <li><a href="{% url 'dashboardreports' 'totalcases' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "All Cases" %}
+              <li><a href="{% url 'dashboardreports' 'totalcases' 'case' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "All Cases" %}
                 <span class="pull-right-container">
                   <span class="label label-info pull-right">{{ dashboard_stats.total_cases }}</span>
                 </span>
