@@ -1321,7 +1321,7 @@ def case_form(request, form_name):
     }
 
     #charts
-    url = 'https://%s/ona/api/v1/data/%s' %(current_site, service.pk)
+    url = 'https://%s/ona/api/v1/data/%s' %(current_site, default_service_xform.pk)
 
     message = ''
     initial = {}
