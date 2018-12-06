@@ -544,32 +544,7 @@ def queue_leave(request):
     request.session['queuestatus'] = ''
 
     hl_user.save()
-    # services = Service.objects.all()
-    # queue_form = QueueLogForm()
-    # user_id = request.user.pk
-    # HelplineUser.objects.filter(user_id=user_id).update(hl_status='Idle')
-
-    # try:
-    #     hotdesk = Hotdesk.objects.filter(agent__exact=request.user.HelplineUser.hl_key)
-    #     hl_user = HelplineUser.objects.get(hl_key=request.user.HelplineUser.hl_key)
-    #     hotdesk.update(agent=0)
-
-    #     request.session['queuejoin'] = 'out'
-    #     request.session['status'] = 'out'
-    #     request.session['jabber'] = ''
-    #     request.session['queuestatus'] = 'queueunpause'
-    #     message = backend.remove_from_queue(
-    #         agent=hl_user.hl_exten,
-    #         queue='Q718874580'
-    #     )
-    #     hl_user.hl_exten = ''
-    #     hl_user.hl_jabber = ''
-    #     hl_user.hl_status = 'Unavailable'
-    #     hl_user.save()
-
-    # except Exception as e:
-    #    message = e
-    message = "The message"
+    message = ""
     return redirect("/helpline/#%s" % (message))
 
 
