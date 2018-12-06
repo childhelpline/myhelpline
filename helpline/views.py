@@ -527,7 +527,8 @@ def queue_log(request):
     request.session['queuejoin'] = 'join'
     request.session['queuestatus'] = 'queuepause'
     # request.session['extension'] = extension
-    return JSONResponse({'status':'200'})
+    response =  HttpResponse({'status':'200'})
+    return response
 
 
 def queue_leave(request):
@@ -538,6 +539,10 @@ def queue_leave(request):
     hl_user.hl_exten = ''
     hl_user.hl_jabber = ''
     hl_user.hl_status = 'Unavailable'
+
+    request.session['queuejoin'] = ''
+    request.session['queuestatus'] = ''
+
     hl_user.save()
     # services = Service.objects.all()
     # queue_form = QueueLogForm()
@@ -764,7 +769,7 @@ def reports(request, report, casetype='Call'):
     default_service_xform = default_service.walkin_xform
     default_service_auth_token = default_service_xform.user.auth_token
     current_site = get_current_site(request)
-    
+
     # Graph data
     headers = {
         'Authorization': 'Token %s' % (default_service_auth_token)

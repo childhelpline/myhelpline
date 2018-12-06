@@ -976,15 +976,17 @@ $(document).ready(function(){
 function join_queue(){
   var csrftoken = jQuery("[name=csrfmiddlewaretoken]").val(); //getCookie('csrftoken')
   $.ajaxSetup({ headers: { 'csrftoken' :  csrftoken} });
-  $.get('/helpline/log/',{'status':'Available'},function(response){
-        alert("DDDD: " + response)
-      })
-  return false
+  // $.get('/helpline/log/',{'status':'Available'},function(response){
+  //       alert("DDDD: " + response)
+  //     })
+
   $.post("{% setting "CALL_API_URL" %}/api/v1/call/agent?login={{request.user.HelplineUser.hl_key | safe}}",function(data){
     if(data.status == 'online'){
       $.post('/helpline/log/',{'status':'Available'},function(response){
-        alert("")
+        alert("You have successfully joined queue")
       })
+    }else{
+      alert("Error joining queue, try again")
     }
   })
 }
