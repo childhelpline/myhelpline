@@ -229,7 +229,8 @@ class DispositionForm(forms.Form):
         super(DispositionForm, self).__init__(*args, **kwargs)
 
     case_number = forms.CharField(widget=forms.HiddenInput(), required=True)
-    disposition = forms.ChoiceField(choices=settings.DISPOSITION_CHOICES,
+    disposition = forms.ChoiceField(label='',
+                                    choices=settings.DISPOSITION_CHOICES,
                                     widget=forms.Select(attrs={
                                         'onchange': "disposeCase(this);",
                                         'class': 'form-control',

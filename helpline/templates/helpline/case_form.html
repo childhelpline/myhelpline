@@ -180,6 +180,8 @@ audio{
 
 
   function disposeCase(param){
+    if($(param).val() == '--')
+      return false
     var dispose_form = '#disposeDet';
 
     $.ajax({
@@ -217,16 +219,9 @@ audio{
           <span id="caseid">{{ case }}</span>
           {% if form_name == 'call' %}<span id="phone">Caller Number: {{ caller }}</span>{% endif %}
           <span id="editedBadge"></span>
-          {% if form_name == 'qa' %}
-          <span class="pull-right">
-            <audio controls autoplay="autoplay">
-              <source src="horse.ogg" type="audio/ogg" />
-              <source src="/opt/asterisk/helpline/media/bridge/{{sourceid}}.wav" type="audio/mpeg" />
-            </audio> 
-          </span>
-          {% else %}
           <span class="pull-right" id="formTimer" style="font-size: 24px; color: #fff; margin-right: 30px;">00:00:00</span>
           {% endif %}
+          <span class="col-md-3 pull-right">{% crispy disposition_form disposition_form.helper %}</span>
           <h4>
           </div>
           <div class="modal-body" style="padding: 0px; height: 80vh;" ><!-- -->
@@ -310,6 +305,7 @@ audio{
         if(event.data){
           var resp = JSON.parse(event.data)
           if(resp.enketoEvent == 'submissionsuccess'){
+
             setInterval(function(){
               window.location.href = '/helpline/'
             },500)

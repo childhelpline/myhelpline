@@ -620,7 +620,7 @@ DEFAULT_SERVICE = 'Inbound'
 
 # Default dispositions.
 DISPOSITION_CHOICES = (
-    ('--', '--'),
+    ('--', 'Dispose'),
     ('Feedback', 'Feedback'),
     ('Request', 'Request'),
     ('Inquiry', 'Inquiry'),

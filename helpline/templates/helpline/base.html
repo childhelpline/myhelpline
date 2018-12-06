@@ -979,38 +979,17 @@ function join_queue(){
   // $.get('/helpline/log/',{'status':'Available'},function(response){
   //       alert("DDDD: " + response)
   //     })
-  
-  // $.post("{% setting "CALL_API_URL" %}/api/v1/call/agent?login={{request.user.HelplineUser.hl_key | safe}}",function(data){
-  //   if(data.status == 'online'){
-  //     $.post('/helpline/log/',{'status':'Available'},function(response){
-  //       alert("You have successfully joined queue")
-  //     })
-  //   }else{
-  //     alert("Error joining queue, try again")
-  //   }
-  // })
 
-  var login = $.ajax({
-              method: 'POST',
-              url: '{% setting "CALL_API_URL" %}/api/v1/call/agent?login={{request.user.HelplineUser.hl_key | safe}}'
-            });
-            login.done(function (response) {
-              if(data.status == 'online'){
-                $.post('/helpline/log/',{'status':'Available'},function(response){
-                    alert("You have successfully joined queue")
-                  })
-                }else{
-                  alert("Error joining queue, try again")
-                }
-            });
-            login.fail(function (response) {
-              alert("Error: Could not join queue, try again: ")
-            });
-            login.always(function () {
-            });
-          }
-
-//}
+  $.post("{% setting "CALL_API_URL" %}/api/v1/call/agent?login={{request.user.HelplineUser.hl_key | safe}}",function(data){
+    if(data.status == 'online'){
+      $.post('/helpline/log/',{'status':'Available'},function(response){
+        alert("You have successfully joined queue")
+      })
+    }else{
+      alert("Error joining queue, try again")
+    }
+  })
+}
 
 var timer = new Timer();
 $('#case_form_modal').on('hidden.bs.modal', function () {
@@ -1033,7 +1012,8 @@ $("#example1").DataTable({
   buttons: [
   'copy', 'csv', 'excel'
   ]
-} );
+});
+
 $('#example2').DataTable({
   "paging": false,
   "lengthChange": false,
