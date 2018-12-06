@@ -94,12 +94,12 @@
                     <tbody>
                       <tr class="bg-green-active color-palette">
                         <td width="56"><strong>Available </strong></td>
-                        <td width="29"><span class="badge bg-blue">{{ status_count.available }}</span></td>
+                        <td width="29"><span class="badge bg-blue">{{ call_stat.agents.online }}</span></td>
                         <td width="29"><span class="badge bg-blue">{% widthratio status_count.available  status_count.total 100 %}%</span></td>
                       </tr>
                       <tr class="bg-yellow-active color-palette">
                         <td><strong>Idle </strong></td>
-                        <td><span class="badge bg-blue">{{ status_count.idle }}</span></td>
+                        <td><span class="badge bg-blue">{{ call_stat.agents.online }}</span></td>
                         <td><span class="badge bg-blue">{% widthratio status_count.idle  status_count.total 100 %}%</span></td>
                       </tr>
                       <tr class="bg-red-active color-palette">
@@ -154,7 +154,6 @@
                     <!-- /.box -->
                   </div>
                   <div class="col-md-6 col-sm-12" style="padding-left: 0px;">
-
                     {% if request.user.HelplineUser.hl_role == 'Caseworker' or request.user.HelplineUser.hl_role == 'Counsellor' %}
                     <div class="box box-primary">
                       <div class="box-header with-border">

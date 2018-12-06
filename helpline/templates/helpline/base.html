@@ -528,15 +528,14 @@ input:checked + .slider:before {
             {% endfor %}
           </ul>
         </li>
-        {% endif %}
-        <li>
+        <!-- <li>
           <a href="/admin/auth/user/">
             <i class="fa fa-users"></i> <span>{% trans "Users" %}</span>
-            <!--span class="pull-right-container">
+            span class="pull-right-container">
               <small class="label pull-right bg-green">new</small>
-            </span-->
+            </span
           </a>
-        </li>
+        </li> -->
         <li>
           <a href="{% url 'manageusers' %}">
             <i class="fa fa-users"></i> <span>{% trans "Users" %}</span>
@@ -556,6 +555,7 @@ input:checked + .slider:before {
             <i class="fa fa-tv"></i> <span>{% trans "Wall Board" %}</span>
           </a>
         </li>
+        {% endif %}
 
         <li class="treeview {% block treeview_reports %}{% endblock treeview_reports %}">
           <a href="{% url 'adminreports' 'callsummaryreport' %}">

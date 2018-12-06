@@ -42,7 +42,7 @@
               				<td class="mailbox-subject"> <b>{{ mess.email_subject }}</b> <td>
               				<td class="mailbox-date">{{ mess.email_date}} </td>
                       <td>{{ mess.email_case|safe }}</td>
-              				<td class="mailbox-date"><!-- Reply  -->{%  if mess.email_case == 0 %} <a href='{% url "case_form" "email" %}?sourceid={{mess.pk}}'>Create Case</a> {% endif %}</td>
+              				<td class="mailbox-date"><!-- Reply  -->{%  if mess.email_case == 0 %} <a href='{% url "case_form" "mail" %}?sourceid={{mess.pk}}'>Create Case</a> {% endif %}</td>
               			</tr>
               			{% endfor %}
               		</tbody>
@@ -52,29 +52,6 @@
               <!-- /.mail-box-messages -->
             </div>
             <!-- /.box-body -->
-            <!--div class="box-footer no-padding">
-              <div class="mailbox-controls">
-                <!-- Check all button ->
-                <button type="button" class="btn btn-default btn-sm checkbox-toggle"><i class="fa fa-square-o"></i>
-                </button>
-                <div class="btn-group">
-                  <button type="button" class="btn btn-default btn-sm"><i class="fa fa-trash-o"></i></button>
-                  <button type="button" class="btn btn-default btn-sm"><i class="fa fa-reply"></i></button>
-                  <button type="button" class="btn btn-default btn-sm"><i class="fa fa-share"></i></button>
-                </div>
-                <!-- /.btn-group ->
-                <button type="button" class="btn btn-default btn-sm"><i class="fa fa-refresh"></i></button>
-                <div class="pull-right">
-                  1-50/200
-                  <div class="btn-group">
-                    <button type="button" class="btn btn-default btn-sm"><i class="fa fa-chevron-left"></i></button>
-                    <button type="button" class="btn btn-default btn-sm"><i class="fa fa-chevron-right"></i></button>
-                  </div>
-                  <!-- /.btn-group ->
-                </div>
-                <!-- /.pull-right ->
-              </div>
-            </div-->
           </div>
           <!-- /. box -->
         </div>
