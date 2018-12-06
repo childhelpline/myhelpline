@@ -311,7 +311,7 @@ audio{
           var resp = JSON.parse(event.data)
           if(resp.enketoEvent == 'submissionsuccess'){
             setInterval(function(){
-              window.location = '/helpline'
+              window.location.href = '/helpline/'
             },500)
           }
         }
