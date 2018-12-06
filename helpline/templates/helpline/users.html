@@ -23,10 +23,17 @@
 
           <div class="box">
             <div class="box-header">
-              <a href="" class="btn btn-success pull-right" style="border-radius: 0px;"  data-toggle="modal" data-target="#user-modal">{% trans 'New User' %}</a>
+              <a href="{% url 'new_user' %}" class="btn btn-success pull-right" style="border-radius: 0px;">{% trans 'New User' %}</a>
             </div>
             <!-- /.box-header -->
             <div class="box-body">
+              <div class="alert alert-info">{{ message }}</div>
+              <div>
+            {% if messages %}
+                {% for message in messages %}
+                    {{ message }}
+                {% endfor %}
+            {% endif %}</div>
               <table id="example1" class="table table-bordered table-striped">
                 <thead>
                 <tr>
@@ -45,14 +52,14 @@
                   {% for user in systemusers %}
                     <tr>
                       <td>{{ forloop.counter }}.</td>
-                      <td><img src="{{ user.hl_avatar }}" alt="{{ user.hl_names }}" /></td>
-                      <td>{{ user.hl_names }}</td>
-                      <td>{{ user.hl_nick }}</td>
-                      <td>{{ user.hl_email }}</td>
-                      <td>{{ user.hl_phone }}</td>
-                      <td>{{ user.hl_role }}</td>
-                      <td>{{ user.hl_clock }}</td>
-                      <td>Delete | Edit</td>
+                      <td><img src="{{ user.hl_avatar }}" height="50px" alt="{{ user.hl_avatar | default:''}}" /></td>
+                      <td>{{user.hl_names | default:''}}</td>
+                      <td>{{ user.hl_nick | default:'' }}</td>
+                      <td>{{ user.hl_email | default:'' }}</td>
+                      <td>{{ user.hl_phone | default:'' }}</td>
+                      <td>{{ user.hl_role | default:'' }}</td>
+                      <td>{{ user.hl_time |default:'' }}</td>
+                      <td>Delete | <a href="{% url 'profile' user.pk %}">Edit</a></td>
                     </tr>
                   {% endfor %}
                 </tbody>
@@ -80,51 +87,4 @@
       <!-- /.row -->
     </section>
     <!-- /.content -->
-
-
-
-
-<!-- COMPOSE MESSAGE MODAL -->
-<div class="modal fade" id="user-modal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title"><i class="fa fa-user-o"></i> {% trans "Create User" %}</h4>
-            </div>
-            <form id="frmUpdate" action="{% url "edit_myaccount" %}" method="post" enctype="multipart/form-data">
-                <div class="modal-body">
-                    <div class="form-group">
-                        <div class="input-group">
-                            <span class="input-group-addon">{% trans "First Name" %}:</span>
-                            <input name="txtFirstName" type="text" class="form-control" id="txtFirstName" value="{{ request.user.first_name }}">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <div class="input-group">
-                            <span class="input-group-addon">{% trans "Last Name" %}:</span>
-                            <input name="txtName" type="text" class="form-control" id="txtName" value="{{ request.user.last_name }}">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <div class="input-group">
-                            <span class="input-group-addon">{% trans "Email" %}:</span>
-                            <input name="txtEmail" type="email" class="form-control" id="txtEmail" value="{{ request.user.email }}">
-                        </div>
-                    </div>
-                    <div class="form-group">
-
-                      <div class="modal-footer clearfix">
-
-                          <button type="button" class="btn btn-danger" data-dismiss="modal"><i class="fa fa-times"></i>{% trans "Discard" %}</button>
-
-                          <button type="submit" id="updateUser" name="updateUser" class="btn btn-primary pull-left"><i class="fa fa-envelope"></i>{% trans "Save" %}</button>
-                      </div>
-                      {% csrf_token %} 
-                  </form>
-              </div><!-- /.modal-content -->
-          </div><!-- /.modal-dialog -->
-      </div><!-- /.modal -->
-  </div>
-</div>
   {% endblock content %}

@@ -4,19 +4,19 @@
 {% endblock %}
 {% block box %}{% endblock %}
 {% block navbar_nav %}
-<li class="dropdown messages-menu">
+<!--li class="dropdown messages-menu">
   <a href="#" class="dropdown-toggle" data-toggle="dropdown">
     <i class="fa fa-bookmark"></i>{% trans "Average Talk Time" %}: {{ dashboard_stats.att.hours }}:{{ dashboard_stats.att.min }}:{{ dashboard_stats.att.seconds }}
   </a>
 </li>
-<!-- Messages: style can be found in dropdown.less-->
+<!-- Messages: style can be found in dropdown.less->
 <li class="dropdown messages-menu">
   <a href="#" class="dropdown-toggle" data-toggle="dropdown">
     <i class="fa fa-bookmark"></i>{% trans "Average Wait Time" %}: {{ dashboard_stats.awt.hours }}:{{ dashboard_stats.awt.min }}:{{ dashboard_stats.awt.seconds }}
   </a>
 </li>
 
-<!-- Messages: style can be found in dropdown.less-->
+<!-- Messages: style can be found in dropdown.less->
 <li class="dropdown messages-menu">
   <a href="#" class="dropdown-toggle" data-toggle="dropdown">
     <i class="fa fa-clock-o"></i>  <span id="clock">0:00 AM</span>
@@ -37,15 +37,12 @@
     <li class="footer">
     </li>
   </ul>
-</li>
+</li-->
 
 {% endblock navbar_nav %}
 
 {% block content %}
 <section class="content-header">
-  <h1>
-    {% trans "REPORT" %} <i class="fa fa-angle-right"></i> {{ title }}<small>My Cases  [<a href="{% url "form-show" owner.username xform.id_string %}">{{ xform.title }}</a>]</small>
-  </h1>
   <ol class="breadcrumb">
     <li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
     <li><a href="#">Cases</a></li>
@@ -167,11 +164,11 @@
                     {% for records in statrecords %}
                     <tr ondblclick="window.location.href = '{% url 'caseview' 'Case_Form' records|get_item:'_id' %}'">
                       <td>{{ forloop.counter }}. </td>
-                      <td><a href="{% url 'caseview' 'Case_Form' records|get_item:'_id' %}">{{  records | get_item:'case_number' }}</a></td>
+                      <td><a href="{% url 'caseview' 'Case_Form' records|get_item:'_id' %}">{{  records | get_item:'case_id' }}</a></td>
                       {% for item_key in recordkeys %}
                       {% if not '_' == item_key|first %}
                       <td>
-                        {% if item_key == 'case_number' %}
+                        {% if item_key == 'case_id' %}
                         <a href="/helpline/forms/{{ xform.id_string }}/{{ records | get_item:'_id' }}">{{  records | get_item:item_key }}</a>
                         {% elif forloop.last %}
                         {{  records | get_item:'_submission_time' | slice:'10' }}

@@ -6,23 +6,22 @@
 {% block content %}
 
 
-<section class="content">
+<section class="content" style="padding-top:0px;">
   <div class="row">
     <div class="col-md-12">
       <!-- /.box-footer -->
       <!--section class="content-header">
         <h1>Dashboard</h1>
       </section-->
-      <div class="box-body">
+      <div class="box-body" style="padding:5px; padding-top:0px;">
         {% block box %}
 
         <div class="row">
-
           <div class="col-md-8" >
             <div class="row home-pallete">
               <div class="col-sm-4 col-md-2 palette-item">
                 <div class="color-palette-set">
-                  <div class="bg-blue color-palette" align="center" onclick="window.location = '{% url 'dashboardreports' 'totalcalls' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.total_calls }} </span><br>{% trans "Total Calls" %}</div>
+                  <div class="bg-blue color-palette" align="center" onclick="window.location = '{% url 'dashboardreports' 'totalcalls' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ call_stat.calls }} </span><br>{% trans "Total Calls" %}</div>
                 </div>
               </div>
               <!-- /.col -->
@@ -49,7 +48,7 @@
               <div class="col-sm-4 col-md-2 palette-item" onclick="window.location = '{% url 'dashboardreports' 'voicemails' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}'">
                 <div class="color-palette-set">
                   <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
-                  <div class="bg-yellow color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.voice_mails }} </span><br>{% trans "Voice Mails" %}</div>
+                  <div class="bg-yellow color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ call_stat.recordings }} </span><br>{% trans "Voice Mails" %}</div>
                   <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
                 </div>
               </div>
@@ -95,12 +94,12 @@
                     <tbody>
                       <tr class="bg-green-active color-palette">
                         <td width="56"><strong>Available </strong></td>
-                        <td width="29"><span class="badge bg-blue">{{ status_count.available }}</span></td>
+                        <td width="29"><span class="badge bg-blue">{{ call_stat.agents.online }}</span></td>
                         <td width="29"><span class="badge bg-blue">{% widthratio status_count.available  status_count.total 100 %}%</span></td>
                       </tr>
                       <tr class="bg-yellow-active color-palette">
                         <td><strong>Idle </strong></td>
-                        <td><span class="badge bg-blue">{{ status_count.idle }}</span></td>
+                        <td><span class="badge bg-blue">{{ call_stat.agents.online }}</span></td>
                         <td><span class="badge bg-blue">{% widthratio status_count.idle  status_count.total 100 %}%</span></td>
                       </tr>
                       <tr class="bg-red-active color-palette">
@@ -130,7 +129,6 @@
             <div class="row">
               <!-- Left col -->
               <!-- /.col -->
-
               <div class="col-md-9 long">
 
                 <div class="row">
@@ -156,7 +154,6 @@
                     <!-- /.box -->
                   </div>
                   <div class="col-md-6 col-sm-12" style="padding-left: 0px;">
-
                     {% if request.user.HelplineUser.hl_role == 'Caseworker' or request.user.HelplineUser.hl_role == 'Counsellor' %}
                     <div class="box box-primary">
                       <div class="box-header with-border">

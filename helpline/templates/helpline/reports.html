@@ -119,7 +119,36 @@ div.scrollmenu {
         <div class="box-body">
           <div class="row">
             <div class="scrollmenu col-md-12">
-              <div id="showustheresultsnow">
+                <div>
+                  <table id="example1" class="table datatable">
+                    <thead>
+                      <th>#</th>
+                      <!-- <th>Case ID</th>
+                      <th>Agent</th> -->
+                      <th>Caller Phone</th>
+                      <th>Date</th>
+                      <th>Start time</th>
+                      <th>End Time</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </thead>
+                  {% for rep in report_data %}
+                    <tr>
+                      <td>{{ forloop.counter}}.</td>
+                      <!-- <td>{{rep.caseid | default:''}}</td>
+                      <td>{{rep.agent | default:''}}</td> -->
+                      <td>{{rep.phone}}</td>
+                      <td>{{rep.date}}</td>
+                      <td>{{rep.start}}</td>
+                      <td>{{rep.ended}}</td>
+                      <td>{{rep.status}}</td>
+                      <td><a href="" class="btn btn-xs btn-warning"><i class="fa fa-eye"></i> View More</a></td>
+                    </tr>
+                  {% endfor %}
+                    
+                  </table>
+                </div>
+              <!--div id="showustheresultsnow">
                 <div class="col-md-4">
                   {% for format in table.export_formats %}
                   <a class="btn btn-app"  href="{% querystring '_export'=format %}">
@@ -131,7 +160,7 @@ div.scrollmenu {
                 {% render_table table %}
                 {% endif %}
               </div>
-            </div>
+            </div-->
           </div>
           <!-- /.col -->
         </div>

@@ -1,0 +1,49 @@
+{% extends "helpline/helpline_success_base.html" %}
+{% load staticfiles %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<script type="text/javascript">
+  /*$.getJSON( "http://192.168.56.102:8000/ona/kemboicheru/forms/Case_Form/form.json",{'Authorization': 'Token 68cf8a32a8f4af59333527fb58dbe1c2423249a0'}, function( data ) {
+  var items = [];
+  var tabs = []
+  alert("Cheru: " + JSON.stringify(data))
+  $.each( data['children'], function( key, val ) {
+    if(typeof(val['control']) !== undefined){
+      tabs.push([val['name'],val['label']])
+    }
+    console.log(key + ". " + JSON.stringify(tabs))
+    items.push( "<li id='" + key + "'>" + val + "</li>" );
+  });
+ 
+  $( "<ul/>", {
+    "class": "my-new-list",
+    html: items.join( "" )
+  }).appendTo( "#json_file" );
+});
+  */
+</script>
+<div class="row">
+  <div class="col-md-12">
+    <div class="box box-default">
+      <div class="box-header with-border">
+        <h3 class="box-title">Success Message</h3>
+      </div>
+      <!-- /.box-header -->
+      <div class="box-body">
+        <div class="alert alert-success alert-dismissible">
+          <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+          <h4><i class="icon fa fa-check"></i> Alert!</h4>
+          Success alert preview. This alert is dismissable.
+        </div>
+        <div id="json_file">
+          
+        </div>
+      </div>
+      <!-- /.box-body -->
+    </div>
+    <!-- /.box -->
+  </div>
+  <!-- /.col -->
+</div>
+{% endblock %}
