@@ -108,14 +108,14 @@ def success(request):
 def home(request):
     "Dashboard home"
 
-    try:
-        att = request.user.HelplineUser.get_average_talk_time()
-        awt = request.user.HelplineUser.get_average_wait_time()
-    except Exception as e:
-        new = initialize_myaccount(request.user)
-        return redirect("/helpline/#%s/new%s" % (e, new))
+    # try:
+    #     att = request.user.HelplineUser.get_average_talk_time()
+    #     awt = request.user.HelplineUser.get_average_wait_time()
+    # except Exception as e:
+    #     new = initialize_myaccount(request.user)
+    #     return redirect("/helpline/#%s/new%s" % (e, new))
 
-    dashboard_stats = get_dashboard_stats(request.user)
+    # dashboard_stats = get_dashboard_stats(request.user)
     status_count = get_status_count()
     case_search_form = CaseSearchForm()
     queue_form = QueueLogForm(request.POST)
@@ -544,7 +544,32 @@ def queue_leave(request):
     request.session['queuestatus'] = ''
 
     hl_user.save()
-    message = ""
+    # services = Service.objects.all()
+    # queue_form = QueueLogForm()
+    # user_id = request.user.pk
+    # HelplineUser.objects.filter(user_id=user_id).update(hl_status='Idle')
+
+    # try:
+    #     hotdesk = Hotdesk.objects.filter(agent__exact=request.user.HelplineUser.hl_key)
+    #     hl_user = HelplineUser.objects.get(hl_key=request.user.HelplineUser.hl_key)
+    #     hotdesk.update(agent=0)
+
+    #     request.session['queuejoin'] = 'out'
+    #     request.session['status'] = 'out'
+    #     request.session['jabber'] = ''
+    #     request.session['queuestatus'] = 'queueunpause'
+    #     message = backend.remove_from_queue(
+    #         agent=hl_user.hl_exten,
+    #         queue='Q718874580'
+    #     )
+    #     hl_user.hl_exten = ''
+    #     hl_user.hl_jabber = ''
+    #     hl_user.hl_status = 'Unavailable'
+    #     hl_user.save()
+
+    # except Exception as e:
+    #    message = e
+    message = "The message"
     return redirect("/helpline/#%s" % (message))
 
 
