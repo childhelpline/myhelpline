@@ -1903,7 +1903,7 @@ def average_talk_time(request):
 @json_view
 def average_hold_time(request):
     """Return the average hold time for current user, in json"""
-    awt = request.user.HelplineUser.get_average_wait_time()
+    awt = 0 #request.user.HelplineUser.get_average_wait_time()
     return awt
 
 
@@ -2035,16 +2035,16 @@ def get_dashboard_stats(user, interval=None):
         status__in=[Ticket.CLOSED_STATUS, Ticket.RESOLVED_STATUS],
     )
 
-    att = user.HelplineUser.get_average_talk_time()
-    awt = user.HelplineUser.get_average_wait_time()
+    # att = user.HelplineUser.get_average_talk_time()
+    # awt = user.HelplineUser.get_average_wait_time()
 
     # get QA score
 
     dashboard_stats = {'midnight': midnight,
                        'midnight_string': midnight_string,
                        'now_string': now_string,
-                       'att': att,
-                       'awt': awt,
+                       # 'att': att,
+                       # 'awt': awt,
                        'total_calls': total_calls.count(),
                        'answered_calls': answered_calls.count(),
                        'abandoned_calls': abandoned_calls.count(),
