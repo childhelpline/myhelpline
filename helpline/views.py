@@ -84,10 +84,10 @@ from helpline.forms import QueueLogForm,\
         ContactForm, DispositionForm, CaseSearchForm, RegisterProfileForm, RegisterUserForm, \
         ReportFilterForm, QueuePauseForm, CaseActionForm, ContactSearchForm
 
-from helpline.qpanel.config import QPanelConfig
-from helpline.qpanel.backend import Backend
-if QPanelConfig().has_queuelog_config():
-    from helpline.qpanel.model import queuelog_data_queue
+# from helpline.qpanel.config import QPanelConfig
+# from helpline.qpanel.backend import Backend
+# if QPanelConfig().has_queuelog_config():
+#     from helpline.qpanel.model import queuelog_data_queue
 import json
 from django.template.defaulttags import register
 from onadata.apps.logger.models import Instance, XForm
@@ -98,8 +98,8 @@ from onadata.libs.utils.user_auth import (get_xform_and_perms, has_permission,
 
 
 
-cfg = QPanelConfig()
-backend = Backend()
+# cfg = QPanelConfig()
+# backend = Backend()
 
 def success(request):
     return render(request, 'helpline/success.html')
@@ -115,7 +115,7 @@ def home(request):
     #     new = initialize_myaccount(request.user)
     #     return redirect("/helpline/#%s/new%s" % (e, new))
 
-    # dashboard_stats = get_dashboard_stats(request.user)
+    dashboard_stats = get_dashboard_stats(request.user)
     status_count = get_status_count()
     case_search_form = CaseSearchForm()
     queue_form = QueueLogForm(request.POST)
@@ -124,8 +124,9 @@ def home(request):
 
     default_service = Service.objects.all().first()
     default_service_xform = default_service.walkin_xform
-    default_service_auth_token = default_service_xform.user.auth_token
+    default_service_auth_token = '7331a310c46884d2643ca9805aaf0d420ebfc831' #default_service_xform.user.auth_token
     current_site = get_current_site(request)
+    default_service_xform.pk = 39
 
     gtdata = []
     stdata = []
@@ -177,8 +178,8 @@ def home(request):
             stdata.append({"label":str(lbl), "data":str(str(dt['count'])), "color":str(col)})
     return render(request, 'helpline/home.html',
                 {'dashboard_stats': dashboard_stats,
-                   'att': att,
-                   'awt': awt,
+                   'att': '',
+                   'awt': '',
                    'queues': queues,
                    'case_search_form': case_search_form,
                    'queue_form': queue_form,
@@ -578,52 +579,53 @@ def queue_remove(request, auth):
     """Remove a user from the Asterisk queue."""
     agent = HelplineUser.objects.get(hl_auth=auth)
     agent.hl_status = 'Idle'
+    data = {}
+    # try:
+    #     hotdesk = Hotdesk.objects.filter(agent__exact=agent.hl_key)
+    #     hotdesk.update(agent=0)
+    #     agent.hl_exten = ''
+    #     agent.hl_jabber = ''
+    #     schedules = Schedule.objects.filter(user=agent.user)
+    #     if schedules:
+    #         for schedule in schedules:
+    #             data = backend.remove_from_queue(
+    #                 agent="SIP/%s" % (request.session.get('extension')),
+    #                 queue='%s' % (schedule.service.queue),
+    #             )
+    #     else:
+    #         data = _("Agent does not have any assigned schedule")
+    #     agent.save()
 
-    try:
-        hotdesk = Hotdesk.objects.filter(agent__exact=agent.hl_key)
-        hotdesk.update(agent=0)
-        agent.hl_exten = ''
-        agent.hl_jabber = ''
-        schedules = Schedule.objects.filter(user=agent.user)
-        if schedules:
-            for schedule in schedules:
-                data = backend.remove_from_queue(
-                    agent="SIP/%s" % (request.session.get('extension')),
-                    queue='%s' % (schedule.service.queue),
-                )
-        else:
-            data = _("Agent does not have any assigned schedule")
-        agent.save()
-
-    except Exception as e:
-        data = e
+    # except Exception as e:
+    #     data = e
 
     return redirect("/helpline/status/web/presence/#%s" % (data))
 
 
 def queue_pause(request):
     """Pause Asterisk Queue member"""
-    form = QueuePauseForm(request.POST)
-    if form.is_valid():
-        schedules = Schedule.objects.filter(user=request.user)
-        if not schedules:
-            message = _("Agent does not have any assigned schedule")
-        for schedule in schedules:
-            message = backend.pause_queue_member(
-                queue='%s' % (schedule.service.queue),
-                interface='%s' % (request.user.HelplineUser.hl_exten),
-                paused=True
-            )
-            clock = Clock()
-            clock.user = request.user
-            clock.hl_clock = form.cleaned_data.get('reason')
-            clock.service = schedule.service
-            clock.hl_time = int(time.time())
-            clock.save()
-        request.user.HelplineUser.hl_status = 'Pause'
-        request.user.HelplineUser.save()
-    else:
-        message = "failed"
+    message = "Nothing to do"
+    # form = QueuePauseForm(request.POST)
+    # if form.is_valid():
+    #     schedules = Schedule.objects.filter(user=request.user)
+    #     if not schedules:
+    #         message = _("Agent does not have any assigned schedule")
+    #     for schedule in schedules:
+    #         message = backend.pause_queue_member(
+    #             queue='%s' % (schedule.service.queue),
+    #             interface='%s' % (request.user.HelplineUser.hl_exten),
+    #             paused=True
+    #         )
+    #         clock = Clock()
+    #         clock.user = request.user
+    #         clock.hl_clock = form.cleaned_data.get('reason')
+    #         clock.service = schedule.service
+    #         clock.hl_time = int(time.time())
+    #         clock.save()
+    #     request.user.HelplineUser.hl_status = 'Pause'
+    #     request.user.HelplineUser.save()
+    # else:
+    #     message = "failed"
 
     return redirect("/helpline/#%s" % (message))
 
@@ -632,18 +634,19 @@ def queue_unpause(request):
     """Unpause Asterisk Queue member"""
     schedules = Schedule.objects.filter(user=request.user)
     if schedules:
-        for schedule in schedules:
-            message = backend.pause_queue_member(
-                queue='%s' % (schedule.service.queue),
-                interface='%s' % (request.user.HelplineUser.hl_exten),
-                paused=False
-            )
-            clock = Clock()
-            clock.hl_clock = "Unpause"
-            clock.user = request.user
-            clock.service = schedule.service
-            clock.hl_time = int(time.time())
-            clock.save()
+        message = _("Nothing to do")
+        # for schedule in schedules:
+        #     message = backend.pause_queue_member(
+        #         queue='%s' % (schedule.service.queue),
+        #         interface='%s' % (request.user.HelplineUser.hl_exten),
+        #         paused=False
+        #     )
+        #     clock = Clock()
+        #     clock.hl_clock = "Unpause"
+        #     clock.user = request.user
+        #     clock.service = schedule.service
+        #     clock.hl_time = int(time.time())
+        #     clock.save()
     else:
         message = _("Agent does not have any assigned schedule")
 
@@ -1292,17 +1295,18 @@ def autolocation(request):
 
 def queue_manager(user, extension, action):
     """queuejoin:queueleave:queuepause:queueunpause:queuetrain"""
-    if action == 'queuejoin':
-        data = backend.add_to_queue(
-            agent="SIP/%s" % (extension),
-            queue='Q718874580',
-            member_name=user.get_full_name()
-        )
-    elif action == 'queueleave':
-        data = backend.remove_from_queue(
-            agent="SIP/%s" % (extension),
-            queue='Q718874580',
-        )
+    data = {}
+    # if action == 'queuejoin':
+    #     data = backend.add_to_queue(
+    #         agent="SIP/%s" % (extension),
+    #         queue='Q718874580',
+    #         member_name=user.get_full_name()
+    #     )
+    # elif action == 'queueleave':
+    #     data = backend.remove_from_queue(
+    #         agent="SIP/%s" % (extension),
+    #         queue='Q718874580',
+    #     )
     return data
 
 def home_direct():
@@ -2404,7 +2408,7 @@ def sources(request, source=None):
 
 
 def get_data_queues(queue=None):
-    data = backend.get_data_queues()
+    data = {} # backend.get_data_queues()
     if queue is not None:
         try:
             data = data[queue]
@@ -2436,47 +2440,47 @@ def queue_json(request, name=None):
     return {'data': data}
 
 
-@login_required
-@json_view
-def spy(request):
-    channel = request.POST.get('channel', '')
-    to_exten = request.POST.get('to_exten', '')
-    r = backend.spy(channel, to_exten)
-    return r
+# @login_required
+# @json_view
+# def spy(request):
+#     channel = request.POST.get('channel', '')
+#     to_exten = request.POST.get('to_exten', '')
+#     r = backend.spy(channel, to_exten)
+#     return r
 
 
-@login_required
-@json_view
-def whisper(request):
-    channel = request.POST.get('channel', '')
-    to_exten = request.POST.get('to_exten', '')
-    r = backend.whisper(channel, to_exten)
-    return r
+# @login_required
+# @json_view
+# def whisper(request):
+#     channel = request.POST.get('channel', '')
+#     to_exten = request.POST.get('to_exten', '')
+#     r = backend.whisper(channel, to_exten)
+#     return r
 
 
-@login_required
-@json_view
-def barge(request):
-    channel = request.POST.get('channel', '')
-    to_exten = request.POST.get('to_exten', '')
-    r = backend.barge(channel, to_exten)
-    return r
+# @login_required
+# @json_view
+# def barge(request):
+#     channel = request.POST.get('channel', '')
+#     to_exten = request.POST.get('to_exten', '')
+#     r = backend.barge(channel, to_exten)
+#     return r
 
 
-@login_required
-@json_view
-def hangup_call(request):
-    channel = request.POST.get('channel', '')
-    r = backend.hangup(channel)
-    return r
+# @login_required
+# @json_view
+# def hangup_call(request):
+#     channel = request.POST.get('channel', '')
+#     r = backend.hangup(channel)
+#     return r
 
 
-@login_required
-@json_view
-def remove_from_queue(request):
-    queue = request.POST.get('queue', '')
-    agent = request.POST.get('agent', '')
-    r = backend.remove_from_queue(agent, queue)
-    return r
+# @login_required
+# @json_view
+# def remove_from_queue(request):
+#     queue = request.POST.get('queue', '')
+#     agent = request.POST.get('agent', '')
+#     r = backend.remove_from_queue(agent, queue)
+#     return r
 
 post_save.connect(report_save_handler, sender=Report)

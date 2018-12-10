@@ -190,31 +190,12 @@ input:checked + .slider:before {
 
             <!-- Messages: style can be found in dropdown.less-->
             <li class="dropdown messages-menu">
-             {% if request.user.HelplineUser.hl_status == 'Available' or request.user.HelplineUser.hl_status == 'Pause' %}
-             <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-              <i class="fa fa-phone"></i>{% trans "Leave Queue" %}
-            </a>
-
-            <ul class="dropdown-menu">
-              <!-- Leave queue -->
-              <a href="{% url "queue_leave" %}">{% trans "Leave Queue" %}</a>
-              <!-- Leave queue -->
-            </ul>
-            {% else %}
-            <a href="#" class="dropdown-toggle" onclick="join_queue()" data-toggle="dropdown">
+               <a href="#" class="leave hidden" onclick="leave_queue(this)" data-toggle="dropdown">
+                <i class="fa fa-phone"></i>{% trans "Leave Queue" %}
+              </a>
+            <a href="#" class="dropdown-toggle join" onclick="join_queue(this)" data-toggle="dropdown">
               <i class="fa fa-phone"></i>{% trans "Join Queue" %}
             </a>
-
-            <!--ul class="dropdown-menu">
-              <!-- Join queue ->
-              <form name = 'queue' method = 'POST' action = '{% url 'queue_log' %}'>
-                {% csrf_token %}
-                {{ queue_form.softphone }}
-                <input id = 'b' type = 'submit' value = 'LogIn'>
-              </form>
-              <!-- Join queue ->
-            </ul-->
-            {% endif %}
 
           </li>
           <li class="dropdown messages-menu">
@@ -528,20 +509,9 @@ input:checked + .slider:before {
             {% endfor %}
           </ul>
         </li>
-        <!-- <li>
-          <a href="/admin/auth/user/">
-            <i class="fa fa-users"></i> <span>{% trans "Users" %}</span>
-            span class="pull-right-container">
-              <small class="label pull-right bg-green">new</small>
-            </span
-          </a>
-        </li> -->
         <li>
           <a href="{% url 'manageusers' %}">
             <i class="fa fa-users"></i> <span>{% trans "Users" %}</span>
-            <!--span class="pull-right-container">
-              <small class="label pull-right bg-green">new</small>
-            </span-->
           </a>
         </li>
 
@@ -952,7 +922,7 @@ $(document).ready(function(){
 
   }, 10000);
 
-  {% if request.user.HelplineUser.hl_status == 'Available' %}
+if(sessionStorage.getItem('in_queue') == 1){
   if(params.get('callcase') == null){
     var call = setInterval(function () {
       $.post("{% setting "CALL_API_URL" %}/api/v1/call/agent?poll={{request.user.HelplineUser.hl_key | safe}}",function(data){
@@ -966,27 +936,42 @@ $(document).ready(function(){
       });
     }, 3000);
   }
- {% endif %}
+}
+  
 
   if(typeof(params.get("callcase")) !== undefined && params.get("callcase") !== null){
     get_submissions('{{caller}}')
   }
 });
+//alert("Cheru: "  + sessionStorage.getItem('in_queue'))
+if(sessionStorage.getItem('in_queue') ==1){
+  $('.leave').removeClass('hidden');
+  $('.join').addClass('hidden')
+}else{
+  $('.join').removeClass('hidden');
+  $('.leave').addClass('hidden')
 
-function join_queue(){
-  var csrftoken = jQuery("[name=csrfmiddlewaretoken]").val(); //getCookie('csrftoken')
-  $.ajaxSetup({ headers: { 'csrftoken' :  csrftoken} });
-  // $.get('/helpline/log/',{'status':'Available'},function(response){
-  //       alert("DDDD: " + response)
-  //     })
-
+}
+function leave_queue(item){
+    $.post("{% setting "CALL_API_URL" %}/api/v1/call/agent?logout={{request.user.HelplineUser.hl_key | safe}}",function(data){
+    if(data.data == 'offline'){
+      sessionStorage.setItem("in_queue", 0);
+      $(item).addClass('hidden')
+      $('.join').removeClass('hidden')
+      alert("Success in leaving queue")
+    }else{
+      alert("Error leaving queue, try again")
+    }
+  })
+}
+function join_queue(item){
   $.post("{% setting "CALL_API_URL" %}/api/v1/call/agent?login={{request.user.HelplineUser.hl_key | safe}}",function(data){
     if(data.status == 'online'){
-      $.post('/helpline/log/',{'status':'Available'},function(response){
-        alert("You have successfully joined queue")
-      })
+      sessionStorage.setItem('in_queue',1)
+      $('.leave').removeClass('hidden')
+      $(item).addClass('hidden')
     }else{
-      alert("Error joining queue, try again")
+      alert("Error joining queue, try again. " + data.error)
     }
   })
 }
