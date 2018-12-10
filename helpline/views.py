@@ -124,9 +124,8 @@ def home(request):
 
     default_service = Service.objects.all().first()
     default_service_xform = default_service.walkin_xform
-    default_service_auth_token = '7331a310c46884d2643ca9805aaf0d420ebfc831' #default_service_xform.user.auth_token
+    default_service_auth_token = default_service_xform.user.auth_token
     current_site = get_current_site(request)
-    default_service_xform.pk = 39
 
     gtdata = []
     stdata = []
