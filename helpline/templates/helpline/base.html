@@ -265,8 +265,8 @@ input:checked + .slider:before {
         <!-- User Account: style can be found in dropdown.less -->
         <li class="dropdown user user-menu">
           <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-            {% avatar user 160 class="user-image" %}
-            <span class="hidden-xs">{{ request.user.get_full_name|default:request.user.username }}</span>
+            {% avatar request.user.avatar 160 class="user-image" %}
+            <span class="hiddenen-xs">{{ request.user.get_full_name|default:request.user.username }}</span>
           </a>
           <ul class="dropdown-menu">
             <!-- User image -->
@@ -930,6 +930,8 @@ if(sessionStorage.getItem('in_queue') == 1){
           window.location = "{% url "case_form" "call"  %}?callcase="+ data.data + '&phone=' + data.phone;
           $('#phone').html("Caller Number: " + data.phone)
           clearInterval(call);    
+        /*}else if(data.status == 'online'){
+          clearInterval(call);*/
         }else if(data.status == 'offline'){
           clearInterval(call);
         }
@@ -1110,7 +1112,7 @@ function get_submissions(phone,name,param=true){
     var caseid = ''
     $.get('/helpline/caseid/walkin',function(data){
       caseid = data
-
+      $('#id_case_number,#caseid').val(caseid) //for display and case disposition
       var url_str = !iframe.src.includes('?') ? '?d[case_number]=' + caseid + '':'&d[case_number]=' + caseid 
       url_str += '&d[case_owner]={{request.user.username}}'
       if(!newreporter){

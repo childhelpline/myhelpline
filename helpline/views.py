@@ -1847,21 +1847,21 @@ def save_disposition_form(request):
     return {'success': False, 'form_html': form_html}
 
 
-@json_view
-def save_disposition_form(request):
-    """Save disposition, uses AJAX and returns json status"""
-    form = DispositionForm(request.POST or None)
-    if form.is_valid():
-        case = Case.objects.get(hl_case=form.cleaned_data['case_number'])
-        case.hl_disposition = form.cleaned_data['disposition']
-        case.save()
-        request.user.HelplineUser.hl_status = 'Available'
-        request.user.HelplineUser.save()
-        return {'success': True}
-    ctx = {}
-    ctx.update(csrf(request))
-    form_html = render_crispy_form(form, context=ctx)
-    return {'success': False, 'form_html': form_html}
+# @json_view
+# def save_disposition_form(request):
+#     """Save disposition, uses AJAX and returns json status"""
+#     form = DispositionForm(request.POST or None)
+#     if form.is_valid():
+#         case = Case.objects.get(hl_case=form.cleaned_data['case_number'])
+#         case.hl_disposition = form.cleaned_data['disposition']
+#         case.save()
+#         request.user.HelplineUser.hl_status = 'Available'
+#         request.user.HelplineUser.save()
+#         return {'success': True}
+#     ctx = {}
+#     ctx.update(csrf(request))
+#     form_html = render_crispy_form(form, context=ctx)
+#     return {'success': False, 'form_html': form_html}
 
 
 @json_view

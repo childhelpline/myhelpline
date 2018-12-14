@@ -180,27 +180,69 @@ audio{
 
 
   function disposeCase(param){
+
     if($(param).val() == '--')
       return false
+    /////try pass filled form data for records
+   {% if form_name == 'call' %}
     var dispose_form = '#disposeDet';
+        $.ajax({
+          url: "{% setting "CALL_API_URL" %}/api/v1/call/case",
+          type: "GET",
+          contentType:'JSON',
+          data: {'cdr':'{{cdr}}','case':$('#caseid').val() != '' ? $('#caseid').val() : 'False','dispose':$(param).val(),'agent':'{{request.user.HelplineUser.hl_key | safe}}'},
+          success: function(data) {
+            /////save disposition details
+            
+            $.ajax({
+              url: "{% url 'save_disposition_form' %}",
+              type: "POST",
+              data: $("#disposeDet").serialize(),
+              success: function(data) {
+                if (!(data['success'])) {
+                  $(dispose_form).replaceWith(data['form_html']);
+                }
+                else{
+                  alert("Form Successfully disposed")
+                  document.location.href = '/helpline/'
+                }
+              },
+              error: function() {
+                $("#error-message").html("Error");
+              }
+            });
 
-    $.ajax({
-      url: "{% url 'save_disposition_form' %}",
-      type: "POST",
-      data: $("#disposeDet").serialize(),
-      success: function(data) {
-        if (!(data['success'])) {
-          $(dispose_form).replaceWith(data['form_html']);
-        }
-        else{
-          closeOverlay();
-        }
-      },
-      error: function() {
-        $("#error-message").html("Error");
+            ///
+          },
+          error: function() {
+            $("#error-message").html("Error");
+          }
+        })
+
+        {% else %}
+           /////save disposition details
+            
+            $.ajax({
+              url: "{% url 'save_disposition_form' %}",
+              type: "POST",
+              data: $("#disposeDet").serialize(),
+              success: function(data) {
+                if (!(data['success'])) {
+                  $(dispose_form).replaceWith(data['form_html']);
+                }
+                else{
+                  alert("Form Successfully disposed")
+                  document.location.href = '/helpline/'
+                }
+              },
+              error: function() {
+                $("#error-message").html("Error");
+              }
+            });
+
+            ///
+        {% endif %}
       }
-    });
-  }
 
   function closeOverlay(){
     top.window.location.href = '{% url "dashboard_home" %}';
