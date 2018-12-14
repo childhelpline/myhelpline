@@ -130,7 +130,7 @@ def home(request):
     gtdata = []
     stdata = []
     if default_service != '' and default_service != 0 and default_service_xform:
-        url = 'https://%s/ona/api/v1/charts/%s.json?field_name=_submission_time' % (
+        url = 'http://%s/ona/api/v1/charts/%s.json?field_name=_submission_time' % (
             current_site,
             default_service_xform.pk
         )
@@ -151,13 +151,13 @@ def home(request):
         stype = 'case_action'
 
         if request.user.HelplineUser.hl_role == 'Caseworker':
-            url = 'https://%s/ona/api/v1/charts/%s.json?field_name=client_state' \
+            url = 'http://%s/ona/api/v1/charts/%s.json?field_name=client_state' \
              %(current_site, default_service_xform.pk)
             color = ['#00a65a', '#00c0ef', '#f39c12', '#808000', '#C7980A', '#F4651F', \
             '#82D8A7', '#CC3A05', '#575E76', '#156943', '#0BD055', '#ACD338']
             stype = 'client_state'
         else:
-            url = 'https://%s/ona/api/v1/charts/%s.json?field_name=case_action' \
+            url = 'http://%s/ona/api/v1/charts/%s.json?field_name=case_action' \
             %(current_site, default_service_xform.pk)
             color = ['#00a65a', '#00c0ef', '#f39c12']
 
@@ -412,7 +412,7 @@ def new_user(request):
                 current_site = get_current_site(request)
 
                 if default_service != '' and default_service != 0 and default_service_xform:
-                    url = 'https://%s/ona/api/v1/%s/share/' % (
+                    url = 'http://%s/ona/api/v1/%s/share/' % (
                         current_site,
                         default_service_xform.pk
                     )
@@ -690,7 +690,7 @@ def caseview(request, form_name, case_id):
     default_service_auth_token = default_service_xform.user.auth_token
     current_site = get_current_site(request)
 
-    url = 'https://%s/ona/api/v1/data/%s/' % (
+    url = 'http://%s/ona/api/v1/data/%s/' % (
         current_site,
         default_service_xform.pk
     )
@@ -847,7 +847,7 @@ def reports(request, report, casetype='Call'):
     else:
         """For case reports"""
 
-        xforms = requests.get('https://%s/ona/api/v1/forms' % (current_site), \
+        xforms = requests.get('http://%s/ona/api/v1/forms' % (current_site), \
             headers=headers).json()
         xformx = {}
 
@@ -863,10 +863,10 @@ def reports(request, report, casetype='Call'):
             else:
                 query_string += ',"case_owner":{"$i":"%s"}' %(username)
 
-        ur = 'https://%s/ona/api/v1/data/%s?query={%s}%s&page=1&page_size=50' %(current_site, \
+        ur = 'http://%s/ona/api/v1/data/%s?query={%s}%s&page=1&page_size=50' %(current_site, \
             default_service_xform.pk, query_string, request_string)
 
-        stat = requests.get('https://%s/ona/api/v1/data/%s?query={%s}%s&page=1&page_size=50' %(current_site, \
+        stat = requests.get('http://%s/ona/api/v1/data/%s?query={%s}%s&page=1&page_size=50' %(current_site, \
             default_service_xform.pk, query_string,  request_string), headers=headers).json()
         # + '&sort={"_id":-1}'
         # data['statss'] = "Cheru Data: %s" % stat
@@ -945,7 +945,7 @@ def qa(request, report='analysed'):
         uri = request.build_absolute_uri()
 
         # Use https for the iframe parent window uri, always.
-        uri = uri.replace('http://', 'https://')
+        # uri = uri.replace('http://', 'https://')
         # Poor mans iframe url gen
         parent_window_origin = urllib.quote_plus(uri)
         iframe_url = url[:url.find("::")] + "i/" + url[url.find("::"):]+\
@@ -984,7 +984,7 @@ def analysed_qa(request, report='analysed'):
     current_site = get_current_site(request)
 
 
-    url = 'https://%s/ona/api/v1/data/%s' % (
+    url = 'http://%s/ona/api/v1/data/%s' % (
         current_site,
         default_service_xform.pk
     )
@@ -1013,7 +1013,7 @@ def analysed_qa(request, report='analysed'):
     request_string += '&date_created__month=' + td_date.strftime('%m')
     request_string += '&date_created__year=' + td_date.strftime('%Y')
 
-    xforms = requests.get('https://%s/ona/api/v1/forms' % (current_site), headers=headers).json();
+    xforms = requests.get('http://%s/ona/api/v1/forms' % (current_site), headers=headers).json();
     xformx = {}
 
     #split to get xform object, this will allow us to obtain xform fields
@@ -1026,7 +1026,7 @@ def analysed_qa(request, report='analysed'):
         request_string += '&case_owner=%s' %(request.user.username)
 
 
-    stat = requests.get('https://%s/ona/api/v1/data/%s?page=1&page_size=50%s' %(current_site, default_service_xform.pk,\
+    stat = requests.get('http://%s/ona/api/v1/data/%s?page=1&page_size=50%s' %(current_site, default_service_xform.pk,\
         request_string), headers=headers).json();
     # + '&sort={"_id":-1}'
     statrecords = []
@@ -1329,7 +1329,7 @@ def case_form(request, form_name):
     }
 
     #charts
-    url = 'https://%s/ona/api/v1/data/%s' %(current_site, default_service_xform.pk)
+    url = 'http://%s/ona/api/v1/data/%s' %(current_site, default_service_xform.pk)
 
     message = ''
     initial = {}
@@ -1402,7 +1402,7 @@ def case_form(request, form_name):
             uri = request.build_absolute_uri()
 
             # Use https for the iframe parent window uri, always.
-            uri = uri.replace('http://', 'https://')
+            # uri = uri.replace('http://', 'https://')
 
             caseid_str = '&d[case_owner]=%s' % (request.user.username)
 
@@ -1566,7 +1566,7 @@ def case_edit(request, form_name, case_id):
         'Authorization': 'Token %s' %(default_service_auth_token)
     }
 
-    url = 'https://%s/ona/api/v1/data/%s/%s/enketo?return_url=https://%s/helpline/success/&format=json' \
+    url = 'http://%s/ona/api/v1/data/%s/%s/enketo?return_url=http://%s/helpline/success/&format=json' \
     % (current_site, default_service_xform.pk, case_id, current_site)
     req = requests.get(url, headers=headers).json()
     return render(request,'helpline/case_form_edit.html', {'case':case_id, 'iframe_url':get_item(req, 'url')})
