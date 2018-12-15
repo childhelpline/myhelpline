@@ -256,7 +256,7 @@ audio{
     <div class="modal-content">
       <div class="modal-header bg-light-blue-active">
         <!--button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button-->
-        <a href="{% url 'dashboard_home' %}" class="close" style="color:#ffffff;"><span aria-hidden="true">&times;</span></a>
+        <!-- <a href="{% url 'dashboard_home' %}" class="close" style="color:#ffffff;"><span aria-hidden="true">&times;</span></a> -->
         <h4 class="modal-title" id="myModalLabel">{% trans "Form" %} > {{ form_name }} 
           <span id="caseid">{{ case }}</span>
           {% if form_name == 'call' %}<span id="phone">Caller Number: {{ caller }}</span>{% endif %}
@@ -347,6 +347,58 @@ audio{
           var resp = JSON.parse(event.data)
           if(resp.enketoEvent == 'submissionsuccess'){
 
+          /////try pass filled form data for records
+          {% if form_name == 'call' %}
+              var token =  $('input[name="csrfmiddlewaretoken"]').attr('value');
+              $.ajax({
+                url: "{% setting "CALL_API_URL" %}/api/v1/call/case",
+                type: "GET",
+                contentType:'JSON',
+                data: {'cdr':'{{cdr}}','case':$('#caseid').val() != '' ? $('#caseid').val() : 'False','dispose':'Complete Call','agent':'{{request.user.HelplineUser.hl_key | safe}}'},
+                success: function(data) {
+                  /////save disposition details
+                  var formData = new FormData()
+                  formData.append({'case_numer':$('#caseid').val(),'disposition':'Complete Call','csrfmiddlewaretoken':token})
+                  $.ajax({
+                    url: "{% url 'save_disposition_form' %}",
+                    type: "POST",
+                    data: formData,
+                    success: function(data) {
+                        document.location.href = '/helpline/'
+                      }
+                    },
+                    error: function() {
+                      $("#error-message").html("Error");
+                    }
+                  });
+
+                  ///
+                },
+                error: function() {
+                  $("#error-message").html("Error");
+                }
+              }
+
+              {% else %}
+                 /////save disposition details
+                  var formData = new FormData()
+                  formData.append({'case_numer':$('#caseid').val(),'disposition':'Complete Call','csrfmiddlewaretoken':token})
+                  $.ajax({
+                    url: "{% url 'save_disposition_form' %}",
+                    type: "POST",
+                    data: formData,
+                    success: function(data) {
+                        document.location.href = '/helpline/'
+                      }
+                    },
+                    error: function() {
+                      $("#error-message").html("Error");
+                    }
+
+                  ///
+              {% endif %}
+
+              /////
             setInterval(function(){
               window.location.href = '/helpline/'
             },500)
