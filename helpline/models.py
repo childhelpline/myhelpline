@@ -904,5 +904,6 @@ class Cases(models.Model):
     case_number = models.IntegerField(default=0)
     case_source = models.CharField(max_length = 7, editable=False)
     case_time   = models.DateTimeField(auto_now_add=True)
+    case_disposition = models.CharField(max_length = 100,blank=True, null=True)
 
         

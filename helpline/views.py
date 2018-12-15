@@ -1833,18 +1833,31 @@ def save_case_action(request):
 @json_view
 def save_disposition_form(request):
     """Save disposition, uses AJAX and returns json status"""
-    form = DispositionForm(request.POST or None)
-    if form.is_valid():
-        case = Case.objects.get(hl_case=form.cleaned_data['case_number'])
-        case.hl_disposition = form.cleaned_data['disposition']
-        case.save()
-        request.user.HelplineUser.hl_status = 'Available'
-        request.user.HelplineUser.save()
-        return {'success': True}
-    ctx = {}
-    ctx.update(csrf(request))
-    form_html = render_crispy_form(form, context=ctx)
-    return {'success': False, 'form_html': form_html}
+    mess = ''
+    st = False
+    try:
+        form = DispositionForm(request.POST or None)
+        if form.is_valid():
+            case = Cases.objects.get(case_number=form.cleaned_data['case_number'])
+            case.case_disposition = form.cleaned_data['disposition']
+            case.save()
+            request.user.HelplineUser.hl_status = 'Available'
+            request.user.HelplineUser.save()
+            st = True
+        else:
+            st = False
+            mess = 'Error: Invalid form'
+        
+        ctx = {}
+        ctx.update(csrf(request))
+        form_html = render_crispy_form(form, context=ctx)
+        mess = form_html
+    except Exception as e:
+        st = False
+        mess = e
+
+    
+    return {'success': st, 'form_html': mess}
 
 
 # @json_view

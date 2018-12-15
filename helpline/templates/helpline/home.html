@@ -27,7 +27,7 @@
               <!-- /.col -->
               <div class="col-sm-4 col-md-2 palette-item">
                 <div class="color-palette-set">
-                  <div class="bg-aqua color-palette" align="center" style="padding-right:5px; padding-bottom:5px;" onclick="window.location = '{% url 'dashboardreports' 'answeredcalls' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.answered_calls }}</span><br>{% trans "Answered Calls" %}</div>
+                  <div class="bg-aqua color-palette" align="center" style="padding-right:5px; padding-bottom:5px;" onclick="window.location = '{% url 'dashboardreports' 'answeredcalls' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ call_stat.answered}}</span><br>{% trans "Answered Calls" %}</div>
                   <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
                 </div>
               </div>
@@ -36,9 +36,9 @@
                 <div class="color-palette-set">
                   <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
                   {% if request.user.HelplineUser.hl_role == 'Supervisor' %}
-                  <div class="bg-red color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"  onclick="window.location = '{% url 'dashboardreports' 'abandonedcalls' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.abandoned_calls }} </span><br>{% trans "Abandoned Calls" %}</div>
+                  <div class="bg-red color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"  onclick="window.location = '{% url 'dashboardreports' 'abandonedcalls' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ call_stat.abandoned }} </span><br>{% trans "Abandoned Calls" %}</div>
                   {% else %}
-                  <div class="bg-red color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.missed_calls }} </span><br>{% trans "Missed Calls" %}</div>
+                  <div class="bg-red color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ call_stat.abandoned }} </span><br>{% trans "Missed Calls" %}</div>
                   {% endif %}
 
                   <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
@@ -99,13 +99,13 @@
                       </tr>
                       <tr class="bg-yellow-active color-palette">
                         <td><strong>Idle </strong></td>
-                        <td><span class="badge bg-blue">{{ call_stat.agents.online }}</span></td>
+                        <td><span class="badge bg-blue">{{ call_stat.agents.offline }}</span></td>
                         <td><span class="badge bg-blue">{% widthratio status_count.idle  status_count.total 100 %}%</span></td>
                       </tr>
                       <tr class="bg-red-active color-palette">
                         <td><strong>Busy </strong></td>
-                        <td><span class="badge bg-blue">{{ status_count.busy_on_call }}</span></td>
-                        <td><span class="badge bg-blue">{% widthratio status_count.busy_on_call  status_count.total 100 %}%</span></td>
+                        <td><span class="badge bg-blue">{{ status_count.oncall }}</span></td>
+                        <td><span class="badge bg-blue">{% widthratio status_count.oncall  status_count.total 100 %}%</span></td>
                       </tr>
                     </tbody>
                   </table>
