@@ -189,7 +189,6 @@ audio{
         $.ajax({
           url: "{% setting "CALL_API_URL" %}/api/v1/call/case",
           type: "GET",
-          contentType:'JSON',
           data: {'cdr':'{{cdr}}','case':$('#caseid').val() != '' ? $('#caseid').val() : 'False','dispose':$(param).val(),'agent':'{{request.user.HelplineUser.hl_key | safe}}'},
           success: function(data) {
             /////save disposition details
