@@ -346,10 +346,9 @@ audio{
         if(event.data){
           var resp = JSON.parse(event.data)
           if(resp.enketoEvent == 'submissionsuccess'){
-
+              var token =  $('input[name="csrfToken"]').attr('value');
           /////try pass filled form data for records
           {% if form_name == 'call' %}
-              var token =  $('input[name="csrfToken"]').attr('value');
               $.ajax({
                 url: "{% setting "CALL_API_URL" %}/api/v1/call/case",
                 type: "GET",
@@ -358,7 +357,9 @@ audio{
                 success: function(data) {
                   /////save disposition details
                   var formData = new FormData()
-                  formData.append({'case_numer':$('#caseid').val(),'disposition':'Complete Call','csrfmiddlewaretoken':$('#disposeDet').csrfmiddlewaretoken.value})
+                  formData.append('case_numer',$('#caseid').val())
+                  formData.append('disposition','Complete Call')
+                  formData.append('csrfmiddlewaretoken',token)
                   $.ajax({
                     url: "{% url 'save_disposition_form' %}",
                     type: "POST",
@@ -382,7 +383,9 @@ audio{
               {% else %}
                  /////save disposition details
                   var formData = new FormData()
-                  formData.append({'case_numer':$('#caseid').val(),'disposition':'Complete Call','csrfmiddlewaretoken':$('#disposeDet').csrfmiddlewaretoken.value})
+                  formData.append('case_numer',$('#caseid').val())
+                  formData.append('disposition','Complete Call')
+                  formData.append('csrfmiddlewaretoken',token)
                   $.ajax({
                     url: "{% url 'save_disposition_form' %}",
                     type: "POST",

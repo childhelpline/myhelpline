@@ -151,11 +151,11 @@ def home(request):
         stype = 'case_action'
 
         if request.user.HelplineUser.hl_role == 'Caseworker':
-            url = 'http://%s/ona/api/v1/charts/%s.json?field_name=client_state' \
+            url = 'http://%s/ona/api/v1/charts/%s.json?field_name=reporter_county' \
              %(current_site, default_service_xform.pk)
             color = ['#00a65a', '#00c0ef', '#f39c12', '#808000', '#C7980A', '#F4651F', \
             '#82D8A7', '#CC3A05', '#575E76', '#156943', '#0BD055', '#ACD338']
-            stype = 'client_state'
+            stype = 'reporter_county'
         else:
             url = 'http://%s/ona/api/v1/charts/%s.json?field_name=case_action' \
             %(current_site, default_service_xform.pk)
