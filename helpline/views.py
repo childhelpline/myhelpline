@@ -140,7 +140,7 @@ def home(request):
             'Authorization': 'Token %s' % (default_service_auth_token)
         }
 
-        stat = requests.get(url, headers=headers).json()
+        stat = requests.get(url, headers=headers).json() or {}
 
         call_statistics = requests.post('%s/api/v1/index' %(settings.CALL_API_URL)).json()
 
