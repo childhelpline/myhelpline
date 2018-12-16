@@ -345,7 +345,7 @@ audio{
       {
         if(event.data){
           var resp = JSON.parse(event.data)
-          if(resp.enketoEvent == 'submissionsuccess'){
+          if(resp.enketoEvent == 'submissionsuccess' || resp.status == 201){
               var token =  $('input[name="csrfToken"]').attr('value');
           /////try pass filled form data for records
           {% if form_name == 'call' %}
@@ -368,19 +368,17 @@ audio{
                     contentType: false,
                     success: function(data) {
                         document.location.href = '/helpline/'
+                      },
+                      error: function() {
+                        $("#error-message").html("Error");
                       }
-                    },
-                    error: function() {
-                      $("#error-message").html("Error");
-                    }
-                  });
-
-                  ///
-                },
-                error: function() {
-                  $("#error-message").html("Error");
-                }
-              }
+                    })
+                    ///
+                  },
+                  error: function() {
+                    $("#error-message").html("Error");
+                  }
+                })
 
               {% else %}
                  /////save disposition details
@@ -391,7 +389,7 @@ audio{
                   $.ajax({
                     url: "{% url 'save_disposition_form' %}",
                     type: "POST",
-                    data: formData,, 
+                    data: formData,
                     processData: false,
                     contentType: false,
                     success: function(data) {
@@ -406,11 +404,8 @@ audio{
               {% endif %}
 
               /////
-            setInterval(function(){
-              window.location.href = '/helpline/'
-            },500)
           }
-        }
+        } 
       }
     </script>
     <script>

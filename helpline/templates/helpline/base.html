@@ -1111,11 +1111,14 @@ function get_submissions(phone,name,param=true){
     */
     var iframe = document.getElementById("helpline-forms");
     var caseid = ''
-    $.get('/helpline/caseid/walkin',function(data){
+    $.get('/helpline/caseid/{{form_name}}',function(data){
       caseid = data
       $('#id_case_number,#caseid').val(caseid) //for display and case disposition
       var url_str = !iframe.src.includes('?') ? '?d[case_number]=' + caseid + '':'&d[case_number]=' + caseid 
       url_str += '&d[case_owner]={{request.user.username}}'
+      {% if form_name == 'call' %}
+        url_str += '&d[/Case_Form/reporter_details/reporter_phone]={{caller}}' 
+      {% endif %}
       if(!newreporter){
         selected_contact = selected_contact[0]
         for(contact_key in selected_contact){

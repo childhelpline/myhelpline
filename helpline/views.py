@@ -340,15 +340,15 @@ def manage_users(request):
     return render(request, 'helpline/users.html', {'systemusers':userlist, 'message':message})
 
 def increment_case_number():
-    case = Cases.objects.all().last()
+    case = Cases.objects.all().order_by('case_number').last() # Cases.objects.all().last()
 
-    if case:
-        case = case.case_number
+    # if case:
+    #     case = case.case_number
 
     if not case:
         return 100001
     else:
-        return int(case) + int(1)
+        return int(case.case_number) + int(1)
 def get_case_number(case_source):
     case = Cases()
     caseid = increment_case_number()
