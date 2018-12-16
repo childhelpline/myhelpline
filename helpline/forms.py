@@ -228,7 +228,7 @@ class DispositionForm(forms.Form):
         self.helper.form_action = ''
         super(DispositionForm, self).__init__(*args, **kwargs)
 
-    case_number = forms.CharField(widget=forms.HiddenInput(), required=True)
+    case_number = forms.CharField(widget=forms.HiddenInput(),initial=0, required=True)
     disposition = forms.ChoiceField(label='',
                                     choices=settings.DISPOSITION_CHOICES,
                                     widget=forms.Select(attrs={

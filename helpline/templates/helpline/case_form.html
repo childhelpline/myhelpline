@@ -355,7 +355,7 @@ audio{
                 type: "GET",
                 contentType:'JSON',
                 data: {'cdr':'{{cdr}}','case':$('#caseid').val() != '' ? $('#caseid').val() : 'False','dispose':'Complete Call','agent':'{{request.user.HelplineUser.hl_key | safe}}'},
-                success: function(data) {
+                success: function(data){
                   /////save disposition details
                   var formData = new FormData()
                   formData.append({'case_numer':$('#caseid').val(),'disposition':'Complete Call','csrfmiddlewaretoken':token})
@@ -365,19 +365,16 @@ audio{
                     data: formData,
                     success: function(data) {
                         document.location.href = '/helpline/'
+                      },
+                      error: function(){
+                        $("#error-message").html("Error");
                       }
-                    },
-                    error: function() {
-                      $("#error-message").html("Error");
-                    }
-                  });
-
-                  ///
-                },
-                error: function() {
+                    })
+                  },
+                error: function(){
                   $("#error-message").html("Error");
                 }
-              }
+              })
 
               {% else %}
                  /////save disposition details
@@ -389,11 +386,11 @@ audio{
                     data: formData,
                     success: function(data) {
                         document.location.href = '/helpline/'
-                      }
-                    },
+                      },
                     error: function() {
                       $("#error-message").html("Error");
                     }
+                  })
 
                   ///
               {% endif %}
