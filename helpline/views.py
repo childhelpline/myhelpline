@@ -44,6 +44,7 @@ from django.core.files.storage import FileSystemStorage
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework import status
 
 from django.db import transaction
 
@@ -95,6 +96,7 @@ from onadata.apps.logger.models import Instance, XForm
 from onadata.libs.utils.chart_tools import build_chart_data
 from onadata.libs.utils.user_auth import (get_xform_and_perms, has_permission,
                                           helper_auth_helper)
+from api.serializers import SmsSerializer
 
 
 
@@ -201,26 +203,32 @@ def leta(request):
 
 @api_view(['GET', 'POST'])
 def sync_sms(request):
-    
-    error_message = None
-    state = True
-    try:
-        if request.method == 'POST':
-            # data = request.POST.copy()
-            sms = SMSCDR()
-            sms.contact = data.POST.get('from_phone')
-            sms.msg = data.POST.get('message')
-            sms.time = data.POST.get('sent_timestamp')
-            sms.sms_time = timezone.now()
+    # if request.method == 'GET':
+    if request.method == 'POST':
+        serializer = SmsSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    # error_message = None
+    # state = True
+    # try:
+    #     if request.method == 'POST':
+    #         # data = request.POST.copy()
+    #         sms = SMSCDR()
+    #         sms.contact = data.POST.get('from_phone')
+    #         sms.msg = data.POST.get('message')
+    #         sms.time = data.POST.get('sent_timestamp')
+    #         sms.sms_time = timezone.now()
 
-            sms.save()
-            print "Saving SMS"
-        else:
-           sms_list = SMSCDR.objects.filter(sms_type='OUTBOX').order_by('-sms_time')
-           print "Fetching SMS"
-    except Exception, e:
-        error_message = "Error: %s" %e
-        state = False
+    #         sms.save()
+    #         print "Saving SMS"
+    #     else:
+    #        sms_list = SMSCDR.objects.filter(sms_type='OUTBOX').order_by('-sms_time')
+    #        print "Fetching SMS"
+    # except Exception, e:
+    #     error_message = "Error: %s" %e
+    #     state = False
 
     payload = {
             'payload':{
@@ -931,6 +939,9 @@ def qa(request, report='analysed'):
     service = Service.objects.all().first()
     xform = service.qa_xform
     username = xform.user.username
+    default_service_auth_token = xform.user.auth_token
+    current_site = get_current_site(request)
+
 
     
     form = ReportFilterForm(request.POST)
@@ -954,9 +965,8 @@ def qa(request, report='analysed'):
     except Exception as e:
         data['iframe_url'] = "URL Error: %s" % e
 
-
+    # Set Query Parameters
     query_string = ''
-    # if(report == 'analysis'):
     if request.method == 'POST':
         category = request.POST.get('contact_id', None)
         datetime_range = request.POST.get('datetime_range', None)
@@ -965,13 +975,25 @@ def qa(request, report='analysed'):
             start_date = datetime.strptime(start_date, '%m/%d/%Y %I:%M %p')
             end_date = datetime.strptime(end_date, '%m/%d/%Y %I:%M %p')
 
-    call_data = requests.post("%s/api/v1/call/qa?data=true" %(settings.CALL_API_URL) + query_string).json()
-    # [{ "caseid":43546,"agent": False, "date": "22-11-2018", "length": False, \
-    # "media": "/opt/asterisk/helpline/media/bridge/5bf69baf79c4db757298d02c.wav", "phone": \
-    #  "254733123456", "time": "15:06:07" }] # 
-    data['report_data'] = call_data
+    if report == 'results':
+        headers = {
+            'Authorization': 'Token %s' % (default_service_auth_token)
+        }
+        url = 'http://%s/ona/api/v1/data/%s' % (
+            current_site,
+            xform.pk
+        )
+        result_data = requests.post('%s?page=1&page_size=50' % url,headers=headers).json() 
+        htmltemplate = 'helpline/qaresults.html'
+    else:
+        # Call CDR Data
+        result_data = requests.post("%s/api/v1/call/qa?data=true" %(settings.CALL_API_URL) + query_string).json()
+        htmltemplate = "helpline/nonanalysed.html"
+
+    data['report_data'] = result_data
     data['report'] = report
-    htmltemplate = "helpline/nonanalysed.html"
+    data['users'] = HelplineUser.objects.all()
+    
     return render(request, htmltemplate, data)
 @login_required
 def analysed_qa(request, report='analysed'):
@@ -2416,7 +2438,7 @@ def sources(request, source=None):
     if source == 'email':
         data_messages = Emails.objects.all()
     if source == 'sms':
-        data_messages = SMSCDR.objects.all().order_by('-sms_time')
+        data_messages = SMSCDR.objects.all() #.order_by('-sms_time')
 
     template = 'helpline/%s.html' % (source)
     return render(request, template, {'data_messages':data_messages})

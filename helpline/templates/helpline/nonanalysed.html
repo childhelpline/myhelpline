@@ -101,7 +101,7 @@ div.scrollmenu {
                     </div>
                     {{ form.agent }}
                   </div><!-- /.input group -->
-                </div><!-- /.form group -->
+                </div><!-- /.form group ->
                 <div class="form-group col-md-4">
                   <label>Category:</label>
                   <div class="input-group">
@@ -109,8 +109,8 @@ div.scrollmenu {
                       <i class="fa fa-th"></i>
                     </div>
                     {{ form.category }}
-                  </div><!-- /.input group -->
-                </div><!-- /.form group -->
+                  </div><!-- /.input group ->
+                </div><!-- /.form group ->
 
 
 
@@ -121,8 +121,8 @@ div.scrollmenu {
                       <i class="fa fa-th"></i>
                     </div>
                     {{ form.case_status }}
-                  </div><!-- /.input group -->
-                </div><!-- /.form group -->
+                  </div><!-- /.input group ->
+                </div><!-- /.form group ->
 
 
                 <div class="form-group col-md-4">
@@ -132,12 +132,11 @@ div.scrollmenu {
                       <i class="fa fa-th"></i>
                     </div>
                     {{ form.interventions }}
-                  </div><!-- /.input group -->
+                  </div><!-- /.input group - >
                 </div><!-- /.form group -->
 
 
                 {{ form.queueid }}
-                <br>
                 <div class="form-group col-md-4">
                   <div class="input-group" style="padding-top: 25px;">
                     <input type="submit" value="Fetch Reports" id="total-calls-search-btn" class="btn btn-success btn-sm btn-flat" "><!-- onclick="sendtoReportFactory(); -->
@@ -155,7 +154,7 @@ div.scrollmenu {
               <table id="example1" class="table datatable">
                 <thead>
                   <th>#</th>
-                  <th>Case ID</th>
+                  <!-- <th>Case ID</th> -->
                   <th>Agent</th>
                   <th>Caller Phone</th>
                   <th>Date</th>
@@ -166,29 +165,17 @@ div.scrollmenu {
                 {% for rep in report_data %}
                 <tr>
                   <td>{{ forloop.counter}}.</td>
-                  <td>{{rep.caseid | default:''}}</td>
+                  <!-- <td>{{rep.caseid | default:''}}</td> -->
                   <td>{{rep.agent | default:''}}</td>
                   <td>{{rep.phone}}</td>
                   <td>{{rep.date}}</td>
                   <td>{{rep.start}}</td>
-                  <td>{{rep.end}}</td>
-                  <td><a href="#" data-target="#case_form_modal" class="qa_btn" data-toggle="modal" data-number="{{rep.caseid}}" data-key="{{ rep.media }}"><i class="fa fa-volume-up"></i></a></td>
+                  <td>{{rep.stop}}</td>
+                  <td><a href="#" data-target="#case_form_modal" class="qa_btn btn btn-sm btn-warning" data-toggle="modal" data-number="{{rep.caseid}}" data-key="/audios/{{rep.media}}">Assess <i class="fa fa-volume-up"></i></a></td>
                 </tr>
                 {% endfor %}
 
               </table>
-              <!--div id="showustheresultsnow">{% url 'case_form' 'qa' %}?sourceid={{rep.id}}
-                <div class="col-md-4">
-                  {% for format in table.export_formats %}
-                  <a class="btn btn-app"  href="{% querystring '_export'=format %}">
-                    <i class="fa fa-save"></i> <strong>{% trans "Export" %} .{{ format }}</strong>
-                  </a>
-                  {% endfor %}
-                </div>
-                {% if table %}
-                {% render_table table %}
-                {% endif %}
-              </div-->
             </div>
           </div>
           <!-- /.col -->

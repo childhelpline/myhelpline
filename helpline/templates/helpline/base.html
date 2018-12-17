@@ -198,27 +198,27 @@ input:checked + .slider:before {
             </a>
 
           </li>
-          <li class="dropdown messages-menu">
+          <!-- <li class="dropdown messages-menu">
            {% if request.user.HelplineUser.hl_status == 'Available' %}
            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
             <i class="fa fa-pause"></i>{% trans "Break" %}
           </a>
 
           <ul class="dropdown-menu">
-            <!-- Pause queue -->
+            <!-- Pause queue ->
             <form action="{% url 'queue_pause' %}" method="post">{% csrf_token %}
               {{ queue_pause_form }}
               <input type="submit" value="Go" />
             </form>
-            <!-- Pause queue -->
+            <!-- Pause queue ->
           </ul>
           {% elif request.user.HelplineUser.hl_status == 'Pause' %}
           <a href="{% url 'queue_unpause' %}">
             <i class="fa fa-play"></i>{% trans "Continue" %}
           </a>
-          {% endif %}
+          {% endif %} 
+        </li>-->
 
-        </li>
 
         {% endblock navbar_nav %}
 
@@ -486,9 +486,14 @@ input:checked + .slider:before {
                 <span class="label label-success pull-right">{{ dashboard_stats.open_cases }}</span>
               </span>
             </a></li>
+            <li><a href="{% url 'qa' 'results' %}"><i class="fa fa-circle-o"></i> {% trans "Qa Results" %}
+              <span class="pull-right-container">
+                <span class="label label-success pull-right"></span>
+              </span>
+            </a></li>
           </ul>
         </li>
-        <li class="treeview" >
+        <!-- <li class="treeview" >
           <a href="#">
             <i class="fa fa-phone"></i>
             <span>{% trans "Monitor" %}</span>
@@ -508,7 +513,7 @@ input:checked + .slider:before {
             </li>
             {% endfor %}
           </ul>
-        </li>
+        </li> -->
         <li>
           <a href="{% url 'manageusers' %}">
             <i class="fa fa-users"></i> <span>{% trans "Users" %}</span>
