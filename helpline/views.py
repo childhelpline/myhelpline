@@ -936,11 +936,18 @@ def reports(request, report, casetype='Call'):
 
 @login_required
 def qa(request, report='analysed'):
-    service = Service.objects.all().first()
-    xform = service.qa_xform
+
+    default_service = Service.objects.all().first()
+    xform = default_service.qa_xform
     username = xform.user.username
     default_service_auth_token = xform.user.auth_token
     current_site = get_current_site(request)
+
+    # service = Service.objects.all().first()
+    # xform = service._xform
+    # username = xform.user.username
+    # default_service_auth_token = xform.user.auth_token
+    # current_site = get_current_site(request)
 
 
     
@@ -979,20 +986,66 @@ def qa(request, report='analysed'):
         headers = {
             'Authorization': 'Token %s' % (default_service_auth_token)
         }
-        url = 'http://%s/ona/api/v1/data/%s' % (
+        url = 'http://%s/ona/api/v1/data/%s?page=1&page_size=50' % (
             current_site,
             xform.pk
         )
-        result_data = requests.post('%s?page=1&page_size=50' % url,headers=headers).json() 
+        result_data = requests.get(url,headers=headers).json() 
+
+        # process data for preview
+        statrecords = []
+        recordkeys = []
+
+        ##brings up data only for existing records
+        def get_records(recs):
+            return_obj = []
+            record = {}
+
+            for key, value in recs.items():
+                #if not (key.startswith('_') and key.endswith('_')):# str(key) == "_id":
+                key = str(key)
+                if key.find('/') != -1:
+                    k = key.split('/')
+                    l = len(k)
+                    kk = str(k[l-1])
+                else:
+                    kk = str(key)
+                if isinstance(value, dict) and len(value) >= 1:
+                    record.update(get_records(value))
+                elif isinstance(value, list) and len(value) >= 1:
+                    if isinstance(value[0], dict):
+                        record.update(get_records(value[0]))
+                else:
+                    if not kk in recordkeys and not kk.endswith('ID') and not kk.endswith('ID') and str(value) != 'yes' and \
+                    str(value) != 'no' and str(kk) != 'case_number'  and 'uuid' not in str(kk):
+                        recordkeys.append(kk)
+                    record.update({kk : str(value).capitalize()})
+            return record
+
+
+        for rec in result_data:
+            if isinstance(rec, dict) and len(rec) > 1:
+                statrecords.append(get_records(rec))
+
+        if len(recordkeys) > 0:
+            recordkeys.append('Date Created')
+        else:
+            recordkeys = False
+
+
+        data['report_data'] = statrecords
+        data['recordkeys'] = recordkeys
+
         htmltemplate = 'helpline/qaresults.html'
     else:
         # Call CDR Data
         result_data = requests.post("%s/api/v1/call/qa?data=true" %(settings.CALL_API_URL) + query_string).json()
+        data['report_data'] = result_data
         htmltemplate = "helpline/nonanalysed.html"
 
-    data['report_data'] = result_data
+    
     data['report'] = report
-    data['users'] = HelplineUser.objects.all()
+    # data['users'] = HelplineUser.objects.all()
     
     return render(request, htmltemplate, data)
 @login_required
