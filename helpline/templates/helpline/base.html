@@ -1040,7 +1040,7 @@ function get_submissions(phone,name,param=true){
   // Create a request variable and assign a new XMLHttpRequest object to it.
   var request = new XMLHttpRequest();
   //create query string [optional] based on the passed parameters
-  query_str = typeof(phone) !== 'undefined' && typeof(name) !== 'undefined' ? 'query={"reporter_details/reporter_phone":"' + phone + '","reporter_details/name":{"$i":"' + name + '"}}':(phone != '' && name == '' ? 'query={"reporter_details/reporter_phone":{"$i":"' + phone + '"}}&limit=1':(typeof(phone) !== 'undefined' && typeof(name) !== 'undefined' ? 'query={"reporter_details/name":{"$i":"' + name + '"}}' : ''))
+  query_str = typeof(phone) !== 'undefined' && typeof(name) !== 'undefined' ? 'query={"reporter_details/reporter_phone":"' + phone + '","reporter_details/name":{"$i":"' + name + '"}}':(typeof(phone) != 'undefined' && typeof(name) == 'undefined' ? 'query={"reporter_details/reporter_phone":{"$i":"' + phone + '"}}&limit=1':(typeof(phone) !== 'undefined' && typeof(name) !== 'undefined' ? 'query={"reporter_details/name":{"$i":"' + name + '"}}' : ''))
 
   query_str += '&group="reporter_details/reporter_phone"&format=json'
 
