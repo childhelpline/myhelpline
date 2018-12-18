@@ -273,10 +273,10 @@ audio{
                   <div class="row">
                     <div class="col-sm-12">
                       <div class="modal-body" style="padding: 0px;">
-                        <div id="contact-search" class={% if form_name == 'call' %} hidden {% endif %}>
+                        <div id="contact-search" class=>
                           <div class="row">
                             <!-- accepted payments column -->
-                            <div class="col-xs-6 col-md-12 contact-search">
+                            <div class="col-xs-6 col-md-12 contact-search {% if form_name == 'call' %} hidden {% endif %}">
                               <p class="lead">Contact Search:</p>
                               <div class="text-muted well well-sm no-shadow">
                                 <!-- form start -->
@@ -285,16 +285,16 @@ audio{
 
                                 <div class="box-footer" style="background-color: transparent;">
                                   <button type="button" class="btn btn-primary" onclick="contactSearch();$('.contact-search').removeClass('col-md-12');$('.contact-results').removeClass('hidden');">Search Contact</button>
-                                  <button type="button" class="btn btn-primary pull-right" onclick="create_case();$('#contact-search').addClass('hidden');$('#frame_iframe').removeClass('hidden');$('#frame-contact').addClass('hidden');">New Reporter</button>
                                 </div>
                               </div>
                             </div>
                             <!-- /.col -->
-                            <div class="col-xs-6 contact-results hidden">
+                            <div class="col-xs-6 contact-results {% if form_name != 'call' %} hidden {% endif %}">
                               <p class="lead">Contact Search Results</p>
 
                               <div class="table-responsive text-muted well-sm no-shadow" style="min-height: 242px;">
                                 <div id="contact-search-results"></div>
+                              <button type="button" class="btn btn-primary pull-right" onclick="create_case();$('#contact-search').addClass('hidden');$('#frame_iframe').removeClass('hidden');$('#frame-contact').addClass('hidden');">New Reporter</button>
                               </div>
                             </div>
                             <!-- /.col -->
@@ -304,7 +304,7 @@ audio{
 
 
                         <!-- Table row -->
-                        <div class="contact-cases {% if form_name == 'walkin' %} hidden {% endif %}">
+                        <div class="contact-cases {% if form_name == 'walkin' or form_name == 'call' %} hidden {% endif %}">
 
                           <div class="row">
                             <!-- accepted payments column -->

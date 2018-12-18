@@ -947,7 +947,7 @@ if(sessionStorage.getItem('in_queue') == 1){
   
 
   if(typeof(params.get("callcase")) !== undefined && params.get("callcase") !== null){
-    get_submissions('{{caller}}')
+       get_submissions('{{caller}}')
   }
 });
 //alert("Cheru: "  + sessionStorage.getItem('in_queue'))
@@ -1039,9 +1039,8 @@ function get_submissions(phone,name,param=true){
   $(load_to).html('<div class="overlay" style="width:100%" align="center"><h1><i class="fa fa-refresh fa-spin"></i></h1></div>');
   // Create a request variable and assign a new XMLHttpRequest object to it.
   var request = new XMLHttpRequest();
-
   //create query string [optional] based on the passed parameters
-  query_str = phone !== '' && name !== '' ? 'query={"reporter_details/reporter_phone":"' + phone + '","reporter_details/name":{"$i":"' + name + '"}}':(phone != '' && name == '' ? 'query={"reporter_details/reporter_phone":{"$i":"' + phone + '"}}&limit=1':(phone == '' && name !== '' ? 'query={"reporter_details/name":{"$i":"' + name + '"}}' : ''))
+  query_str = typeof(phone) !== 'undefined' && typeof(name) !== 'undefined' ? 'query={"reporter_details/reporter_phone":"' + phone + '","reporter_details/name":{"$i":"' + name + '"}}':(phone != '' && name == '' ? 'query={"reporter_details/reporter_phone":{"$i":"' + phone + '"}}&limit=1':(typeof(phone) !== 'undefined' && typeof(name) !== 'undefined' ? 'query={"reporter_details/name":{"$i":"' + name + '"}}' : ''))
 
   query_str += '&group="reporter_details/reporter_phone"&format=json'
 
