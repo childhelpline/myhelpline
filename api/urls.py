@@ -5,8 +5,11 @@ from api import views
 router = routers.DefaultRouter()
 router.register(r'users', views.UserViewSet)
 router.register(r'groups', views.GroupViewSet)
+router.register(r'sms', views.SmsViewSet)
 router.register(r'helplineusers', views.HelplineUserViewSet)
 router.register(r'helplinecases', views.HelplineCaseViewSet)
+router.register(r'caseworkers', views.CaseWorkerViewSet)
+router.register(r'supervisors', views.SupervisorViewSet)
 
 urlpatterns = [
     url(r'^', include(router.urls)),

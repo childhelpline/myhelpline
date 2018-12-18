@@ -257,7 +257,7 @@ class ReportFilterForm(forms.Form):
     )
     agent = forms.ModelChoiceField(
         label='Agent:',
-        queryset=User.objects.all().order_by('username'),
+        queryset=User.objects.filter(HelplineUser__hl_role='Counsellor').order_by('username'),
         required=False,
         widget=forms.Select(attrs={'class': 'form-control pull-right',
                                    'id': 'agent',
