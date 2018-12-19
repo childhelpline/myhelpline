@@ -28,15 +28,17 @@ class HelplineCaseSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('url', 'hl_time', 'priority', 'hl_data', 'hl_popup')
 
 class SmsSerializer(serializers.HyperlinkedModelSerializer):
-    # def create(self,validated_data):
-    #     sms = model.objects.create(
-    #         contact=validated_data['from_phone'],
-    #         msg=validated_data['message'],
-    #         time=validated_data['sent_timestamp'],
-    #         sms_time=timezone.now()
-    #     )
-    #     sms.save()
-    #     return sms
+    
     class Meta:
         model = SMSCDR
         fields = ('contact','msg','time','sms_time')
+        extra_kwargs = {'contact': {'required': False}}
+        # def create(self,validated_data):
+        #     sms = model.objects.create(
+        #         contact=validated_data['contact'],
+        #         msg=validated_data['msg'],
+        #         time= timezone.now(), # validated_data['sent_timestamp'],
+        #         sms_time=timezone.now()
+        #     )
+        #     sms.save()
+        #     return sms

@@ -405,17 +405,17 @@ input:checked + .slider:before {
             <ul class="treeview-menu">
               <li><a href="{% url 'dashboardreports' 'missedcalls' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Missed Calls" %}
                 <span class="pull-right-container">
-                  <span class="label label-danger pull-right">{{ dashboard_stats.total_cases }}</span>
+                  <span class="label label-danger pull-right">{{ call_stat.calls }}</span>
                 </span>
               </a></li>
               <li><a href="{% url 'dashboardreports' 'answeredcalls' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Answered Calls" %}
                 <span class="pull-right-container">
-                  <span class="label label-success pull-right">{{ dashboard_stats.answered_calls }}</span>
+                  <span class="label label-success pull-right">{{ call_stat.answered }}</span>
                 </span>
               </a></li>
               <li><a href="{% url 'dashboardreports' 'voicemails' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Voice Mails" %}
                 <span class="pull-right-container">
-                  <span class="label label-warning pull-right">{{ dashboard_stats.total_cases }}</span>
+                  <span class="label label-warning pull-right">{{ call_stat.voicemail }}</span>
                 </span>
               </a></li>
             </ul>
@@ -463,7 +463,7 @@ input:checked + .slider:before {
               </li-->
             </ul>
           </li>
-          {% if request.user.HelplineUser.hl_role == 'Supervisor' %}
+          {% if request.user.HelplineUser.hl_role == 'Supervisor' or  request.user.HelplineUser.is_superuser %}
           <li class="treeview" >
             <a href="#">
               <i class="fa fa-files-o"></i>
@@ -515,17 +515,6 @@ input:checked + .slider:before {
           </ul>
         </li> -->
         <li>
-          <a href="{% url 'manageusers' %}">
-            <i class="fa fa-users"></i> <span>{% trans "Users" %}</span>
-          </a>
-        </li>
-
-        <li>
-          <a href="{% url 'user_profile' request.user.username %}">
-            <i class="fa fa-wpforms"></i> <span>{% trans "Forms" %}</span>
-          </a>
-        </li>
-        <li>
           <a href="{% url 'wall' %}">
             <i class="fa fa-tv"></i> <span>{% trans "Wall Board" %}</span>
           </a>
@@ -558,7 +547,19 @@ input:checked + .slider:before {
         </li>
 
 
+        {% if request.user.HelplineUser.hl_role == 'Administrator'  or  request.user.HelplineUser.is_superuser  %}
 
+        <li>
+          <a href="{% url 'manageusers' %}">
+            <i class="fa fa-users"></i> <span>{% trans "Users" %}</span>
+          </a>
+        </li>
+
+        <li>
+          <a href="{% url 'user_profile' request.user.username %}">
+            <i class="fa fa-wpforms"></i> <span>{% trans "Forms" %}</span>
+          </a>
+        </li>
         <li class="treeview">
           <a href="{% url 'adminreports' 'callsummaryreport' %}">
             <i class="fa fa-pie-chart"></i> <span>{% trans "Settings" %}</span>
@@ -573,6 +574,7 @@ input:checked + .slider:before {
             </a></li>
           </ul>
         </li>
+        {% endif %}
 
       </ul>
     </section>

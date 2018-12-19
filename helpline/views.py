@@ -203,13 +203,23 @@ def leta(request):
 
 @api_view(['GET', 'POST'])
 def sync_sms(request):
+    state = 'False'
+    error_message = 'No Success'
+    
     # if request.method == 'GET':
     if request.method == 'POST':
+        
         serializer = SmsSerializer(data=request.data)
         if serializer.is_valid():
+            # print "Cheru: POST %s" %(request.data.get('msg'))
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            # print serializer.errors
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        # print "kkkkk: " + serializer.errors
+        return JsonResponse({'status':400,'message':'INVALID REQUEST'})
     # error_message = None
     # state = True
     # try:
@@ -230,13 +240,13 @@ def sync_sms(request):
     #     error_message = "Error: %s" %e
     #     state = False
 
-    payload = {
-            'payload':{
-                    'success':state,
-                    'error':error_message
-                }
-            }
-    return Response(payload) 
+    # payload = {
+    #         'payload':{
+    #                 'success':state,
+    #                 'error':error_message
+    #             }
+    #         }
+    # return Response(payload) 
 
 def sync_emails(request):
     FROM_EMAIL = "support@" + settings.BASE_DOMAIN
@@ -1446,7 +1456,7 @@ def case_form(request, form_name):
             email.save()
 
         if form_name == 'sms':
-            sms = get_object_or_404(SMSCDR, pk__exact=sourceid, sms_case__gt=0);
+            sms = SMSCDR(pk=sourceid) # get_object_or_404(SMSCDR, pk__exact=sourceid, sms_case__gt=0);
             sms.sms_case = caseid
             caseid_str = '&d[/Case_Form/reporter_details/reporter_phone]=%s' % (sms.contact) + \
             '&d[/Case_Form/case_narratives/case_narrative]=%s' %(sms.msg)
