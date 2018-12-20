@@ -1,0 +1,192 @@
+{% extends 'helpline/base.html' %}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block box %}
+{% endblock box %}
+{% block treeview_reports %}active{% endblock treeview_reports %}
+{% block navbar_nav %}
+
+<li class="dropdown messages-menu">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+    <i class="fa fa-bookmark"></i>{% trans "Average Talk Time" %}: {{ dashboard_stats.att.hours }}:{{ dashboard_stats.att.min }}:{{ dashboard_stats.att.seconds }}
+  </a>
+</li>
+<!-- Messages: style can be found in dropdown.less-->
+<li class="dropdown messages-menu">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+    <i class="fa fa-bookmark"></i>{% trans "Average Wait Time" %}: {{ dashboard_stats.awt.hours }}:{{ dashboard_stats.awt.min }}:{{ dashboard_stats.awt.seconds }}
+  </a>
+</li>
+
+<!-- Messages: style can be found in dropdown.less-->
+<li class="dropdown messages-menu">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+    <i class="fa fa-clock-o"></i>  <span id="clock">0:00 AM</span>
+  </a>
+  <ul class="dropdown-menu">
+    <li class="header">
+      {% if request.user.chlusers.chlstatus == 'Busy' %}
+      <a href="{% url 'queue_log' %}"><i class="fa fa-circle text-danger"></i> {% trans "Busy" %}</a>
+      {% elif request.user.chlusers.chlstatus == 'Idle' %}
+      <a href="{% url 'queue_log' %}"><i class="fa fa-exclamation-triangle text-warning"></i> {% trans "Idle" %}</a>
+      {% elif request.user.chlusers.chlstatus == 'Available' %}
+      <a href="{% url 'queue_log' %}"><i class="fa fa-circle text-success"></i> {% trans "Online" %}</a>
+      {% elif request.user.chlusers.chlstatus == 'OnCall' %}
+      <a href="{% url 'queue_log' %}"><i class="fa fa-circle text-danger"></i> {% trans "OnCall" %}</a>
+      {% endif %}
+      <span id="durations"></span>
+    </li>
+    <li class="footer">
+    </li>
+  </ul>
+</li>
+
+{% endblock navbar_nav %}
+
+{% block content %}
+<style>
+div.scrollmenu {
+	overflow: auto;
+  white-space: nowrap;
+}
+
+  table tr td{
+    word-wrap: normal !important;
+    white-space: normal !important;
+  }
+</style>
+<section class="content-header">
+  <h1>
+    {% trans "REPORT" %} <i class="fa fa-angle-right"></i> {{ title }}
+  </h1>
+</section>
+
+<!-- Main content -->
+<section class="content">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="box">
+        <div class="box-header with-border">
+          <!--h3 class="box-title">Filter Parameters:</h3-->
+
+          <div class="col-md-12 report-filters">
+            {% load django_tables2 %}
+            <div id="form_collapse" class="in" style="height: auto;">
+              {% block filterform %}
+              <!-- Filter Form -->
+              <form action="#">
+                <!-- Date and time range -->
+                <script>
+                  $(function() {
+                    $('#datetimerange').daterangepicker({
+                     opens: 'left',
+                     timePicker: true,
+                     locale: {
+                      format: 'MM/DD/YYYY h:mm A'
+                    }
+                  }, function(start, end, label) {
+                   console.log("A new date selection was made: " + start.format('M/DD hh:mm A') + ' to ' + end.format('M/DD hh:mm A'));
+                 });
+                  });
+                </script>
+                <div class="form-group col-md-4" style="padding-left: 0px;">
+                    <label>{% trans "Choose Date and time Range" %}:</label>
+                  <div class="input-group">
+                    <div class="input-group-addon">
+                      <i class="fa fa-calendar"></i>
+                    </div>
+                    {{ form.datetime_range }}
+                  </div><!-- /.input group -->
+                </div><!-- /.form group -->
+                <div class="form-group col-md-4">
+                    <label>{% trans "Agent" %}:</label>
+                  <div class="input-group">
+                    <div class="input-group-addon">
+                      <i class="fa fa-users"></i>
+                    </div>
+                    {{ form.agent }}
+                  </div><!-- /.input group -->
+                </div><!-- /.form group -->
+
+                {{ form.queueid }}
+                <br>
+                <div class="form-group col-md-4">
+                  <div class="input-group pt-20">
+                    <input type="button" value="Fetch Reports" id="total-calls-search-btn" class="btn btn-success btn-sm btn-flat" onclick="sendtoReportFactory();">
+                  </div><!-- /.input group -->
+                </div>
+              </form>
+              <!-- End Filter Form -->
+            </div>
+            {% endblock filterform %}
+          </div>
+        </div>
+        <div class="box-body">
+          <div class="row">
+            <div class="scrollmenu col-md-12">
+                <div class="table table-responsive">
+                  <table id="example1" class="table datatable" style="max-width: 100%;">
+                    <thead>
+                      <th width="5%;">#</th>
+                      <!-- <th>Case ID</th>
+                      <th>Agent</th> -->
+                      <th width="10%">Sender</th>
+                      <th width="20%">Subject</th>
+                      <th width="40%">Message</th>
+                      <th  width="5%">Status</th>
+                      <th  width="5%">Case Number</th>
+                      <th  width="5%">Date</th>
+                    </thead>
+                  {% for rep in report_data %}
+                    <tr>
+                      <td>{{ forloop.counter}}.</td>
+                      <!-- <td>{{rep.caseid | default:''}}</td>
+                      <td>{{rep.agent | default:''}}</td> -->
+                      <td>{{rep.email_from}}</td>
+                      <td>{{rep.email_subject}}</td>
+                      <td style="word-wrap: break-word; max-width: 400px;">{{rep.email_body}}</td>
+                      <td>{{rep.email_status}}</td>
+                      <td>{{rep.email_date}}</td>
+                      <td>{{rep.email_case}}</td>
+                    </tr>
+                  {% endfor %}
+                    
+                  </table>
+                </div>
+              <!--div id="showustheresultsnow">
+                <div class="col-md-4">
+                  {% for format in table.export_formats %}
+                  <a class="btn btn-app"  href="{% querystring '_export'=format %}">
+                    <i class="fa fa-save"></i> <strong>{% trans "Export" %} .{{ format }}</strong>
+                  </a>
+                  {% endfor %}
+                </div>
+                {% if table %}
+                {% render_table table %}
+                {% endif %}
+              </div>
+            </div-->
+          </div>
+          <!-- /.col -->
+        </div>
+        <!-- /.row -->
+      </div>
+      <!-- ./box-body -->
+    </div>
+  </div>
+</section>
+
+<script type="text/javascript">
+  function sendtoReportFactory(){
+    var reservationtime = document.getElementById("datetimerange").value;
+    var queueid = document.getElementById("id_queueid").value;
+    var agent = document.getElementById("agent").value;
+    var c = document.getElementById("showustheresultsnow");
+    var query = document.getElementById("navbar-search-input").value;
+    //c.innerHTML = '<div align="center">Loading Report.. ';
+    $("#showustheresultsnow").fadeIn("slow");
+    $("#showustheresultsnow").load("{% url 'ajax_admin_report' report %}?datetime_range="+ encodeURIComponent(reservationtime) +'&sevc='+ encodeURIComponent(queueid) +'&agent='+ encodeURIComponent(agent)+'&q='+ encodeURIComponent(query));  
+  }
+</script>
+{% endblock content %}

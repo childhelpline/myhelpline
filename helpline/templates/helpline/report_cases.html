@@ -1,0 +1,181 @@
+{% extends 'helpline/base.html' %}
+{% load i18n %}
+{% block additional-headers %}
+{% endblock %}
+{% block box %}{% endblock %}
+{% block navbar_nav %}
+<li class="dropdown messages-menu">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+    <i class="fa fa-bookmark"></i>{% trans "Average Talk Time" %}: {{ dashboard_stats.att.hours }}:{{ dashboard_stats.att.min }}:{{ dashboard_stats.att.seconds }}
+  </a>
+</li>
+<!-- Messages: style can be found in dropdown.less-->
+<li class="dropdown messages-menu">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+    <i class="fa fa-bookmark"></i>{% trans "Average Wait Time" %}: {{ dashboard_stats.awt.hours }}:{{ dashboard_stats.awt.min }}:{{ dashboard_stats.awt.seconds }}
+  </a>
+</li>
+
+<!-- Messages: style can be found in dropdown.less-->
+<li class="dropdown messages-menu">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+    <i class="fa fa-clock-o"></i>  <span id="clock">0:00 AM</span>
+  </a>
+  <ul class="dropdown-menu">
+    <li class="header">
+      {% if request.user.chlusers.chlstatus == 'Busy' %}
+      <a href="{% url 'queue_log' %}"><i class="fa fa-circle text-danger"></i> {% trans "Busy" %}</a>
+      {% elif request.user.chlusers.chlstatus == 'Idle' %}
+      <a href="{% url 'queue_log' %}"><i class="fa fa-exclamation-triangle text-warning"></i> {% trans "Idle" %}</a>
+      {% elif request.user.chlusers.chlstatus == 'Available' %}
+      <a href="{% url 'queue_log' %}"><i class="fa fa-circle text-success"></i> {% trans "Online" %}</a>
+      {% elif request.user.chlusers.chlstatus == 'OnCall' %}
+      <a href="{% url 'queue_log' %}"><i class="fa fa-circle text-danger"></i> {% trans "OnCall" %}</a>
+      {% endif %}
+      <span id="durations"></span>
+    </li>
+    <li class="footer">
+    </li>
+  </ul>
+</li>
+
+{% endblock navbar_nav %}
+
+{% block content %}
+<section class="content-header">
+  <h1>
+    {% trans "REPORT" %} <i class="fa fa-angle-right"></i> {{ title }}<small>My Cases  [<a href="{% url "form-show" owner.username xform.id_string %}">{{ xform.title }}</a>]</small>
+  </h1>
+  <ol class="breadcrumb">
+    <li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
+    <li><a href="#">Cases</a></li>
+    <li class="active">{{ xform.title }}</li>
+  </ol>
+</section>
+<!-- Main content -->
+<section class="content"  id="data-view">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="box">
+        <div class="box-header with-border">
+          <div class="col-md-12 report-filters">
+            {% load django_tables2 %}
+            <div id="form_collapse" class="in" style="height: auto;">
+              {% block filterform %}
+              <!-- Filter Form -->
+              <form action="#">
+                <!-- Date and time range -->
+                <script>
+                  $(function() {
+                    $('#datetimerange').daterangepicker({
+                     opens: 'left',
+                     timePicker: true,
+                     locale: {
+                      format: 'MM/DD/YYYY h:mm A'
+                    }
+
+                  }, function(start, end, label) {
+                   console.log("A new date selection was made: " + start.format('M/DD hh:mm A') + ' to ' + end.format('M/DD hh:mm A'));
+                 });
+                  });
+                </script>
+
+
+                <div class="form-group col-md-4" style="padding-left: 0px;">
+                  <label>Choose Date and time Range:</label>
+                  <div class="input-group">
+                    <div class="input-group-addon">
+                      <i class="fa fa-calendar"></i>
+                    </div>
+                    {{ form.datetime_range }}
+                  </div><!-- /.input group -->
+                </div><!-- /.form group -->
+
+                {{ form.queueid }}
+                <br>
+                <div class="form-group col-md-4">
+                  <div class="input-group" style="padding-top: 5px;">
+                    <input type="submit" value="Fetch Reports" id="total-calls-search-btn" class="btn btn-success btn-md btn-flat" onclick="sendtoReportFactory();">
+                  </div><!-- /.input group -->
+                </div>
+              </form>
+              <!-- End Filter Form -->
+            </div>
+            {% endblock filterform %}
+          </div>
+        </div>
+        <!-- /.box-header -->
+        <div class="box-body">
+          <div class="row">
+            <div class="col-md-12">
+              <div class="data-table-data table table-responsive">
+                <table id="example1" class="table table-bordered table-striped dataTable">
+                  {% if recordkeys %}
+                  <thead>
+                    <tr onclick="">
+                      <th>#</th>
+                      <th style="white-space: nowrap;">Case ID</th>
+                      {% for itemx in recordkeys %}
+                      {% if not "_" == itemx|first %}
+                        <th>{{ itemx }}</th>
+                      {% endif %}
+                      {% endfor %}                    
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for records in statrecords %}
+                    <tr>
+                      <td>{{ forloop.counter }}. </td>
+                      <td>{{  records | get_item:'case_number' }}</td>
+                      {% for item_key in recordkeys %}
+                      {% if not '_' == item_key|first %}
+                      <td>
+                        {% if item_key == 'case_number' %}
+                        <a href="/helpline/forms/{{ xform.id_string }}/{{ records | get_item:'_id' }}">{{  records | get_item:item_key }}</a>
+                        {% elif forloop.last %}
+                        {{  records | get_item:'_submission_time' | slice:'10' }}
+                        {% else %}
+                        {{  records | get_item:item_key }}
+                        {% endif %}
+                      </td>
+                      {% endif %}
+
+                      {% endfor %}
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                  <tfooter>
+                    <tr>
+                      <th>#</th>
+                      <th>Case ID</th>
+                      {% for recordkey in recordkeys %}
+                      {% if not "_" == recordkey|first %}
+                      <th>{{ recordkey }}</th>
+                      {% endif %}
+                      {% endfor %}                       
+                    </tr>
+                  </tfooter>
+                  {% else %}
+                  <thead>
+                    <tr>
+                      <th style="display: none;"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                  {% endif %}
+                </table>
+              </div>
+              <div style="clear: both;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block javascripts %}
+{{ block.super }}
+{% endblock %}

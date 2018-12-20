@@ -123,6 +123,7 @@ USER_ROLES = (
     ('Counsellor','Counsellor'),
     ('Caseworker','Caseworker'),
     ('Supervisor', 'Supervisor'),
+    ('Administrator', 'Administrator'),
 )
 
 def get_dialects():
