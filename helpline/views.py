@@ -11,6 +11,7 @@ import urllib
 
 import imaplib
 import email
+from django.core.mail import send_mail
 
 from itertools import tee
 
@@ -249,16 +250,13 @@ def sync_sms(request):
     # return Response(payload) 
 
 def sync_emails(request):
-    FROM_EMAIL = "support@" + settings.BASE_DOMAIN
-    SMTP_PORT = 993
-
     message = {'message':'', 'count':0}
     try:
-        mail = imaplib.IMAP4_SSL(settings.SMTP_SERVER)
-        mail.login(FROM_EMAIL, settings.SUPPORT_PASS)
+        mail = imaplib.IMAP4_SSL(settings.SERVER_EMAIL)
+        mail.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
         mail.select('inbox')
 
-        type, data = mail.search(None, 'UNSEEN')
+        type, data = mail.search(None, 'SEEN')
         mail_ids = data[0]
 
         id_list = mail_ids.split() 
@@ -281,6 +279,7 @@ def sync_emails(request):
                 model_mail = Emails()
                 if isinstance(response_part, tuple):
                     msg = email.message_from_string(response_part[1])
+
                     model_mail.email_idkey = i
                     model_mail.email_from = msg['from']
                     model_mail.email_body = str(msg.get_payload())
@@ -349,13 +348,24 @@ def myaccount(request):
     """View request user account details page"""
     return render(request, 'helpline/profile.html')
 
-
 @login_required
-def manage_users(request):
+def manage_users(request,action=None,action_item=None):
     """View user management page"""
-    userlist = HelplineUser.objects.all()
+    
     message = ""
-    return render(request, 'helpline/users.html', {'systemusers':userlist, 'message':message})
+    userlist = HelplineUser.objects.all() 
+    template = 'users'
+    if action != None and action_item != None:
+        if action == 'delete':
+            HelplineUser.objects.filter(hl_key__exact=action_item).delete()
+            userlist = HelplineUser.objects.all()
+            message = "User successfully deleted"
+        elif action == 'profile':
+            userlist = HelplineUser.objects.get(hl_key__exact=action_item)
+            template = 'profile'
+
+    
+    return render(request, 'helpline/%s.html' %(template), {'systemusers':userlist, 'message':message})
 
 def increment_case_number():
     case = Cases.objects.all().order_by('case_number').last() # Cases.objects.all().last()
@@ -437,7 +447,7 @@ def new_user(request):
                     headers = {
                         'Authorization': 'Token %s' % (default_service_auth_token),
                         'username':user.username,
-                        'role':'dataentry'
+                        'role':'manager'
                     }
                     requests.post(url, headers=headers)
 
@@ -583,8 +593,8 @@ def user_profile(request, user_id):
             messages.error(request, "Error")
             message = "Invalid form"
     else:
-        form = RegisterUserForm(None,instance=user_edit)
-        user_form = RegisterUserForm(None,instance=user_profile)
+        form = RegisterUserForm(instance=user_edit)
+        user_form = RegisterProfileForm(instance=user_prof)
 
     return render(request, 'helpline/user.html', {'form':form,'profileform':profile_form, 'message':message})
 
@@ -1280,7 +1290,7 @@ def qa(request, report='analysed'):
                         record.update(get_records(value[0]))
                 else:
                     if not kk in recordkeys and not kk.endswith('ID') and not kk.endswith('ID') and str(value) != 'yes' and \
-                    str(value) != 'no' and str(kk) != 'case_number'  and 'uuid' not in str(kk):
+                    str(value) != 'no' and str(kk) != 'case_number' and 'uuid' not in str(kk):
                         recordkeys.append(kk)
                     record.update({kk : str(value).capitalize()})
             return record
@@ -1659,7 +1669,7 @@ def case_form(request, form_name):
     default_service_auth_token = default_service_xform.user.auth_token
     current_site = get_current_site(request)
     """
-    '7331a310c46884d2643ca9805aaf0d420ebfc831' #
+    '7331a310c46884d2643ca9805aaf0d420ebfc831'
     Graph data
     """
     headers = { 
@@ -2653,7 +2663,7 @@ def logout(request, template_name="helpline/loggedout.html"):
         hl_user.hl_jabber = ''
         hl_user.hl_status = 'Unavailable'
         hl_user.save()
-
+        
         queue_manager(hl_user.hl_key,
                       request.session.get('extension'),
                       'queueleave')
@@ -2748,13 +2758,54 @@ def wall(request):
                    'week_dashboard_stats': week_dashboard_stats})
 
 @login_required
-def sources(request, source=None):
+def sources(request, source=None,itemid=None):
     """Display data source"""
     data_messages = ''
+    item = ''
     if source == 'email':
         data_messages = Emails.objects.all()
+        item = Emails
+
+        if request.method == 'POST':
+            email = Emails()
+
+            try:
+
+                # email.email_idkey = 
+                email.email_from      = 'kemboicheru@gmail.com'
+                email.email_status    = 0
+                email.email_body      = request.POST.get('message', None)
+                email.email_subject   = ''
+                email.email_date      = datetime.now()
+                email.save()
+                send_mail(
+                    'Subject here',
+                    request.POST.get('message', None),
+                    "support@" + settings.BASE_DOMAIN,
+                    ['kemboicheru@gmail.com'],
+                    fail_silently=False,
+                )
+            except Exception as e:
+                message = "Error: %s" %e
+
+
     if source == 'sms':
         data_messages = SMSCDR.objects.all() #.order_by('-sms_time')
+        item = SMSCDR
+
+        # if request.method == 'POST':
+        #     email = Emails()
+            
+        #     email.email_idkey = 
+        #     email.email_from      = 
+        #     email.email_status    = 0
+        #     email.email_body      = 
+        #     email.email_subject   = 
+        #     email.email_date      = date.now()
+
+    if itemid != None:
+        data_messages = item.objects.get(pk=itemid) # (Emails,pk=itemid)
+        source = 'read_%s' % (source) 
 
     template = 'helpline/%s.html' % (source)
     return render(request, template, {'data_messages':data_messages})

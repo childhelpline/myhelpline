@@ -79,9 +79,11 @@ class Address(models.Model):
     hl_contact = models.IntegerField(blank=True, null=True)
     hl_time = models.IntegerField(blank=True, null=True)
     hl_hiv = models.CharField(max_length=8, blank=True, null=True)
+    
 
     def __unicode__(self):
         return self.hl_names or u''
+ 
 
 
 class Contact(models.Model):
@@ -638,7 +640,7 @@ class SMSCDR(models.Model):
     """
     This acts as an SMS log where both received and sent SMS are stored, when a case is created, its number is marked against the sms
     """
-    contact     = models.CharField(max_length=30)
+    from_phone     = models.CharField(max_length=30)
     msg         = models.CharField(max_length=320, blank=True, null=True)
     sms_status  = models.IntegerField(default=0)
     time        = models.DateTimeField(db_column='Time', blank=True, null=True)

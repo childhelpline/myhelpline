@@ -31,8 +31,8 @@ class SmsSerializer(serializers.HyperlinkedModelSerializer):
     
     class Meta:
         model = SMSCDR
-        fields = ('contact','msg','time','sms_time')
-        extra_kwargs = {'contact': {'required': False}}
+        fields = ('from_phone','msg','time','sms_time')
+        # extra_kwargs = {'contact': {'required': False}}
         # def create(self,validated_data):
         #     sms = model.objects.create(
         #         contact=validated_data['contact'],

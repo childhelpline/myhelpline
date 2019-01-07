@@ -151,8 +151,6 @@ input:checked + .slider:before {
         <div class="navbar-custom-menu">
           <ul class="nav navbar-nav">
             <!-- Messages: style can be found in dropdown.less-->
-            {% block navbar_nav %}
-
             <li class="dropdown messages-menu">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                 <i class="fa fa-bookmark"></i>{% trans "Average Talk Time" %}: {{ call_stat.avgtalk }}
@@ -220,12 +218,27 @@ input:checked + .slider:before {
         </li>-->
 
 
-        {% endblock navbar_nav %}
+        <!-- Notifications: style can be found in dropdown.less -->
+        <li class="dropdown notifications-menu">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+            <i class="fa fa-comment-o"></i>
+            {% live_notify_badge badge_class="label label-warning" %}
+          </a>
+          <ul class="dropdown-menu">
+            <li class="header">{% blocktrans %}You have {{ unread_count }} notification{{ unread_count|pluralize }}{% endblocktrans %}</li>
+            <li>
+              <!-- inner menu: contains the actual data -->
+              {% live_notify_list list_class="dropdown-menu" %}
+            </li>
+            <li class="footer"><a href="{% url "notifications:unread" %}">View all</a></li>
+          </ul>
+        </li>
+
 
         <!-- Notifications: style can be found in dropdown.less -->
         <li class="dropdown notifications-menu">
           <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-            <i class="fa fa-bell-o"></i>
+            <i class="fa fa-envelope-o"></i>
             {% live_notify_badge badge_class="label label-warning" %}
           </a>
           <ul class="dropdown-menu">
@@ -265,7 +278,8 @@ input:checked + .slider:before {
         <!-- User Account: style can be found in dropdown.less -->
         <li class="dropdown user user-menu">
           <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-            {% avatar request.user.avatar 160 class="user-image" %}
+            <img src="{{request.user.avatar}}" /> 
+            <!-- {% avatar request.user.avatar 160 class="user-image" %} -->
             <span class="hiddenen-xs">{{ request.user.get_full_name|default:request.user.username }}</span>
           </a>
           <ul class="dropdown-menu">
@@ -302,7 +316,7 @@ input:checked + .slider:before {
     <a href="{% url "myaccount" %}" class="btn btn-default btn-flat">Profile</a>
   </div>
   <div class="pull-right">
-    <a href="{% url 'logout' %}" class="btn btn-default btn-flat">Sign out</a>
+    <a href="{% url 'logout' %}" onclick="leave_queue(this)" class="btn btn-default btn-flat">Sign out</a>
   </div>
 </li>
 </ul>
@@ -1049,9 +1063,24 @@ function get_submissions(phone,name,param=true){
   query_str = typeof(phone) !== 'undefined' && typeof(name) !== 'undefined' ? 'query={"reporter_details/reporter_phone":"' + phone + '","reporter_details/name":{"$i":"' + name + '"}}':(typeof(phone) != 'undefined' && typeof(name) == 'undefined' ? 'query={"reporter_details/reporter_phone":{"$i":"' + phone + '"}}&limit=1':(typeof(phone) !== 'undefined' && typeof(name) !== 'undefined' ? 'query={"reporter_details/name":{"$i":"' + name + '"}}' : ''))
 
   query_str += '&group="reporter_details/reporter_phone"&format=json'
+  request.withCredentials = false;
+
+//   $.ajax({
+//     method: "GET",
+//     url: '{{ data_url |safe }}?format=json',
+//     dataType: 'json',
+//     xhrFields: {
+//         withCredentials: false
+//     },
+//     headers: {
+//         'Authorization': 'Token {{ data_token }}'
+//     },
+//     success:function(resp){}
+// });
 
   // Open a new connection, using the GET request on the URL endpoint
   request.open('GET', '{{ data_url |safe }}?' + query_str, true);
+  request.setRequestHeader('Content-Type', 'application/json');
   request.setRequestHeader("Authorization", "Token {{ data_token }}");
 
   request.onload = function (data) {
