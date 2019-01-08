@@ -58,6 +58,7 @@ urlpatterns = [
     url(r'^reports/(?P<report>\w+)/$', views.reports, name='adminreports'),
     url(r'^reports/(?P<report>\w+)/(?P<casetype>\w+)/$', views.reports,
         name='dashboardreports'),
+    url(r'^contact_search/$', views.contact_search, name='contact_search'),
     url(r'^form/(?P<form_name>\w+)/$', views.case_form, name='case_form'),
     url(r'^form/(?P<form_name>\w+)/(?P<case_id>\w+)/edit/$', views.case_edit, name='case_edit'),
     url(r'^forms/(?P<form_name>\w+)/(?P<case_id>\w+)/$', views.caseview, name='caseview'),

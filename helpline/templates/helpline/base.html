@@ -278,14 +278,15 @@ input:checked + .slider:before {
         <!-- User Account: style can be found in dropdown.less -->
         <li class="dropdown user user-menu">
           <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-            <img src="{{request.user.avatar}}" /> 
+            <img src="{{request.user.HelplineUser.hl_avatar}}" alt="{{request.user.HelplineUser.hl_avatar}}" class="user-image" /> 
             <!-- {% avatar request.user.avatar 160 class="user-image" %} -->
             <span class="hiddenen-xs">{{ request.user.get_full_name|default:request.user.username }}</span>
           </a>
           <ul class="dropdown-menu">
             <!-- User image -->
             <li class="user-header">
-              {% avatar user 160 class="img-circle" %}
+              <!-- {% avatar user 160 class="img-circle" %} -->
+              <img src="{{request.user.HelplineUser.hl_avatar}}" alt="{{request.user.HelplineUser.hl_avatar}}" class="img-circle" /> 
 
               <p>
                {{ request.user.get_full_name|default:request.user.username }}
@@ -337,7 +338,7 @@ input:checked + .slider:before {
     <!-- Sidebar user panel -->
     <div class="user-panel">
       <div class="pull-left image">
-        {% avatar user 160 class="img-circle" %}
+         <img src="{{request.user.HelplineUser.hl_avatar}}" alt="{{request.user.HelplineUser.hl_avatar}}" class="img-circle" /> <!-- {% avatar user 160 class="img-circle" %} -->
       </div>
       <div class="pull-left info">
         <p>{{ request.user.get_full_name|default:request.user.username }}</p>
@@ -1062,7 +1063,7 @@ function get_submissions(phone,name,param=true){
   //create query string [optional] based on the passed parameters
   query_str = typeof(phone) !== 'undefined' && typeof(name) !== 'undefined' ? 'query={"reporter_details/reporter_phone":"' + phone + '","reporter_details/name":{"$i":"' + name + '"}}':(typeof(phone) != 'undefined' && typeof(name) == 'undefined' ? 'query={"reporter_details/reporter_phone":{"$i":"' + phone + '"}}&limit=1':(typeof(phone) !== 'undefined' && typeof(name) !== 'undefined' ? 'query={"reporter_details/name":{"$i":"' + name + '"}}' : ''))
 
-  query_str += '&group="reporter_details/reporter_phone"&format=json'
+  query_str += '&group="reporter_details/reporter_phone"'
   request.withCredentials = false;
 
 //   $.ajax({
@@ -1079,7 +1080,8 @@ function get_submissions(phone,name,param=true){
 // });
 
   // Open a new connection, using the GET request on the URL endpoint
-  request.open('GET', '{{ data_url |safe }}?' + query_str, true);
+  var urstr  = '{{data_url |safe}}?' + query_str;
+  request.open('GET', '{% url "contact_search" %}?url=' + urstr, true);
   request.setRequestHeader('Content-Type', 'application/json');
   request.setRequestHeader("Authorization", "Token {{ data_token }}");
 

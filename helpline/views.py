@@ -9,7 +9,7 @@ from random import randint
 import hashlib
 import urllib
 
-import imaplib
+import imaplib,smtplib
 import email
 from django.core.mail import send_mail
 
@@ -1660,6 +1660,19 @@ def home_direct():
     return Redirect('/helpline/')
 
 @login_required
+def contact_search(request, search_string=None):
+    service = Service.objects.all().first()
+    default_service_xform = service.walkin_xform
+    default_service_auth_token = default_service_xform.user.auth_token
+    current_site = get_current_site(request)
+
+    headers = {
+        'Authorization': 'Token %s' % (default_service_auth_token)
+    }
+    call_data = requests.get("%s" %(request.GET.get('url')),headers=headers).json()
+
+    return JsonResponse(call_data,safe=False)
+@login_required
 def case_form(request, form_name):
     """Handle Walkin and CallForm POST and GET Requests"""
 
@@ -2762,6 +2775,7 @@ def sources(request, source=None,itemid=None):
     """Display data source"""
     data_messages = ''
     item = ''
+    message = ''
     if source == 'email':
         data_messages = Emails.objects.all()
         item = Emails
@@ -2778,13 +2792,15 @@ def sources(request, source=None,itemid=None):
                 email.email_subject   = ''
                 email.email_date      = datetime.now()
                 email.save()
-                send_mail(
-                    'Subject here',
-                    request.POST.get('message', None),
-                    "support@" + settings.BASE_DOMAIN,
-                    ['kemboicheru@gmail.com'],
-                    fail_silently=False,
-                )
+
+
+                server = smtplib.SMTP('mail.bitz-itc.com')
+                server.starttls()
+                server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
+                server.set_debuglevel(2)
+                server.sendmail("support@" + settings.BASE_DOMAIN,'kemboicheru@gmail.com',request.POST.get('message', None))
+                server.quit()
+                message = "Mail sent successfully"
             except Exception as e:
                 message = "Error: %s" %e
 
@@ -2808,7 +2824,7 @@ def sources(request, source=None,itemid=None):
         source = 'read_%s' % (source) 
 
     template = 'helpline/%s.html' % (source)
-    return render(request, template, {'data_messages':data_messages})
+    return render(request, template, {'data_messages':data_messages,'message':message})
 
 
 def get_data_queues(queue=None):
