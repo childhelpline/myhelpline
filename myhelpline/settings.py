@@ -673,7 +673,7 @@ TESTING_MODE = True
 SLAVE_DATABASES = []
 
 try:
-    from myhelpline.localsettings_clk import *
+    from myhelpline.localsettings import *
 except ImportError as e:
     print(e)
     pass

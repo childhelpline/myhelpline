@@ -1,0 +1,315 @@
+{% extends 'helpline/base.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load humanize %}
+
+{% block content %}
+
+
+<section class="content" style="padding-top:0px;">
+  <div class="row">
+    <div class="col-md-12">
+      <!-- /.box-footer -->
+      <!--section class="content-header">
+        <h1>Dashboard</h1>
+      </section-->
+      <div class="box-body" style="padding:5px; padding-top:0px;">
+        
+        <!-- /.row -->
+        <div class="row homedashboard">
+          <div class="col-md-12">
+            <div class="row">
+              <!-- Left col -->
+              <div class="col-md-3">
+                <!-- Info Boxes Style 2 -->
+                <div class="info-box bg-green">
+                  <span class="info-box-icon"><i class="ion ion-checkmark"></i></span>
+
+                  <div class="info-box-content">
+                    <span class="info-box-text">{% trans "Closed Cases" %}</span>
+                    <span class="info-box-number">{{ status_stat.closed|intcomma }}</span>
+
+                    <div class="progress">
+                      <div class="progress-bar" style="width: {% widthratio dashboard_stats.closed_cases dashboard_stats.total_cases 100 %}%"></div>
+                    </div>
+                    <span class="progress-description">
+                      {% widthratio dashboard_stats.closed_cases dashboard_stats.total_cases 100 %}% {% trans "Closed Cases" %}
+                    </span>
+                  </div>
+                  <!-- /.info-box-content -->
+                </div>
+                <!-- /.info-box -->
+              </div>
+
+              <div class="col-md-3">
+                <div class="info-box bg-yellow">
+                  <span class="info-box-icon"><i class="ion ion-ios-flag" md="md-flag"></i></span>
+
+                  <div class="info-box-content">
+                    <span class="info-box-text">{% trans "Escalated Cases" %}</span>
+                    <span class="info-box-number">{{ status_stat.escalate | intcomma }}</span>
+
+                    <div class="progress">
+                      <div class="progress-bar" style="width: {% widthratio dashboard_stats.referred_cases dashboard_stats.total_cases 100 %}%"></div>
+                    </div>
+                    <span class="progress-description">
+                      {% widthratio dashboard_stats.referred_cases dashboard_stats.total_cases 100 %}% {% trans "Escalated Cases" %}
+                    </span>
+                  </div>
+                  <!-- /.info-box-content -->
+                </div>
+                <!-- /.info-box -->
+              </div>  
+
+              <div class="col-md-3">
+                <div class="info-box bg-aqua">
+                  <a href="{% url 'dashboardreports' 'pendingcases' %}" style="color: #fff;">
+                  <span class="info-box-icon"><i class="ion-ios-clock-outline"></i></span>
+
+                  <div class="info-box-content">
+                    <span class="info-box-text">{% trans "Pending Cases" %}</span>
+                    <span class="info-box-number">{{ status_stat.pending|intcomma }}</span>
+
+                    <div class="progress">
+                      <div class="progress-bar" style="width: {% widthratio dashboard_stats.open_cases dashboard_stats.total_cases 100 %}%"></div>
+                    </div>
+                    <span class="progress-description">
+                      {% widthratio dashboard_stats.open_cases dashboard_stats.total_cases 100 %}% {% trans "Pending Cases" %}
+                    </span>
+                  </div>
+                  <!-- /.info-box-content -->
+                  </a>
+                </div>
+                <!-- /.info-box -->
+
+              </div>            
+              <div class="col-md-3">
+                <div class="info-box bg-red">
+                  <span class="info-box-icon"><i class="ion-ios-clock-outline"></i></span>
+
+                  <div class="info-box-content">
+                    <span class="info-box-text">{% trans "High Priority Cases" %}</span>
+                    <span class="info-box-number">{{ priority_stat | last | get_item:'count' }}</span>
+
+                    <div class="progress">
+                      <div class="progress-bar" style="width: {% widthratio dashboard_stats.open_cases dashboard_stats.total_cases 100 %}%"></div>
+                    </div>
+                    <span class="progress-description">
+                      {% widthratio dashboard_stats.open_cases dashboard_stats.total_cases 100 %}% {% trans "Critical Cases" %}
+                    </span>
+                  </div>
+                  <!-- /.info-box-content -->
+                </div>
+                <!-- /.info-box -->
+              </div>
+
+              <!-- /.col -->
+              <!-- /.col -->
+              <div class="col-md-12 long">
+
+                <div class="row">
+                  <div class="col-md-6 col-sm-12 ">
+
+                    <!-- Bar chart -->
+                    <div class="box box-primary">
+                      <div class="box-header with-border">
+                        <i class="fa fa-bar-chart-o"></i>
+
+                        <h3 class="box-title">{% trans "Daily Submissions" %}</h3>
+                        <div class="box-tools pull-right">
+                          <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
+                          </button>
+                          <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+                        </div>
+                      </div>
+                      <div class="box-body">
+                        <div id="bar-chart" style="height: 300px;"></div>
+                      </div>
+                      <!-- /.box-body-->
+                    </div>
+                    <!-- /.box -->
+                  </div>
+                  <div class="col-md-6 col-sm-12" style="padding-left: 0px;">
+                    
+                    <div class="box box-primary">
+                      <div class="box-header with-border">
+                        <i class="fa fa-bar-chart-o"></i>
+
+                        <h3 class="box-title">{% trans "Cases Per Location" %}</h3>
+
+                        <div class="box-tools pull-right">
+                          <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
+                          </button>
+                          <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+                        </div>
+                      </div>
+                      <div class="box-body">
+                        <div id="donut-chart" style="height: 300px;"></div>
+                      </div>
+                      <!-- /.box-body-->
+                    </div>
+                    <!-- /.box -->
+                  </div>
+                </div>
+
+
+              </div>
+              <!-- /col-md-9 -->
+            </div>
+          </div>
+        </div>
+
+        {% if request.user.HelplineUser.hl_role == 'Caseworker' %}
+        <div class="row">
+
+          <div class="col-md-12" >
+            <div class="row home-pallete">
+              <div class="col-sm-4 col-md-2 palette-item">
+                <div class="color-palette-set">
+                  <div class="bg-blue color-palette" align="center" onclick="window.location = '{% url 'dashboardreports' 'totalcalls' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.total_calls }} </span><br>{% trans "Total Cases" %}</div>
+                </div>
+              </div>
+              <!-- /.col -->
+              <div class="col-sm-4 col-md-2 palette-item">
+                <div class="color-palette-set">
+                  <div class="bg-aqua color-palette" align="center" style="padding-right:5px; padding-bottom:5px;" onclick="window.location = '{% url 'dashboardreports' 'answeredcalls' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.answered_calls }}</span><br>{% trans "Total Cases Closed" %}</div>
+                  <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
+                </div>
+              </div>
+              <!-- /.col -->
+              <div class="col-sm-4 col-md-2 palette-item">
+                <div class="color-palette-set">
+                  <div class="bg-red color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.missed_calls }} </span><br>{% trans "Total Cases Pending" %}</div>
+
+                  <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
+                </div>
+              </div>
+              <!-- /.col -->
+              <div class="col-sm-4 col-md-2 palette-item" onclick="window.location = '{% url 'dashboardreports' 'voicemails' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}'">
+                <div class="color-palette-set">
+                  <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
+                  <div class="bg-yellow color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.voice_mails }} </span><br>{% trans "Total Cases Escalated" %}</div>
+                  <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
+                </div>
+              </div>
+              <!-- /.col -->
+              <div class="col-sm-4 col-md-2 palette-item">
+                <div class="color-palette-set">
+                  <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
+                  <div class="bg-gray color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.number_tickets }}</span><br>{% trans "Follow Up" %}</div>
+                  <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
+                </div>
+              </div>
+              <!-- /.col -->
+              <div class="col-sm-4 col-md-2 palette-item">
+                <div class="color-palette-set">
+                  <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
+                  <div class="bg-gray color-palette" align="center" style=" padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.total_sms }}</span><br>SMS</div>
+                  <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
+                </div>
+              </div>
+              <!-- /.col -->
+            </div>
+          </div>
+          <!-- /.col -->
+        </div>
+        <!-- /.row -->
+        {% endif %}
+
+      </section>
+      <!-- /.content -->
+      {% endblock content %}
+      {% block script_end %}
+
+<script type="text/javascript">
+  
+    /*
+     * BAR CHART
+     * ---------
+     */
+    data = []
+
+
+    var bar_data = {
+      data: {{ gdata|safe }}/*[["January", 10], ["February", 8], ["March", 4], ["April", 13], ["May", 17], ["June", 9]]*/,
+      color: "#3c8dbc"
+    };
+    $.plot("#bar-chart", [bar_data], {
+      grid: {
+        borderWidth: 0.1,
+        borderColor: "#f3f3f3",
+        tickColor: "#f3f3f3"
+      },
+      series: {
+        bars: {
+          show: true,
+          barWidth: 0.1,
+          align: "center"
+        }
+      },
+      xaxis: {
+        mode: "categories",
+        tickLength: 0
+      }
+    });
+    /* END BAR CHART */
+
+
+
+    /*
+     * DONUT CHART
+     * -----------
+     */
+    var dData = {{ dt|safe }}
+    var donutData = []
+    var i = 0;
+    for(var key in dData){
+      var x = 0
+      var dk = {};
+      if(dData.hasOwnProperty(key)){
+        var ds = dData[key]
+        for(var keys in ds){
+         dk[keys] = ds[keys]
+        }
+      }
+      donutData[i] = dk
+      i++
+      
+    }
+
+    $.plot("#donut-chart", donutData, {
+      series: {
+        pie: {
+          show: true,
+          radius: 1,
+          innerRadius: 0.5,
+          label: {
+            show: true,
+            radius: 2 / 3,
+            formatter: labelFormatter,
+            threshold: 0.1
+          }
+
+        }
+      },
+      legend: {
+        show: false
+      }
+    });
+    /*
+     * END DONUT CHART
+     */
+
+
+       /*
+   * Custom Label formatter
+   * ----------------------
+   */
+  function labelFormatter(label,series) {
+    return '<div style="font-size:13px; text-align:center; padding:2px; color: #fff; font-weight: 600; z-index:500;">'
+        + label
+        + "<br>"
+        + Math.round(series.percent) + "%</div>";
+  }
+</script>
+{% endblock script_end %}

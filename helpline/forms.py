@@ -122,6 +122,7 @@ INTERVENTIONS = (
 USER_ROLES = (
     ('Counsellor','Counsellor'),
     ('Caseworker','Caseworker'),
+    ('Casemanager','Casemanager'),
     ('Supervisor', 'Supervisor'),
     ('Administrator', 'Administrator'),
 )

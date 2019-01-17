@@ -722,7 +722,7 @@ class HelplineUser(models.Model):
         null=True,
         verbose_name=_('Avatar'))
     hl_role = models.CharField(
-        max_length=10,
+        max_length=20,
         blank=True, null=True,
         verbose_name=_('Role')
     )

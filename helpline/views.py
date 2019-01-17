@@ -118,6 +118,8 @@ def home(request):
     #     new = initialize_myaccount(request.user)
     #     return redirect("/helpline/#%s/new%s" % (e, new))
 
+    template = 'home'
+
     dashboard_stats = get_dashboard_stats(request.user)
     status_count = get_status_count()
     case_search_form = CaseSearchForm()
@@ -127,7 +129,8 @@ def home(request):
 
     default_service = Service.objects.all().first()
     default_service_xform = default_service.walkin_xform
-    default_service_auth_token = default_service_xform.user.auth_token
+    default_service_auth_token = '25b34d52ca65e2271cdb854832a47b28fed4c03b' # default_service_xform.user.auth_token
+    default_service_xform.pk = 1;
     current_site = get_current_site(request)
 
     gtdata = []
@@ -145,6 +148,29 @@ def home(request):
 
         stat = requests.get(url, headers=headers).json() or {}
 
+
+        # case priority statistics
+        url = 'http://%s/ona/api/v1/charts/%s.json?field_name=case_priority' % (
+            current_site,
+            default_service_xform.pk
+        )
+        statex = requests.get(url, headers=headers).json() or {}
+
+        # case status statistics
+        url_status = 'http://%s/ona/api/v1/charts/%s.json?field_name=case_action' \
+        %(current_site, default_service_xform.pk)
+
+        status_stat = requests.get(url_status, headers= headers).json()
+
+        status_stats = {'escalate':0,'closed':0,'pending':0}
+        rrr = []
+        for st_action in status_stat['data']:
+            for sts in status_stats:
+                r_str = str(st_action['case_action'][0]).lower()
+                if sts == r_str:
+                    status_stats[sts] =  st_action['count']
+
+
         call_statistics = requests.post('%s/api/v1/index' %(settings.CALL_API_URL)).json()
 
         for dt in get_item(stat, 'data'):
@@ -153,7 +179,9 @@ def home(request):
 
         stype = 'case_action'
 
-        if request.user.HelplineUser.hl_role == 'Caseworker':
+        if request.user.HelplineUser.hl_role == 'Caseworker' or \
+        request.user.HelplineUser.hl_role == 'Casemanager':
+            template = 'homeworker'
             url = 'http://%s/ona/api/v1/charts/%s.json?field_name=reporter_county' \
              %(current_site, default_service_xform.pk)
             color = ['#00a65a', '#00c0ef', '#f39c12', '#808000', '#C7980A', '#F4651F', \
@@ -178,17 +206,17 @@ def home(request):
             col = color[ic]
             ic += 1
             stdata.append({"label":str(lbl), "data":str(str(dt['count'])), "color":str(col)})
-    return render(request, 'helpline/home.html',
+
+    return render(request, 'helpline/%s.html' % template,
                 {'dashboard_stats': dashboard_stats,
                    'att': '',
                    'awt': '',
-                   'queues': queues,
                    'case_search_form': case_search_form,
-                   'queue_form': queue_form,
-                   'queue_pause_form': queue_pause_form,
                    'status_count': status_count,
                    'gdata': gtdata,
                    'dt': stdata,
+                   'priority_stat':statex['data'],
+                   'status_stat':status_stats,
                    'call_stat':call_statistics
                 })
 
@@ -357,7 +385,7 @@ def manage_users(request,action=None,action_item=None):
     template = 'users'
     if action != None and action_item != None:
         if action == 'delete':
-            HelplineUser.objects.filter(hl_key__exact=action_item).delete()
+            User.objects.filter(HelplineUser__hl_key__exact=action_item).delete()
             userlist = HelplineUser.objects.all()
             message = "User successfully deleted"
         elif action == 'profile':
@@ -403,7 +431,7 @@ def new_user(request):
                 user.refresh_from_db()
 
                 user.HelplineUser.hl_names = "%s %s" %(form.cleaned_data.get('first_name'), \
-                    form.cleaned_data.get('first_name'))
+                    form.cleaned_data.get('last_name'))
                 user.HelplineUser.hl_nick = form.cleaned_data.get('username')
                 user.HelplineUser.hl_calls = 0
                 user.HelplineUser.hl_email = "%s" % profile_form.cleaned_data.get('useremail')
@@ -451,7 +479,7 @@ def new_user(request):
                     }
                     requests.post(url, headers=headers)
 
-                messages.append("User saved successfully")
+                messages.append("User saved successfully %s" % user.HelplineUser.hl_email)
                 form = RegisterUserForm()
                 profile_form = RegisterProfileForm()
 
