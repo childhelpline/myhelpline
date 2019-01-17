@@ -409,6 +409,7 @@ input:checked + .slider:before {
               </a></li>
             </ul>
           </li>
+          {% if request.user.HelplineUser.hl_role != 'Casemanager'  and request.user.HelplineUser.hl_role != 'Caseworker' %}
           <li class="treeview">
             <a href="#">
               <i class="fa fa-files-o"></i>
@@ -443,7 +444,7 @@ input:checked + .slider:before {
               </span>
             </a>
           </li>
-
+          {% endif %}
           <li class="treeview">
             <a href="javascript:void(0)">
               <i class="fa fa-pie-chart"></i> <span>{% trans "Sources" %}</span>
@@ -514,7 +515,8 @@ input:checked + .slider:before {
             <i class="fa fa-users"></i> <span>{% trans "Users" %}</span>
           </a>
         </li>
-        {% if request.user.HelplineUser.hl_role == 'administrator'  or  request.user.HelplineUser.is_superuser %}
+        {% endif %}
+        {% if request.user.HelplineUser.hl_role == 'Administrator'  or  request.user.HelplineUser.is_superuser %}
         <li>
           <a href="{% url 'user_profile' request.user.username %}">
             <i class="fa fa-wpforms"></i> <span>{% trans "Forms" %}</span>
@@ -525,7 +527,6 @@ input:checked + .slider:before {
             <i class="fa fa-tv"></i> <span>{% trans "Wall Board" %}</span>
           </a>
         </li>
-        {% endif %}
         <li class="treeview">
           <a href="{% url 'adminreports' 'callsummaryreport' %}">
             <i class="fa fa-pie-chart"></i> <span>{% trans "Settings" %}</span>
