@@ -129,8 +129,7 @@ def home(request):
 
     default_service = Service.objects.all().first()
     default_service_xform = default_service.walkin_xform
-    default_service_auth_token = '25b34d52ca65e2271cdb854832a47b28fed4c03b' # default_service_xform.user.auth_token
-    default_service_xform.pk = 1;
+    default_service_auth_token = default_service_xform.user.auth_token
     current_site = get_current_site(request)
 
     gtdata = []
