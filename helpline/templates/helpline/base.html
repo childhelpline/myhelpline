@@ -509,14 +509,14 @@ input:checked + .slider:before {
             </a></li>
           </ul>
         </li>
+        {% endif %}
+        {% if request.user.HelplineUser.hl_role == 'Administrator'  or  request.user.HelplineUser.is_superuser or request.user.HelplineUser.hl_role == 'Admin' %}
 
         <li>
           <a href="{% url 'manageusers' %}">
             <i class="fa fa-users"></i> <span>{% trans "Users" %}</span>
           </a>
         </li>
-        {% endif %}
-        {% if request.user.HelplineUser.hl_role == 'Administrator'  or  request.user.HelplineUser.is_superuser %}
         <li>
           <a href="{% url 'user_profile' request.user.username %}">
             <i class="fa fa-wpforms"></i> <span>{% trans "Forms" %}</span>
