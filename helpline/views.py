@@ -1222,7 +1222,6 @@ def reports(request, report, casetype='Call'):
 
         data['statrecords'] = statrecords
         data['recordkeys'] = recordkeys
-        data['qr'] = q_ur
 
     
     if report == 'nonanalysed':
