@@ -1120,7 +1120,7 @@ def reports(request, report, casetype='Call'):
         if request.user.HelplineUser.hl_role == 'Counsellor':
             query_string = '"case_actions/case_action":{"$i":"escalate"}'
         elif request.user.HelplineUser.hl_role == 'Caseworker':
-            query_string = '"case_actions/case_action":"Escalate",\
+            query_string = '"case_actions/case_action":"escalate",\
             "case_actions/escalate_caseworker":"%s"' %(str(username).lower())
         elif request.user.HelplineUser.hl_role == 'Supervisor':
             query_string = '"case_actions/case_action":"escalate",\
