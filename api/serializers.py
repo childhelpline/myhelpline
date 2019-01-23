@@ -6,7 +6,7 @@ from helpdesk.models import Ticket
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
 
-    name = serializers.IntegerField(source='pk')
+    name = serializers.CharField(source='username')
     label = serializers.CharField(source='username')
     class Meta:
         model = User
