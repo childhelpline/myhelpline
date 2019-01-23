@@ -151,6 +151,7 @@ input:checked + .slider:before {
         <div class="navbar-custom-menu">
           <ul class="nav navbar-nav">
             <!-- Messages: style can be found in dropdown.less-->
+            {% if request.user.HelplineUser.hl_role == 'Supervisor' or request.user.HelplineUser.hl_role == 'Counsellor' or request.user.HelplineUser.hl_role == 'Casemanager' %}
             <li class="dropdown messages-menu">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                 <i class="fa fa-bookmark"></i>{% trans "Average Talk Time" %}: {{ call_stat.avgtalk }}
@@ -162,6 +163,7 @@ input:checked + .slider:before {
                 <i class="fa fa-bookmark"></i>{% trans "Average Wait Time" %}: {{ call_stat.avgwait }}
               </a>
             </li>
+            {% endif %}
 
             <!-- Messages: style can be found in dropdown.less-->
             <li class="dropdown messages-menu">
@@ -690,9 +692,9 @@ input:checked + .slider:before {
  <script type="application/javascript">
   $(document).ready(function () {
             getDataQueue(); //load data on page ready :)
-            setInterval(function () {
-              getDataQueue();
-            }, 3000);
+            // setInterval(function () {
+            //   getDataQueue();
+            // }, 3000);
           });
 
         // Parse data and put values on view
