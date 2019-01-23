@@ -1171,11 +1171,11 @@ def reports(request, report, casetype='Call'):
             else:
                 query_string += ',"case_owner":{"$i":"%s"}' %(username)
 
-        ur = 'http://%s/ona/api/v1/data/%s?query={%s}%s&page=1&page_size=50' %(current_site, \
+        ur = 'http://%s/ona/api/v1/data/%s?query={%s}%s' %(current_site, \
             default_service_xform.pk, query_string, request_string)
 
-        stat = requests.get('http://%s/ona/api/v1/data/%s?query={%s}%s&page=1&page_size=50' %(current_site, \
-            default_service_xform.pk, query_string,  request_string), headers=headers).json()
+        stat = requests.get('http://%s/ona/api/v1/data/%s?query={%s}%s' %(current_site, \
+            default_service_xform.pk, query_string,  request_string), headers=headers).json() # &page=1&page_size=50
         # + '&sort={"_id":-1}'
         # data['statss'] = "Cheru Data: %s" % stat
         data['ur'] = ur
