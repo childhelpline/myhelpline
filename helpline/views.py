@@ -1174,8 +1174,7 @@ def reports(request, report, casetype='Call'):
         ur = 'http://%s/ona/api/v1/data/%s?query={%s}%s' %(current_site, \
             default_service_xform.pk, query_string, request_string)
 
-        stat = requests.get('http://%s/ona/api/v1/data/%s?query={%s}%s' %(current_site, \
-            default_service_xform.pk, query_string,  request_string), headers=headers).json() # &page=1&page_size=50
+        stat = requests.get(ur, headers=headers).json() # &page=1&page_size=50
         # + '&sort={"_id":-1}'
         # data['statss'] = "Cheru Data: %s" % stat
         data['ur'] = ur
@@ -1221,6 +1220,7 @@ def reports(request, report, casetype='Call'):
 
         data['statrecords'] = statrecords
         data['recordkeys'] = recordkeys
+        data['qr'] = q_ur
 
     
     if report == 'nonanalysed':
