@@ -129,7 +129,7 @@ def home(request):
 
     default_service = Service.objects.all().first()
     default_service_xform = default_service.walkin_xform
-    default_service_auth_token = default_service_xform.user.auth_token
+    default_service_auth_token =default_service_xform.user.auth_token  
     current_site = get_current_site(request)
 
     gtdata = []
@@ -1124,7 +1124,7 @@ def reports(request, report, casetype='Call'):
             "case_actions/escalate_caseworker":"%s"' %(request.user.pk)
         elif request.user.HelplineUser.hl_role == 'Supervisor':
             query_string = '"case_actions/case_action":"escalate",\
-            "case_actions/supervisors":"14"' # %(request.user.pk)
+            "case_actions/supervisors":"%s"' %(request.user.pk)
 
 
     elif report == 'today':
