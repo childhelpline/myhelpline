@@ -14,6 +14,7 @@ import email
 from django.core.mail import send_mail
 
 from itertools import tee
+import numbers
 
 from datetime import timedelta, datetime, date, time as datetime_time
 
@@ -193,7 +194,7 @@ def home(request):
     else:
         url = 'http://%s/ona/api/v1/charts/%s.json?field_name=case_action' \
         %(current_site, default_service_xform.pk)
-        color = ['#00c0ef','#f39c12','#00a65a']
+        color = ['#f39c12','#00c0ef','#00a65a']
 
     #for case status 
     status_data = requests.get(url, headers= headers).json()
@@ -210,20 +211,33 @@ def home(request):
         ic += 1
         stdata.append({"label":str(lbl), "data":str(str(dt['count'])), "color":str(col)})
 
-    #  get QA stats
-    url_qa = 'http://%s/ona/api/v1/charts/%s.json?field_name=case_owner' % (
-        current_site,
-        default_service_qa.pk
-    )
+    #  get QA stats http://192.168.1.116/ona/api/v1/data/2?query={"case_owner":"clkadmin"}&format=json
+    if request.user.HelplineUser.hl_role == 'Counsellor':
+        url_qa = 'http://%s/ona/api/v1/data/%s?query={"case_owner":"%s"}' % (
+            current_site,
+            default_service_qa.pk,
+            request.user.username
+        )
+    else:
+        url_qa = 'http://%s/ona/api/v1/data/%s' % (
+            current_site,
+            default_service_qa.pk
+        )
+
     qa_stats = requests.get(url_qa, headers=headers).json() or {}
     stat_qa = 0;
+    quiz = 0;
 
-    for qa_stat in qa_stats['data']:
-        if request.user.HelplineUser.hl_role == 'Counsellor':
-            if qa_stat['case_owner'][0] == username:
-                stat_qa  = qa_stat['count']
-        else:
-            stat_qa += qa_stat['count'] 
+    for all_stats in qa_stats:
+        for ev,qa_stat in all_stats.items():
+            if ev.encode('utf-8') == 'qa_results/note_results':
+                if not str(qa_stat.encode('utf-8')).lower() == 'nan':
+                    stat_qa = stat_qa + float(qa_stat.encode('utf-8')) # '%s || %s || ' %(stat_qa, qa_stat.encode('utf-8'))
+            # stat_qa  = '%s || %s ||' %(str(stat_qa),str(get_item(qa_stat,'qa_results/note_results')))
+        quiz += 1
+
+    if quiz > 0:
+        stat_qa = stat_qa/quiz
 
     high_priority = 0
     for ke_item in statex['data']:
