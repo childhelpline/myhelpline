@@ -52,6 +52,13 @@
                   <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
                 </div>
               </div>
+              <div class="col-sm-4 col-md-2 palette-item">
+                <div class="color-palette-set">
+                  <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
+                  <div class="bg-gray color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ call_stat.pranks | default:0 }}</span><br>{% trans "Dropped Calls" %}</div>
+                  <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
+                </div>
+              </div>
               <!-- /.col -->
               <div class="col-sm-4 col-md-2 palette-item">
                 <div class="color-palette-set">
@@ -61,27 +68,27 @@
                 </div>
               </div>
               <!-- /.col -->
-              <div class="col-sm-4 col-md-2 palette-item">
+              <!-- /.col -->
+            </div>
+          </div>
+          <div class="col-md-4 qa-presence">
+            <div class="row">
+              <div class="{% if request.user.HelplineUser.hl_role == 'Supervisor' %} col-sm-4 col-md-4 {% else %} col-sm-6 col-md-6 {% endif %} palette-item">
                 <div class="color-palette-set">
                   <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
                   <div class="bg-gray color-palette" align="center" style=" padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.total_sms }}</span><br>SMS</div>
                   <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
                 </div>
               </div>
-              <!-- /.col -->
-            </div>
-          </div>
-          <div class="col-md-4 qa-presence">
-            <div class="row">
-              <div class="{% if request.user.HelplineUser.hl_role == 'Supervisor' %} col-sm-6 col-md-6 {% else %} col-sm-12 col-md-12 {% endif %}">
+              <div class="{% if request.user.HelplineUser.hl_role == 'Supervisor' %} col-sm-4 col-md-4 {% else %} col-sm-6 col-md-6 {% endif %}">
                 <div class="color-palette-set">
                   <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
-                  <div class="bg-aqua color-palette" align="center" style="border-radius:0px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.total_sms }} %</span><br /><br />    </div>
+                  <div class="bg-aqua color-palette" align="center" style="border-radius:0px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ qa_stat }} %</span><br /><br />    </div>
                   <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
                 </div>
               </div>
               {% if request.user.HelplineUser.hl_role == 'Supervisor' %}
-              <div class="col-sm-6 col-md-6">
+              <div class="col-sm-4 col-md-4">
 
                 <!--div class="color-palette-set" style="border:solid thin #09F; padding:2px;" align="center">
                   <div class="bg-green disabled color-palette" style="height:30px;"><span>{{ status_count.available }} Available | {% widthratio status_count.available  status_count.total 100 %}%</span></div>
@@ -217,13 +224,13 @@
 
                   <div class="info-box-content">
                     <span class="info-box-text">{% trans "Closed Cases" %}</span>
-                    <span class="info-box-number">{{ dashboard_stats.closed_cases|intcomma }}</span>
+                    <span class="info-box-number">{{ status_stat.closed|intcomma }}</span>
 
                     <div class="progress">
-                      <div class="progress-bar" style="width: {% widthratio dashboard_stats.closed_cases dashboard_stats.total_cases 100 %}%"></div>
+                      <div class="progress-bar" style="width: {% widthratio status_stat.closed status_stat.total 100 %}%"></div>
                     </div>
                     <span class="progress-description">
-                      {% widthratio dashboard_stats.closed_cases dashboard_stats.total_cases 100 %}% {% trans "Closed Cases" %}
+                      {% widthratio status_stat.closed status_stat.total 100 %}% {% trans "Closed Cases" %}
                     </span>
                   </div>
                   <!-- /.info-box-content -->
@@ -234,13 +241,13 @@
 
                   <div class="info-box-content">
                     <span class="info-box-text">{% trans "Escalated Cases" %}</span>
-                    <span class="info-box-number">{{ dashboard_stats.closed_cases|intcomma }}</span>
+                    <span class="info-box-number">{{ status_stat.escalate |intcomma }}</span>
 
                     <div class="progress">
-                      <div class="progress-bar" style="width: {% widthratio dashboard_stats.referred_cases dashboard_stats.total_cases 100 %}%"></div>
+                      <div class="progress-bar" style="width: {% widthratio status_stat.escalate status_stat.total 100 %}%"></div>
                     </div>
                     <span class="progress-description">
-                      {% widthratio dashboard_stats.referred_cases dashboard_stats.total_cases 100 %}% {% trans "Escalated Cases" %}
+                      {% widthratio status_stat.escalate status_stat.total 100 %}% {% trans "Escalated Cases" %}
                     </span>
                   </div>
                   <!-- /.info-box-content -->
@@ -250,14 +257,15 @@
                   <span class="info-box-icon"><i class="ion-ios-clock-outline"></i></span>
 
                   <div class="info-box-content">
-                    <span class="info-box-text">{% trans "Critical Cases" %}</span>
-                    <span class="info-box-number">{{ dashboard_stats.open_cases|intcomma }}</span>
+                    <span class="info-box-text">{% trans "High Priority Cases" %}</span>
+                    <span class="info-box-number">{{ priority_stat |intcomma }}</span>
 
                     <div class="progress">
-                      <div class="progress-bar" style="width: {% widthratio dashboard_stats.open_cases dashboard_stats.total_cases 100 %}%"></div>
+                      <div class="progress-bar" style="width: {% widthratio priority_stat status_stat.total 100 %}%"></div>
+                      }
                     </div>
                     <span class="progress-description">
-                      {% widthratio dashboard_stats.open_cases dashboard_stats.total_cases 100 %}% {% trans "Critical Cases" %}
+                      {% widthratio priority_stat status_stat.total 100 %}% {% trans "Critical Cases" %}
                     </span>
                   </div>
                   <!-- /.info-box-content -->
@@ -269,13 +277,13 @@
 
                   <div class="info-box-content">
                     <span class="info-box-text">{% trans "Pending Cases" %}</span>
-                    <span class="info-box-number">{{ dashboard_stats.open_cases|intcomma }}</span>
+                    <span class="info-box-number">{{ status_stat.pending|intcomma }}</span>
 
                     <div class="progress">
-                      <div class="progress-bar" style="width: {% widthratio dashboard_stats.open_cases dashboard_stats.total_cases 100 %}%"></div>
+                      <div class="progress-bar" style="width: {% widthratio status_stat.pending status_stat.total 100 %}%"></div>
                     </div>
                     <span class="progress-description">
-                      {% widthratio dashboard_stats.open_cases dashboard_stats.total_cases 100 %}% {% trans "Pending Cases" %}
+                      {% widthratio status_stat.pending status_stat.total 100 %}% {% trans "Pending Cases" %}
                     </span>
                   </div>
                   <!-- /.info-box-content -->

@@ -129,82 +129,108 @@ def home(request):
 
     default_service = Service.objects.all().first()
     default_service_xform = default_service.walkin_xform
+
+    default_service_qa = default_service.qa_xform
     default_service_auth_token = default_service_xform.user.auth_token
     current_site = get_current_site(request)
 
     gtdata = []
     stdata = []
-    if default_service != '' and default_service != 0 and default_service_xform:
-        url = 'http://%s/ona/api/v1/charts/%s.json?field_name=_submission_time' % (
-            current_site,
-            default_service_xform.pk
-        )
 
-        # Graph data
-        headers = {
-            'Authorization': 'Token %s' % (default_service_auth_token)
-        }
+    # if default_service != '' and default_service > 0 and default_service_xform.pk  > 0:
+    url = 'http://%s/ona/api/v1/charts/%s.json?field_name=_submission_time' % (
+        current_site,
+        default_service_xform.pk
+    )
 
-        stat = requests.get(url, headers=headers).json() or {}
+    # Graph data
+    headers = {
+        'Authorization': 'Token %s' % (default_service_auth_token)
+    }
+
+    stat = requests.get(url, headers=headers).json() or {}
 
 
-        # case priority statistics
-        url = 'http://%s/ona/api/v1/charts/%s.json?field_name=case_priority' % (
-            current_site,
-            default_service_xform.pk
-        )
-        statex = requests.get(url, headers=headers).json() or {}
+    # case priority statistics
+    url = 'http://%s/ona/api/v1/charts/%s.json?field_name=case_priority' % (
+        current_site,
+        default_service_xform.pk
+    )
+    statex = requests.get(url, headers=headers).json() or {}
 
-        # case status statistics
-        url_status = 'http://%s/ona/api/v1/charts/%s.json?field_name=case_action' \
+    # case status statistics
+    url_status = 'http://%s/ona/api/v1/charts/%s.json?field_name=case_action' \
+    %(current_site, default_service_xform.pk)
+
+    status_stat = requests.get(url_status, headers= headers).json() or {}
+
+    status_stats = {'escalate':0,'closed':0,'pending':0,'total':0}
+    rrr = []
+    for st_action in status_stat['data']:
+        for sts in status_stats:
+            r_str = str(st_action['case_action'][0]).lower()
+            if sts == r_str:
+                status_stats[sts] =  st_action['count']
+        status_stats['total'] += st_action['count']
+
+
+    call_statistics = requests.post('%s/api/v1/index' %(settings.CALL_API_URL)).json()
+
+    for dt in get_item(stat, 'data'):
+        t = [str(get_item(dt, '_submission_time')), get_item(dt, 'count')]
+        gtdata.append(t)
+
+    stype = 'case_action'
+
+    if request.user.HelplineUser.hl_role == 'Caseworker' or \
+    request.user.HelplineUser.hl_role == 'Casemanager':
+        template = 'homeworker'
+        url = 'http://%s/ona/api/v1/charts/%s.json?field_name=reporter_county' \
+         %(current_site, default_service_xform.pk)
+        color = ['#00a65a', '#00c0ef', '#f39c12', '#808000', '#C7980A', '#F4651F', \
+        '#82D8A7', '#CC3A05', '#575E76', '#156943', '#0BD055', '#ACD338']
+        stype = 'reporter_county'
+    else:
+        url = 'http://%s/ona/api/v1/charts/%s.json?field_name=case_action' \
         %(current_site, default_service_xform.pk)
+        color = ['#00c0ef','#f39c12','#00a65a']
 
-        status_stat = requests.get(url_status, headers= headers).json()
+    #for case status 
+    status_data = requests.get(url, headers= headers).json()
 
-        status_stats = {'escalate':0,'closed':0,'pending':0}
-        rrr = []
-        for st_action in status_stat['data']:
-            for sts in status_stats:
-                r_str = str(st_action['case_action'][0]).lower()
-                if sts == r_str:
-                    status_stats[sts] =  st_action['count']
-
-
-        call_statistics = requests.post('%s/api/v1/index' %(settings.CALL_API_URL)).json()
-
-        for dt in get_item(stat, 'data'):
-            t = [str(get_item(dt, '_submission_time')), get_item(dt, 'count')]
-            gtdata.append(t)
-
-        stype = 'case_action'
-
-        if request.user.HelplineUser.hl_role == 'Caseworker' or \
-        request.user.HelplineUser.hl_role == 'Casemanager':
-            template = 'homeworker'
-            url = 'http://%s/ona/api/v1/charts/%s.json?field_name=reporter_county' \
-             %(current_site, default_service_xform.pk)
-            color = ['#00a65a', '#00c0ef', '#f39c12', '#808000', '#C7980A', '#F4651F', \
-            '#82D8A7', '#CC3A05', '#575E76', '#156943', '#0BD055', '#ACD338']
-            stype = 'reporter_county'
+    ic = 0
+    for dt in get_item(status_data, 'data'):#  status_data['data']:
+        lbl = dt[str(stype)]
+        if isinstance(lbl, list):
+            lbl = lbl[0].encode('UTF8') if not len(lbl) == 0 else "Others"
         else:
-            url = 'http://%s/ona/api/v1/charts/%s.json?field_name=case_action' \
-            %(current_site, default_service_xform.pk)
-            color = ['#00a65a', '#00c0ef', '#f39c12']
+            lbl if not len(lbl) == 0 else "Others"
 
-        #for case status 
-        status_data = requests.get(url, headers= headers).json()
+        col = color[ic]
+        ic += 1
+        stdata.append({"label":str(lbl), "data":str(str(dt['count'])), "color":str(col)})
 
-        ic = 0
-        for dt in get_item(status_data, 'data'):#  status_data['data']:
-            lbl = dt[str(stype)]
-            if isinstance(lbl, list):
-                lbl = lbl[0].encode('UTF8') if not len(lbl) == 0 else "Others"
-            else:
-                lbl if not len(lbl) == 0 else "Others"
+    #  get QA stats
+    url_qa = 'http://%s/ona/api/v1/charts/%s.json?field_name=case_owner' % (
+        current_site,
+        default_service_qa.pk
+    )
+    qa_stats = requests.get(url_qa, headers=headers).json() or {}
+    stat_qa = 0;
 
-            col = color[ic]
-            ic += 1
-            stdata.append({"label":str(lbl), "data":str(str(dt['count'])), "color":str(col)})
+    for qa_stat in qa_stats['data']:
+        if request.user.HelplineUser.hl_role == 'Counsellor':
+            if qa_stat['case_owner'][0] == username:
+                stat_qa  = qa_stat['count']
+        else:
+            stat_qa += qa_stat['count'] 
+
+    high_priority = 0
+    for ke_item in statex['data']:
+        if str(ke_item['case_priority'][0]) == 'High Priority':
+            high_priority = ke_item['count']
+
+
 
     return render(request, 'helpline/%s.html' % template,
                 {'dashboard_stats': dashboard_stats,
@@ -214,9 +240,10 @@ def home(request):
                    'status_count': status_count,
                    'gdata': gtdata,
                    'dt': stdata,
-                   'priority_stat':statex['data'],
+                   'priority_stat':high_priority,
                    'status_stat':status_stats,
-                   'call_stat':call_statistics
+                   'call_stat':call_statistics,
+                   'qa_stat':stat_qa
                 })
 
 
