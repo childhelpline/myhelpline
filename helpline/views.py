@@ -239,6 +239,7 @@ def home(request):
     if quiz > 0:
         stat_qa = stat_qa/quiz
 
+
     high_priority = 0
     for ke_item in statex['data']:
         if str(ke_item['case_priority'][0]) == 'High Priority':
@@ -1761,10 +1762,19 @@ def case_form(request, form_name):
     #charts
     url = 'http://%s/ona/api/v1/data/%s' %(current_site, default_service_xform.pk)
 
+
+    users = User.objects.exclude(username__iexact=request.user.username)
+
+    trans_users = []
+    for trans_user in users:
+        trans_users.append({'text':str(trans_user.username),'value':str(trans_user.username)})
+
     message = ''
     initial = {}
     data = {}
     caseid = ''
+
+    data['users'] = trans_users
     data['enketo_url'] = settings.ENKETO_URL
     data['base_domain'] = settings.BASE_DOMAIN
     data['data_url'] = url
