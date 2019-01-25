@@ -133,6 +133,7 @@ def home(request):
 
     default_service_qa = default_service.qa_xform
     default_service_auth_token = default_service_xform.user.auth_token
+
     current_site = get_current_site(request)
 
     gtdata = []
@@ -1767,7 +1768,8 @@ def case_form(request, form_name):
 
     trans_users = []
     for trans_user in users:
-        trans_users.append({'text':str(trans_user.username),'value':str(trans_user.username)})
+        if HelplineUser.objects.filter(user=trans_user):
+            trans_users.append({'text':str(trans_user.username),'value':str(trans_user.HelplineUser.hl_key)})
 
     message = ''
     initial = {}

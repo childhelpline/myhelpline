@@ -185,7 +185,7 @@ audio{
       return false
 
     /////try pass filled form data for records
-   {% if form_name != 'call' %}
+   {% if form_name == 'call' %}
       var dispose_form = '#disposeDet';
 
         if($(param).val() == 'Transfer'){
@@ -345,7 +345,6 @@ audio{
                             <!-- /.col -->
                             <div class="col-xs-6 contact-results {% if form_name != 'call' %} hidden {% endif %}">
                               <p class="lead">Contact Search Results</p>
-
                               <div class="table-responsive text-muted well-sm no-shadow" style="min-height: 242px;">
                                 <div id="contact-search-results"></div>
                               </div>
