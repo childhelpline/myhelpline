@@ -101,7 +101,7 @@ tr:nth-child(odd) {
 
           <div class="info-box-content">
             <span class="info-box-text">Total <br /> Calls</span>
-            <span class="info-box-number">{{ dashboard_stats.total_calls }}</span>
+            <span class="info-box-number">{{call.calls | default:0 }}</span>
           </div>
           <!-- /.info-box-content -->
         </div>
@@ -114,7 +114,7 @@ tr:nth-child(odd) {
 
           <div class="info-box-content">
             <span class="info-box-text">Calls <br />Abandoned</span>
-            <span class="info-box-number">{{ dashboard_stats.abandoned_calls }}</span>
+            <span class="info-box-number">{{call.abandoned | default:0 }}</span>
           </div>
           <!-- /.info-box-content -->
         </div>
@@ -131,7 +131,7 @@ tr:nth-child(odd) {
 
           <div class="info-box-content">
             <span class="info-box-text">Calls <br /> Recieved</span>
-            <span class="info-box-number">{{ dashboard_stats.answered_calls }}</span>
+            <span class="info-box-number">{{call.answered | default:0 }}</span>
           </div>
           <!-- /.info-box-content -->
         </div>
@@ -143,8 +143,8 @@ tr:nth-child(odd) {
           <span class="info-box-icon bg-red"><i class="ion ion-ios-telephone-outline"></i></span>
 
           <div class="info-box-content">
-            <span class="info-box-text">Nobody<br />Available</span>
-            <span class="info-box-number">{{ dashboard_stats.voice_mails }}</span>
+            <span class="info-box-text">Voice<br />Mails</span>
+            <span class="info-box-number">{{call.voicemail | default:0 }}</span>
           </div>
           <!-- /.info-box-content -->
         </div>
@@ -211,25 +211,25 @@ tr:nth-child(odd) {
               <div class="col-sm-6 col-md-6" style="padding-right:2px; padding-left:2px;">
                 <div class="color-palette-set">
                   <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
-                  <div class="bg-primary color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.total_cases }} </span><br />{% trans "Total Cases" %}</div>
+                  <div class="bg-primary color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ case.total }} </span><br />{% trans "Total Cases" %}</div>
                 </div>
               </div>
               <!-- /.col -->
               <div class="col-sm-6 col-md-6" style="padding-right:2px; padding-left:2px;">
                 <div class="color-palette-set">
-                  <div class="bg-yellow color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.open_cases }} </span><br />{% trans "Pending Cases" %}</div>
+                  <div class="bg-yellow color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ case.pending }} </span><br />{% trans "Pending Cases" %}</div>
                 </div>
               </div>
               <!-- /.col -->
               <div class="col-sm-6 col-md-6" style="padding-right:2px; margin-top:10px; padding-left:2px;">
                 <div class="color-palette-set">
-                  <div class="bg-green color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.closed_cases }} </span><br />{% trans "Closed Cases" %}</div>
+                  <div class="bg-green color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ case.closed }} </span><br />{% trans "Closed Cases" %}</div>
                 </div>
               </div>
               <!-- /.col -->
               <div class="col-sm-6 col-md-6" style="padding-right:2px; margin-top:10px; padding-left:2px;">
                 <div class="color-palette-set">
-                  <div class="bg-red color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.referred_cases }} </span><br />{% trans "Escalated Cases" %}</div>
+                  <div class="bg-red color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ case.escalate }} </span><br />{% trans "Escalated Cases" %}</div>
                 </div>
               </div>
               <!-- /.col -->

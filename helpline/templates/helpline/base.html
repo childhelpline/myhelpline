@@ -398,7 +398,7 @@ input:checked + .slider:before {
               </a></li>
               <li><a href="{% url 'dashboardreports' 'escalated' 'case' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Escalated Cases" %}
                 <span class="pull-right-container">
-                  <span class="label label-warning pull-right">{{ dashboard_stats.open_cases }}</span>
+                  <span class="label label-warning pull-right">{{ status_stat.escalate }}</span>
                 </span>
               </a></li>
               <!--li><a href="{% url 'dashboardreports' 'pendingcases' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Pending Cases" %}
@@ -408,7 +408,7 @@ input:checked + .slider:before {
               </a></li-->
               <li><a href="{% url 'dashboardreports' 'totalcases' 'case' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "All Cases" %}
                 <span class="pull-right-container">
-                  <span class="label label-info pull-right">{{ dashboard_stats.total_cases }}</span>
+                  <span class="label label-info pull-right">{{ status_stat.total }}</span>
                 </span>
               </a></li>
             </ul>
@@ -423,11 +423,14 @@ input:checked + .slider:before {
               </span>
             </a>
             <ul class="treeview-menu">
-              <li><a href="{% url 'dashboardreports' 'missedcalls' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Missed Calls" %}
-                <span class="pull-right-container">
-                  <span class="label label-danger pull-right">{{ call_stat.calls }}</span>
-                </span>
-              </a></li>
+              <li>
+                <a href="{% url 'dashboardreports' 'missedcalls' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}">
+                  <i class="fa fa-circle-o"></i> {% trans "Missed Calls" %}
+                  <span class="pull-right-container">
+                    <span class="label label-danger pull-right">{{ call_stat.calls }}</span>
+                  </span>
+                </a>
+              </li>
               <li><a href="{% url 'dashboardreports' 'answeredcalls' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Answered Calls" %}
                 <span class="pull-right-container">
                   <span class="label label-success pull-right">{{ call_stat.answered }}</span>
@@ -437,7 +440,8 @@ input:checked + .slider:before {
                 <span class="pull-right-container">
                   <span class="label label-warning pull-right">{{ call_stat.voicemail }}</span>
                 </span>
-              </a></li>
+              </a>
+            </li>
             </ul>
           </li>
           <li>

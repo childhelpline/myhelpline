@@ -43,6 +43,7 @@ from django.conf import settings
 from django.utils.translation import gettext as _
 from django.utils import timezone
 from django.core.files.storage import FileSystemStorage
+from django.contrib.sessions.models import Session
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -138,14 +139,14 @@ def home(request):
 
     gtdata = []
     stdata = []
-
+    
     # if default_service != '' and default_service > 0 and default_service_xform.pk  > 0:
     url = 'http://%s/ona/api/v1/charts/%s.json?field_name=_submission_time' % (
         current_site,
         default_service_xform.pk
     )
 
-    # Graph data
+    # Set headers
     headers = {
         'Authorization': 'Token %s' % (default_service_auth_token)
     }
@@ -427,7 +428,9 @@ def manage_users(request,action=None,action_item=None):
     template = 'users'
     if action != None and action_item != None:
         if action == 'delete':
-            User.objects.filter(HelplineUser__hl_key__exact=action_item).delete()
+            del_user = User.objects.filter(HelplineUser__hl_key__exact=action_item)
+            del_user.is_active = False;
+            del_user.save()
             userlist = HelplineUser.objects.all()
             message = "User successfully deleted"
         elif action == 'profile':
@@ -1763,13 +1766,19 @@ def case_form(request, form_name):
     #charts
     url = 'http://%s/ona/api/v1/data/%s' %(current_site, default_service_xform.pk)
 
+    sessions = Session.objects.filter(expire_date__gte=timezone.now())
+    uid_list = []
 
-    users = User.objects.exclude(username__iexact=request.user.username)
+    # Build a list of user ids from that query
+    for session in sessions:
+        data = session.get_decoded()
+        uid_list.append(data.get('_auth_user_id', None))
 
     trans_users = []
+    # Query all logged in users based on id list
+    users = User.objects.filter(id__in=uid_list)
     for trans_user in users:
-        if HelplineUser.objects.filter(user=trans_user):
-            trans_users.append({'text':str(trans_user.username),'value':str(trans_user.HelplineUser.hl_key)})
+        trans_users.append({'text':str(trans_user.username),'value':str(trans_user.HelplineUser.hl_key)})
 
     message = ''
     initial = {}
@@ -2845,11 +2854,46 @@ def ajax_get_sub_subcategory(request, category):
 @login_required
 def wall(request):
     """Display statistics for the wall board"""
+
+    # Case statistics
+
+    default_service = Service.objects.all().first()
+    default_service_xform = default_service.walkin_xform
+
+    default_service_qa = default_service.qa_xform
+    default_service_auth_token = default_service_xform.user.auth_token
+    current_site = get_current_site(request)
+
+    # Graph data
+    headers = {
+        'Authorization': 'Token %s' % (default_service_auth_token)
+    }
+
+    url_status = 'http://%s/ona/api/v1/charts/%s.json?field_name=case_action' \
+    %(current_site, default_service_xform.pk)
+
+    status_stat = requests.get(url_status, headers= headers).json() or {}
+
+    status_stats = {'escalate':0,'closed':0,'pending':0,'total':0}
+    rrr = []
+    for st_action in status_stat['data']:
+        for sts in status_stats:
+            r_str = str(st_action['case_action'][0]).lower()
+            if sts == r_str:
+                status_stats[sts] =  st_action['count']
+        status_stats['total'] += st_action['count']
+
+    
+
+    # call statistics
+    call_statistics = requests.post('%s/api/v1/index' %(settings.CALL_API_URL)).json()
+
     dashboard_stats = get_dashboard_stats(request.user)
     week_dashboard_stats = get_dashboard_stats(request.user, interval='weekly')
-    return render(request, 'helpline/wall.html',
-                  {'dashboard_stats': dashboard_stats,
-                   'week_dashboard_stats': week_dashboard_stats})
+
+    statistics = {'case': status_stats,'call':call_statistics,'dashboard_stats': dashboard_stats,
+                   'week_dashboard_stats': week_dashboard_stats}
+    return render(request, 'helpline/wall.html',statistics)
 
 @login_required
 def sources(request, source=None,itemid=None):
