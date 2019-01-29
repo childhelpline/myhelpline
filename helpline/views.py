@@ -971,7 +971,7 @@ def general_reports(request, report='cases'):
     xform = get_form({'id_string__iexact': str(default_service.walkin_xform)})
 
     query = request.GET.get('q', '')
-    datetime_range = request.GET.get("datetime_range")
+    datetime_range = request.GET.get("datetime_range") or ''
     agent = request.GET.get("agent")
     category = request.GET.get("category", "")
     form = ReportFilterForm(request.GET)
@@ -992,10 +992,10 @@ def general_reports(request, report='cases'):
     request_string = ''
     query_string = ''
 
-    if datetime_range == '':
-        start_date, end_date = [datetime_range.split(" - ")[0], datetime_range.split(" - ")[1]]
-        start_date = datetime.strptime(start_date, '%m/%d/%Y')
-        end_date = datetime.strptime(end_date, '%m/%d/%Y')
+    # if datetime_range == '':
+    #     start_date, end_date = [datetime_range.split(" - ")[0], datetime_range.split(" - ")[1]]
+    #     start_date = datetime.strptime(start_date, '%m/%d/%Y')
+    #     end_date = datetime.strptime(end_date, '%m/%d/%Y')
 
     # if report == 'escalated':
     #     if request.user.HelplineUser.hl_role == 'Counsellor':
@@ -1019,10 +1019,15 @@ def general_reports(request, report='cases'):
     if report.lower() == 'calls':
         """For call reports"""
         htmltemplate = "helpline/report.html"
-        call_url = "%s/api/v1/call/cdrdata?daterange=%s" %(settings.CALL_API_URL, \
+        if datetime_range == '':
+            call_url = "%s/api/v1/call/cdrdata" %(settings.CALL_API_URL)
+        else:
+            call_url = "%s/api/v1/call/cdrdata?daterange=%s" %(settings.CALL_API_URL, \
             datetime_range)
+
         call_data = requests.post(call_url).json()
         data['report_data'] = call_data
+        data['urls'] = call_url
 
     if report.lower() == 'voicemails':
         """For call reports"""
