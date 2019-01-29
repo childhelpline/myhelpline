@@ -396,7 +396,7 @@ audio{
 
     </div>
     <script>
-      sessionStorage.setItem("on_case", true);
+      sessionStorage.setItem("on_case", 1);
       window.addEventListener("message", receiveMessage, false);
 
       function receiveMessage(event)
@@ -404,7 +404,6 @@ audio{
         if(event.data){
           var resp = JSON.parse(event.data)
           if(resp.enketoEvent == 'submissionsuccess' || resp.status == 201){
-            sessionStorage.setItem("on_case", false);
           /////try pass filled form data for records
           {% if form_name == 'call' %}
               $.ajax({
@@ -462,6 +461,8 @@ audio{
               {% endif %}
 
               /////
+              
+            sessionStorage.setItem("on_case", 0);
           }
         } 
       }
