@@ -1016,13 +1016,12 @@ def general_reports(request, report='cases'):
 
     htmltemplate = 'helpline/report_cases.html'
 
-    if report.lower() == 'call':
+    if report.lower() == 'calls':
         """For call reports"""
         htmltemplate = "helpline/report.html"
-        
-        call_data = requests.post("%s/api/v1/call/cdrdata?daterange=%s" %(settings.CALL_API_URL, \
-            datetime_range)).json()
-
+        call_url = "%s/api/v1/call/cdrdata?daterange=%s" %(settings.CALL_API_URL, \
+            datetime_range)
+        call_data = requests.post(call_url).json()
         data['report_data'] = call_data
 
     elif report.lower() == 'emails':
@@ -1756,7 +1755,7 @@ def case_form(request, form_name):
     default_service_auth_token = default_service_xform.user.auth_token
     current_site = get_current_site(request)
     """
-    '7331a310c46884d2643ca9805aaf0d420ebfc831'
+    '7331a310c46884d2643ca9805aaf0d420ebfc831 808935560b3f462caf70364d2850071b041d8c28'
     Graph data
     """
     headers = { 
@@ -1778,7 +1777,8 @@ def case_form(request, form_name):
     # Query all logged in users based on id list
     users = User.objects.filter(id__in=uid_list)
     for trans_user in users:
-        trans_users.append({'text':str(trans_user.username),'value':str(trans_user.HelplineUser.hl_key)})
+        if HelplineUser.objects.filter(user=trans_user):
+                    trans_users.append({'text':str(trans_user.username),'value':str(trans_user.HelplineUser.hl_key)})
 
     message = ''
     initial = {}
