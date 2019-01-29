@@ -941,7 +941,7 @@ if(sessionStorage.getItem('in_queue') == 1){
   if(params.get('callcase') == null){
     var call = setInterval(function () {
       $.post("{% setting "CALL_API_URL" %}/api/v1/call/agent?poll={{request.user.HelplineUser.hl_key | safe}}",function(data){
-        if(data.status == 'oncall' && (typeof(localStorage.getItem("on_case")) == undefined || sessionStorage.getItem("on_case") == 0)){
+        if(data.status == 'oncall' && (typeof(localStorage.getItem("on_case")) == 'undefined' || sessionStorage.getItem("on_case") == 0)){
           sessionStorage.setItem("on_case", 1);
           window.location = "{% url "case_form" "call"  %}?callcase="+ data.data + '&phone=' + data.phone;
           $('#phone').html("Caller Number: " + data.phone)
