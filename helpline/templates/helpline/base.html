@@ -941,13 +941,15 @@ if(sessionStorage.getItem('in_queue') == 1){
   if(params.get('callcase') == null){
     var call = setInterval(function () {
       $.post("{% setting "CALL_API_URL" %}/api/v1/call/agent?poll={{request.user.HelplineUser.hl_key | safe}}",function(data){
-        if(data.status == 'oncall'){
+        if(data.status == 'oncall' && sessionStorage.getItem("on_case") == false){
+          sessionStorage.setItem("on_case", true);
           window.location = "{% url "case_form" "call"  %}?callcase="+ data.data + '&phone=' + data.phone;
           $('#phone').html("Caller Number: " + data.phone)
           clearInterval(call);    
         /*}else if(data.status == 'online'){
           clearInterval(call);*/
         }else if(data.status == 'offline'){
+          sessionStorage.setItem("on_case", false);
           clearInterval(call);
         }
       });
