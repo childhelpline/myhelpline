@@ -12,6 +12,7 @@ import urllib
 import imaplib,smtplib
 import email
 from django.core.mail import send_mail
+import operator
 
 from itertools import tee
 import numbers
@@ -135,13 +136,14 @@ def home(request):
     default_service_qa = default_service.qa_xform
     default_service_auth_token = default_service_xform.user.auth_token
 
+
     current_site = get_current_site(request)
 
     gtdata = []
     stdata = []
     
     # if default_service != '' and default_service > 0 and default_service_xform.pk  > 0:
-    url = 'http://%s/ona/api/v1/charts/%s.json?field_name=_submission_time' % (
+    url = 'http://%s/ona/api/v1/charts/%s.json?field_name=_submission_time&limit=14' % (
         current_site,
         default_service_xform.pk
     )
@@ -161,6 +163,11 @@ def home(request):
     )
     statex = requests.get(url, headers=headers).json() or {}
 
+    home_statistics = {}
+    # SMS stats
+    home_statistics['sms'] = SMSCDR.objects.filter(sms_time__date=datetime.today()).count()
+    # Email stats
+    home_statistics['email'] = Emails.objects.filter(email_time__date=datetime.today()).count()
     # case status statistics
     url_status = 'http://%s/ona/api/v1/charts/%s.json?field_name=case_action' \
     %(current_site, default_service_xform.pk)
@@ -178,40 +185,58 @@ def home(request):
 
 
     call_statistics = requests.post('%s/api/v1/index' %(settings.CALL_API_URL)).json()
-
+    
+    forloop = 0
     for dt in get_item(stat, 'data'):
         t = [str(get_item(dt, '_submission_time')), get_item(dt, 'count')]
         gtdata.append(t)
+        forloop += 1
+        if forloop == 14:
+            break
 
     stype = 'case_action'
 
-    if request.user.HelplineUser.hl_role == 'Caseworker' or \
-    request.user.HelplineUser.hl_role == 'Casemanager':
-        template = 'homeworker'
-        url = 'http://%s/ona/api/v1/charts/%s.json?field_name=reporter_county' \
-         %(current_site, default_service_xform.pk)
-        color = ['#00a65a', '#00c0ef', '#f39c12', '#808000', '#C7980A', '#F4651F', \
-        '#82D8A7', '#CC3A05', '#575E76', '#156943', '#0BD055', '#ACD338']
-        stype = 'reporter_county'
-    else:
-        url = 'http://%s/ona/api/v1/charts/%s.json?field_name=case_action' \
-        %(current_site, default_service_xform.pk)
-        color = ['#f39c12','#00c0ef','#00a65a']
+    # if request.user.HelplineUser.hl_role == 'Caseworker' or \
+    # request.user.HelplineUser.hl_role == 'Casemanager':
+    #     template = 'homeworker'
+    url = 'http://%s/ona/api/v1/charts/%s.json?field_name=reporter_county' \
+     %(current_site, default_service_xform.pk)
+    color = ['#CD5C5C','#000000','#8A2BE2','#A52A2A','#DEB887','#ADD8E6','#F08080','#90EE90','#F0E68C','#FFB6C1', \
+    '#5F9EA0','#7FFF00','#D2691E','#FF7F50','#6495ED','#FFF8DC','#DC143C','#00FFFF','#00008B','#008B8B','#B8860B','#A9A9A9', \
+    '#006400','#A9A9A9','#BDB76B','#8B008B','#556B2F','#FF8C00','#9932CC','#8B0000','#E9967A','#8FBC8F','#483D8B','#2F4F4F',\
+    '#2F4F4F','#00CED1','#9400D3','#FF1493','#00BFFF','#696969','#696969','#1E90FF','#B22222','#FFFAF0','#228B22','#DCDCDC',\
+    '#F8F8FF','#FFD700','#DAA520','#808080','#ADFF2F','#F0FFF0','#FF69B4','#FFE4C4','#4B0082','#FFFFF0','#E6E6FA',\
+    '#FFF0F5','#7CFC00','#FFFACD','#FAFAD2','#90EE90','#D3D3D3','#F0F8FF','#FAEBD7','#F0FFFF','#F5F5DC','#7FFFD4','#FFA07A'
+    ]
+    stype = 'reporter_county'
+    # else:
+    #     url = 'http://%s/ona/api/v1/charts/%s.json?field_name=case_action' \
+    #     %(current_site, default_service_xform.pk)
+    #     color = ['#f39c12','#00c0ef','#00a65a']
 
     #for case status 
-    status_data = requests.get(url, headers= headers).json()
+    status_data = requests.get(url, headers=headers).json()
 
     ic = 0
-    for dt in get_item(status_data, 'data'):#  status_data['data']:
+    othercount = 0
+    datas = get_item(status_data, 'data')
+    for dt in sorted(get_item(status_data, 'data'),reverse=True):#  status_data['data']:
         lbl = dt[str(stype)]
         if isinstance(lbl, list):
-            lbl = lbl[0].encode('UTF8') if not len(lbl) == 0 else "Others"
+            lbl = lbl[0] if lbl[0] and len(lbl[0]) > 0 else "Others"
         else:
-            lbl if not len(lbl) == 0 else "Others"
+            lbl = lbl if not len(lbl) == 0 else "Others"
 
-        col = color[ic]
-        ic += 1
-        stdata.append({"label":str(lbl), "data":str(str(dt['count'])), "color":str(col)})
+        col = color[ic] if color[ic] else color[0]
+        if ic < 9 and lbl != 'Others':
+            if not isinstance(lbl, int) and len(lbl) > 3:
+                stdata.append({"label":str(lbl), "data":str(str(dt['count'])), "color":str(col)})
+                ic += 1
+        else:
+            othercount = int(dt['count'])
+        
+
+    stdata.append({"label":'Others', "data":str(othercount), "color":str(col)})
 
     #  get QA stats http://192.168.1.116/ona/api/v1/data/2?query={"case_owner":"clkadmin"}&format=json
     if request.user.HelplineUser.hl_role == 'Counsellor':
@@ -260,7 +285,9 @@ def home(request):
                    'priority_stat':high_priority,
                    'status_stat':status_stats,
                    'call_stat':call_statistics,
-                   'qa_stat':stat_qa
+                   'qa_stat':stat_qa,
+                   'status_data':status_data,
+                   'home':home_statistics
                 })
 
 
@@ -1035,7 +1062,7 @@ def general_reports(request, report='cases'):
         call_url = "%s/api/v1/call/cdrdata?daterange=%s" %(settings.CALL_API_URL, \
             datetime_range)
         call_data = requests.post(call_url).json()
-        data['report_data'] = filter(lambda _call_data: _call_data['voicemail'], call_data)
+        data['report_data'] = filter(lambda call_data: call_data['voicemail'], call_data)
     elif report.lower() == 'emails':
         """For call reports"""
         email_data = Emails.objects.all()
@@ -1133,6 +1160,7 @@ def reports(request, report, casetype='Call'):
     default_service = Service.objects.all().first()
     default_service_xform = default_service.walkin_xform
     default_service_auth_token = default_service_xform.user.auth_token
+
     current_site = get_current_site(request)
 
     # Graph data
@@ -1173,19 +1201,21 @@ def reports(request, report, casetype='Call'):
     #     start_date = datetime.strptime(start_date, '%m/%d/%Y')
     #     end_date = datetime.strptime(end_date, '%m/%d/%Y')
 
-    if report == 'escalated':
+    if report == 'escalated' or report == 'pending' or report == 'closed':
+        rep_status = 'escalate' if report == 'escalated' else report
         if request.user.HelplineUser.hl_role == 'Counsellor':
-            query_string = '"case_actions/case_action":{"$i":"escalate"}'
+            query_string = '"case_actions/case_action":{"$i":"%s"}' % rep_status
         elif request.user.HelplineUser.hl_role == 'Caseworker':
-            query_string = '"case_actions/case_action":"escalate",\
-            "case_actions/escalate_caseworker":"%s"' %(str(username).lower())
+            query_string = '"case_actions/case_action":"%s",\
+            "case_actions/escalate_caseworker":"%s"' %(str(username).lower(), rep_status)
         elif request.user.HelplineUser.hl_role == 'Supervisor':
-            query_string = '"case_actions/case_action":"escalate",\
-            "case_actions/supervisors":"%s"' %(str(username).lower())
+            query_string = '"case_actions/case_action":"%s",\
+            "case_actions/supervisors":"%s"' %(str(username).lower(), rep_status)
         else:
-            query_string = '"case_actions/case_action":"escalate"'
+            query_string = '"case_actions/case_action":"%s"'  % rep_status
 
-
+    elif report == 'highpriority':
+        query_string = '"case_narratives/case_priority":"high_priority"'
     elif report == 'today':
         td_date = datetime.today()
         request_string += '&date_created__day=' + td_date.strftime('%d')
@@ -1284,12 +1314,13 @@ def reports(request, report, casetype='Call'):
 
     
     if report == 'nonanalysed':
-        data['report_data'] = filter(lambda _call_data: not _call_data['length'] and _call_data['length'] <= 1, call_data)
+        data['report_data'] = filter(lambda call_data: not call_data['length'] and call_data['length'] <= 1, call_data)
         htmltemplate = "helpline/nonanalysed.html"
     elif report == 'voicemails':
-        data['report_data'] = filter(lambda _call_data: _call_data['voicemail'], call_data)
+        data['report_data'] = filter(lambda call_data: call_data['voicemail'], call_data)
     elif htmltemplate == '':
         htmltemplate = "helpline/report_body.html"
+        # data['report_data'] = filter(lambda call_data: not call_data['voicemail'], call_data)
 
     return render(request, htmltemplate, data)
 

@@ -442,6 +442,12 @@ input:checked + .slider:before {
                 </span>
               </a>
             </li>
+              <li><a href="{% url 'dashboardreports' 'totalcalls' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "All Calls" %}
+                <span class="pull-right-container">
+                  <span class="label label-info pull-right">{{ call_stat.calls }}</span>
+                </span>
+              </a>
+            </li>
             </ul>
           </li>
           <li>
@@ -1044,6 +1050,10 @@ function get_submissions(phone,name,param=true){
     return false
   }
 
+  if(phone > 0 && phone != ''){
+    phone = phone.substr(-9);
+  }
+
 
   //if fetching cases, fill selected contact
   selected_contact = !param ? selected_cases.filter(function(selected_case){ return selected_case['reporter_details/reporter_phone'] === phone}):[]
@@ -1052,7 +1062,7 @@ function get_submissions(phone,name,param=true){
   // Create a request variable and assign a new XMLHttpRequest object to it.
   var request = new XMLHttpRequest();
   //create query string [optional] based on the passed parameters
-  query_str = typeof(phone) !== 'undefined' && typeof(name) !== 'undefined' ? 'query={"reporter_details/reporter_phone":"' + phone + '","reporter_details/name":{"$i":"' + name + '"}}':(typeof(phone) != 'undefined' && typeof(name) == 'undefined' ? 'query={"reporter_details/reporter_phone":{"$i":"' + phone + '"}}&limit=1':(typeof(phone) !== 'undefined' && typeof(name) !== 'undefined' ? 'query={"reporter_details/name":{"$i":"' + name + '"}}' : ''))
+  query_str = typeof(phone) !== 'undefined' && typeof(name) !== 'undefined' ? 'query={"reporter_details/reporter_phone":{"$i":"' + phone + '"},"reporter_details/name":{"$i":"' + name + '"}}':(typeof(phone) != 'undefined' && typeof(name) == 'undefined' ? 'query={"reporter_details/reporter_phone":{"$i":"' + phone + '"}}&limit=1':(typeof(phone) !== 'undefined' && typeof(name) !== 'undefined' ? 'query={"reporter_details/name":{"$i":"' + name + '"}}' : ''))
 
   query_str += '&group="reporter_details/reporter_phone"'
   request.withCredentials = false;

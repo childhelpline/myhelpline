@@ -10,9 +10,9 @@
   <div class="row">
     <div class="col-md-12">
       <!-- /.box-footer -->
-      <!--section class="content-header">
+      <!-- <section class="content-header">
         <h1>Dashboard</h1>
-      </section-->
+      </section -->
       <div class="box-body" style="padding:5px; padding-top:0px;">
         {% block box %}
 
@@ -21,7 +21,7 @@
             <div class="row home-pallete">
               <div class="col-sm-4 col-md-2 palette-item">
                 <div class="color-palette-set">
-                  <div class="bg-blue color-palette" align="center" onclick="window.location = '{% url 'dashboardreports' 'totalcalls' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ call_stat.calls }} </span><br>{% trans "Total Calls" %}</div>
+                  <div class="bg-blue color-palette" align="center" onclick="window.location = '{% url 'dashboardreports' 'totalcalls' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ call_stat.calls }} </a></span><br>{% trans "Total Calls" %}</div>
                 </div>
               </div>
               <!-- /.col -->
@@ -63,7 +63,7 @@
               <div class="col-sm-4 col-md-2 palette-item">
                 <div class="color-palette-set">
                   <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
-                  <div class="bg-gray color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.number_tickets }}</span><br>{% trans "Mails" %}</div>
+                  <div class="bg-gray color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ home.email }}</span><br>{% trans "Mails" %}</div>
                   <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
                 </div>
               </div>
@@ -76,14 +76,14 @@
               <div class="{% if request.user.HelplineUser.hl_role == 'Supervisor' %} col-sm-4 col-md-4 {% else %} col-sm-6 col-md-6 {% endif %} palette-item">
                 <div class="color-palette-set">
                   <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
-                  <div class="bg-gray color-palette" align="center" style=" padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.total_sms }}</span><br>SMS</div>
+                  <div class="bg-gray color-palette" align="center" style=" padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ home.sms }}</span><br>SMS</div>
                   <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
                 </div>
               </div>
               <div class="{% if request.user.HelplineUser.hl_role == 'Supervisor' %} col-sm-4 col-md-4 {% else %} col-sm-6 col-md-6 {% endif %}">
                 <div class="color-palette-set">
                   <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
-                  <div class="bg-aqua color-palette" align="center" style="border-radius:0px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ qa_stat }}</span><br />Percentage (%)</div>
+                  <div class="bg-aqua color-palette" align="center" style="border-radius:0px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ qa_stat | floatformat:2 }}</span><br />Percentage (%)</div>
                   <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
                 </div>
               </div>
@@ -146,7 +146,7 @@
                       <div class="box-header with-border">
                         <i class="fa fa-bar-chart-o"></i>
 
-                        <h3 class="box-title">{% trans "Daily Submissions" %}</h3>
+                        <h3 class="box-title">{% trans "Daily Cases" %}</h3>
                         <div class="box-tools pull-right">
                           <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
                           </button>
@@ -176,6 +176,11 @@
                       </div>
                       <div class="box-body">
                         <div id="donut-chart" style="height: 300px;"></div>
+                      </div>
+                      <div class="box-footer">
+                        {% for ds in dt %}
+                        <span style="min-width:19%;color:#fff;background-color: {{ds.color}};float:left;padding:3px 4px !important;margin:2px 1px;">{{ds.label}}</span>
+                        {% endfor %}
                       </div>
                       <!-- /.box-body-->
                     </div>
@@ -220,6 +225,7 @@
               <div class="col-md-3 short">
                 <!-- Info Boxes Style 2 -->
                 <div class="info-box bg-green">
+                  <a href="{% url 'dashboardreports' 'closed' 'cases' %}" style="color: #fff;">
                   <span class="info-box-icon"><i class="ion ion-checkmark"></i></span>
 
                   <div class="info-box-content">
@@ -234,9 +240,11 @@
                     </span>
                   </div>
                   <!-- /.info-box-content -->
+                </a>
                 </div>
                 <!-- /.info-box -->
                 <div class="info-box bg-yellow">
+                  <a href="{% url 'dashboardreports' 'escalated' 'case' %}" style="color: #fff;">
                   <span class="info-box-icon"><i class="ion ion-ios-flag" md="md-flag"></i></span>
 
                   <div class="info-box-content">
@@ -251,28 +259,11 @@
                     </span>
                   </div>
                   <!-- /.info-box-content -->
-                </div>
-                <!-- /.info-box -->
-                <div class="info-box bg-red">
-                  <span class="info-box-icon"><i class="ion-ios-clock-outline"></i></span>
-
-                  <div class="info-box-content">
-                    <span class="info-box-text">{% trans "High Priority Cases" %}</span>
-                    <span class="info-box-number">{{ priority_stat |intcomma }}</span>
-
-                    <div class="progress">
-                      <div class="progress-bar" style="width: {% widthratio priority_stat status_stat.total 100 %}%"></div>
-                      }
-                    </div>
-                    <span class="progress-description">
-                      {% widthratio priority_stat status_stat.total 100 %}% {% trans "Critical Cases" %}
-                    </span>
-                  </div>
-                  <!-- /.info-box-content -->
+                </a>
                 </div>
                 <!-- /.info-box -->
                 <div class="info-box bg-aqua">
-                  <a href="{% url 'dashboardreports' 'pendingcases' %}" style="color: #fff;">
+                  <a href="{% url 'dashboardreports' 'pending' 'case' %}" style="color: #fff;">
                   <span class="info-box-icon"><i class="ion-ios-clock-outline"></i></span>
 
                   <div class="info-box-content">
@@ -290,6 +281,26 @@
                   </a>
                 </div>
                 <!-- /.info-box -->
+                <div class="info-box bg-red">
+                  <a href="{% url 'dashboardreports' 'highpriority' 'case' %}" style="color: #fff;">
+                  <span class="info-box-icon"><i class="ion-ios-clock-outline"></i></span>
+
+                  <div class="info-box-content">
+                    <span class="info-box-text">{% trans "High Priority Cases" %}</span>
+                    <span class="info-box-number">{{ priority_stat |intcomma }}</span>
+
+                    <div class="progress">
+                      <div class="progress-bar" style="width: {% widthratio priority_stat status_stat.total 100 %}%"></div>
+                      }
+                    </div>
+                    <span class="progress-description">
+                      {% widthratio priority_stat status_stat.total 100 %}% {% trans "Critical Cases" %}
+                    </span>
+                  </div>
+                  <!-- /.info-box-content -->
+                </a>
+                </div>
+                <!-- /.info-box -->
 
               </div>
               <!-- /.col -->
@@ -297,7 +308,7 @@
           </div>
         </div>
 
-        {% if request.user.HelplineUser.hl_role == 'Caseworker' %}
+        {% if request.user.HelplineUser.hl_role == 'Caseworkerxx' %}
         <div class="row">
 
           <div class="col-md-12" >
