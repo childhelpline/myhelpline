@@ -55,7 +55,6 @@ div.scrollmenu {
     {% trans "REPORT" %} <i class="fa fa-angle-right"></i> {{ title }}
   </h1>
 </section>
-
 <!-- Main content -->
 <section class="content">
   <div class="row">
@@ -123,26 +122,26 @@ div.scrollmenu {
                   <table id="example1" class="table datatable">
                     <thead>
                       <th>#</th>
-                      <!-- <th>Case ID</th>
-                      <th>Agent</th> -->
+                      <!-- <th>Case ID</th>-->
+                      <th>Agent</th> 
                       <th>Caller Phone</th>
                       <th>Date</th>
                       <th>Start time</th>
                       <th>End Time</th>
                       <th>Status</th>
-                      <th>Action</th>
+                      <!-- <th>Action</th> -->
                     </thead>
                   {% for rep in report_data %}
                     <tr>
                       <td>{{ forloop.counter}}.</td>
-                      <!-- <td>{{rep.caseid | default:''}}</td>
-                      <td>{{rep.agent | default:''}}</td> -->
-                      <td>{{rep.phone}}</td>
-                      <td>{{rep.date}}</td>
-                      <td>{{rep.start}}</td>
-                      <td>{{rep.ended}}</td>
-                      <td>{{rep.status}}</td>
-                      <td><a href="" class="btn btn-xs btn-warning"><i class="fa fa-eye"></i> View More</a></td>
+                      <!-- <td>{{rep.caseid | default:''}}</td> -->
+                      <td>{{rep.cdrAgent | default:''}}</td>
+                      <td>{{rep.cdrPhone}}</td>
+                      <td>{{rep.datacreated}}</td>
+                      <td>{{rep.cdrstart}}</td>
+                      <td>{{rep.cdrstop}}</td>
+                      <td>{{rep.cdrStatus}}</td>
+                      <!-- <td><a href="" class="btn btn-xs btn-warning"><i class="fa fa-eye"></i> View More</a></td> -->
                     </tr>
                   {% endfor %}
                     

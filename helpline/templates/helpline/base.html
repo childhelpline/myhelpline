@@ -341,16 +341,16 @@ input:checked + .slider:before {
     <!-- Sidebar user panel -->
     <div class="user-panel">
       <div class="pull-left image">
-         <img src="{{request.user.HelplineUser.hl_avatar | default:'/media/blank-avatar.png'}}" alt="{{request.user.HelplineUser.hl_avatar}}" class="img-circle" /> <!-- {% avatar user 160 class="img-circle" %} -->
+         <img src="{{request.user.HelplineUser.hl_avatar | default:'/media/blank-avatar.png'}}" alt="{{request.user.username}}" class="img-circle" /> <!-- {% avatar user 160 class="img-circle" %} -->
       </div>
       <div class="pull-left info">
         <p>{{ request.user.get_full_name|default:request.user.username }}</p>
-        <p><small><em>{{ request.user.HelplineUser.hl_role|default:'' }}</em></small></p>
+        <p><small><em>{{ request.user.HelplineUser.hl_status|default:'' }}</em></small></p>
         {% if request.user.HelplineUser.hl_status == 'Busy' %}
         <a href="{% url 'queue_log' %}"><i class="fa fa-circle text-danger"></i> {% trans "Busy" %}</a>
         {% elif request.user.HelplineUser.hl_status == 'Idle' %}
         <a href="{% url 'queue_log' %}"><i class="fa fa-circle text-warning"></i> {% trans "Idle" %}</a>
-        {% elif request.user.HelplineUser.hl_status == 'Available' %}
+        {% elif request.user.HelplineUser.hl_status == 'Online' %}
         <a href="{% url 'queue_log' %}"><i class="fa fa-circle text-success"></i> {% trans "Online" %}</a>
         {% elif request.user.HelplineUser.hl_status == 'OnCall' %}
         <a href="{% url 'queue_log' %}"><i class="fa fa-circle text-danger"></i> {% trans "OnCall" %}</a>
@@ -427,7 +427,7 @@ input:checked + .slider:before {
                 <a href="{% url 'dashboardreports' 'missedcalls' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}">
                   <i class="fa fa-circle-o"></i> {% trans "Missed Calls" %}
                   <span class="pull-right-container">
-                    <span class="label label-danger pull-right">{{ call_stat.calls }}</span>
+                    <span class="label label-danger pull-right">{{ call_stat.missed }}</span>
                   </span>
                 </a>
               </li>
@@ -977,9 +977,15 @@ if(sessionStorage.getItem('in_queue') ==1){
   $('.leave').addClass('hidden')
 
 }
+
 function leave_queue(item){
+  var values = {
+      'csrfmiddlewaretoken': '{{ csrf_token }}'
+    }
+  var logout = $(item).html()
     $.post("{% setting "CALL_API_URL" %}/api/v1/call/agent?logout={{request.user.HelplineUser.hl_key | safe}}",function(data){
-    if(data.data == 'offline'){
+    if(data.data == 'offline' || logout == 'Sign out'){
+      $.post("{% url 'queue_leave' %}",values)//,function(){}
       sessionStorage.setItem("in_queue", 0);
       $(item).addClass('hidden')
       $('.join').removeClass('hidden')
@@ -990,9 +996,13 @@ function leave_queue(item){
   })
 }
 function join_queue(item){
+  var values = {
+      'csrfmiddlewaretoken': '{{ csrf_token }}'
+    }
   $.post("{% setting "CALL_API_URL" %}/api/v1/call/agent?login={{request.user.HelplineUser.hl_key | safe}}",function(data){
     if(data.status !== 'offline'){
       sessionStorage.setItem('in_queue',1)
+      $.post("{% url 'queue_log' %}",values)
       $('.leave').removeClass('hidden')
       $(item).addClass('hidden')
       window.location.reload()
