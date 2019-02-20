@@ -125,7 +125,7 @@ def home(request):
 
     template = 'home'
 
-    dashboard_stats = get_dashboard_stats(request.user)
+    home_statistics = get_dashboard_stats(request)
     status_count = get_status_count()
     case_search_form = CaseSearchForm()
     queue_form = QueueLogForm(request.POST)
@@ -162,29 +162,6 @@ def home(request):
         default_service_xform.pk
     )
     statex = requests.get(url, headers=headers).json() or {}
-
-    home_statistics = {}
-    # SMS stats
-    home_statistics['sms'] = SMSCDR.objects.filter(sms_time__date=datetime.today()).count()
-    # Email stats
-    home_statistics['email'] = Emails.objects.filter(email_time__date=datetime.today()).count()
-    # case status statistics
-    url_status = 'http://%s/ona/api/v1/charts/%s.json?field_name=case_action' \
-    %(current_site, default_service_xform.pk)
-
-    status_stat = requests.get(url_status, headers= headers).json() or {}
-
-    status_stats = {'escalate':0,'closed':0,'pending':0,'total':0}
-    rrr = []
-    for st_action in status_stat['data']:
-        for sts in status_stats:
-            r_str = str(st_action['case_action'][0]).lower()
-            if sts == r_str:
-                status_stats[sts] =  st_action['count']
-        status_stats['total'] += st_action['count']
-
-
-    call_statistics = requests.post('%s/api/v1/index' %(settings.CALL_API_URL)).json()
     
     forloop = 0
     for dt in get_item(stat, 'data'):
@@ -220,30 +197,37 @@ def home(request):
     ic = 0
     othercount = 0
     datas = get_item(status_data, 'data')
+    # for dt in sorted(get_item(status_data, 'data'),reverse=True):#  status_data['data']:
+    #     lbl = dt[str(stype)]
+    #     if isinstance(lbl, list):
+    #         lbl = lbl[0] if lbl[0] and len(lbl[0]) > 0 else "Others"
+    #     else:
+    #         lbl = lbl if not len(lbl) == 0 else "Others"
+
+    #     col = color[ic] if color[ic] else color[0]
+    #     if ic < 9 and lbl != 'Others':
+    #         if isinstance(lbl, int) and len(lbl) > 3:
+    #             stdata.append({"label":str(lbl), "data":str(str(dt['count'])), "color":str(col)})
+    #             ic += 1
+    #     else:
+    #         othercount = int(dt['count'])
     for dt in sorted(get_item(status_data, 'data'),reverse=True):#  status_data['data']:
         lbl = dt[str(stype)]
         if isinstance(lbl, list):
-            lbl = lbl[0] if lbl[0] and len(lbl[0]) > 0 else "Others"
+            lbl = lbl[0] if len(lbl) > 0 and lbl[0] != 'null' else '' #"Others"
         else:
-            lbl = lbl if not len(lbl) == 0 else "Others"
+            lbl = lbl if len(lbl) > 0  and lbl != 'null' else '' # "Others"
 
-        col = color[ic] if color[ic] else color[0]
-        if ic < 9 and lbl != 'Others':
-            if isinstance(lbl, int) and len(lbl) > 3:
-                stdata.append({"label":str(lbl), "data":str(str(dt['count'])), "color":str(col)})
-                ic += 1
-        else:
-            othercount = int(dt['count'])
-    # for dt in get_item(status_data, 'data'):#  status_data['data']:
-    #     lbl = dt[str(stype)]
-    #     if isinstance(lbl, list):
-    #         lbl = lbl[0] if not len(lbl) == 0 else "Others"
-    #     else:
-    #         lbl if not len(lbl) == 0 else "Others"
+        col = color[ic]
+        if ic < 9 and lbl != 'Others' and lbl != None:
+            stdata.append({"label":str(lbl), "data":str(str(dt['count'])), "color":str(col)})
+            ic += 1
+        elif lbl != '' and  lbl != None:
+            othercount += dt['count']
+            ic += 1
 
-    #     col = color[ic]
-    #     ic += 1
-    #     stdata.append({"label":str(lbl), "data":str(str(dt['count'])), "color":str(col)})
+        
+        # stdata.append({"label":str(lbl), "data":str(str(dt['count'])), "color":str(col)})
         
 
     stdata.append({"label":'Others', "data":str(othercount), "color":str(col)})
@@ -285,7 +269,7 @@ def home(request):
 
 
     return render(request, 'helpline/%s.html' % template,
-                {'dashboard_stats': dashboard_stats,
+                {
                    'att': '',
                    'awt': '',
                    'case_search_form': case_search_form,
@@ -293,8 +277,8 @@ def home(request):
                    'gdata': gtdata,
                    'dt': stdata,
                    'priority_stat':high_priority,
-                   'status_stat':status_stats,
-                   'call_stat':call_statistics,
+                   # 'status_stat':status_stats,
+                   # 'call_stat':call_statistics,
                    'qa_stat':stat_qa,
                    'status_data':status_data,
                    'home':home_statistics
@@ -1269,7 +1253,7 @@ def namedtuplefetchall(cursor):
 def reports(request, report, casetype='Call'):
     query = request.GET.get('q', '')
     datetime_range = request.GET.get("datetime_range") or ''
-    agent = request.GET.get("agent")
+    agent = request.GET.get("agent") or ''
     category = request.GET.get("category", "")
     form = ReportFilterForm(request.GET)
     dashboard_stats = get_dashboard_stats(request.user)
@@ -1278,19 +1262,21 @@ def reports(request, report, casetype='Call'):
     request_string = ''
     query_string = ''
 
+    home_statistics = get_dashboard_stats(request)
+
     data = {
             'title': report_title.get(report),
             'report': report,
             'form': form,
             'datetime_range': datetime_range,
-            'dashboard_stats': dashboard_stats,
+            'home': home_statistics,
             'query': query
         }
 
 
     if str(casetype).lower() == 'call':
         """For call reports"""
-        callreports = ["missedcalls", "voicemails", "totalcalls",
+        callreports = ["missedcalls", "totalcalls",
                        "answeredcalls", "abandonedcalls", "callsummaryreport",
                        "search", "agentsessionreport"]
         
@@ -1298,15 +1284,38 @@ def reports(request, report, casetype='Call'):
             htmltemplate = "helpline/reports.html"
         elif report == 'callsreport':
             htmltemplate = "helpline/report.html"
+        elif report == 'voicemails': 
+            htmltemplate = "helpline/voicemails.html"
+
         calls_url = "%s/api/v1/call/cdrdata?daterange=%s" %(settings.CALL_API_URL, \
             datetime_range)
 
         call_data = {} # requests.post(calls_url).json()
 
+        if not datetime_range == '':
+            start_date, end_date = [datetime_range.split(" - ")[0], datetime_range.split(" - ")[1]]
+            start_date = datetime.strptime(start_date, '%m/%d/%Y  %I:%M %p')
+            end_date = datetime.strptime(end_date, '%m/%d/%Y  %I:%M %p')
+
+            start_date = start_date.strftime('%s')
+            end_date = end_date.strftime('%s')
+
+            query_string = ' where calls_detail."dataCreated" >= %s AND calls_detail."dataCreated" <=%s' %(start_date,end_date)
+
+        if not agent == '':
+            agent_det = User.objects.get(id=agent)
+            agent = agent_det.HelplineUser.hl_key
+
+            if not query_string == '':
+                query_string += ' AND calls_agent."cdrAgent" = %d' % agent
+                # print "Cheru: %s " % query_string
+            else:
+                query_string += ' where calls_agent."cdrAgent" = %d' % agent
+                # print "Cheru: %s " % query_string
         with connection.cursor() as cursor:
             query = 'SELECT calls_detail."cdrPhone",calls_detail."cdrStatus",to_timestamp(calls_detail."cdrStop") as cdrStop,\
-            to_timestamp(calls_detail."cdrStart") as cdrStart,to_timestamp(calls_detail."dataCreated") as dataCreated,calls_agent."cdrAgent", \
-            calls_agent."id" as "aid" from calls_detail inner join calls_agent on calls_detail."id" =calls_agent."cdrID"  limit 20'
+            to_timestamp(calls_detail."cdrStart") as cdrStart,to_timestamp(calls_detail."dataCreated") as dataCreated,HU."hl_nick", \
+            calls_agent."id" as "aid" from calls_detail inner join calls_agent on calls_detail."id" = calls_agent."cdrID" inner join helpline_HelplineUser HU on HU."hl_key" = calls_agent."cdrAgent"  %s' % query_string
             cursor.execute(query)
             call_data = namedtuplefetchall(cursor)
 
@@ -1920,7 +1929,7 @@ def case_form(request, form_name):
 
     service = Service.objects.all().first()
     default_service_xform = service.walkin_xform
-    default_service_auth_token = '808935560b3f462caf70364d2850071b041d8c28' # 'cc61d4322de0daf5f15e3a7d6d5f91f17b36ed62' # default_service_xform.user.auth_token
+    default_service_auth_token = default_service_xform.user.auth_token
     current_site = get_current_site(request)
     """
     '7331a310c46884d2643ca9805aaf0d420ebfc831 808935560b3f462caf70364d2850071b041d8c28'
@@ -2608,8 +2617,59 @@ def get_status_count():
                     'busy_on_call': busy_on_call}
     return status_count
 
+def get_dashboard_stats(request, interval=None):
+    default_service = Service.objects.all().first()
+    default_service_xform = default_service.walkin_xform
 
-def get_dashboard_stats(user, interval=None):
+    default_service_qa = default_service.qa_xform
+    default_service_auth_token = default_service_xform.user.auth_token
+    current_site = get_current_site(request)
+
+    # Set headers
+    headers = {
+        'Authorization': 'Token %s' % (default_service_auth_token)
+    }
+
+    # date time
+    midnight_datetime = datetime.combine(
+            date.today(), datetime_time.min)
+    midnight = calendar.timegm(midnight_datetime.timetuple())
+
+    midnight_string = datetime.combine(
+        date.today(), datetime_time.min).strftime('%m/%d/%Y %I:%M %p')
+    now_string = timezone.now().strftime('%m/%d/%Y %I:%M %p')
+
+    call_statistics = requests.post('%s/api/v1/index' %(settings.CALL_API_URL)).json()
+
+
+
+    home_statistics = {'escalate':0,'closed':0,'pending':0,'total':0,'call_stat':call_statistics,\
+    'midnight': midnight,'midnight_string': midnight_string,'now_string': now_string,}
+    # SMS stats
+    home_statistics['sms'] = SMSCDR.objects.filter(sms_time__date=datetime.today()).count()
+    # Email stats
+    home_statistics['email'] = Emails.objects.filter(email_time__date=datetime.today()).count()
+    # case status statistics
+    url_status = 'http://%s/ona/api/v1/charts/%s.json?field_name=case_action' \
+    %(current_site, default_service_xform.pk)
+
+    status_stat = requests.get(url_status, headers= headers).json() or {}
+
+    status_text = {'escalate':0,'closed':0,'pending':0,'total':0}
+    rrr = [] 
+
+    for st_action in status_stat['data']:
+        for sts in status_text:
+            r_str = str(st_action['case_action'][0]).lower()
+            if sts == r_str:
+                home_statistics[sts] =  st_action['count']
+        home_statistics['total'] += st_action['count']
+
+    return home_statistics
+
+
+
+def get_dashboard_statsx(user, interval=None):
     """Stats which are displayed on the dashboard, returns a dict
     Get stats from last midnight
     """
@@ -3069,6 +3129,9 @@ def sources(request, source=None,itemid=None):
     data_messages = ''
     item = ''
     message = ''
+
+    home_statistics = get_dashboard_stats(request)
+
     if source == 'email':
         data_messages = Emails.objects.all()
         item = Emails
@@ -3117,7 +3180,7 @@ def sources(request, source=None,itemid=None):
         source = 'read_%s' % (source) 
 
     template = 'helpline/%s.html' % (source)
-    return render(request, template, {'data_messages':data_messages,'message':message})
+    return render(request, template, {'data_messages':data_messages,'message':message,'home':home_statistics})
 
 
 def get_data_queues(queue=None):

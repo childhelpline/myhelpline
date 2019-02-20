@@ -391,14 +391,14 @@ input:checked + .slider:before {
             <li>
               <a href="{% url "case_form" "walkin" %}" role="button"><i class="fa fa-circle-o"></i> {% trans "New WalkIn" %}
               </a></li>
-              <li><a href="{% url 'dashboardreports' 'today' 'case' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Today's Cases" %}
+              <li><a href="{% url 'dashboardreports' 'today' 'case' %}?datetime_range={{ home.midnight_string }} - {{ home.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Today's Cases" %}
                 <span class="pull-right-container">
-                  <span class="label label-success pull-right">{{ dashboard_stats.total_cases }}</span>
+                  <span class="label label-success pull-right">{{ home.total }}</span>
                 </span>
               </a></li>
-              <li><a href="{% url 'dashboardreports' 'escalated' 'case' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Escalated Cases" %}
+              <li><a href="{% url 'dashboardreports' 'escalated' 'case' %}?datetime_range={{ home.midnight_string }} - {{ home.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Escalated Cases" %}
                 <span class="pull-right-container">
-                  <span class="label label-warning pull-right">{{ status_stat.escalate }}</span>
+                  <span class="label label-warning pull-right">{{ home.escalate }}</span>
                 </span>
               </a></li>
               <!--li><a href="{% url 'dashboardreports' 'pendingcases' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Pending Cases" %}
@@ -406,9 +406,9 @@ input:checked + .slider:before {
                   <span class="label label-warning pull-right">{{ dashboard_stats.open_cases }}</span>
                 </span>
               </a></li-->
-              <li><a href="{% url 'dashboardreports' 'totalcases' 'case' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "All Cases" %}
+              <li><a href="{% url 'dashboardreports' 'totalcases' 'case' %}?datetime_range={{ home.midnight_string }} - {{ home.now_string }}"><i class="fa fa-circle-o"></i> {% trans "All Cases" %}
                 <span class="pull-right-container">
-                  <span class="label label-info pull-right">{{ status_stat.total }}</span>
+                  <span class="label label-info pull-right">{{ home.total }}</span>
                 </span>
               </a></li>
             </ul>
@@ -424,27 +424,27 @@ input:checked + .slider:before {
             </a>
             <ul class="treeview-menu">
               <li>
-                <a href="{% url 'dashboardreports' 'missedcalls' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}">
+                <a href="{% url 'dashboardreports' 'missedcalls' %}">
                   <i class="fa fa-circle-o"></i> {% trans "Missed Calls" %}
                   <span class="pull-right-container">
-                    <span class="label label-danger pull-right">{{ call_stat.missed }}</span>
+                    <span class="label label-danger pull-right">{{ home.call_stat.abandoned }}</span>
                   </span>
                 </a>
               </li>
-              <li><a href="{% url 'dashboardreports' 'answeredcalls' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Answered Calls" %}
+              <li><a href="{% url 'dashboardreports' 'answeredcalls' %}"><i class="fa fa-circle-o"></i> {% trans "Answered Calls" %}
                 <span class="pull-right-container">
-                  <span class="label label-success pull-right">{{ call_stat.answered }}</span>
+                  <span class="label label-success pull-right">{{ home.call_stat.answered }}</span>
                 </span>
               </a></li>
-              <li><a href="{% url 'dashboardreports' 'voicemails' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Voice Mails" %}
+              <li><a href="{% url 'dashboardreports' 'voicemails' %}"><i class="fa fa-circle-o"></i> {% trans "Voice Mails" %}
                 <span class="pull-right-container">
-                  <span class="label label-warning pull-right">{{ call_stat.voicemail }}</span>
+                  <span class="label label-warning pull-right">{{ home.call_stat.voicemail }}</span>
                 </span>
               </a>
             </li>
-              <li><a href="{% url 'dashboardreports' 'totalcalls' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "All Calls" %}
+              <li><a href="{% url 'dashboardreports' 'totalcalls' %}"><i class="fa fa-circle-o"></i> {% trans "All Calls" %}
                 <span class="pull-right-container">
-                  <span class="label label-info pull-right">{{ call_stat.calls }}</span>
+                  <span class="label label-info pull-right">{{ home.call_stat.calls }}</span>
                 </span>
               </a>
             </li>
@@ -470,19 +470,23 @@ input:checked + .slider:before {
               <li>
                 <a href="{% url 'mysources' 'email' %}">
                   <i class="fa fa-circle-o"></i>
-                  <span>{% trans "Emails" %}</span><span class="label label-info pull-right"></span>
+                  <span>{% trans "Emails" %}</span><span class="pull-right-container">
+                  <span class="label label-info pull-right">{{ home.email }}</span>
+                </span>
                 </a>
               </li>
               <li class="treeview">
                 <a href="{% url 'mysources' 'sms' %}">
                   <i class="fa fa-circle-o"></i>
-                  <span>{% trans "SMS" %}</span><span class="label label-info pull-right"></span>
+                  <span>{% trans "SMS" %}</span><span class="pull-right-container">
+                  <span class="label label-success pull-right">{{ home.sms }}</span>
+                </span>
                 </a>
               </li>
               <li class="treeview">
                 <a href="{% url 'mysources' 'web' %}">
                   <i class="fa fa-circle-o"></i>
-                  <span>{% trans "Web Online" %}</span><span class="label label-info pull-right"></span>
+                  <span>{% trans "Web Online" %}</span><span class="label label-success pull-right"></span>
                 </a>
               </li>
               <!--li class="treeview">
@@ -508,12 +512,12 @@ input:checked + .slider:before {
             </a></li ?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }} -->
             <li><a href="{% url 'qa' 'analysis' %}"><i class="fa fa-circle-o"></i> {% trans "Call Cases" %}
               <span class="pull-right-container">
-                <span class="label label-info pull-right">{{ dashboard_stats.total_cases }}</span>
+                <span class="label label-info pull-right">{{ home.total_cases }}</span>
               </span>
             </a></li>
             <li><a href="{% url 'qa' 'analysed' %}"><i class="fa fa-circle-o"></i> {% trans "Analysed Cases" %}
               <span class="pull-right-container">
-                <span class="label label-success pull-right">{{ dashboard_stats.open_cases }}</span>
+                <span class="label label-success pull-right">{{ home.open_cases }}</span>
               </span>
             </a></li>
             <li><a href="{% url 'qa' 'results' %}"><i class="fa fa-circle-o"></i> {% trans "Qa Results" %}
@@ -567,7 +571,7 @@ input:checked + .slider:before {
           <ul class="treeview-menu">
             <li><a href="{% url 'general' 'cases' %}"><i class="fa fa-circle-o"></i>{% trans "Cases" %}
             </a></li>
-            <li><a href="{% url 'general' 'calls' %}"><i class="fa fa-circle-o"></i>{% trans "Calls" %}
+            <li><a href="{% url 'dashboardreports' 'totalcalls' %}"><i class="fa fa-circle-o"></i>{% trans "Calls" %}
             </a></li>
             <li><a href="{% url 'general' 'sms' %}"><i class="fa fa-circle-o"></i>{% trans "SMS" %}
             </a></li>
