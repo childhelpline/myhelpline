@@ -229,7 +229,7 @@ def home(request):
         
         # stdata.append({"label":str(lbl), "data":str(str(dt['count'])), "color":str(col)})
         
-
+    col = color[ic]
     stdata.append({"label":'Others', "data":str(othercount), "color":str(col)})
 
     #  get QA stats http://192.168.1.116/ona/api/v1/data/2?query={"case_owner":"clkadmin"}&format=json
@@ -250,21 +250,23 @@ def home(request):
     quiz = 0;
 
     for all_stats in qa_stats:
-        for ev,qa_stat in all_stats.items():
-            if ev.encode('utf-8') == 'qa_results/note_results':
-                if not str(qa_stat.encode('utf-8')).lower() == 'nan':
-                    stat_qa = stat_qa + float(qa_stat.encode('utf-8')) # '%s || %s || ' %(stat_qa, qa_stat.encode('utf-8'))
-            # stat_qa  = '%s || %s ||' %(str(stat_qa),str(get_item(qa_stat,'qa_results/note_results')))
-        quiz += 1
+        if isinstance(all_stats,dict):
+            for ev,qa_stat in all_stats.items():
+                if ev.encode('utf-8') == 'qa_results/note_results':
+                    if not str(qa_stat.encode('utf-8')).lower() == 'nan':
+                        stat_qa = stat_qa + float(qa_stat.encode('utf-8')) # '%s || %s || ' %(stat_qa, qa_stat.encode('utf-8'))
+                # stat_qa  = '%s || %s ||' %(str(stat_qa),str(get_item(qa_stat,'qa_results/note_results')))
+            quiz += 1
 
     if quiz > 0:
         stat_qa = stat_qa/quiz
 
 
     high_priority = 0
-    for ke_item in statex['data']:
-        if str(ke_item['case_priority'][0]) == 'High Priority':
-            high_priority = ke_item['count']
+    if statex.get('data',None) != None:
+        for ke_item in statex['data']:
+            if str(ke_item['case_priority'][0]) == 'High Priority':
+                high_priority = ke_item['count']
 
 
 
@@ -2653,17 +2655,18 @@ def get_dashboard_stats(request, interval=None):
     url_status = 'http://%s/ona/api/v1/charts/%s.json?field_name=case_action' \
     %(current_site, default_service_xform.pk)
 
-    status_stat = requests.get(url_status, headers= headers).json() or {}
+    status_stat = requests.get(url_status, headers= headers).json()
 
     status_text = {'escalate':0,'closed':0,'pending':0,'total':0}
     rrr = [] 
 
-    for st_action in status_stat['data']:
-        for sts in status_text:
-            r_str = str(st_action['case_action'][0]).lower()
-            if sts == r_str:
-                home_statistics[sts] =  st_action['count']
-        home_statistics['total'] += st_action['count']
+    if status_stat.get('data',None) != None:
+        for st_action in status_stat.get('data',{}):
+            for sts in status_text:
+                r_str = str(st_action['case_action'][0]).lower()
+                if sts == r_str:
+                    home_statistics[sts] =  st_action['count']
+            home_statistics['total'] += st_action['count']
 
     return home_statistics
 

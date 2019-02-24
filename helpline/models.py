@@ -255,19 +255,36 @@ class IMregistry(models.Model):
 
 class MainCDR(models.Model):
     """Raw Call details """
-    hl_unique = models.CharField(unique=True, max_length=32)
-    hl_start = models.BigIntegerField()
-    hl_end = models.IntegerField()
-    hl_duration = models.IntegerField()
-    hl_queue = models.IntegerField()
-    hl_agent = models.IntegerField()
-    hl_bridge = models.CharField(max_length=100)
-    hl_holdtime = models.IntegerField()
-    hl_talktime = models.IntegerField()
-    hl_vmail = models.CharField(max_length=7)
-    hl_app = models.CharField(max_length=9)
-    hl_status = models.CharField(max_length=11)
-    hl_time = models.IntegerField()
+    # hl_unique = models.CharField(unique=True, max_length=32)
+    # hl_start = models.BigIntegerField()
+    # hl_end = models.IntegerField()
+    # hl_duration = models.IntegerField()
+    # hl_queue = models.IntegerField()
+    # hl_agent = models.IntegerField()
+    # hl_bridge = models.CharField(max_length=100)
+    # hl_holdtime = models.IntegerField()
+    # hl_talktime = models.IntegerField()
+    # hl_vmail = models.CharField(max_length=7)
+    # hl_app = models.CharField(max_length=9)
+    # hl_status = models.CharField(max_length=11)
+    # hl_time = models.IntegerField()
+    hl_phone       = models.CharField(max_length=12,blank=True, null=True)
+    hl_start       = models.BigIntegerField(blank=True, null=True)
+    hl_answer      = models.IntegerField(blank=True, null=True)
+    hl_stop        = models.BigIntegerField(blank=True, null=True)
+    hl_queue       = models.IntegerField(blank=True, null=True)
+    hl_status      = models.CharField(max_length=11,blank=True, null=True)
+    hl_type        = models.IntegerField(blank=True, null=True)
+    hl_chan        = models.IntegerField(blank=True, null=True)
+    hl_agent       = models.IntegerField(blank=True, null=True)
+    hl_transfer    = models.CharField(max_length=11,blank=True, null=True)
+    hl_record      = models.CharField(max_length=30,blank=True, null=True)
+    hl_case        = models.IntegerField(blank=True, null=True)
+    hl_wrapup      = models.CharField(max_length=11,blank=True, null=True)
+    hl_bargein     = models.CharField(max_length=11,blank=True, null=True)
+    hl_voicemail   = models.CharField(max_length=11,blank=True, null=True)
+    hl_disposition = models.CharField(max_length=20,blank=True, null=True)
+    hl_pid         = models.IntegerField(blank=True, null=True)
 
 
 class MatrixQA(models.Model):
@@ -908,4 +925,14 @@ class Cases(models.Model):
     case_time   = models.DateTimeField(auto_now_add=True)
     case_disposition = models.CharField(max_length = 100,blank=True, null=True)
 
+# CALL RECORD MODEL
+# datas['phone'] = _data.get('cdr_phone') datas['app'] = _data.get('cdr_app') \
+# datas['start'] = _data.get('cdr_start') datas['answer'] = _data.get('cdr_answer') \
+# datas['stop'] = _data.get('cdr_stop') datas['queue'] = _data.get('cdr_queue') \
+# datas['status'] = _data.get('cdr_status') datas['type'] = _data.get('cdr_type') \
+# datas['chan'] = _data.get('cdr_chan') datas['agent'] = _data.get('cdr_agent') \
+# datas['transfer'] = _data.get('cdr_transfer') datas['record'] = _data.get('cdr_record') \
+# datas['case'] = _data.get('cdr_case') datas['wrapup'] = _data.get('cdr_wrapup') \
+# datas['bargein'] = _data.get('cdr_bargein') datas['voicemail'] = _data.get('cdr_voicemail') \
+# datas['disposition'] = _data.get('cdr_exit') datas['pid'] = _data.get('cdr_pid')
         

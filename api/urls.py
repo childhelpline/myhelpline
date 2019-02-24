@@ -10,6 +10,7 @@ router.register(r'helplineusers', views.HelplineUserViewSet)
 router.register(r'helplinecases', views.HelplineCaseViewSet)
 router.register(r'caseworkers', views.CaseWorkerViewSet)
 router.register(r'supervisors', views.SupervisorViewSet)
+router.register(r'cdrlist',views.MainCdrViewSet, base_name='MainCdr')
 
 urlpatterns = [
     url(r'^', include(router.urls)),
