@@ -21,13 +21,13 @@
             <div class="row home-pallete">
               <div class="col-sm-4 col-md-2 palette-item">
                 <div class="color-palette-set">
-                  <div class="bg-blue color-palette" align="center" onclick="window.location = '{% url 'dashboardreports' 'totalcalls' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ home.call_stat.calls }} </a></span><br>{% trans "Total Calls" %}</div>
+                  <div class="bg-blue color-palette" align="center" onclick="window.location = '{% url 'dashboardreports' 'totalcalls' %}?datetime_range={{ home.midnight_string }} - {{ home.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ home.call_stat.calls }} </a></span><br>{% trans "Total Calls" %}</div>
                 </div>
               </div>
               <!-- /.col -->
               <div class="col-sm-4 col-md-2 palette-item">
                 <div class="color-palette-set">
-                  <div class="bg-aqua color-palette" align="center" style="padding-right:5px; padding-bottom:5px;" onclick="window.location = '{% url 'dashboardreports' 'answeredcalls' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ home.call_stat.answered}}</span><br>{% trans "Answered Calls" %}</div>
+                  <div class="bg-aqua color-palette" align="center" style="padding-right:5px; padding-bottom:5px;" onclick="window.location = '{% url 'dashboardreports' 'answeredcalls' %}?datetime_range={{ home.midnight_string }} - {{ home.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ home.call_stat.answered}}</span><br>{% trans "Answered Calls" %}</div>
                   <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
                 </div>
               </div>
@@ -36,7 +36,7 @@
                 <div class="color-palette-set">
                   <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
                   {% if request.user.HelplineUser.hl_role == 'Supervisor' %}
-                  <div class="bg-red color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"  onclick="window.location = '{% url 'dashboardreports' 'abandonedcalls' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ home.call_stat.abandoned }} </span><br>{% trans "Abandoned Calls" %}</div>
+                  <div class="bg-red color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"  onclick="window.location = '{% url 'dashboardreports' 'abandonedcalls' %}?datetime_range={{ home.midnight_string }} - {{ home.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ home.call_stat.abandoned }} </span><br>{% trans "Abandoned Calls" %}</div>
                   {% else %}
                   <div class="bg-red color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ home.call_stat.abandoned | default:0 }} </span><br>{% trans "Missed Calls" %}</div>
                   {% endif %}
@@ -45,7 +45,7 @@
                 </div>
               </div>
               <!-- /.col -->
-              <div class="col-sm-4 col-md-2 palette-item" onclick="window.location = '{% url 'dashboardreports' 'voicemails' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}'">
+              <div class="col-sm-4 col-md-2 palette-item" onclick="window.location = '{% url 'dashboardreports' 'voicemails' %}?datetime_range={{ home.midnight_string }} - {{ home.now_string }}'">
                 <div class="color-palette-set">
                   <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
                   <div class="bg-yellow color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ home.call_stat.voicemail | default:0 }} </span><br>{% trans "Voice Mails" %}</div>
@@ -315,29 +315,29 @@
             <div class="row home-pallete">
               <div class="col-sm-4 col-md-2 palette-item">
                 <div class="color-palette-set">
-                  <div class="bg-blue color-palette" align="center" onclick="window.location = '{% url 'dashboardreports' 'totalcalls' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.total_calls }} </span><br>{% trans "Total Cases" %}</div>
+                  <div class="bg-blue color-palette" align="center" onclick="window.location = '{% url 'dashboardreports' 'totalcalls' %}?datetime_range={{ home.midnight_string }} - {{ home.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ home.total_calls }} </span><br>{% trans "Total Cases" %}</div>
                 </div>
               </div>
               <!-- /.col -->
               <div class="col-sm-4 col-md-2 palette-item">
                 <div class="color-palette-set">
-                  <div class="bg-aqua color-palette" align="center" style="padding-right:5px; padding-bottom:5px;" onclick="window.location = '{% url 'dashboardreports' 'answeredcalls' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.answered_calls }}</span><br>{% trans "Total Cases Closed" %}</div>
+                  <div class="bg-aqua color-palette" align="center" style="padding-right:5px; padding-bottom:5px;" onclick="window.location = '{% url 'dashboardreports' 'answeredcalls' %}?datetime_range={{ home.midnight_string }} - {{ home.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ home.answered_calls }}</span><br>{% trans "Total Cases Closed" %}</div>
                   <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
                 </div>
               </div>
               <!-- /.col -->
               <div class="col-sm-4 col-md-2 palette-item">
                 <div class="color-palette-set">
-                  <div class="bg-red color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.missed_calls }} </span><br>{% trans "Total Cases Pending" %}</div>
+                  <div class="bg-red color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ home.missed_calls }} </span><br>{% trans "Total Cases Pending" %}</div>
 
                   <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
                 </div>
               </div>
               <!-- /.col -->
-              <div class="col-sm-4 col-md-2 palette-item" onclick="window.location = '{% url 'dashboardreports' 'voicemails' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}'">
+              <div class="col-sm-4 col-md-2 palette-item" onclick="window.location = '{% url 'dashboardreports' 'voicemails' %}?datetime_range={{ home.midnight_string }} - {{ home.now_string }}'">
                 <div class="color-palette-set">
                   <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
-                  <div class="bg-yellow color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.voice_mails }} </span><br>{% trans "Total Cases Escalated" %}</div>
+                  <div class="bg-yellow color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ home.voice_mails }} </span><br>{% trans "Total Cases Escalated" %}</div>
                   <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
                 </div>
               </div>
@@ -345,7 +345,7 @@
               <div class="col-sm-4 col-md-2 palette-item">
                 <div class="color-palette-set">
                   <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
-                  <div class="bg-gray color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.number_tickets }}</span><br>{% trans "Follow Up" %}</div>
+                  <div class="bg-gray color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ home.number_tickets }}</span><br>{% trans "Follow Up" %}</div>
                   <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
                 </div>
               </div>
@@ -353,7 +353,7 @@
               <div class="col-sm-4 col-md-2 palette-item">
                 <div class="color-palette-set">
                   <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
-                  <div class="bg-gray color-palette" align="center" style=" padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.total_sms }}</span><br>SMS</div>
+                  <div class="bg-gray color-palette" align="center" style=" padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ home.total_sms }}</span><br>SMS</div>
                   <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
                 </div>
               </div>

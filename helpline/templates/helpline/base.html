@@ -406,7 +406,7 @@ input:checked + .slider:before {
                   <span class="label label-warning pull-right">{{ dashboard_stats.open_cases }}</span>
                 </span>
               </a></li-->
-              <li><a href="{% url 'dashboardreports' 'totalcases' 'case' %}?datetime_range={{ home.midnight_string }} - {{ home.now_string }}"><i class="fa fa-circle-o"></i> {% trans "All Cases" %}
+              <li><a href="{% url 'dashboardreports' 'totalcases' 'case' %}"><i class="fa fa-circle-o"></i> {% trans "All Cases" %}
                 <span class="pull-right-container">
                   <span class="label label-info pull-right">{{ home.total }}</span>
                 </span>
