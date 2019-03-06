@@ -130,8 +130,8 @@
                       <i class="fa fa-th"></i>
                     </div>
                     {{ form.interventions }}
-                  </div><!-- /.input group ->
-                </div><!-- /.form group -->
+                  </div><!- /.input group ->
+                </div><!- /.form group -->
                 {{ form.queueid }}
                 <br>
                 <div class="form-group col-md-4">
@@ -170,11 +170,11 @@
                       <td><a href="{% url 'caseview' 'Case_Form' records|get_item:'_id' %}">{{  records | get_item:'case_number' }}</a></td>
                       {% for item_key in recordkeys %}
                       {% if not '_' == item_key|first %}
-                      <td>
+                      <td {% if 'narrative' in item_key or  'case_plan' in item_key %} style="min-width: 400px;"{% endif %}>
                         {% if item_key == 'case_number' %}
                         <a href="/helpline/forms/{{ xform.id_string }}/{{ records | get_item:'_id' }}">{{  records | get_item:item_key }}</a>
                         {% elif forloop.last %}
-                        {{  records | get_item:'_submission_time' | slice:'10' }}
+                        {{  records | get_item:'_submission_time' }}
                         {% else %}
                         {{  records | get_item:item_key }}
                         {% endif %}

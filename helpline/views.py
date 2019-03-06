@@ -1274,7 +1274,18 @@ def reports(request, report, casetype='Call'):
             'home': home_statistics,
             'query': query
         }
+    case_start = '';
+    case_end = ''
+    if not datetime_range == '':
+            start_dates, end_dates = [datetime_range.split(" - ")[0], datetime_range.split(" - ")[1]]
+            start_date = datetime.strptime(start_dates, '%m/%d/%Y  %I:%M %p')
+            end_date = datetime.strptime(end_dates, '%m/%d/%Y  %I:%M %p')
+            
+            case_start = start_date.strftime('%Y-%m-%d')
+            case_end = end_date.strftime('%Y-%m-%d')
 
+            start_date = start_date.strftime('%s')
+            end_date = end_date.strftime('%s')
 
     if str(casetype).lower() == 'call':
         """For call reports"""
@@ -1295,13 +1306,6 @@ def reports(request, report, casetype='Call'):
         call_data = {} # requests.post(calls_url).json()
 
         if not datetime_range == '':
-            start_date, end_date = [datetime_range.split(" - ")[0], datetime_range.split(" - ")[1]]
-            start_date = datetime.strptime(start_date, '%m/%d/%Y  %I:%M %p')
-            end_date = datetime.strptime(end_date, '%m/%d/%Y  %I:%M %p')
-
-            start_date = start_date.strftime('%s')
-            end_date = end_date.strftime('%s')
-
             query_string = ' where calls_detail."dataCreated" >= %s AND calls_detail."dataCreated" <=%s' %(start_date,end_date)
 
         if not agent == '':
@@ -1399,9 +1403,8 @@ def reports(request, report, casetype='Call'):
             ur = 'http://%s/ona/api/v1/data/%s?query={%s}%s' %(current_site, \
                 default_service_xform.pk, query_string, request_string)
 
-            stat = requests.get(ur, headers=headers).json() # &page=1&page_size=50
-            # + '&sort={"_id":-1}'
-            # data['statss'] = "Cheru Data: %s" % stat
+            stat = requests.get(ur, headers=headers).json()
+
             data['ur'] = ur
             statrecords = []
             recordkeys = []
@@ -1412,7 +1415,6 @@ def reports(request, report, casetype='Call'):
                 record = {}
 
                 for key, value in recs.items():
-                    #if not (key.startswith('_') and key.endswith('_')):# str(key) == "_id":
                     key = str(key)
                     if key.find('/') != -1:
                         k = key.split('/')
@@ -1430,9 +1432,20 @@ def reports(request, report, casetype='Call'):
                         str(value) != 'no' and str(kk) != 'case_number'  and str(kk) != 'uuid':
                             recordkeys.append(kk)
                         record.update({kk : str(value).capitalize()})
+
+                    # format submission date to allow later filter by date
+                    if record.get('_submission_time',None) != None:
+                        cr_time = record['_submission_time']
+                        cr_time = str(cr_time)
+
+                        if 't' in cr_time:
+                            cr_time = datetime.strptime(cr_time, '%Y-%m-%dt%H:%M:%S')
+                            cr_time = cr_time.strftime('%Y-%m-%d')
+                        record['_submission_time'] = cr_time
+
                 return record
 
-
+            
             for rec in stat:
                 if isinstance(rec, dict) and len(rec) > 1:
                     statrecords.append(get_records(rec))
@@ -1442,6 +1455,9 @@ def reports(request, report, casetype='Call'):
             else:
                 recordkeys = False
 
+            # filter by date submitted
+            if not case_start == '':
+                statrecords = filter(lambda statrecords: statrecords['_submission_time'] >= case_start and statrecords['_submission_time'] <= case_end, statrecords)
 
             data['statrecords'] = statrecords
             data['recordkeys'] = recordkeys
@@ -3081,7 +3097,14 @@ def ajax_get_sub_subcategory(request, category):
     data = {'data': list(results)}
     return data
 
-
+@login_required
+def pivot(request):
+    report = {}
+    with connection.cursor() as cursor:
+            query = 'SELECT json from logger_xform where id = 1'
+            cursor.execute(query)
+            report['data'] = namedtuplefetchall(cursor).json
+    return render(request, 'helpline/report_pivot.html',report)
 @login_required
 def wall(request):
     """Display statistics for the wall board"""
