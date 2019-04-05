@@ -1362,10 +1362,10 @@ def reports(request, report, casetype='Call'):
                 query_string = '"case_actions/case_action":{"$i":"%s"}' % rep_status
             elif request.user.HelplineUser.hl_role == 'Caseworker':
                 query_string = '"case_actions/case_action":"%s",\
-                "case_actions/escalate_caseworker":"%s"' %(str(username).lower(), rep_status)
+                "case_actions/escalate_caseworker":"%s"' %(rep_status,str(username).lower())
             elif request.user.HelplineUser.hl_role == 'Supervisor':
                 query_string = '"case_actions/case_action":"%s",\
-                "case_actions/supervisors":"%s"' %(str(username).lower(), rep_status)
+                "case_actions/supervisors":"%s"' %(rep_status,str(username).lower())
             else:
                 query_string = '"case_actions/case_action":"%s"'  % rep_status
 
