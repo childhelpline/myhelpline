@@ -1,6 +1,7 @@
 alabaster==0.7.11
 amqp==2.3.2
 Babel==2.6.0
+backports.shutil-get-terminal-size==1.0.0
 beautifulsoup4==4.6.0
 billiard==3.5.0.3
 cachetools==2.1.0
@@ -11,8 +12,10 @@ chardet==3.0.4
 click==6.7
 configparser==3.5.0
 contextlib2==0.5.5
+coverage==4.0.3
 croniter==0.3.24
 datapackage==1.2.6
+decorator==4.3.0
 defusedxml==0.5.0
 dict2xml==1.6
 Django==1.11.15
@@ -91,6 +94,8 @@ ijson==2.3
 imagesize==1.0.0
 inflection==0.3.1
 iptools==0.6.1
+ipython==5.8.0
+ipython-genutils==0.2.0
 isodate==0.6.0
 itsdangerous==0.24
 jdcal==1.4
@@ -122,10 +127,15 @@ openpyxl==2.4.11
 packaging==17.1
 paho-mqtt==1.3.1
 path.py==11.0.1
+pathlib2==2.3.2
 pbr==4.0.4
+pexpect==4.6.0
+pickleshare==0.7.5
 Pillow==5.1.0
+prompt-toolkit==1.0.15
 psycopg2==2.7.5
 psycopg2-binary==2.7.5
+ptyprocess==0.6.0
 py-Asterisk==0.5.17
 pyasn1==0.4.3
 pyasn1-modules==0.2.1
@@ -138,6 +148,7 @@ PyJWT==1.6.4
 pylibmc==1.5.2
 pymongo==3.6.1
 pyparsing==2.2.0
+python-coveralls==2.9.1
 python-dateutil==2.7.3
 -e git+https://github.com/onaio/python-digest.git@3af1bd0ef6114e24bf23d0e8fd9d7ebf389845d1#egg=python_digest
 -e git+https://github.com/onaio/python-json2xlsclient.git@62b4645f7b4f2684421a13ce98da0331a9dd66a0#egg=python_json2xlsclient
@@ -156,6 +167,8 @@ rq==0.12.0
 rq-scheduler==0.8.3
 rsa==3.4.2
 savReaderWriter==3.4.2
+scandir==1.9.0
+simplegeneric==0.8.1
 simplejson==3.15.0
 six==1.11.0
 snowballstemmer==1.2.1
@@ -168,6 +181,7 @@ tableschema==1.1.0
 tablib==0.12.1
 tabulator==1.14.0
 traceback2==1.4.0
+traitlets==4.3.2
 typing==3.6.4
 unicodecsv==0.14.1
 Unidecode==1.0.22
@@ -179,5 +193,6 @@ vine==1.1.4
 virtualenv==16.0.0
 virtualenv-clone==0.3.0
 virtualenvwrapper==4.8.2
+wcwidth==0.1.7
 xlrd==1.1.0
 xlwt==1.3.0
