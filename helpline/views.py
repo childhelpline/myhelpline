@@ -460,6 +460,8 @@ def manage_users(request,action=None,action_item=None):
     data = {}
     userlist = HelplineUser.objects.all() 
     template = 'users'
+    data['systemusers'] = userlist
+
     if action != None and action_item != None:
         if action == 'delete':
             del_user = User.objects.filter(HelplineUser__hl_key__exact=action_item)
@@ -470,7 +472,7 @@ def manage_users(request,action=None,action_item=None):
         elif action == 'profile':
             userlist = HelplineUser.objects.get(hl_key__exact=action_item)
             template = 'profile'
-            data['userlist'] = userlist
+            data['systemusers'] = userlist
             data['template'] = 'user'
         elif action == 'edit':
             userlist = User.objects.get(pk__exact=action_item)
@@ -982,7 +984,7 @@ def caseview(request, form_name, case_id):
     """View case or submission information"""
 
     default_service = Service.objects.all().first()
-    default_service_xform = default_service.call_xform
+    default_service_xform = default_service.walkin_xform
     default_service_auth_token =  default_service_xform.user.auth_token
     current_site = get_current_site(request)
 
