@@ -33,7 +33,9 @@
                 {% for message in messages %}
                     {{ message }}
                 {% endfor %}
-            {% endif %}</div>
+            {% endif %}
+          </div>
+
               <table id="example1" class="table table-bordered table-striped">
                 <thead>
                 <tr>
@@ -52,14 +54,14 @@
                   {% for user in systemusers %}
                     <tr>
                       <td>{{ forloop.counter }}.</td>
-                      <td><img src="{{ user.hl_avatar }}" height="50px" alt="{{ user.hl_avatar | default:''}}" /></td>
-                      <td>{{user.hl_names | default:''}}</td>
-                      <td>{{ user.hl_nick | default:'' }}</td>
-                      <td>{{ user.hl_email | default:'' }}</td>
-                      <td>{{ user.hl_phone | default:'' }}</td>
-                      <td>{{ user.hl_role | default:'' }}</td>
-                      <td>{{ user.hl_time |default:'' }}</td>
-                      <td><a href="{% url 'manageusers' 'delete' user.pk %}" onClick=" if(!confirm('Are you sure you want to delete this user?'))return false;else''">Delete </a> | <a href="{% url 'profile' user.pk %}">Edit</a></td>
+                      <td><img src="{{ user.HelplineUser.hl_avatar }}" height="50px" alt="{{ user.HelplineUser.hl_avatar | default:''}}" /></td>
+                      <td>{{user.HelplineUser.hl_names | default:''}}</td>
+                      <td>{{ user.HelplineUser.hl_nick | default:'' }}</td>
+                      <td>{{ user.HelplineUser.hl_email | default:'' }}</td>
+                      <td>{{ user.HelplineUser.hl_phone | default:'' }}</td>
+                      <td>{{ user.HelplineUser.hl_role | default:'' }}</td>
+                      <td>{{ user.HelplineUser.hl_time |default:'' }}</td>
+                      <td><a href="{% url 'manageusers' 'delete' user.HelplineUser.hl_key %}" onClick=" if(!confirm('Are you sure you want to delete this user?'))return false;else''">Delete </a> | <a href="{% url 'manageusers' 'edit' user.HelplineUser.hl_key %}">Edit</a></td>
                     </tr>
                   {% endfor %}
                 </tbody>

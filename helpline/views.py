@@ -458,26 +458,28 @@ def manage_users(request,action=None,action_item=None):
     
     message = ""
     data = {}
-    userlist = HelplineUser.objects.all() 
+    # userlist = User.objects.all().filter(is_active=True)
     template = 'users'
-    data['systemusers'] = userlist
 
     if action != None and action_item != None:
+        action_user = User.objects.filter(HelplineUser__hl_key__exact=action_item).first()
         if action == 'delete':
-            del_user = User.objects.filter(HelplineUser__hl_key__exact=action_item)
-            del_user.is_active = False;
-            del_user.save()
-            userlist = HelplineUser.objects.all()
+            # del_user = new User()
+            action_user.is_active = False;
+            action_user.save()
             message = "User successfully deleted"
         elif action == 'profile':
-            userlist = HelplineUser.objects.get(hl_key__exact=action_item)
             template = 'profile'
-            data['systemusers'] = userlist
             data['template'] = 'user'
         elif action == 'edit':
-            userlist = User.objects.get(pk__exact=action_item)
-            form = RegisterUserForm(request.POST,instance=userlist)
-            profile_form = RegisterProfileForm(userlist)
+            # form = RegisterUserForm(action_user, request.POST, request.FILES)
+            # profile_form = RegisterProfileForm()
+            action_user = User.objects.get(pk__exact=4)
+            user_prof = action_user.HelplineUser
+            
+            form = RegisterUserForm(request.POST or None, request.FILES,instance=action_user)
+            profile_form = RegisterProfileForm(request.POST or None, request.FILES,instance=user_prof)
+
             data['template'] = 'user'
             template = 'user'
             data['form'] = form
@@ -547,8 +549,9 @@ def manage_users(request,action=None,action_item=None):
             #         form = RegisterUserForm(request.POST)
             #         profile_form = RegisterProfileForm(request.POST, request.FILES)
             #         messages.append('Error saving user: %s' % (e))
-
     
+    userlist = User.objects.filter(is_active=True).select_related('HelplineUser')
+    data['systemusers'] = userlist
     return render(request, 'helpline/%s.html' %(template), data)
 
 def increment_case_number():
@@ -2642,7 +2645,13 @@ def get_dashboard_stats(request, interval=None):
     default_service_xform = default_service.walkin_xform
 
     default_service_qa = default_service.qa_xform
-    default_service_auth_token = default_service_xform.user.auth_token
+
+    default_service_auth_token = ''
+    if default_service_xform.user:
+        default_service_auth_token = default_service_xform.user.auth_token
+    else:
+        message = "Please Configure Service and assign forms"
+        HttpResponseRedirect('/ona/%s?message=%s' %(request.user,message))
     current_site = get_current_site(request)
 
     # Set headers

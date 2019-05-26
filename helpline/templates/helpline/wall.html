@@ -1,7 +1,19 @@
 {% extends "helpline/helpline/base.html" %}
 {% load i18n %}
 {% load staticfiles %}
-{% block head %} <meta http-equiv="refresh" content="300" /> {% endblock head %}
+
+{% block head %} 
+
+<meta http-equiv="refresh" content="300" />
+
+<script type="text/javascript">
+
+  $(document).ready(function(){
+    setInterval(function(){
+        window.location.reload()
+     },10000)    })
+</script>
+{% endblock head %}
 {% block content %}
 
 <style>
@@ -33,6 +45,22 @@ tr:nth-child(odd) {
 .color-palette-set
 {
 	text-transform: uppercase;
+}
+
+.oncall{
+  color: blue !important;
+}
+.online{
+  color: green !important;
+}
+.offline{
+  color: red !important;
+}
+.wrapup{
+  color: orange !important;
+}
+.unavailable{
+  color: black !important;
 }
 </style>
 
@@ -187,8 +215,7 @@ tr:nth-child(odd) {
       <div class="box-body">
         <div class="row">
           <div class="col-sm-8 col-xs-12">
-            <h3 class="box-title">{% trans "Agents Online" %}</h3>
-            
+            <h3 class="box-title">{% trans "Counsellors" %}<small><em>Offline: {{ call.agents.offline}} | On Call: {{call.agents.oncall}} | Online: {{ call.agents.online}} | On Wrapup: {{ call.agents.wrapup}} </em></h3>
             <div class="table-responsive">
               <table class="table no-margin" id="agents">
                 <thead>
@@ -201,6 +228,15 @@ tr:nth-child(odd) {
                   </tr>
                 </thead>
                 <tbody>
+                  {% for user in users %}
+                  <tr>
+                    <td>{{ user.username | capfirst }}</td>
+                    <td class="{{ call_agents | get_item:user.username | default:'unavailable' | lower  }}">{{ call_agents | get_item:user.username | default:'Unavailable' | upper  }}</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                  {% endfor %}
                 </tbody>
               </table>
             </div>

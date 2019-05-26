@@ -391,12 +391,12 @@ input:checked + .slider:before {
             <li>
               <a href="{% url "case_form" "walkin" %}" role="button"><i class="fa fa-circle-o"></i> {% trans "New WalkIn" %}
               </a></li>
-              <li><a href="{% url 'dashboardreports' 'today' 'case' %}?datetime_range={{ home.midnight_string }} - {{ home.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Today's Cases" %}
+              <li><a href="{% url 'dashboardreports' 'today' 'case' %}"><i class="fa fa-circle-o"></i> {% trans "Today's Cases" %}
                 <span class="pull-right-container">
                   <span class="label label-success pull-right">{{ home.total }}</span>
                 </span>
               </a></li>
-              <li><a href="{% url 'dashboardreports' 'escalated' 'case' %}?datetime_range={{ home.midnight_string }} - {{ home.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Escalated Cases" %}
+              <li><a href="{% url 'dashboardreports' 'escalated' 'case' %}"><i class="fa fa-circle-o"></i> {% trans "Escalated Cases" %}
                 <span class="pull-right-container">
                   <span class="label label-warning pull-right">{{ home.escalate }}</span>
                 </span>
