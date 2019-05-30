@@ -72,23 +72,9 @@ Replace username and db name accordingly.
     sudo su postgres -c "psql -c \"CREATE DATABASE helpline OWNER helplineuser;\""
     sudo su postgres -c "psql -d helpline -c \"CREATE EXTENSION IF NOT EXISTS postgis;\""
     sudo su postgres -c "psql -d helpline -c \"CREATE EXTENSION IF NOT EXISTS postgis_topology;\""
+    sudo su postgres -c "psql -d helpline -c \"ALTER USER helplineuser WITH superuser;\""
 
 
-
-### Asterisk
-On /etc/asterisk/manager.conf set command permission for read and write, example:
-
-```
-    [helpline]
-    secret = my_super_secret_password
-    read = command
-    write = command,originate,call,agent
-```
-
-#### AMI Options
-    * _originate_ for spy, whisper and barge.
-    * _call_ for hanging up calls.
-    * _agent_ remove and add agents to and from the queues.
 
 ##  Prepair environment
 
@@ -145,8 +131,13 @@ python manage.py loaddata helpline
 ## Install components using bower
  ```
  python manage.py bower install
+
  ```
- ## Create User
+if running as root
+```
+bower install --allow-root
+```
+## Create User
  Run the following command and follow the prompt
   ```
   python manage.py createsuperuser
