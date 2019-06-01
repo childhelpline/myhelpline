@@ -528,7 +528,7 @@ input:checked + .slider:before {
           </ul>
         </li>
         {% endif %}
-        {% if request.user.HelplineUser.hl_role == 'Administrator'  or  request.user.HelplineUser.is_superuser or request.user.HelplineUser.hl_role == 'Admin' %}
+        {% if request.user.HelplineUser.hl_role == 'Administrator'  or  request.user.is_superuser or request.user.HelplineUser.hl_role == 'Admin' %}
 
         <li>
           <a href="{% url 'manageusers' %}">
@@ -987,7 +987,7 @@ function leave_queue(item){
       'csrfmiddlewaretoken': '{{ csrf_token }}'
     }
   var logout = $(item).html()
-    $.post("{% setting "CALL_API_URL" %}/api/v1/call/agent?logout={{request.user.HelplineUser.hl_key | safe}}",function(data){
+    $.post("{% setting "CALL_API_URL" %}/clk/agent/?agent={{request.user.HelplineUser.hl_key | safe}}&action=2",function(data){
     if(data.data == 'offline' || logout == 'Sign out'){
       $.post("{% url 'queue_leave' %}",values)//,function(){}
       sessionStorage.setItem("in_queue", 0);
@@ -1001,9 +1001,10 @@ function leave_queue(item){
 }
 function join_queue(item){
   var values = {
-      'csrfmiddlewaretoken': '{{ csrf_token }}'
-    }
-  $.post("{% setting "CALL_API_URL" %}/api/v1/call/agent?login={{request.user.HelplineUser.hl_key | safe}}",function(data){
+      'csrfmiddlewaretoken': '{{ csrf_token }}',
+      'Access-Control-Allow-Origin': '*'
+    }//{{request.user.HelplineUser.hl_key | safe}}
+  $.post("{% setting "CALL_API_URL" %}/clk/agent/",{"agent":841217489,"action":1},function(data){
     if(data.status !== 'offline'){
       sessionStorage.setItem('in_queue',1)
       $.post("{% url 'queue_log' %}",values)
