@@ -1,0 +1,132 @@
+{% extends 'helpline/base.html' %}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block box %}
+{% endblock box %}
+{% block navbar_nav %}
+
+{% endblock navbar_nav %}
+
+{% block content %}
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <h1>
+        Read Mail
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li class="active">Mailbox</li>
+      </ol>
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="box box-primary">
+            <div class="box-header with-border">
+              <h3 class="box-title">Read Mail</h3>
+
+              <div class="box-tools pull-right">
+                <a href="#" class="btn btn-box-tool" data-toggle="tooltip" title="Previous"><i class="fa fa-chevron-left"></i></a>
+                <a href="#" class="btn btn-box-tool" data-toggle="tooltip" title="Next"><i class="fa fa-chevron-right"></i></a>
+              </div>
+            </div>
+            <!-- /.box-header -->
+            <div class="box-body no-padding">
+              <div class="mailbox-read-info">
+                <h3>{{data_messages.email_subject}}</h3>
+                <h5>From: {{data_messages.email_from}}
+                  <span class="mailbox-read-time pull-right">{{data_messages.email_date}}</span></h5>
+              </div>
+              <!-- /.mailbox-read-info -->
+              <div class="mailbox-controls with-border text-center">
+                <div class="btn-group">
+                  <button type="button" class="btn btn-default btn-sm" data-toggle="tooltip" data-container="body" title="Delete">
+                    <i class="fa fa-trash-o"></i></button>
+                  <button type="button" class="btn btn-default btn-sm" data-toggle="modal" data-container="body" title="Reply" data-backdrop="static"  data-keyboard="false" data-target="#email_reply">
+                    <i class="fa fa-reply"></i></button>
+                  <button type="button" class="btn btn-default btn-sm" data-toggle="tooltip" data-container="body" title="Forward">
+                    <i class="fa fa-share"></i></button>
+                </div>
+                <!-- /.btn-group -->
+                <button type="button" class="btn btn-default btn-sm" data-toggle="tooltip" title="Print">
+                  <i class="fa fa-print"></i></button>
+              </div>
+              <!-- /.mailbox-controls -->
+              <div class="mailbox-read-message">
+                <p>{{ data_messages.email_body }}</p>
+              </div>
+              <!-- /.mailbox-read-message -->
+            </div>
+            <!-- /.box-body -->
+            <!-- <div class="box-footer">
+              <ul class="mailbox-attachments clearfix">
+                <li>
+                  <span class="mailbox-attachment-icon"><i class="fa fa-file-pdf-o"></i></span>
+
+                  <div class="mailbox-attachment-info">
+                    <a href="#" class="mailbox-attachment-name"><i class="fa fa-paperclip"></i> Sep2014-report.pdf</a>
+                        <span class="mailbox-attachment-size">
+                          1,245 KB
+                          <a href="#" class="btn btn-default btn-xs pull-right"><i class="fa fa-cloud-download"></i></a>
+                        </span>
+                  </div>
+                </li>
+                <li>
+                  <span class="mailbox-attachment-icon"><i class="fa fa-file-word-o"></i></span>
+
+                  <div class="mailbox-attachment-info">
+                    <a href="#" class="mailbox-attachment-name"><i class="fa fa-paperclip"></i> App Description.docx</a>
+                        <span class="mailbox-attachment-size">
+                          1,245 KB
+                          <a href="#" class="btn btn-default btn-xs pull-right"><i class="fa fa-cloud-download"></i></a>
+                        </span>
+                  </div>
+                </li>
+              </ul>
+            </div> -->
+            <!-- /.box-footer -->
+            <div class="box-footer">
+              <div class="pull-right">
+                <button type="button" class="btn btn-default"><i class="fa fa-reply"></i> Reply</button>
+                <button type="button" class="btn btn-default"><i class="fa fa-share"></i> Forward</button>
+              </div>
+              <button type="button" class="btn btn-default"><i class="fa fa-trash-o"></i> Delete</button>
+              <button type="button" class="btn btn-default"><i class="fa fa-print"></i> Print</button>
+            </div>
+            <!-- /.box-footer -->
+          </div>
+          <!-- /. box -->
+        </div>
+        <!-- /.col -->
+      </div>
+      <!-- /.row -->
+    </section>
+    <!-- /.content -->
+
+
+
+
+
+
+    <!-- Modal -->
+    <div class="modal fade"  id="email_reply" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+      <div class="modal-dialog" role="document" style="width: 80%;">
+        <div class="modal-content">
+          <div class="modal-header bg-light-blue-active">
+            <h4>Reply Message</h4>
+          </div>
+          <div class="modal-body" style="padding: 0px; padding-left: 4px; height: 80vh;" ><!-- -->
+            <form method="POST">
+              {% csrf_token %}
+              <textarea cols="206" name="message" rows="15"></textarea>
+              <button type="submit" class="btn btn-info btn-md btn-flat">Send</button>
+              <button type="reset" class="btn btn-default btn-md btn-flat">Cancel</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+{% endblock %}

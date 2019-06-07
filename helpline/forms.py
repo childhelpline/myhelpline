@@ -122,7 +122,9 @@ INTERVENTIONS = (
 USER_ROLES = (
     ('Counsellor','Counsellor'),
     ('Caseworker','Caseworker'),
+    ('Casemanager','Casemanager'),
     ('Supervisor', 'Supervisor'),
+    ('Administrator', 'Administrator'),
 )
 
 def get_dialects():
@@ -228,11 +230,13 @@ class DispositionForm(forms.Form):
         self.helper.form_action = ''
         super(DispositionForm, self).__init__(*args, **kwargs)
 
-    case_number = forms.CharField(widget=forms.HiddenInput(), required=True)
-    disposition = forms.ChoiceField(choices=settings.DISPOSITION_CHOICES,
+    case_number = forms.CharField(widget=forms.HiddenInput(),initial=0, required=True)
+    disposition = forms.ChoiceField(label='Dispose',
+                                    choices=settings.DISPOSITION_CHOICES,
                                     widget=forms.Select(attrs={
                                         'onchange': "disposeCase(this);",
                                         'class': 'form-control',
+                                        'placeholder':'Select Disposition'
                                     }
                                     ))
 
@@ -256,7 +260,7 @@ class ReportFilterForm(forms.Form):
     )
     agent = forms.ModelChoiceField(
         label='Agent:',
-        queryset=User.objects.all().order_by('username'),
+        queryset=User.objects.filter(HelplineUser__hl_role='Counsellor').order_by('username'),
         required=False,
         widget=forms.Select(attrs={'class': 'form-control pull-right',
                                    'id': 'agent',

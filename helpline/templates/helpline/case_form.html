@@ -180,25 +180,123 @@ audio{
 
 
   function disposeCase(param){
-    var dispose_form = '#disposeDet';
 
-    $.ajax({
-      url: "{% url 'save_disposition_form' %}",
-      type: "POST",
-      data: $("#disposeDet").serialize(),
-      success: function(data) {
-        if (!(data['success'])) {
-          $(dispose_form).replaceWith(data['form_html']);
+    if($(param).val() == '--')
+      return false
+
+    /////try pass filled form data for records
+   {% if form_name == 'call' %}
+      var dispose_form = '#disposeDet';
+
+        if($(param).val() == 'Transfer'){
+          bootbox.prompt({title:'Select user',
+              inputType: 'select',
+              inputOptions: {{users | safe}},
+             buttons: {
+                confirm: {
+                    label: 'Transfer',
+                    className: 'btn-success'
+                },
+                cancel: {
+                    label: 'Cancel',
+                    className: 'btn-danger'
+                }
+            },
+            callback:function(transfer){
+            if(transfer){
+              $.ajax({
+                url: "{% setting "CALL_API_URL" %}/clk/cdr", ///api/v1/call/transfer",
+                type: "POST",
+                contentType:'JSON',
+                data: {'cdr':'{{cdr}}','case':$('#caseid').val() != '' ? $('#caseid').val() : 'False','dispose':$(param).val(),'agent':'{{request.user.HelplineUser.hl_key | safe}}','transfer':transfer},
+                success: function(data) {
+                  /////save disposition details
+                  
+                  $.ajax({
+                    url: "{% url 'save_disposition_form' %}",
+                    type: "POST",
+                    data: $("#disposeDet").serialize(),
+                    success: function(data) {
+                      if (!(data['success'])) {
+                        $(dispose_form).replaceWith(data['form_html']);
+                      }
+                      else{
+                        alert("Form Successfully disposed")
+                        document.location.href = '/helpline/'
+                      }
+                    },
+                    error: function() {
+                      $("#error-message").html("Error");
+                    }
+                  });
+
+                  ///
+                },
+                error: function() {
+                  $("#error-message").html("Error");
+                }
+              })
+            }
+          }})
+        }else{
+          $.ajax({
+          url: "{% setting "CALL_API_URL" %}/clk/cdr",
+          type: "POST",
+          contentType:'JSON',
+          data: {'cdr':'{{cdr}}','case':$('#caseid').val() != '' ? $('#caseid').val() : 'False','dispose':$(param).val(),'agent':'{{request.user.HelplineUser.hl_key | safe}}'},
+          success: function(data) {
+            /////save disposition details
+            
+            $.ajax({
+              url: "{% url 'save_disposition_form' %}",
+              type: "POST",
+              data: $("#disposeDet").serialize(),
+              success: function(data) {
+                if (!(data['success'])) {
+                  $(dispose_form).replaceWith(data['form_html']);
+                }
+                else{
+                  alert("Form Successfully disposed")
+                  document.location.href = '/helpline/'
+                }
+              },
+              error: function() {
+                $("#error-message").html("Error");
+              }
+            });
+
+            ///
+          },
+          error: function() {
+            $("#error-message").html("Error");
+          }
+        })
         }
-        else{
-          closeOverlay();
-        }
-      },
-      error: function() {
-        $("#error-message").html("Error");
+
+        {% else %}
+           /////save disposition details
+            
+            $.ajax({
+              url: "{% url 'save_disposition_form' %}",
+              type: "POST",
+              data: $("#disposeDet").serialize(),
+              success: function(data) {
+                if (!(data['success'])) {
+                  $(dispose_form).replaceWith(data['form_html']);
+                }
+                else{
+                  alert("Form Successfully disposed")
+                  document.location.href = '/helpline/'
+                }
+              },
+              error: function() {
+                $("#error-message").html("Error");
+              }
+            });
+
+            ///
+        {% endif %}
       }
-    });
-  }
 
   function closeOverlay(){
     top.window.location.href = '{% url "dashboard_home" %}';
@@ -212,21 +310,13 @@ audio{
     <div class="modal-content">
       <div class="modal-header bg-light-blue-active">
         <!--button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button-->
-        <a href="{% url 'dashboard_home' %}" class="close" style="color:#ffffff;"><span aria-hidden="true">&times;</span></a>
+        <!-- <a href="{% url 'dashboard_home' %}" class="close" style="color:#ffffff;"><span aria-hidden="true">&times;</span></a> -->
         <h4 class="modal-title" id="myModalLabel">{% trans "Form" %} > {{ form_name }} 
           <span id="caseid">{{ case }}</span>
           {% if form_name == 'call' %}<span id="phone">Caller Number: {{ caller }}</span>{% endif %}
           <span id="editedBadge"></span>
-          {% if form_name == 'qa' %}
-          <span class="pull-right">
-            <audio controls autoplay="autoplay">
-              <source src="horse.ogg" type="audio/ogg" />
-              <source src="/opt/asterisk/helpline/media/bridge/{{sourceid}}.wav" type="audio/mpeg" />
-            </audio> 
-          </span>
-          {% else %}
           <span class="pull-right" id="formTimer" style="font-size: 24px; color: #fff; margin-right: 30px;">00:00:00</span>
-          {% endif %}
+          <span class="col-md-3 pull-right">{% crispy disposition_form disposition_form.helper %}</span>
           <h4>
           </div>
           <div class="modal-body" style="padding: 0px; height: 80vh;" ><!-- -->
@@ -237,10 +327,10 @@ audio{
                   <div class="row">
                     <div class="col-sm-12">
                       <div class="modal-body" style="padding: 0px;">
-                        <div id="contact-search" class={% if form_name == 'call' %} hidden {% endif %}>
+                        <div id="contact-search" class=>
                           <div class="row">
                             <!-- accepted payments column -->
-                            <div class="col-xs-6 col-md-12 contact-search">
+                            <div class="col-xs-6 col-md-12 contact-search {% if form_name == 'call' %} hidden {% endif %}">
                               <p class="lead">Contact Search:</p>
                               <div class="text-muted well well-sm no-shadow">
                                 <!-- form start -->
@@ -249,26 +339,29 @@ audio{
 
                                 <div class="box-footer" style="background-color: transparent;">
                                   <button type="button" class="btn btn-primary" onclick="contactSearch();$('.contact-search').removeClass('col-md-12');$('.contact-results').removeClass('hidden');">Search Contact</button>
-                                  <button type="button" class="btn btn-primary pull-right" onclick="create_case();$('#contact-search').addClass('hidden');$('#frame_iframe').removeClass('hidden');$('#frame-contact').addClass('hidden');">New Reporter</button>
                                 </div>
                               </div>
                             </div>
                             <!-- /.col -->
-                            <div class="col-xs-6 contact-results hidden">
+                            <div class="col-xs-6 contact-results {% if form_name != 'call' %} hidden {% endif %}">
                               <p class="lead">Contact Search Results</p>
-
                               <div class="table-responsive text-muted well-sm no-shadow" style="min-height: 242px;">
                                 <div id="contact-search-results"></div>
                               </div>
                             </div>
                             <!-- /.col -->
+                              <div class="table-responsive text-muted well-sm no-shadow" style="min-height: 242px;">
+                                <button type="button" class="btn btn-primary pull-right" onclick="create_case();$('#contact-search').addClass('hidden');$('#frame_iframe').removeClass('hidden');$('#frame-contact').addClass('hidden');">New Reporter</button>
+                              </div>
+
+                              
                           </div>
                           <!-- /.row -->
                         </div>
 
 
                         <!-- Table row -->
-                        <div class="contact-cases {% if form_name == 'walkin' %} hidden {% endif %}">
+                        <div class="contact-cases {% if form_name == 'walkin' or form_name == 'call' %} hidden {% endif %}">
 
                           <div class="row">
                             <!-- accepted payments column -->
@@ -303,18 +396,75 @@ audio{
 
     </div>
     <script>
+      sessionStorage.setItem("on_case", 1);
       window.addEventListener("message", receiveMessage, false);
 
       function receiveMessage(event)
       {
         if(event.data){
           var resp = JSON.parse(event.data)
-          if(resp.enketoEvent == 'submissionsuccess'){
-            setInterval(function(){
-              window.location.href = '/helpline/'
-            },500)
+          if(resp.enketoEvent == 'submissionsuccess' || resp.status == 201){
+          /////try pass filled form data for records
+          {% if form_name == 'call' %}
+              $.ajax({
+                url: "{% setting "CALL_API_URL" %}/api/v1/call/case",
+                type: "GET",
+                contentType:'JSON',
+                data: {'cdr':'{{cdr}}','case':$('#caseid').val() != '' ? $('#caseid').val() : 'False','dispose':'Complete Call','agent':'{{request.user.HelplineUser.hl_key | safe}}'},
+                success: function(data) {
+                  /////save disposition details
+                  var formData = new FormData()
+                  formData.append('case_numer',$('#caseid').val())
+                  formData.append('disposition','Complete Call')
+                  formData.append('csrfmiddlewaretoken', '{{ csrf_token }}')
+                  $.ajax({
+                    url: "{% url 'save_disposition_form' %}",
+                    type: "POST",
+                    data: formData, 
+                    processData: false,
+                    contentType: false,
+                    success: function(data) {
+                        document.location.href = '/helpline/'
+                      },
+                      error: function() {
+                        $("#error-message").html("Error");
+                      }
+                    })
+                    ///
+                  },
+                  error: function() {
+                    $("#error-message").html("Error");
+                  }
+                })
+
+              {% else %}
+                 /////save disposition details
+                  var formData = new FormData()
+                  formData.append('case_numer',$('#caseid').val())
+                  formData.append('disposition','Complete Call')
+                  formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+                  $.ajax({
+                    url: "{% url 'save_disposition_form' %}",
+                    type: "POST",
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(data) {
+                        document.location.href = '/helpline/'
+                      },
+                    error: function() {
+                      $("#error-message").html("Error");
+                    }
+                  })
+
+                  ///
+              {% endif %}
+
+              /////
+              
+            sessionStorage.setItem("on_case", 0);
           }
-        }
+        } 
       }
     </script>
     <script>

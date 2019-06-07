@@ -46,8 +46,8 @@
 {% block content %}
 <style>
 div.scrollmenu {
-  overflow: auto;
-  white-space: nowrap;
+	overflow: auto;
+	white-space: nowrap;
 }
 </style>
 <section class="content-header">
@@ -55,6 +55,7 @@ div.scrollmenu {
     {% trans "REPORT" %} <i class="fa fa-angle-right"></i> {{ title }}
   </h1>
 </section>
+
 <!-- Main content -->
 <section class="content">
   <div class="row">
@@ -68,7 +69,7 @@ div.scrollmenu {
             <div id="form_collapse" class="in" style="height: auto;">
               {% block filterform %}
               <!-- Filter Form -->
-              <form action="">
+              <form action="#">
                 <!-- Date and time range -->
                 <script>
                   $(function() {
@@ -106,7 +107,7 @@ div.scrollmenu {
                 <br>
                 <div class="form-group col-md-4">
                   <div class="input-group pt-20">
-                    <input type="submit" value="Fetch Reports" id="total-calls-search-btn" class="btn btn-success btn-sm btn-flat">
+                    <input type="button" value="Fetch Reports" id="total-calls-search-btn" class="btn btn-success btn-sm btn-flat" onclick="sendtoReportFactory();">
                   </div><!-- /.input group -->
                 </div>
               </form>
@@ -122,25 +123,24 @@ div.scrollmenu {
                   <table id="example1" class="table datatable">
                     <thead>
                       <th>#</th>
-                      <!-- <th>Case ID</th>-->
-                      <th>Caller Phone</th>
+                      <!-- <th>Case ID</th>
+                      <th>Agent</th> -->
+                      <th>Sender ID</th>
+                      <th>Message</th>
+                      <th>Case Numebr</th>
+                      <th>Message Status</th>
                       <th>Date</th>
-                      <th>Start time</th>
-                      <th>End Time</th>
-                      <th>Status</th>
-                      <th>Action</th>
                     </thead>
                   {% for rep in report_data %}
                     <tr>
                       <td>{{ forloop.counter}}.</td>
-                      <!-- <td>{{rep.caseid | default:''}}</td> -->
-
-                      <td>{{rep.phone}}</td>
-                      <td>{{rep.date}}</td>
-                      <td>{{rep.start}}</td>
-                      <td>{{rep.ended}}</td>
-                      <td>{{rep.status}}</td>
-                      <td><a href="" class="btn btn-xs btn-info btn-flat"><i class="fa fa-volume-up"></i> Listen</a> | <a href="" class="btn btn-xs btn-warning btn-flat"><i class="fa fa-edit"></i> Create Case</a></td>
+                      <!-- <td>{{rep.caseid | default:''}}</td>
+                      <td>{{rep.agent | default:''}}</td> -->
+                      <td>{{rep.contact}}</td>
+                      <td>{{rep.msg}}</td>
+                      <td>{{rep.sms_case | safe}}</td>
+                      <td>{{rep.sms_status}}</td>
+                      <td>{{rep.sms_time}}</td>
                     </tr>
                   {% endfor %}
                     

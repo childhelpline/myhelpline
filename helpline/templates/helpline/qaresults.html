@@ -151,31 +151,36 @@ div.scrollmenu {
         <div class="box-body">
           <div class="row">
             <div class="scrollmenu col-md-12">
-              <table id="example1" class="table datatable">
-                <thead>
-                  <th>#</th>
-                  <!-- <th>Case ID</th> -->
-                  <th>Agent</th>
-                  <th>Caller Phone</th>
-                  <th>Date</th>
-                  <th>Start time</th>
-                  <th>End Time</th>
-                  <th>Action</th>
-                </thead>
-                {% for rep in report_data %}
-                <tr>
-                  <td>{{ forloop.counter}}.</td>
-                  <!-- <td>{{rep.caseid | default:''}}</td> -->
-                  <td>{{rep.agent | default:''}}</td>
-                  <td>{{rep.phone}}</td>
-                  <td>{{rep.date}}</td>
-                  <td>{{rep.start}}</td>
-                  <td>{{rep.stop}}</td>
-                  <td><a href="#" data-target="#case_form_modal" class="qa_btn btn btn-sm btn-warning" data-toggle="modal" data-number="{{rep.caseid}}" data-key="/audios/{{rep.media}}">Assess <i class="fa fa-volume-up"></i></a></td>
-                </tr>
-                {% endfor %}
+              <div class="data-table-data table table-responsive">
+                <table id="example1" class="table table-bordered table-striped dataTable">
+                  <thead>
+                    <th>#</th>
+                    {% for elem in recordkeys %}
 
-              </table>
+                    {% if not '_' == elem|first %}
+                    <th>{{ elem }}</th>
+                    {% endif %}
+                    {% endfor %}
+                  </thead>
+                  <tbody>
+                    {% for qares in report_data %}
+                    <tr>
+                      <td>{{ forloop.counter }}. </td>
+                      {% for elem in recordkeys %}
+                      {% if forloop.last %}
+                      <td>{{ qares | get_item:'_submission_time' | slice:'10' }}</td>
+                      {% elif not '_' == elem|first %}
+                      <td>{{ qares | get_item:elem }}</td>
+                      {% endif %}
+                      {% endfor %}
+
+                      
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            
             </div>
           </div>
           <!-- /.col -->

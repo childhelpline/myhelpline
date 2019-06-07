@@ -9,15 +9,23 @@ from random import randint
 import hashlib
 import urllib
 
-import imaplib
+import imaplib,smtplib
 import email
+from django.core.mail import send_mail
+import operator
+
+from celery import Celery
+from celery.decorators import task
 
 from itertools import tee
+import numbers
 
 from datetime import timedelta, datetime, date, time as datetime_time
 
 # from nameparser import HumanName
 import requests
+from django.db import connection
+from collections import namedtuple
 
 from django.shortcuts import render, redirect
 from django.http import JsonResponse, Http404
@@ -41,9 +49,11 @@ from django.conf import settings
 from django.utils.translation import gettext as _
 from django.utils import timezone
 from django.core.files.storage import FileSystemStorage
+from django.contrib.sessions.models import Session
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework import status
 
 from django.db import transaction
 
@@ -84,10 +94,10 @@ from helpline.forms import QueueLogForm,\
         ContactForm, DispositionForm, CaseSearchForm, RegisterProfileForm, RegisterUserForm, \
         ReportFilterForm, QueuePauseForm, CaseActionForm, ContactSearchForm
 
-from helpline.qpanel.config import QPanelConfig
-from helpline.qpanel.backend import Backend
-if QPanelConfig().has_queuelog_config():
-    from helpline.qpanel.model import queuelog_data_queue
+# from helpline.qpanel.config import QPanelConfig
+# from helpline.qpanel.backend import Backend
+# if QPanelConfig().has_queuelog_config():
+#     from helpline.qpanel.model import queuelog_data_queue
 import json
 from django.template.defaulttags import register
 from onadata.apps.logger.models import Instance, XForm
@@ -95,11 +105,12 @@ from onadata.apps.logger.models import Instance, XForm
 from onadata.libs.utils.chart_tools import build_chart_data
 from onadata.libs.utils.user_auth import (get_xform_and_perms, has_permission,
                                           helper_auth_helper)
+from api.serializers import SmsSerializer
 
 
 
-cfg = QPanelConfig()
-backend = Backend()
+# cfg = QPanelConfig()
+# backend = Backend()
 
 def success(request):
     return render(request, 'helpline/success.html')
@@ -108,14 +119,21 @@ def success(request):
 def home(request):
     "Dashboard home"
 
-    try:
-        att = request.user.HelplineUser.get_average_talk_time()
-        awt = request.user.HelplineUser.get_average_wait_time()
-    except Exception as e:
-        new = initialize_myaccount(request.user)
-        return redirect("/helpline/#%s/new%s" % (e, new))
+    # try:
+    #     att = request.user.HelplineUser.get_average_talk_time()
+    #     awt = request.user.HelplineUser.get_average_wait_time()
+    # except Exception as e:
+    #     new = initialize_myaccount(request.user)
+    #     return redirect("/helpline/#%s/new%s" % (e, new))
 
-    dashboard_stats = get_dashboard_stats(request.user)
+    template = 'home'
+
+    if not get_dashboard_stats(request):
+        message = "Please Configure Service and assign forms"
+        return redirect('/ona/%s?message=%s' %(request.user,message))
+    else:
+        home_statistics = get_dashboard_stats(request)
+
     status_count = get_status_count()
     case_search_form = CaseSearchForm()
     queue_form = QueueLogForm(request.POST)
@@ -123,70 +141,162 @@ def home(request):
     queues = get_data_queues()
 
     default_service = Service.objects.all().first()
-    default_service_xform = default_service.walkin_xform
+
+    if hasattr(default_service,'walkin_xform') and default_service.walkin_xform:
+        default_service_xform = default_service.walkin_xform
+    else:
+        response = redirect('/ona/%s' % request.user.username)
+        return response
+
+    default_service_qa = default_service.qa_xform
     default_service_auth_token = default_service_xform.user.auth_token
     current_site = get_current_site(request)
 
     gtdata = []
     stdata = []
-    if default_service != '' and default_service != 0 and default_service_xform:
-        url = 'https://%s/ona/api/v1/charts/%s.json?field_name=_submission_time' % (
+    
+    # if default_service != '' and default_service > 0 and default_service_xform.pk  > 0:
+    url = 'http://%s/ona/api/v1/charts/%s.json?field_name=_submission_time&limit=14' % (
+        current_site,
+        default_service_xform.pk
+    )
+
+    # Set headers
+    headers = {
+        'Authorization': 'Token %s' % (default_service_auth_token)
+    }
+
+    stat = requests.get(url, headers=headers).json() or {}
+
+
+    # case priority statistics
+    url = 'http://%s/ona/api/v1/charts/%s.json?field_name=case_priority' % (
+        current_site,
+        default_service_xform.pk
+    )
+    statex = requests.get(url, headers=headers).json() or {}
+    
+    forloop = 0
+    for dt in get_item(stat, 'data'):
+        t = [str(get_item(dt, '_submission_time')), get_item(dt, 'count')]
+        gtdata.append(t)
+        forloop += 1
+        if forloop == 14:
+            break
+
+    stype = 'case_action'
+
+    # if request.user.HelplineUser.hl_role == 'Caseworker' or \
+    # request.user.HelplineUser.hl_role == 'Casemanager':
+    #     template = 'homeworker'
+    url = 'http://%s/ona/api/v1/charts/%s.json?field_name=reporter_county' \
+     %(current_site, default_service_xform.pk)
+    color = ['#CD5C5C','#000000','#8A2BE2','#A52A2A','#DEB887','#ADD8E6','#F08080','#90EE90','#F0E68C','#FFB6C1', \
+    '#5F9EA0','#7FFF00','#D2691E','#FF7F50','#6495ED','#FFF8DC','#DC143C','#00FFFF','#00008B','#008B8B','#B8860B','#A9A9A9', \
+    '#006400','#A9A9A9','#BDB76B','#8B008B','#556B2F','#FF8C00','#9932CC','#8B0000','#E9967A','#8FBC8F','#483D8B','#2F4F4F',\
+    '#2F4F4F','#00CED1','#9400D3','#FF1493','#00BFFF','#696969','#696969','#1E90FF','#B22222','#FFFAF0','#228B22','#DCDCDC',\
+    '#F8F8FF','#FFD700','#DAA520','#808080','#ADFF2F','#F0FFF0','#FF69B4','#FFE4C4','#4B0082','#FFFFF0','#E6E6FA',\
+    '#FFF0F5','#7CFC00','#FFFACD','#FAFAD2','#90EE90','#D3D3D3','#F0F8FF','#FAEBD7','#F0FFFF','#F5F5DC','#7FFFD4','#FFA07A'
+    ]
+    stype = 'reporter_county'
+    # else:
+    #     url = 'http://%s/ona/api/v1/charts/%s.json?field_name=case_action' \
+    #     %(current_site, default_service_xform.pk)
+    #     color = ['#f39c12','#00c0ef','#00a65a']
+
+    #for case status 
+    status_data = requests.get(url, headers=headers).json()
+
+    ic = 0
+    othercount = 0
+    datas = get_item(status_data, 'data')
+    # for dt in sorted(get_item(status_data, 'data'),reverse=True):#  status_data['data']:
+    #     lbl = dt[str(stype)]
+    #     if isinstance(lbl, list):
+    #         lbl = lbl[0] if lbl[0] and len(lbl[0]) > 0 else "Others"
+    #     else:
+    #         lbl = lbl if not len(lbl) == 0 else "Others"
+
+    #     col = color[ic] if color[ic] else color[0]
+    #     if ic < 9 and lbl != 'Others':
+    #         if isinstance(lbl, int) and len(lbl) > 3:
+    #             stdata.append({"label":str(lbl), "data":str(str(dt['count'])), "color":str(col)})
+    #             ic += 1
+    #     else:
+    #         othercount = int(dt['count'])
+    for dt in sorted(get_item(status_data, 'data'),reverse=True):#  status_data['data']:
+        lbl = dt[str(stype)]
+        if isinstance(lbl, list):
+            lbl = lbl[0] if len(lbl) > 0 and lbl[0] != 'null' else '' #"Others"
+        else:
+            lbl = lbl if len(lbl) > 0  and lbl != 'null' else '' # "Others"
+
+        col = color[ic]
+        if ic < 9 and lbl != 'Others' and lbl != None:
+            stdata.append({"label":str(lbl), "data":str(str(dt['count'])), "color":str(col)})
+            ic += 1
+        elif lbl != '' and  lbl != None:
+            othercount += dt['count']
+            ic += 1
+
+        
+        # stdata.append({"label":str(lbl), "data":str(str(dt['count'])), "color":str(col)})
+        
+    col = color[ic]
+    stdata.append({"label":'Others', "data":str(othercount), "color":str(col)})
+
+    #  get QA stats http://192.168.1.116/ona/api/v1/data/2?query={"case_owner":"clkadmin"}&format=json
+    if request.user.HelplineUser.hl_role == 'Counsellor':
+        url_qa = 'http://%s/ona/api/v1/data/%s?query={"case_owner":"%s"}' % (
             current_site,
-            default_service_xform.pk
+            default_service_qa.pk,
+            request.user.username
+        )
+    else:
+        url_qa = 'http://%s/ona/api/v1/data/%s' % (
+            current_site,
+            default_service_qa.pk
         )
 
-        # Graph data
-        headers = {
-            'Authorization': 'Token %s' % (default_service_auth_token)
-        }
+    qa_stats = requests.get(url_qa, headers=headers).json() or {}
+    stat_qa = 0;
+    quiz = 0;
 
-        stat = requests.get(url, headers=headers).json()
+    for all_stats in qa_stats:
+        if isinstance(all_stats,dict):
+            for ev,qa_stat in all_stats.items():
+                if ev.encode('utf-8') == 'qa_results/note_results':
+                    if not str(qa_stat.encode('utf-8')).lower() == 'nan':
+                        stat_qa = stat_qa + float(qa_stat.encode('utf-8')) # '%s || %s || ' %(stat_qa, qa_stat.encode('utf-8'))
+                # stat_qa  = '%s || %s ||' %(str(stat_qa),str(get_item(qa_stat,'qa_results/note_results')))
+            quiz += 1
 
-        call_statistics = requests.post('%s/api/v1/index' %(settings.CALL_API_URL)).json()
+    if quiz > 0:
+        stat_qa = stat_qa/quiz
 
-        for dt in get_item(stat, 'data'):
-            t = [str(get_item(dt, '_submission_time')), get_item(dt, 'count')]
-            gtdata.append(t)
 
-        stype = 'case_action'
+    high_priority = 0
+    if statex.get('data',None) != None:
+        for ke_item in statex['data']:
+            if str(ke_item['case_priority'][0]) == 'High Priority':
+                high_priority = ke_item['count']
 
-        if request.user.HelplineUser.hl_role == 'Caseworker':
-            url = 'https://%s/ona/api/v1/charts/%s.json?field_name=client_state' \
-             %(current_site, default_service_xform.pk)
-            color = ['#00a65a', '#00c0ef', '#f39c12', '#808000', '#C7980A', '#F4651F', \
-            '#82D8A7', '#CC3A05', '#575E76', '#156943', '#0BD055', '#ACD338']
-            stype = 'client_state'
-        else:
-            url = 'https://%s/ona/api/v1/charts/%s.json?field_name=case_action' \
-            %(current_site, default_service_xform.pk)
-            color = ['#00a65a', '#00c0ef', '#f39c12']
 
-        #for case status 
-        status_data = requests.get(url, headers= headers).json()
 
-        ic = 0
-        for dt in get_item(status_data, 'data'):#  status_data['data']:
-            lbl = dt[str(stype)]
-            if isinstance(lbl, list):
-                lbl = lbl[0].encode('UTF8') if not len(lbl) == 0 else "Others"
-            else:
-                lbl if not len(lbl) == 0 else "Others"
-
-            col = color[ic]
-            ic += 1
-            stdata.append({"label":str(lbl), "data":str(str(dt['count'])), "color":str(col)})
-    return render(request, 'helpline/home.html',
-                {'dashboard_stats': dashboard_stats,
-                   'att': att,
-                   'awt': awt,
-                   'queues': queues,
+    return render(request, 'helpline/%s.html' % template,
+                {
+                   'att': '',
+                   'awt': '',
                    'case_search_form': case_search_form,
-                   'queue_form': queue_form,
-                   'queue_pause_form': queue_pause_form,
                    'status_count': status_count,
                    'gdata': gtdata,
                    'dt': stdata,
-                   'call_stat':call_statistics
+                   'priority_stat':high_priority,
+                   # 'status_stat':status_stats,
+                   # 'call_stat':call_statistics,
+                   'qa_stat':stat_qa,
+                   'status_data':status_data,
+                   'home':home_statistics
                 })
 
 
@@ -198,50 +308,72 @@ def leta(request):
     return render(request, 'helpline/leta.html',
                   {'ld': login_duration,
                    'ready': ready})
+@api_view(['POST'])
+def user_api_update(request):
+    state = 'False'
+    error_message = 'No Success'
+    if request.method == 'POST':
+        hl_user = HelplineUser.objects.get(hl_key__exact=request.POST.get('agent'))
+        hl_user.status = request.POST.get('status')
+        hl_user.save()
+    sms_list = HelplineUser.objects.all().order_by('-id')
+
+    return JSONResponse({'data':sms_list, 'status':'Eror'})
 
 @api_view(['GET', 'POST'])
 def sync_sms(request):
+    state = 'False'
+    error_message = 'No Success'
     
-    error_message = None
-    state = True
-    try:
-        if request.method == 'POST':
-            # data = request.POST.copy()
-            sms = SMSCDR()
-            sms.contact = data.POST.get('from_phone')
-            sms.msg = data.POST.get('message')
-            sms.time = data.POST.get('sent_timestamp')
-            sms.sms_time = timezone.now()
-
-            sms.save()
-            print "Saving SMS"
+    # if request.method == 'GET':
+    if request.method == 'POST':        
+        serializer = SmsSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
-           sms_list = SMSCDR.objects.filter(sms_type='OUTBOX').order_by('-sms_time')
-           print "Fetching SMS"
-    except Exception, e:
-        error_message = "Error: %s" %e
-        state = False
+            # print serializer.errors
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return JsonResponse({'status':400,'message':'INVALID REQUEST'})
+    # error_message = None
+    # state = True
+    # try:
+    #     if request.method == 'POST':
+    #         # data = request.POST.copy()
+    #         sms = SMSCDR()
+    #         sms.contact = data.POST.get('from_phone')
+    #         sms.msg = data.POST.get('message')
+    #         sms.time = data.POST.get('sent_timestamp')
+    #         sms.sms_time = timezone.now()
 
-    payload = {
-            'payload':{
-                    'success':state,
-                    'error':error_message
-                }
-            }
-    return Response(payload) 
+    #         sms.save()
+    #         print "Saving SMS"
+    #     else:
+    #        sms_list = SMSCDR.objects.filter(sms_type='OUTBOX').order_by('-sms_time')
+    #        print "Fetching SMS"
+    # except Exception, e:
+    #     error_message = "Error: %s" %e
+    #     state = False
+
+    # payload = {
+    #         'payload':{
+    #                 'success':state,
+    #                 'error':error_message
+    #             }
+    #         }
+    # return Response(payload) 
 
 def sync_emails(request):
-    FROM_EMAIL = "support@" + settings.BASE_DOMAIN
-    SMTP_PORT = 993
-
     message = {'message':'', 'count':0}
     try:
-        mail = imaplib.IMAP4_SSL(settings.SMTP_SERVER)
-        mail.login(FROM_EMAIL, settings.SUPPORT_PASS)
+        mail = imaplib.IMAP4_SSL(settings.EMAIL_HOST)
+        mail.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
         mail.select('inbox')
 
-        type, data = mail.search(None, 'UNSEEN')
+        type, data = mail.search(None, 'SEEN')
         mail_ids = data[0]
+
 
         id_list = mail_ids.split() 
         mail_count = len(id_list)
@@ -263,6 +395,7 @@ def sync_emails(request):
                 model_mail = Emails()
                 if isinstance(response_part, tuple):
                     msg = email.message_from_string(response_part[1])
+
                     model_mail.email_idkey = i
                     model_mail.email_from = msg['from']
                     model_mail.email_body = str(msg.get_payload())
@@ -331,24 +464,122 @@ def myaccount(request):
     """View request user account details page"""
     return render(request, 'helpline/profile.html')
 
-
 @login_required
-def manage_users(request):
+def manage_users(request,action=None,action_item=None):
     """View user management page"""
-    userlist = HelplineUser.objects.all()
+    
     message = ""
-    return render(request, 'helpline/users.html', {'systemusers':userlist, 'message':message})
+    data = {}
+    # userlist = User.objects.all().filter(is_active=True)
+    template = 'users'
+
+    if action != None and action_item != None:
+        action_user = User.objects.filter(HelplineUser__hl_key__exact=action_item).first()
+        if action == 'delete':
+            # del_user = new User()
+            action_user.is_active = False;
+            action_user.save()
+            message = "User successfully deleted"
+        elif action == 'profile':
+            template = 'profile'
+            data['template'] = 'user'
+        elif action == 'edit':
+            user = User.objects.get(HelplineUser__hl_key__exact=action_item)
+            profile = user.HelplineUser
+
+            form = RegisterUserForm(instance=user)
+            profile_form = RegisterProfileForm(instance=profile)
+
+            if request.user.is_authenticated() and request.user.id == user.id:
+                if request.method == "POST":
+                    # form = RegisterProfileForm(request.POST, request.FILES, instance=profile)            
+                    form = RegisterUserForm(request.POST or None, request.FILES,instance=action_user)
+                    profile_form = RegisterProfileForm(request.POST or None, request.FILES,instance=user_prof)
+
+            data['template'] = 'user'
+            template = 'user'
+            data['form'] = form
+            data['profileform'] = profile_form
+            data['messs'] = ''
+            # profile_form = RegisterProfileForm(request.POST, request.FILES)
+            # if form.is_valid() and profile_form.is_valid():
+            #     user = User()
+            #     try:
+            #         user = form.save()
+            #         user.refresh_from_db()
+
+            #         user.HelplineUser.hl_names = "%s %s" %(form.cleaned_data.get('first_name'), \
+            #             form.cleaned_data.get('last_name'))
+            #         user.HelplineUser.hl_nick = form.cleaned_data.get('username')
+            #         user.HelplineUser.hl_calls = 0
+            #         user.HelplineUser.hl_email = "%s" % profile_form.cleaned_data.get('useremail')
+
+            #         user.HelplineUser.hl_area = ''
+            #         user.HelplineUser.hl_phone = profile_form.cleaned_data.get('phone')
+            #         user.HelplineUser.hl_branch = ''
+            #         user.HelplineUser.hl_case = 0
+
+            #         user.HelplineUser.hl_status = 'Idle'
+            #         user.HelplineUser.hl_jabber = "" # "%s@%s" % (user.username, settings.BASE_DOMAIN)
+            #         user.HelplineUser.hl_pass = hashlib.md5("1234").hexdigest()
+
+            #         user.HelplineUser.hl_role = "%s" % profile_form.cleaned_data.get('userrole')
+            #         # user.save()
+
+            #         uploaded_file_url = ''                
+            #         filename = ''
+            #         if request.FILES['avatar']:
+            #             myfile = request.FILES['avatar']
+            #             fs = FileSystemStorage()
+            #             filename = fs.save(myfile.name, myfile)
+            #             uploaded_file_url = fs.url(filename)
+
+            #         user.HelplineUser.hl_avatar = uploaded_file_url
+            #         user.HelplineUser.hl_time = time.time()
+
+            #         user.HelplineUser.save()
+
+            #         # share case form
+            #         default_service = Service.objects.all().first()
+            #         default_service_xform = default_service.walkin_xform
+            #         default_service_auth_token = default_service_xform.user.auth_token
+            #         current_site = get_current_site(request)
+
+            #         if default_service != '' and default_service != 0 and default_service_xform:
+            #             url = 'http://%s/ona/api/v1/%s/share/' % (
+            #                 current_site,
+            #                 default_service_xform.pk
+            #             )
+            #             headers = {
+            #                 'Authorization': 'Token %s' % (default_service_auth_token),
+            #                 'username':user.username,
+            #                 'role':'manager'
+            #             }
+            #             requests.post(url, headers=headers)
+
+            #         messages.append("User saved successfully %s" % user.HelplineUser.hl_email)
+            #         form = RegisterUserForm()
+            #         profile_form = RegisterProfileForm()
+
+            #     except Exception as e:
+            #         form = RegisterUserForm(request.POST)
+            #         profile_form = RegisterProfileForm(request.POST, request.FILES)
+            #         messages.append('Error saving user: %s' % (e))
+    
+    userlist = User.objects.filter(is_active=True).select_related('HelplineUser')
+    data['systemusers'] = userlist
+    return render(request, 'helpline/%s.html' %(template), data)
 
 def increment_case_number():
-    case = Cases.objects.all().last()
+    case = Cases.objects.all().order_by('case_number').last() # Cases.objects.all().last()
 
-    if case:
-        case = case.case_number
+    # if case:
+    #     case = case.case_number
 
     if not case:
         return 100001
     else:
-        return int(case) + int(1)
+        return int(case.case_number) + int(1)
 def get_case_number(case_source):
     case = Cases()
     caseid = increment_case_number()
@@ -364,6 +595,89 @@ def case_number(request, case_source):
 
 @login_required
 def new_user(request):
+    messages = []
+    if request.method == 'POST':
+        form = RegisterUserForm(request.POST, request.FILES)
+        profile_form = RegisterProfileForm(request.POST, request.FILES)
+        if form.is_valid() and profile_form.is_valid():
+            user = User()
+            try:
+                user = form.save()
+                user.refresh_from_db()
+
+                user.HelplineUser.hl_names = "%s %s" %(form.cleaned_data.get('first_name'), \
+                    form.cleaned_data.get('last_name'))
+                user.HelplineUser.hl_nick = form.cleaned_data.get('username')
+                user.HelplineUser.hl_calls = 0
+                user.HelplineUser.hl_email = "%s" % profile_form.cleaned_data.get('useremail')
+
+                user.HelplineUser.hl_area = ''
+                user.HelplineUser.hl_phone = profile_form.cleaned_data.get('phone')
+                user.HelplineUser.hl_branch = ''
+                user.HelplineUser.hl_case = 0
+
+                user.HelplineUser.hl_status = 'Idle'
+                user.HelplineUser.hl_jabber = "" # "%s@%s" % (user.username, settings.BASE_DOMAIN)
+                user.HelplineUser.hl_pass = hashlib.md5("1234").hexdigest()
+
+                user.HelplineUser.hl_role = "%s" % profile_form.cleaned_data.get('userrole')
+                # user.save()
+
+                uploaded_file_url = ''                
+                filename = ''
+                if request.FILES['avatar']:
+                    myfile = request.FILES['avatar']
+                    fs = FileSystemStorage()
+                    filename = fs.save(myfile.name, myfile)
+                    uploaded_file_url = fs.url(filename)
+
+                user.HelplineUser.hl_avatar = uploaded_file_url
+                user.HelplineUser.hl_time = time.time()
+
+                user.HelplineUser.save()
+
+                # share case form
+                default_service = Service.objects.all().first()
+                default_service_xform = default_service.walkin_xform
+                default_service_auth_token = default_service_xform.user.auth_token
+                current_site = get_current_site(request)
+
+                if default_service != '' and default_service != 0 and default_service_xform:
+                    url = 'http://%s/ona/api/v1/%s/share/' % (
+                        current_site,
+                        default_service_xform.pk
+                    )
+                    headers = {
+                        'Authorization': 'Token %s' % (default_service_auth_token),
+                        'username':user.username,
+                        'role':'manager'
+                    }
+                    requests.post(url, headers=headers)
+
+                messages.append("User saved successfully %s" % user.HelplineUser.hl_email)
+                form = RegisterUserForm()
+                profile_form = RegisterProfileForm()
+
+            except Exception as e:
+                form = RegisterUserForm(request.POST)
+                profile_form = RegisterProfileForm(request.POST, request.FILES)
+                messages.append('Error saving user: %s' % (e))
+        else:
+            # messages.error(request, "Error")
+            messages.append("Invalid form")
+    else:
+        form = RegisterUserForm()
+        profile_form = RegisterProfileForm()
+    return render(request, 'helpline/user.html', {'form':form, 'profileform':profile_form, 'messs':messages})
+
+@login_required
+def edit_user(request,userid):
+
+    user = get_object_or_404(User,pk=pk) 
+    user = User.objects.get(pk=pk)
+    user_profile = User.HelplineUser
+    user_form = RegisterUserForm(request.POST or None, instance=user)
+    profile_form = RegisterProfileForm(request.POST or None,instance=user_profile)
     messages = []
     if request.method == 'POST':
         form = RegisterUserForm(request.POST, request.FILES)
@@ -412,7 +726,7 @@ def new_user(request):
                 current_site = get_current_site(request)
 
                 if default_service != '' and default_service != 0 and default_service_xform:
-                    url = 'https://%s/ona/api/v1/%s/share/' % (
+                    url = 'http://%s/ona/api/v1/%s/share/' % (
                         current_site,
                         default_service_xform.pk
                     )
@@ -442,9 +756,11 @@ def new_user(request):
 
 @login_required
 def user_profile(request, user_id):
-    user_edit = get_object_or_404(HelplineUser, user_id)
+    user_edit = User.objects.get(HelplineUser__hl_key__exact=user_id) # get_object_or_404(HelplineUser, user_id)
+    user_prof = user_edit.HelplineUser
     message = ''
-
+    form = RegisterUserForm(request.POST or None, request.FILES,instance=user_edit)
+    profile_form = RegisterProfileForm(request.POST or None, request.FILES,instance=user_prof)
     if request.method == 'POST':
         form = RegisterUserForm(request.POST, request.FILES,instance=user_edit)
         if form.is_valid():
@@ -481,8 +797,9 @@ def user_profile(request, user_id):
             message = "Invalid form"
     else:
         form = RegisterUserForm(instance=user_edit)
+        user_form = RegisterProfileForm(instance=user_prof)
 
-    return render(request, 'helpline/user.html', {'form':user_edit, 'message':message})
+    return render(request, 'helpline/user.html', {'form':form,'profileform':profile_form, 'message':message})
 
 
 
@@ -521,7 +838,7 @@ def queue_logx(request):
 def queue_log(request):
     """Join Asterisk queues."""
     agent = request.user.HelplineUser
-    agent.hl_status = 'Available'
+    agent.hl_status = 'Online'
     agent.save()
     # request.session['cdr_key'] = queue_status['data']
     request.session['queuejoin'] = 'join'
@@ -533,12 +850,12 @@ def queue_log(request):
 
 def queue_leave(request):
     """Leave Asterisk queues."""
-    queue_status = requests.post('%s/api/v1/call/agent?logout=%s' %(settings.CALL_API_URL,\
+    queue_status = requests.post('%s/clk/agent/?agent=%s' %(settings.CALL_API_URL,\
         request.user.HelplineUser.hl_key)).json()
     hl_user = HelplineUser.objects.get(hl_key=request.user.HelplineUser.hl_key)
     hl_user.hl_exten = ''
     hl_user.hl_jabber = ''
-    hl_user.hl_status = 'Unavailable'
+    hl_user.hl_status = 'Offline'
 
     request.session['queuejoin'] = ''
     request.session['queuestatus'] = ''
@@ -578,52 +895,53 @@ def queue_remove(request, auth):
     """Remove a user from the Asterisk queue."""
     agent = HelplineUser.objects.get(hl_auth=auth)
     agent.hl_status = 'Idle'
+    data = {}
+    # try:
+    #     hotdesk = Hotdesk.objects.filter(agent__exact=agent.hl_key)
+    #     hotdesk.update(agent=0)
+    #     agent.hl_exten = ''
+    #     agent.hl_jabber = ''
+    #     schedules = Schedule.objects.filter(user=agent.user)
+    #     if schedules:
+    #         for schedule in schedules:
+    #             data = backend.remove_from_queue(
+    #                 agent="SIP/%s" % (request.session.get('extension')),
+    #                 queue='%s' % (schedule.service.queue),
+    #             )
+    #     else:
+    #         data = _("Agent does not have any assigned schedule")
+    #     agent.save()
 
-    try:
-        hotdesk = Hotdesk.objects.filter(agent__exact=agent.hl_key)
-        hotdesk.update(agent=0)
-        agent.hl_exten = ''
-        agent.hl_jabber = ''
-        schedules = Schedule.objects.filter(user=agent.user)
-        if schedules:
-            for schedule in schedules:
-                data = backend.remove_from_queue(
-                    agent="SIP/%s" % (request.session.get('extension')),
-                    queue='%s' % (schedule.service.queue),
-                )
-        else:
-            data = _("Agent does not have any assigned schedule")
-        agent.save()
-
-    except Exception as e:
-        data = e
+    # except Exception as e:
+    #     data = e
 
     return redirect("/helpline/status/web/presence/#%s" % (data))
 
 
 def queue_pause(request):
     """Pause Asterisk Queue member"""
-    form = QueuePauseForm(request.POST)
-    if form.is_valid():
-        schedules = Schedule.objects.filter(user=request.user)
-        if not schedules:
-            message = _("Agent does not have any assigned schedule")
-        for schedule in schedules:
-            message = backend.pause_queue_member(
-                queue='%s' % (schedule.service.queue),
-                interface='%s' % (request.user.HelplineUser.hl_exten),
-                paused=True
-            )
-            clock = Clock()
-            clock.user = request.user
-            clock.hl_clock = form.cleaned_data.get('reason')
-            clock.service = schedule.service
-            clock.hl_time = int(time.time())
-            clock.save()
-        request.user.HelplineUser.hl_status = 'Pause'
-        request.user.HelplineUser.save()
-    else:
-        message = "failed"
+    message = "Nothing to do"
+    # form = QueuePauseForm(request.POST)
+    # if form.is_valid():
+    #     schedules = Schedule.objects.filter(user=request.user)
+    #     if not schedules:
+    #         message = _("Agent does not have any assigned schedule")
+    #     for schedule in schedules:
+    #         message = backend.pause_queue_member(
+    #             queue='%s' % (schedule.service.queue),
+    #             interface='%s' % (request.user.HelplineUser.hl_exten),
+    #             paused=True
+    #         )
+    #         clock = Clock()
+    #         clock.user = request.user
+    #         clock.hl_clock = form.cleaned_data.get('reason')
+    #         clock.service = schedule.service
+    #         clock.hl_time = int(time.time())
+    #         clock.save()
+    #     request.user.HelplineUser.hl_status = 'Pause'
+    #     request.user.HelplineUser.save()
+    # else:
+    #     message = "failed"
 
     return redirect("/helpline/#%s" % (message))
 
@@ -632,18 +950,19 @@ def queue_unpause(request):
     """Unpause Asterisk Queue member"""
     schedules = Schedule.objects.filter(user=request.user)
     if schedules:
-        for schedule in schedules:
-            message = backend.pause_queue_member(
-                queue='%s' % (schedule.service.queue),
-                interface='%s' % (request.user.HelplineUser.hl_exten),
-                paused=False
-            )
-            clock = Clock()
-            clock.hl_clock = "Unpause"
-            clock.user = request.user
-            clock.service = schedule.service
-            clock.hl_time = int(time.time())
-            clock.save()
+        message = _("Nothing to do")
+        # for schedule in schedules:
+        #     message = backend.pause_queue_member(
+        #         queue='%s' % (schedule.service.queue),
+        #         interface='%s' % (request.user.HelplineUser.hl_exten),
+        #         paused=False
+        #     )
+        #     clock = Clock()
+        #     clock.hl_clock = "Unpause"
+        #     clock.user = request.user
+        #     clock.service = schedule.service
+        #     clock.hl_time = int(time.time())
+        #     clock.save()
     else:
         message = _("Agent does not have any assigned schedule")
 
@@ -652,6 +971,13 @@ def queue_unpause(request):
 
     return redirect("/helpline/#%s" % (message))
 
+def presence(request,presence):
+    try:
+        request.user.HelplineUser.hl_status = presence
+        request.user.HelplineUser.save()
+        return True
+    except Exception as e:
+        return False
 
 def walkin(request):
     """Render CallForm manualy."""
@@ -684,11 +1010,11 @@ def caseview(request, form_name, case_id):
     """View case or submission information"""
 
     default_service = Service.objects.all().first()
-    default_service_xform = default_service.call_xform
-    default_service_auth_token = default_service_xform.user.auth_token
+    default_service_xform = default_service.walkin_xform
+    default_service_auth_token =  default_service_xform.user.auth_token
     current_site = get_current_site(request)
 
-    url = 'https://%s/ona/api/v1/data/%s/' % (
+    url = 'http://%s/ona/api/v1/data/%s/' % (
         current_site,
         default_service_xform.pk
     )
@@ -762,8 +1088,14 @@ def caseview(request, form_name, case_id):
 
     return render(request, htmltemplate, data)
 
+def namedtuplefetchall(cursor):
+    "Return all rows from a cursor as a namedtuple"
+    desc = cursor.description
+    nt_result = namedtuple('Result', [col[0] for col in desc])
+    return [nt_result(*row) for row in cursor.fetchall()]
+
 @login_required
-def reports(request, report, casetype='Call'):
+def general_reports(request, report='cases'):
     """Report processing and rendering"""
     default_service = Service.objects.all().first()
     default_service_xform = default_service.walkin_xform
@@ -782,7 +1114,7 @@ def reports(request, report, casetype='Call'):
     xform = get_form({'id_string__iexact': str(default_service.walkin_xform)})
 
     query = request.GET.get('q', '')
-    datetime_range = request.GET.get("datetime_range")
+    datetime_range = request.GET.get("datetime_range") or ''
     agent = request.GET.get("agent")
     category = request.GET.get("category", "")
     form = ReportFilterForm(request.GET)
@@ -803,49 +1135,76 @@ def reports(request, report, casetype='Call'):
     request_string = ''
     query_string = ''
 
-    if datetime_range == '':
+    if datetime_range != '':
         start_date, end_date = [datetime_range.split(" - ")[0], datetime_range.split(" - ")[1]]
-        start_date = datetime.strptime(start_date, '%m/%d/%Y')
-        end_date = datetime.strptime(end_date, '%m/%d/%Y')
-
-    if report == 'escalated':
-        if request.user.HelplineUser.hl_role == 'Counsellor':
-            query_string = '"case_actions/case_action":{"$i":"escalate"}'
-        elif request.user.HelplineUser.hl_role == 'Caseworker':
-            query_string = '"case_actions/case_action":"escalate",\
-            "case_actions/escalate_caseworker":"%s"' %(request.user.pk)
-        elif request.user.HelplineUser.hl_role == 'Supervisor':
-            query_string = '"case_actions/case_action":"escalate",\
-            "case_actions/supervisors":"14"' # %(request.user.pk)
-
-
-    elif report == 'today':
-        td_date = datetime.today()
-        request_string += '&date_created__day=' + td_date.strftime('%d')
-        request_string += '&date_created__month=' + td_date.strftime('%m')
-        request_string += '&date_created__year=' + td_date.strftime('%Y')
-
-    htmltemplate = ''
-
-    if casetype.lower() == 'qa':
-        call_data = requests.post("%s/api/v1/call/qa?data=true" %(settings.CALL_API_URL)).json()
-    elif casetype.lower() == 'call':
-        """For call reports"""
-        callreports = ["missedcalls", "voicemails", "totalcalls",
-                       "answeredcalls", "abandonedcalls", "callsummaryreport",
-                       "search", "agentsessionreport"]
-        
-        if report in callreports:
-            htmltemplate = "helpline/reports.html"
-        
-        call_data = requests.post("%s/api/v1/call/cdrdata?daterange=%s" %(settings.CALL_API_URL, \
-            datetime_range)).json()
-
-        data['report_data'] = call_data
+        start_date = datetime.strptime(start_date, '%Y-%m-%d')
+        end_date = datetime.strptime(end_date, '%Y-%m-%d')
+        datetime_range = '%s-%s' %(start_date,end_date)
     else:
+        today = datetime.now()
+        datetime_range = datetime.strptime(today,'%Y-%m-%d')
+
+    # if datetime_range == '':
+    #     start_date, end_date = [datetime_range.split(" - ")[0], datetime_range.split(" - ")[1]]
+    #     start_date = datetime.strptime(start_date, '%m/%d/%Y')
+    #     end_date = datetime.strptime(end_date, '%m/%d/%Y')
+
+    # if report == 'escalated':
+    #     if request.user.HelplineUser.hl_role == 'Counsellor':
+    #         query_string = '"case_actions/case_action":{"$i":"escalate"}'
+    #     elif request.user.HelplineUser.hl_role == 'Caseworker':
+    #         query_string = '"case_actions/case_action":"escalate",\
+    #         "case_actions/escalate_caseworker":"%s"' %(request.user.pk)
+    #     elif request.user.HelplineUser.hl_role == 'Supervisor':
+    #         query_string = '"case_actions/case_action":"escalate",\
+    # #         "case_actions/supervisors":"14"' # %(request.user.pk)
+
+
+    # elif report == 'today':
+    #     td_date = datetime.today()
+    #     request_string += '&date_created__day=' + td_date.strftime('%d')
+    #     request_string += '&date_created__month=' + td_date.strftime('%m')
+    #     request_string += '&date_created__year=' + td_date.strftime('%Y')
+
+    htmltemplate = 'helpline/report_cases.html'
+
+    if report.lower() == 'calls':
+        """For call reports"""
+        htmltemplate = "helpline/report.html"
+        if datetime_range == '':
+            call_url = "%s/clk/cdr" %(settings.CALL_API_URL)
+        else:
+            call_url = "%s/clk/cdr?chan_ts_f=%s" %(settings.CALL_API_URL, \
+            datetime_range)
+        
+
+
+        call_data = requests.post(call_url).json()
+        data['report_data'] = call_data
+        data['urls'] = call_url
+
+    if report.lower() == 'voicemails':
+        """For call reports"""
+        htmltemplate = "helpline/report.html"
+        call_url = "%s/clk/cdr?daterange=%s" %(settings.CALL_API_URL, \
+            datetime_range)
+        call_data = requests.post(call_url).json()
+        data['report_data'] = filter(lambda call_data: call_data['voicemail'], call_data)
+    elif report.lower() == 'emails':
+        """For call reports"""
+        email_data = Emails.objects.all()
+        data['report_data'] = email_data
+        htmltemplate = "helpline/reports_emails.html"
+
+    elif report.lower() == 'sms':
+        """For call reports"""
+        sms_data = SMSCDR.objects.all()
+        data['report_data'] = sms_data
+        htmltemplate = "helpline/reports_sms.html"
+    elif report.lower() == 'cases':
         """For case reports"""
 
-        xforms = requests.get('https://%s/ona/api/v1/forms' % (current_site), \
+        xforms = requests.get('http://%s/ona/api/v1/forms' % (current_site), \
             headers=headers).json()
         xformx = {}
 
@@ -861,10 +1220,10 @@ def reports(request, report, casetype='Call'):
             else:
                 query_string += ',"case_owner":{"$i":"%s"}' %(username)
 
-        ur = 'https://%s/ona/api/v1/data/%s?query={%s}%s&page=1&page_size=50' %(current_site, \
+        ur = 'http://%s/ona/api/v1/data/%s?query={%s}%s&page=1&page_size=50' %(current_site, \
             default_service_xform.pk, query_string, request_string)
 
-        stat = requests.get('https://%s/ona/api/v1/data/%s?query={%s}%s&page=1&page_size=50' %(current_site, \
+        stat = requests.get('http://%s/ona/api/v1/data/%s?query={%s}%s&page=1&page_size=50' %(current_site, \
             default_service_xform.pk, query_string,  request_string), headers=headers).json()
         # + '&sort={"_id":-1}'
         # data['statss'] = "Cheru Data: %s" % stat
@@ -913,22 +1272,270 @@ def reports(request, report, casetype='Call'):
         data['recordkeys'] = recordkeys
 
     
-    if report == 'nonanalysed':
-        data['report_data'] = filter(lambda _call_data: not _call_data['length'] and _call_data['length'] <= 1, call_data)
-        htmltemplate = "helpline/nonanalysed.html"
-    elif report == 'voicemails':
-        data['report_data'] = filter(lambda _call_data: _call_data['voicemail'], call_data)
-    elif htmltemplate == '':
-        htmltemplate = "helpline/report_body.html"
+    # if report == 'nonanalysed':
+    #     data['report_data'] = filter(lambda _call_data: not _call_data['length'] and _call_data['length'] <= 1, call_data)
+    #     htmltemplate = "helpline/nonanalysed.html"
+    # elif report == 'voicemails':
+    #     data['report_data'] = filter(lambda _call_data: _call_data['voicemail'], call_data)
+    # elif htmltemplate == '':
+    #     htmltemplate = "helpline/report_body.html"
+
+    return render(request, htmltemplate, data)
+
+def namedtuplefetchall(cursor):
+    "Return all rows from a cursor as a namedtuple"
+    desc = cursor.description
+    nt_result = namedtuple('Result', [col[0] for col in desc])
+    return [nt_result(*row) for row in cursor.fetchall()]
+
+@login_required
+def reports(request, report, casetype='Call'):
+    query = request.GET.get('q', '')
+    datetime_range = request.GET.get("datetime_range") or ''
+    agent = request.GET.get("agent") or ''
+    category = request.GET.get("category", "")
+    form = ReportFilterForm(request.GET)
+    dashboard_stats = get_dashboard_stats(request.user)
+    report_title = {report: _(str(report).capitalize() + " Reports")}
+
+    request_string = ''
+    query_string = ''
+
+    home_statistics = get_dashboard_stats(request)
+
+    data = {
+            'title': report_title.get(report),
+            'report': report,
+            'form': form,
+            'datetime_range': datetime_range,
+            'home': home_statistics,
+            'query': query
+        }
+    case_start = '';
+    case_end = ''
+    if not datetime_range == '':
+        start_dates, end_dates = [datetime_range.split(" - ")[0], datetime_range.split(" - ")[1]]
+        
+        start_date = datetime.strptime(start_dates, '%m/%d/%Y  %I:%M %p')
+        end_date = datetime.strptime(end_dates, '%m/%d/%Y  %I:%M %p')
+
+        d1 = start_date.strftime('%Y-%m-%d %H:%M')
+        d2 = end_date.strftime('%Y-%m-%d %H:%M')
+        request_string = '%sto%s' %(d1,d2)
+
+
+        case_start = start_date.strftime('%Y-%m-%d')
+        case_end = end_date.strftime('%Y-%m-%d')
+
+    else:
+        nowdate = datetime.now()
+
+        start_date = nowdate.strftime('%Y-%m-%d  00:00')
+        end_date = nowdate.strftime('%Y-%m-%d  23:59')
+
+        request_string = '%sto%s' %(start_date,end_date)
+
+        case_start = nowdate.strftime('%Y-%m-%d')
+        case_end = nowdate.strftime('%Y-%m-%d')
+
+    if agent != '':
+        agent = User.objects.get(pk__exact=agent)
+        agent = agent.HelplineUser.hl_key
+        if request_string == '':
+            request_string = '?usr_f=%s' % agent
+        else:
+            request_string = '%s&usr_f=%s' % (request_string,agent)
+
+    if str(casetype).lower() == 'call':
+        """For call reports"""
+        callreports = ["missedcalls", "totalcalls",
+                       "answeredcalls", "abandonedcalls", "callsummaryreport",
+                       "search", "agentsessionreport"]
+
+
+        calls_url = "%s/clk/cdr?chan_ts_f=%s" %(settings.CALL_API_URL, \
+            request_string)
+
+        call_data = requests.post(calls_url).json() 
+
+        
+        if report in callreports:
+            htmltemplate = "helpline/reports.html"
+        elif report == 'voicemails': 
+            call_data = filter(lambda call_data: call_data['voicemail'] == 'true' and call_data['recording'] != '', call_data)
+            htmltemplate = "helpline/voicemails.html"
+
+        agents = User.objects.filter().only("username", "HelplineUser__hl_key")
+        
+        agent_list = {}
+        agents = map(lambda x: agent_list.update({'%s'%x.HelplineUser.hl_key:str(x.username)}), agents)
+
+        data['agents'] = agent_list
+        data['report_data'] = call_data
+        data['urls'] = calls_url
+    else:
+        """Report processing and rendering"""
+        default_service = Service.objects.all().first()
+        default_service_xform = default_service.walkin_xform
+        default_service_auth_token = default_service_xform.user.auth_token
+        current_site = get_current_site(request)
+
+        data['owner'] = default_service_xform.user
+        data['xform'] = default_service_xform
+
+        # Graph data
+        headers = {
+            'Authorization': 'Token %s' % (default_service_auth_token)
+        }
+
+        id_string = str(default_service_xform)
+        username = request.user.username
+
+        owner = get_object_or_404(User, username__iexact=username)
+        xform = get_form({'id_string__iexact': str(default_service.walkin_xform)})
+
+        # if datetime_range == '':
+        #     start_date, end_date = [datetime_range.split(" - ")[0], datetime_range.split(" - ")[1]]
+        #     start_date = datetime.strptime(start_date, '%m/%d/%Y')
+        #     end_date = datetime.strptime(end_date, '%m/%d/%Y')
+        
+        if report == 'escalated' or report == 'pending' or report == 'closed':
+            rep_status = 'escalate' if report == 'escalated' else report
+            if request.user.HelplineUser.hl_role == 'Counsellor':
+                query_string = '"case_actions/case_action":{"$i":"%s"}' % rep_status
+            elif request.user.HelplineUser.hl_role == 'Caseworker':
+                query_string = '"case_actions/case_action":"%s",\
+                "case_actions/escalate_caseworker":"%s"' %(rep_status,str(username))
+            elif request.user.HelplineUser.hl_role == 'Supervisor':
+                query_string = '"case_actions/case_action":"%s",\
+                "case_actions/supervisors":"%s"' %(rep_status,str(username))
+            else:
+                query_string = '"case_actions/case_action":"%s"'  % rep_status
+
+        elif report == 'highpriority':
+            query_string = '"case_narratives/case_priority":"high_priority"'
+        elif report == 'today':
+            td_date = datetime.today()
+            request_string += '&date_created__day=' + td_date.strftime('%d')
+            request_string += '&date_created__month=' + td_date.strftime('%m')
+            request_string += '&date_created__year=' + td_date.strftime('%Y')
+
+        htmltemplate = ''
+
+        if report == 'disposition':
+            dispositions = Cases.objects.all().order_by('case_number')
+            data['report_data'] = dispositions
+            htmltemplate = 'helpline/dispositions.html'
+        elif casetype.lower() == 'qa':
+            call_data = requests.post("%s/clk/cdr?data=true" %(settings.CALL_API_URL)).json()
+        else:
+            """For case reports"""
+            # xforms = requests.get('http://%s/ona/api/v1/forms' % (current_site), \
+            #     headers=headers).json()
+            # xformx = {}
+
+            #split to get xform object
+            # for xfrm in xforms:
+            #     if str(xfrm['id_string']) == id_string:
+            #         for key, frm in xfrm.items():
+            #             xformx.update({str(key):str(frm)})
+
+            if request.user.HelplineUser.hl_role == 'Counsellor':
+                if query_string == '':
+                    query_string = '"case_owner":{"$i":"%s"}' %(username)
+                else:
+                    query_string += ',"case_owner":{"$i":"%s"}' %(username)
+
+            ur = 'http://%s/ona/api/v1/data/%s?query={%s}%s' %(current_site, \
+                default_service_xform.pk, query_string, request_string)
+
+            stat = requests.get(ur, headers=headers).json()
+
+            data['ur'] = ur
+            statrecords = []
+            recordkeys = []
+
+            ##brings up data only for existing records
+            def get_records(recs):
+                return_obj = []
+                record = {}
+
+                for key, value in recs.items():
+                    key = str(key)
+                    if key.find('/') != -1:
+                        k = key.split('/')
+                        l = len(k)
+                        kk = str(k[l-1])
+                    else:
+                        kk = str(key)
+                    if isinstance(value, dict) and len(value) >= 1:
+                        record.update(get_records(value))
+                    elif isinstance(value, list) and len(value) >= 1:
+                        if isinstance(value[0], dict):
+                            record.update(get_records(value[0]))
+                    else:
+                        if not kk in recordkeys and not kk.endswith('ID') and str(value) != 'yes' and \
+                        str(value) != 'no' and str(kk) != 'case_number'  and str(kk) != 'uuid':
+                            recordkeys.append(kk)
+                        record.update({kk : str(value).capitalize()})
+
+                    # format submission date to allow later filter by date
+                    if record.get('_submission_time',None) != None:
+                        cr_time = record['_submission_time']
+                        cr_time = str(cr_time)
+
+                        if 't' in cr_time:
+                            cr_time = datetime.strptime(cr_time, '%Y-%m-%dt%H:%M:%S')
+                            cr_time = cr_time.strftime('%Y-%m-%d')
+                        record['_submission_time'] = cr_time
+
+                return record
+
+            
+            for rec in stat:
+                if isinstance(rec, dict) and len(rec) > 1:
+                    statrecords.append(get_records(rec))
+
+            if len(recordkeys) > 0:
+                recordkeys.append('Date Created')
+            else:
+                recordkeys = False
+
+            # filter by date submitted
+            if not case_start == '':
+                statrecords = filter(lambda statrecords: statrecords['_submission_time'] >= case_start and statrecords['_submission_time'] <= case_end, statrecords)
+
+            data['statrecords'] = statrecords
+            data['recordkeys'] = recordkeys
+
+    
+        if report == 'nonanalysed':
+            data['report_data'] = filter(lambda call_data: not call_data['length'] and call_data['length'] <= 1, call_data)
+            htmltemplate = "helpline/nonanalysed.html"
+        elif report == 'voicemails':
+            data['report_data'] = filter(lambda call_data: call_data['voicemail'], call_data)
+        elif htmltemplate == '':
+            htmltemplate = "helpline/report_body.html"
+            # data['report_data'] = filter(lambda call_data: not call_data['voicemail'], call_data)
 
     return render(request, htmltemplate, data)
 
 
 @login_required
 def qa(request, report='analysed'):
-    service = Service.objects.all().first()
-    xform = service.qa_xform
+
+    default_service = Service.objects.all().first()
+    xform = default_service.qa_xform
     username = xform.user.username
+    default_service_auth_token = xform.user.auth_token
+    current_site = get_current_site(request)
+
+    # service = Service.objects.all().first()
+    # xform = service._xform
+    # username = xform.user.username
+    # default_service_auth_token = xform.user.auth_token
+    # current_site = get_current_site(request)
+
 
     
     form = ReportFilterForm(request.POST)
@@ -943,7 +1550,7 @@ def qa(request, report='analysed'):
         uri = request.build_absolute_uri()
 
         # Use https for the iframe parent window uri, always.
-        uri = uri.replace('http://', 'https://')
+        # uri = uri.replace('http://', 'https://')
         # Poor mans iframe url gen
         parent_window_origin = urllib.quote_plus(uri)
         iframe_url = url[:url.find("::")] + "i/" + url[url.find("::"):]+\
@@ -952,9 +1559,8 @@ def qa(request, report='analysed'):
     except Exception as e:
         data['iframe_url'] = "URL Error: %s" % e
 
-
+    # Set Query Parameters
     query_string = ''
-    # if(report == 'analysis'):
     if request.method == 'POST':
         category = request.POST.get('contact_id', None)
         datetime_range = request.POST.get('datetime_range', None)
@@ -963,13 +1569,71 @@ def qa(request, report='analysed'):
             start_date = datetime.strptime(start_date, '%m/%d/%Y %I:%M %p')
             end_date = datetime.strptime(end_date, '%m/%d/%Y %I:%M %p')
 
-    call_data = requests.post("%s/api/v1/call/qa?data=true" %(settings.CALL_API_URL) + query_string).json()
-    # [{ "caseid":43546,"agent": False, "date": "22-11-2018", "length": False, \
-    # "media": "/opt/asterisk/helpline/media/bridge/5bf69baf79c4db757298d02c.wav", "phone": \
-    #  "254733123456", "time": "15:06:07" }] # 
-    data['report_data'] = call_data
+    if report == 'results':
+        headers = {
+            'Authorization': 'Token %s' % (default_service_auth_token)
+        }
+        url = 'http://%s/ona/api/v1/data/%s?page=1&page_size=50' % (
+            current_site,
+            xform.pk
+        )
+        result_data = requests.get(url,headers=headers).json() 
+
+        # process data for preview
+        statrecords = []
+        recordkeys = []
+
+        ##brings up data only for existing records
+        def get_records(recs):
+            return_obj = []
+            record = {}
+
+            for key, value in recs.items():
+                #if not (key.startswith('_') and key.endswith('_')):# str(key) == "_id":
+                key = str(key)
+                if key.find('/') != -1:
+                    k = key.split('/')
+                    l = len(k)
+                    kk = str(k[l-1])
+                else:
+                    kk = str(key)
+                if isinstance(value, dict) and len(value) >= 1:
+                    record.update(get_records(value))
+                elif isinstance(value, list) and len(value) >= 1:
+                    if isinstance(value[0], dict):
+                        record.update(get_records(value[0]))
+                else:
+                    if not kk in recordkeys and not kk.endswith('ID') and not kk.endswith('ID') and str(value) != 'yes' and \
+                    str(value) != 'no' and str(kk) != 'case_number' and 'uuid' not in str(kk):
+                        recordkeys.append(kk)
+                    record.update({kk : str(value).capitalize()})
+            return record
+
+
+        for rec in result_data:
+            if isinstance(rec, dict) and len(rec) > 1:
+                statrecords.append(get_records(rec))
+
+        if len(recordkeys) > 0:
+            recordkeys.append('Date Created')
+        else:
+            recordkeys = False
+
+
+        data['report_data'] = statrecords
+        data['recordkeys'] = recordkeys
+
+        htmltemplate = 'helpline/qaresults.html'
+    else:
+        # Call CDR Data
+        result_data = requests.post("%s/clk/cdr/?data=true" %(settings.CALL_API_URL) + query_string).json()
+        data['report_data'] = result_data
+        htmltemplate = "helpline/nonanalysed.html"
+
+    
     data['report'] = report
-    htmltemplate = "helpline/nonanalysed.html"
+    # data['users'] = HelplineUser.objects.all()
+    
     return render(request, htmltemplate, data)
 @login_required
 def analysed_qa(request, report='analysed'):
@@ -982,7 +1646,7 @@ def analysed_qa(request, report='analysed'):
     current_site = get_current_site(request)
 
 
-    url = 'https://%s/ona/api/v1/data/%s' % (
+    url = 'http://%s/ona/api/v1/data/%s' % (
         current_site,
         default_service_xform.pk
     )
@@ -1011,7 +1675,7 @@ def analysed_qa(request, report='analysed'):
     request_string += '&date_created__month=' + td_date.strftime('%m')
     request_string += '&date_created__year=' + td_date.strftime('%Y')
 
-    xforms = requests.get('https://%s/ona/api/v1/forms' % (current_site), headers=headers).json();
+    xforms = requests.get('http://%s/ona/api/v1/forms' % (current_site), headers=headers).json();
     xformx = {}
 
     #split to get xform object, this will allow us to obtain xform fields
@@ -1024,7 +1688,7 @@ def analysed_qa(request, report='analysed'):
         request_string += '&case_owner=%s' %(request.user.username)
 
 
-    stat = requests.get('https://%s/ona/api/v1/data/%s?page=1&page_size=50%s' %(current_site, default_service_xform.pk,\
+    stat = requests.get('http://%s/ona/api/v1/data/%s?page=1&page_size=50%s' %(current_site, default_service_xform.pk,\
         request_string), headers=headers).json();
     # + '&sort={"_id":-1}'
     statrecords = []
@@ -1292,33 +1956,53 @@ def autolocation(request):
 
 def queue_manager(user, extension, action):
     """queuejoin:queueleave:queuepause:queueunpause:queuetrain"""
-    if action == 'queuejoin':
-        data = backend.add_to_queue(
-            agent="SIP/%s" % (extension),
-            queue='Q718874580',
-            member_name=user.get_full_name()
-        )
-    elif action == 'queueleave':
-        data = backend.remove_from_queue(
-            agent="SIP/%s" % (extension),
-            queue='Q718874580',
-        )
+    data = {}
+    # if action == 'queuejoin':
+    #     data = backend.add_to_queue(
+    #         agent="SIP/%s" % (extension),
+    #         queue='Q718874580',
+    #         member_name=user.get_full_name()
+    #     )
+    # elif action == 'queueleave':
+    #     data = backend.remove_from_queue(
+    #         agent="SIP/%s" % (extension),
+    #         queue='Q718874580',
+    #     )
     return data
 
 def home_direct():
     return Redirect('/helpline/')
 
 @login_required
+def contact_search(request, search_string=None):
+    service = Service.objects.all().first()
+    default_service_xform = service.walkin_xform
+    default_service_auth_token = default_service_xform.user.auth_token
+    current_site = get_current_site(request)
+
+    headers = {
+        'Authorization': 'Token %s' % (default_service_auth_token)
+    }
+    call_data = requests.get("%s" %(request.GET.get('url')),headers=headers).json()
+
+    return JsonResponse(call_data,safe=False)
+@login_required
 def case_form(request, form_name):
     """Handle Walkin and CallForm POST and GET Requests"""
 
 
     service = Service.objects.all().first()
-    default_service_xform = service.walkin_xform
+
+    if hasattr(service,'walkin_xform') and service.walkin_xform:
+        default_service_xform = service.walkin_xform
+    else:
+        response = redirect('/ona/%s' % request.user.username)
+        return response
+
+    #default_service_xform = service.walkin_xform
     default_service_auth_token = default_service_xform.user.auth_token
     current_site = get_current_site(request)
     """
-    '7331a310c46884d2643ca9805aaf0d420ebfc831' #
     Graph data
     """
     headers = { 
@@ -1326,12 +2010,29 @@ def case_form(request, form_name):
     }
 
     #charts
-    url = 'https://%s/ona/api/v1/data/%s' %(current_site, default_service_xform.pk)
+    url = 'http://%s/ona/api/v1/data/%s' %(current_site, default_service_xform.pk)
+
+    sessions = Session.objects.filter(expire_date__gte=timezone.now())
+    uid_list = []
+
+    # Build a list of user ids from that query
+    for session in sessions:
+        data = session.get_decoded()
+        uid_list.append(data.get('_auth_user_id', None))
+
+    trans_users = []
+    # Query all logged in users based on id list
+    users = User.objects.filter(id__in=uid_list)
+    for trans_user in users:
+        if HelplineUser.objects.filter(user=trans_user):
+                    trans_users.append({'text':str(trans_user.username),'value':str(trans_user.HelplineUser.hl_key)})
 
     message = ''
     initial = {}
     data = {}
     caseid = ''
+
+    data['users'] = trans_users
     data['enketo_url'] = settings.ENKETO_URL
     data['base_domain'] = settings.BASE_DOMAIN
     data['data_url'] = url
@@ -1368,7 +2069,7 @@ def case_form(request, form_name):
             email.save()
 
         if form_name == 'sms':
-            sms = get_object_or_404(SMSCDR, pk__exact=sourceid, sms_case__gt=0);
+            sms = SMSCDR(pk=sourceid) # get_object_or_404(SMSCDR, pk__exact=sourceid, sms_case__gt=0);
             sms.sms_case = caseid
             caseid_str = '&d[/Case_Form/reporter_details/reporter_phone]=%s' % (sms.contact) + \
             '&d[/Case_Form/case_narratives/case_narrative]=%s' %(sms.msg)
@@ -1399,7 +2100,7 @@ def case_form(request, form_name):
             uri = request.build_absolute_uri()
 
             # Use https for the iframe parent window uri, always.
-            uri = uri.replace('http://', 'https://')
+            # uri = uri.replace('http://', 'https://')
 
             caseid_str = '&d[case_owner]=%s' % (request.user.username)
 
@@ -1563,7 +2264,7 @@ def case_edit(request, form_name, case_id):
         'Authorization': 'Token %s' %(default_service_auth_token)
     }
 
-    url = 'https://%s/ona/api/v1/data/%s/%s/enketo?return_url=https://%s/helpline/success/&format=json' \
+    url = 'http://%s/ona/api/v1/data/%s/%s/enketo?return_url=http://%s/helpline/success/&format=json' \
     % (current_site, default_service_xform.pk, case_id, current_site)
     req = requests.get(url, headers=headers).json()
     return render(request,'helpline/case_form_edit.html', {'case':case_id, 'iframe_url':get_item(req, 'url')})
@@ -1830,35 +2531,51 @@ def save_case_action(request):
 @json_view
 def save_disposition_form(request):
     """Save disposition, uses AJAX and returns json status"""
-    form = DispositionForm(request.POST or None)
-    if form.is_valid():
-        case = Case.objects.get(hl_case=form.cleaned_data['case_number'])
-        case.hl_disposition = form.cleaned_data['disposition']
-        case.save()
-        request.user.HelplineUser.hl_status = 'Available'
-        request.user.HelplineUser.save()
-        return {'success': True}
-    ctx = {}
-    ctx.update(csrf(request))
-    form_html = render_crispy_form(form, context=ctx)
-    return {'success': False, 'form_html': form_html}
+    status_message = ''
+    status = False
+    try:
+        form = DispositionForm(request.POST or None)
+        case_num = request.POST.get('case_number') or '0'
+        if form.is_valid():
+            if case_num != '0':
+                case = Cases.objects.get(case_number=form.cleaned_data['case_number'])
+                ctx = {}
+                ctx.update(csrf(request))
+                form_html = render_crispy_form(form, context=ctx)
+            else:
+                case = Cases()
+                status_message = 'Complete Case'
+            case.case_disposition = form.cleaned_data['disposition']
+            case.save()
+            request.user.HelplineUser.hl_status = 'Available'
+            request.user.HelplineUser.save()
+            status = True
+        else:
+            status = False
+            status_message = 'Error: Invalid form'
+    except Exception as e:
+        status = False
+        status_message = e
+
+    
+    return {'success': status, 'form_html': status_message}
 
 
-@json_view
-def save_disposition_form(request):
-    """Save disposition, uses AJAX and returns json status"""
-    form = DispositionForm(request.POST or None)
-    if form.is_valid():
-        case = Case.objects.get(hl_case=form.cleaned_data['case_number'])
-        case.hl_disposition = form.cleaned_data['disposition']
-        case.save()
-        request.user.HelplineUser.hl_status = 'Available'
-        request.user.HelplineUser.save()
-        return {'success': True}
-    ctx = {}
-    ctx.update(csrf(request))
-    form_html = render_crispy_form(form, context=ctx)
-    return {'success': False, 'form_html': form_html}
+# @json_view
+# def save_disposition_form(request):
+#     """Save disposition, uses AJAX and returns json status"""
+#     form = DispositionForm(request.POST or None)
+#     if form.is_valid():
+#         case = Case.objects.get(hl_case=form.cleaned_data['case_number'])
+#         case.hl_disposition = form.cleaned_data['disposition']
+#         case.save()
+#         request.user.HelplineUser.hl_status = 'Available'
+#         request.user.HelplineUser.save()
+#         return {'success': True}
+#     ctx = {}
+#     ctx.update(csrf(request))
+#     form_html = render_crispy_form(form, context=ctx)
+#     return {'success': False, 'form_html': form_html}
 
 
 @json_view
@@ -1900,7 +2617,7 @@ def average_talk_time(request):
 @json_view
 def average_hold_time(request):
     """Return the average hold time for current user, in json"""
-    awt = request.user.HelplineUser.get_average_wait_time()
+    awt = 0 #request.user.HelplineUser.get_average_wait_time()
     return awt
 
 
@@ -1970,8 +2687,73 @@ def get_status_count():
                     'busy_on_call': busy_on_call}
     return status_count
 
+def get_dashboard_stats(request, interval=None):
+    default_service = Service.objects.all().first()
 
-def get_dashboard_stats(user, interval=None):
+    if hasattr(default_service,'walkin_xform') and default_service.walkin_xform:
+        default_service_xform = default_service.walkin_xform
+    else:
+        response = redirect('/ona/%s' % request.user.username)
+        return response
+
+    default_service_qa = default_service.qa_xform
+
+    default_service_auth_token = ''
+    
+    if hasattr(default_service_xform,'user'):
+        default_service_auth_token = default_service_xform.user.auth_token
+    else:
+        message = "Please Configure Service and assign forms"
+        return False #redirect('/ona/%s?message=%s' %(request.user,message))
+
+    current_site = get_current_site(request)
+
+    # Set headers
+    headers = {
+        'Authorization': 'Token %s' % (default_service_auth_token)
+    }
+
+    # date time
+    midnight_datetime = datetime.combine(
+            date.today(), datetime_time.min)
+    midnight = calendar.timegm(midnight_datetime.timetuple())
+
+    midnight_string = datetime.combine(
+        date.today(), datetime_time.min).strftime('%m/%d/%Y %I:%M %p')
+    now_string = timezone.now().strftime('%m/%d/%Y %I:%M %p')
+
+    call_statistics = requests.post('%s/clk/stats' %(settings.CALL_API_URL)).json()
+
+
+
+    home_statistics = {'escalate':0,'closed':0,'pending':0,'total':0,'call_stat':call_statistics,\
+    'midnight': midnight,'midnight_string': midnight_string,'now_string': now_string,}
+    # SMS stats
+    home_statistics['sms'] = SMSCDR.objects.filter(sms_time__date=datetime.today()).count()
+    # Email stats
+    home_statistics['email'] = Emails.objects.filter(email_time__date=datetime.today()).count()
+    # case status statistics
+    url_status = 'http://%s/ona/api/v1/charts/%s.json?field_name=case_action' \
+    %(current_site, default_service_xform.pk)
+
+    status_stat = requests.get(url_status, headers= headers).json()
+
+    status_text = {'escalate':0,'closed':0,'pending':0,'total':0}
+    rrr = [] 
+
+    if status_stat.get('data',None) != None:
+        for st_action in status_stat.get('data',{}):
+            for sts in status_text:
+                r_str = str(st_action['case_action'][0]).lower()
+                if sts == r_str:
+                    home_statistics[sts] =  st_action['count']
+            home_statistics['total'] += st_action['count']
+
+    return home_statistics
+
+
+
+def get_dashboard_statsx(user, interval=None):
     """Stats which are displayed on the dashboard, returns a dict
     Get stats from last midnight
     """
@@ -2032,16 +2814,16 @@ def get_dashboard_stats(user, interval=None):
         status__in=[Ticket.CLOSED_STATUS, Ticket.RESOLVED_STATUS],
     )
 
-    att = user.HelplineUser.get_average_talk_time()
-    awt = user.HelplineUser.get_average_wait_time()
+    # att = user.HelplineUser.get_average_talk_time()
+    # awt = user.HelplineUser.get_average_wait_time()
 
     # get QA score
 
     dashboard_stats = {'midnight': midnight,
                        'midnight_string': midnight_string,
                        'now_string': now_string,
-                       'att': att,
-                       'awt': awt,
+                       # 'att': att,
+                       # 'awt': awt,
                        'total_calls': total_calls.count(),
                        'answered_calls': answered_calls.count(),
                        'abandoned_calls': abandoned_calls.count(),
@@ -2059,23 +2841,27 @@ def get_dashboard_stats(user, interval=None):
 
 def web_presence(request):
     """Show presence information of agents"""
-    available = HelplineUser.objects.filter(hl_status__exact='Available')
-    busy_on_call = HelplineUser.objects.filter(hl_status__exact='OnCall')
-    idle = HelplineUser.objects.filter(hl_status__exact='Idle')
-    offline = HelplineUser.objects.filter(hl_status__exact='Offline')
-    status_count = get_status_count()
+
+    user_list = User.objects.filter(is_active__exact=True,HelplineUser__hl_role='Counsellor')
+
+    return render(request,'helpline/presence.html',{'users':user_list})
+    # available = HelplineUser.objects.filter(hl_status__exact='Available')
+    # busy_on_call = HelplineUser.objects.filter(hl_status__exact='OnCall')
+    # idle = HelplineUser.objects.filter(hl_status__exact='Idle')
+    # offline = HelplineUser.objects.filter(hl_status__exact='Offline')
+    # status_count = get_status_count()
 
     # Display all agents in the Connected Agents Table
     # Exclude Unavailable agents.
-    agents = HelplineUser.objects.exclude(hl_status='Unavailable')
-    connected_agents_table = ConnectedAgentsTable(agents,
-                                                  order_by=(
-                                                      request.GET.get('sort',
-                                                                      'userid')))
+    # agents = HelplineUser.objects.exclude(hl_status='Unavailable')
+    # connected_agents_table = ConnectedAgentsTable(agents,
+    #                                               order_by=(
+    #                                                   request.GET.get('sort',
+    #                                                                   'userid')))
 
-    return render(request,
-                  'helpline/presence.html',
-                  {'connected_agents_table': connected_agents_table})
+    # return render(request,
+    #               'helpline/presence.html',
+    #               {'connected_agents_table': connected_agents_table})
 
 
 def report_factory(report='callsummary', datetime_range=None, agent=None,
@@ -2296,7 +3082,7 @@ def logout(request, template_name="helpline/loggedout.html"):
         hl_user.hl_jabber = ''
         hl_user.hl_status = 'Unavailable'
         hl_user.save()
-
+        
         queue_manager(hl_user.hl_key,
                       request.session.get('extension'),
                       'queueleave')
@@ -2380,31 +3166,143 @@ def ajax_get_sub_subcategory(request, category):
     data = {'data': list(results)}
     return data
 
+@login_required
+def pivot(request):
+    report = {}
+    with connection.cursor() as cursor:
+            query = 'SELECT json from logger_xform where id = 1'
+            cursor.execute(query)
+            report['data'] = namedtuplefetchall(cursor).json
+    return render(request, 'helpline/report_pivot.html',report)
 
 @login_required
 def wall(request):
-    """Display statistics for the wall board"""
-    dashboard_stats = get_dashboard_stats(request.user)
-    week_dashboard_stats = get_dashboard_stats(request.user, interval='weekly')
-    return render(request, 'helpline/wall.html',
-                  {'dashboard_stats': dashboard_stats,
-                   'week_dashboard_stats': week_dashboard_stats})
+    ret = stat(request)
+    return HttpResponse(ret)
 
 @login_required
-def sources(request, source=None):
+def stat(request):
+    """Display statistics for the wall board"""
+
+    # Case statistics
+
+    default_service = Service.objects.all().first()
+    default_service_xform = default_service.walkin_xform
+
+    default_service_qa = default_service.qa_xform
+    default_service_auth_token = default_service_xform.user.auth_token
+    current_site = get_current_site(request)
+
+    # Graph data
+    headers = {
+        'Authorization': 'Token %s' % (default_service_auth_token)
+    }
+
+    url_status = 'http://%s/ona/api/v1/charts/%s.json?field_name=case_action' \
+    %(current_site, default_service_xform.pk)
+
+    status_stat = requests.get(url_status, headers= headers).json() or {}
+
+    status_stats = {'escalate':0,'closed':0,'pending':0,'total':0}
+    rrr = []
+    for st_action in status_stat['data']:
+        for sts in status_stats:
+            r_str = str(st_action['case_action'][0]).lower()
+            if sts == r_str:
+                status_stats[sts] =  st_action['count']
+        status_stats['total'] += st_action['count']
+
+    # agent status
+    url_agents = {} # '%s/api/v1/call/agent?webdata' %(settings.CALL_API_URL)
+
+    agent_status = requests.get(url_agents, headers=headers).json()
+
+    # call statistics
+    call_statistics = requests.post('%s/clk/stats/' %(settings.CALL_API_URL)).json()
+
+    dashboard_stats = get_dashboard_stats(request.user)
+    week_dashboard_stats = get_dashboard_stats(request.user, interval='weekly')
+
+    userlist = User.objects.filter(is_active=True,HelplineUser__hl_role='Counsellor').select_related('HelplineUser')
+    
+    def get_queue_status(agent_id):
+        ret_val = ''
+        for ag in agent_status:
+            if ag['agent_id'] == agent_id:
+                ret_val = str(ag['status']) 
+        return ret_val   
+
+    agent_status_x = {}
+
+    for user_x in userlist:
+        agent_status_x.update({str(user_x.username):get_queue_status(user_x.HelplineUser.hl_key)})
+
+    statistics = {'case': status_stats,'call':call_statistics,'dashboard_stats': dashboard_stats,
+                   'week_dashboard_stats': week_dashboard_stats,'users':userlist,'call_agents':agent_status_x}
+    return render(request, 'helpline/wall.html',statistics)
+
+@login_required
+def sources(request, source=None,itemid=None):
     """Display data source"""
     data_messages = ''
+    item = ''
+    message = ''
+
+    home_statistics = get_dashboard_stats(request)
+
     if source == 'email':
         data_messages = Emails.objects.all()
+        item = Emails
+
+        if request.method == 'POST':
+            email = Emails()
+
+            try:
+
+                # email.email_idkey = 
+                email.email_from      = 'kemboicheru@gmail.com'
+                email.email_status    = 0
+                email.email_body      = request.POST.get('message', None)
+                email.email_subject   = ''
+                email.email_date      = datetime.now()
+                email.save()
+
+
+                server = smtplib.SMTP('mail.bitz-itc.com')
+                server.starttls()
+                server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
+                server.set_debuglevel(2)
+                server.sendmail("support@" + settings.BASE_DOMAIN,'kemboicheru@gmail.com',request.POST.get('message', None))
+                server.quit()
+                message = "Mail sent successfully"
+            except Exception as e:
+                message = "Error: %s" %e
+
+
     if source == 'sms':
-        data_messages = SMSCDR.objects.all().order_by('-sms_time')
+        data_messages = SMSCDR.objects.all() #.order_by('-sms_time')
+        item = SMSCDR
+
+        # if request.method == 'POST':
+        #     email = Emails()
+            
+        #     email.email_idkey = 
+        #     email.email_from      = 
+        #     email.email_status    = 0
+        #     email.email_body      = 
+        #     email.email_subject   = 
+        #     email.email_date      = date.now()
+
+    if itemid != None:
+        data_messages = item.objects.get(pk=itemid) # (Emails,pk=itemid)
+        source = 'read_%s' % (source) 
 
     template = 'helpline/%s.html' % (source)
-    return render(request, template, {'data_messages':data_messages})
+    return render(request, template, {'data_messages':data_messages,'message':message,'home':home_statistics})
 
 
 def get_data_queues(queue=None):
-    data = backend.get_data_queues()
+    data = {} # backend.get_data_queues()
     if queue is not None:
         try:
             data = data[queue]
@@ -2435,48 +3333,47 @@ def queue_json(request, name=None):
     data = get_data_queues(name)
     return {'data': data}
 
-
-@login_required
-@json_view
-def spy(request):
-    channel = request.POST.get('channel', '')
-    to_exten = request.POST.get('to_exten', '')
-    r = backend.spy(channel, to_exten)
-    return r
-
-
-@login_required
-@json_view
-def whisper(request):
-    channel = request.POST.get('channel', '')
-    to_exten = request.POST.get('to_exten', '')
-    r = backend.whisper(channel, to_exten)
-    return r
+# @login_required
+# @json_view
+# def spy(request):
+#     channel = request.POST.get('channel', '')
+#     to_exten = request.POST.get('to_exten', '')
+#     r = backend.spy(channel, to_exten)
+#     return r
 
 
-@login_required
-@json_view
-def barge(request):
-    channel = request.POST.get('channel', '')
-    to_exten = request.POST.get('to_exten', '')
-    r = backend.barge(channel, to_exten)
-    return r
+# @login_required
+# @json_view
+# def whisper(request):
+#     channel = request.POST.get('channel', '')
+#     to_exten = request.POST.get('to_exten', '')
+#     r = backend.whisper(channel, to_exten)
+#     return r
 
 
-@login_required
-@json_view
-def hangup_call(request):
-    channel = request.POST.get('channel', '')
-    r = backend.hangup(channel)
-    return r
+# @login_required
+# @json_view
+# def barge(request):
+#     channel = request.POST.get('channel', '')
+#     to_exten = request.POST.get('to_exten', '')
+#     r = backend.barge(channel, to_exten)
+#     return r
 
 
-@login_required
-@json_view
-def remove_from_queue(request):
-    queue = request.POST.get('queue', '')
-    agent = request.POST.get('agent', '')
-    r = backend.remove_from_queue(agent, queue)
-    return r
+# @login_required
+# @json_view
+# def hangup_call(request):
+#     channel = request.POST.get('channel', '')
+#     r = backend.hangup(channel)
+#     return r
+
+
+# @login_required
+# @json_view
+# def remove_from_queue(request):
+#     queue = request.POST.get('queue', '')
+#     agent = request.POST.get('agent', '')
+#     r = backend.remove_from_queue(agent, queue)
+#     return r
 
 post_save.connect(report_save_handler, sender=Report)

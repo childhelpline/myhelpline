@@ -1,411 +1,171 @@
+{% extends 'helpline/base.html' %}
 {% load staticfiles %}
-{% load crispy_forms_tags %}
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <title>{{ title }} | Reports</title>
-        <meta content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no' name='viewport'>
-        <script src="{% static 'jquery/jquery.min.js' %}"></script>
-        <link href="{% static "bootstrap/dist/css/bootstrap.min.css" %}" rel="stylesheet" media="screen">
-        <link href="{% static "font-awesome/css/font-awesome.min.css" %}" rel="stylesheet" type="text/css" />
-        <!-- Date Picker -->
-        <link href="{% static "helpline/adminreports/css/datepicker/datepicker3.css" %}" rel="stylesheet" type="text/css" />
-        <!-- Daterange picker -->
-        <link href="{% static "bootstrap-daterangepicker/daterangepicker.css" %}" rel="stylesheet" type="text/css" />
-        <!-- bootstrap wysihtml5 - text editor -->
-		<!-- new added for exporting data-->
-        <!-- font Awesome -->
- 	<link href="{% static "helpline/adminreports/css/datatables/dataTables.bootstrap.css" %}" rel="stylesheet" type="text/css" />
+{% load i18n %}
 
-        <!-- Theme style -->
-        <link href="{% static "helpline/adminreports/css/AdminLTE.css" %}" rel="stylesheet" type="text/css" />
+{% block box %}
+{% endblock box %}
+{% block treeview_reports %}active{% endblock treeview_reports %}
+{% block navbar_nav %}
+<li class="dropdown messages-menu">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+    <i class="fa fa-bookmark"></i>{% trans "Average Talk Time" %}: {{ dashboard_stats.att.hours }}:{{ dashboard_stats.att.min }}:{{ dashboard_stats.att.seconds }}
+  </a>
+</li>
+<!-- Messages: style can be found in dropdown.less-->
+<li class="dropdown messages-menu">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+    <i class="fa fa-bookmark"></i>{% trans "Average Wait Time" %}: {{ dashboard_stats.awt.hours }}:{{ dashboard_stats.awt.min }}:{{ dashboard_stats.awt.seconds }}
+  </a>
+</li>
 
+<!-- Messages: style can be found in dropdown.less-->
+<li class="dropdown messages-menu">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+    <i class="fa fa-clock-o"></i>  <span id="clock">0:00 AM</span>
+  </a>
+  <ul class="dropdown-menu">
+    <li class="header">
+      {% if request.user.chlusers.chlstatus == 'Busy' %}
+      <a href="{% url 'queue_log' %}"><i class="fa fa-circle text-danger"></i> {% trans "Busy" %}</a>
+      {% elif request.user.chlusers.chlstatus == 'Idle' %}
+      <a href="{% url 'queue_log' %}"><i class="fa fa-exclamation-triangle text-warning"></i> {% trans "Idle" %}</a>
+      {% elif request.user.chlusers.chlstatus == 'Available' %}
+      <a href="{% url 'queue_log' %}"><i class="fa fa-circle text-success"></i> {% trans "Online" %}</a>
+      {% elif request.user.chlusers.chlstatus == 'OnCall' %}
+      <a href="{% url 'queue_log' %}"><i class="fa fa-circle text-danger"></i> {% trans "OnCall" %}</a>
+      {% endif %}
+      <span id="durations"></span>
+    </li>
+    <li class="footer">
+    </li>
+  </ul>
+</li>
 
-        <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-        <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-        <!--[if lt IE 9]>
-          <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-          <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
-        <![endif]-->
-<script type="text/javascript">
-var tableToExcel = (function() {
-  var uri = 'data:application/vnd.ms-excel;base64,'
-    , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
-    , base64 = function(s) { return window.btoa(unescape(encodeURIComponent(s))) }
-    , format = function(s, c) { return s.replace(/{(\w+)}/g, function(m, p) { return c[p]; }) }
-  return function(table, name) {
-    if (!table.nodeType) table = document.getElementById(table)
-    var ctx = {worksheet: name || 'Worksheet', table: table.innerHTML}
-    window.location.href = uri + base64(format(template, ctx))
-  }
-})()
-</script>
-        {% block head %}
-      <script>
-     function openCase(param){
-     var caseNo =param;
-     top.window.location.href='../main.php?win=34&caseNo=' + caseNo;
-        }
-     </script>
-		<script type="text/javascript">
-		function sendtoReportFactory(){
-            var reservationtime = document.getElementById("reservationtime").value;
-            var queueid = document.getElementById("id_queueid").value;
-            var agent = document.getElementById("agent").value;
-            var c = document.getElementById("showustheresultsnow");
-            var query = document.getElementById("navbar-search-input").value;
-            var category = document.getElementById("category").value;
-            //c.innerHTML = '<div align="center">Loading Report.. ';
-            $("#showustheresultsnow").fadeIn("slow");
-            $("#showustheresultsnow").load("{% url 'ajax_admin_report' title %}?datetime_range="+ encodeURIComponent(reservationtime) +'&sevc='+ encodeURIComponent(queueid) +'&agent='+ encodeURIComponent(agent)+'&q='+ encodeURIComponent(query)+'&category='+ encodeURIComponent(category));  }
-		</script>
-        {% endblock head %}
-    </head>
-     <body class="skin-blue">
-        <!-- header logo: style can be found in header.less -->
-        <header class="header">
-          <a href="{% url 'dashboard_home' %}" class="logo">
-          <!-- LOGO -->
-          {{ title }}
-          </a>
+{% endblock navbar_nav %}
 
-            <!-- Header Navbar: style can be found in header.less -->
-            <nav class="navbar navbar-static-top" role="navigation">
-                <!-- Sidebar toggle button-->
-                <a href="#" class="navbar-btn sidebar-toggle" data-toggle="offcanvas" role="button">
-                    <span class="sr-only"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </a>
+{% block content %}
+<style>
+div.scrollmenu {
+    overflow: auto;
+    white-space: nowrap;
+}
+</style>
+<section class="content-header">
+  <h1>
+    {% trans "REPORT" %} <i class="fa fa-angle-right"></i> {{ title }}
+  </h1>
+</section>
 
-                <form class="navbar-form navbar-left" role="search" action="{% if search_url %}{{ search_url }}{% else %}{% url 'dashboardreports' title %}{% endif %}">
-                <div class="form-group">
-                  <input type="text" name="q" class="form-control" id="navbar-search-input" placeholder="Search" value="{{ query }}">
+<!-- Main content -->
+<section class="content">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="box">
+        <div class="box-header with-border">
+          <!--h3 class="box-title">Filter Parameters:</h3-->
+
+          <div class="col-md-12 report-filters">
+            {% load django_tables2 %}
+            <div id="form_collapse" class="in" style="height: auto;">
+              {% block filterform %}
+              <!-- Filter Form -->
+              <form action="#">
+                <!-- Date and time range -->
+                <script>
+                  $(function() {
+                    $('#datetimerange').daterangepicker({
+                     opens: 'left',
+                     timePicker: true,
+                     locale: {
+                      format: 'MM/DD/YYYY h:mm A'
+                    }
+                  }, function(start, end, label) {
+                   console.log("A new date selection was made: " + start.format('M/DD hh:mm A') + ' to ' + end.format('M/DD hh:mm A'));
+                 });
+                  });
+                </script>
+                <div class="form-group col-md-4" style="padding-left: 0px;">
+                    <label>{% trans "Choose Date and time Range" %}:</label>
+                  <div class="input-group">
+                    <div class="input-group-addon">
+                      <i class="fa fa-calendar"></i>
+                    </div>
+                    {{ form.datetime_range }}
+                  </div><!-- /.input group -->
+                </div><!-- /.form group -->
+                <div class="form-group col-md-4">
+                    <label>{% trans "Agent" %}:</label>
+                  <div class="input-group">
+                    <div class="input-group-addon">
+                      <i class="fa fa-users"></i>
+                    </div>
+                    {{ form.agent }}
+                  </div><!-- /.input group -->
+                </div><!-- /.form group -->
+
+                {{ form.queueid }}
+                <br>
+                <div class="form-group col-md-4">
+                  <div class="input-group pt-20">
+                    <input type="submit" value="Fetch Reports" id="total-calls-search-btn" class="btn btn-success btn-sm btn-flat" >
+                  </div><!-- /.input group -->
                 </div>
               </form>
-
-            </nav>
-
-        </header>
-
-
-        <div class="wrapper row-offcanvas row-offcanvas-left" >
-            <!-- Left side column. contains the logo and sidebar -->
-            <aside class="left-side sidebar-offcanvas" style="background-color:#79A341">
-                <!-- sidebar: style can be found in sidebar.less -->
-                <section class="sidebar" >
-                    <!-- Sidebar user panel -->
-
-                    <!-- /.search form -->
-                    <!-- sidebar menu: : style can be found in sidebar.less -->
-                    <ul class="sidebar-menu" >
-                        <li>
-                        <a href="{% url 'dashboard_home' %}">
-                              <img src="{% static "helpline/dashboard.png" %}"> <span>Dashboard </span>
-                            </a>
-                        </li>
-
-                        <li  class="{% block class_tab1 %}inactive{% endblock %}"> <a href="{% url 'dashboardreports' 'totalcalls' %}">
-
-                                <span><strong>Total Calls</strong> </span>
-
-                            </a>
-							</li>
-
-                            <li class="{% block class_tab2 %}inactive{% endblock %}"> <a href="{% url 'dashboardreports' 'answeredcalls' %}">
-
-                                <span><strong>Answered Calls</strong> </span>
-
-                            </a>
-							</li>
-                            <li class="{% block class_tab3 %}inactive{% endblock %}"> <a href="{% url 'dashboardreports' 'abandonedcalls' %}">
-
-                                <span><strong>Abandoned Calls</strong> </span>
-
-                            </a>
-							</li>
-                            <li class="{% block class_tab4 %}inactive{% endblock %}"> <a href="{% url 'dashboardreports' 'voicemail' %}">
-
-                                <span><strong>Voice Mails</strong> </span>
-
-                            </a>
-							</li>
-                            <li class="{% block class_tab5 %}inactive{% endblock %}"> <a href="{% url 'dashboardreports' 'totalcases' %}">
-
-                                <span><strong>Total Cases</strong> </span>
-
-                            </a>
-							</li>
-                            <li class="{% block class_tab6 %}inactive{% endblock %}">
-                            <a href="{% url 'dashboardreports' 'pendingcases' %}">
-                                <span><strong>Pending Cases</strong> </span>
-                            </a>
-							</li>
-
-                            <li class="{% block class_tab7 %}inactive{% endblock %}">  <a href="{% url 'dashboardreports' 'closedcases' %}">
-
-                                <span><strong>Closed Cases</strong> </span>
-
-                            </a>
-							</li>
-
-                            <li class="{% block class_tab8 %}inactive{% endblock %}">
-                             <a href="{% url 'dashboardreports' 'escalatedcases' %}">
-                                <span><strong>Referred Cases</strong> </span>
-
-                            </a>
-							</li>
-                        <li  class="{% block class_tab9 %}inactive{% endblock %}"> <a href="{% url 'adminreports' 'callsummaryreport' %}">
-
-                                <span><strong>Call Summary Report</strong> </span>
-
-                            </a>
-							</li>
-
-                            <li class="{% block class_tab10 %}inactive{% endblock %}"> <a href="{% url 'adminreports' 'calldetailsreport' %}">
-
-                                <span><strong>Call Details Report</strong> </span>
-
-                            </a>
-							</li>
-                            <li class="{% block class_tab11 %}inactive{% endblock %}"> <a href="{% url 'adminreports' 'agentsessionreport' %}">
-
-                                <span><strong>Agent Session Report</strong> </span>
-
-                            </a>
-							</li>
-                            <li class="{% block class_tab12 %}inactive{% endblock %}">
-                             <a href="#">
-                                <span><strong>Search Results</strong> </span>
-
-                            </a>
-							</li>
-                            <li class="{% block class_tab13 %}inactive{% endblock %}">
-                            <a href="{% url 'report_charts' 'callsummary' 'call' %}">
-                                <span><strong>Charts Inbound</strong> </span>
-
-                            </a>
-							</li>
-                            <li class="{% block class_tab14 %}inactive{% endblock %}">
-                            <a href="{% url 'report_charts' 'categorysummary' 'call' %}">
-                                <span><strong>Category Charts Inbound</strong> </span>
-
-                            </a>
-							</li>
-                            <li class="{% block class_tab15 %}inactive{% endblock %}">
-                            <a href="{% url 'report_charts' 'callsummary' 'walkin' %}">
-                                <span><strong>Charts Walkin/Outbound</strong> </span>
-
-                            </a>
-							</li>
-                            <li class="{% block class_tab16 %}inactive{% endblock %}">
-                            <a href="{% url 'report_charts' 'categorysummary' 'walkin' %}">
-                                <span><strong>Category Charts Walkin/Outbound</strong> </span>
-
-                            </a>
-							</li>
-                            <li class="{% block class_tab17 %}inactive{% endblock %}">
-                            <a href="{% url 'report_charts' 'dailysummary' 'all' %}">
-                                <span><strong>Day Summary</strong> </span>
-
-                            </a>
-							</li>
-                            <li class="{% block class_tab18 %}inactive{% endblock %}">
-                            <a href="{% url 'report_charts' 'dailysummary' 'call' %}">
-                                <span><strong>Inbound Day Summary</strong> </span>
-
-                            </a>
-							</li>
-                            <li class="{% block class_tab19 %}inactive{% endblock %}">
-                            <a href="{% url 'report_charts' 'dailysummary' 'walkin' %}">
-                                <span><strong>Outbound Day Summary</strong> </span>
-
-                            </a>
-							</li>
-                    </ul>
-                </section>
-                <!-- /.sidebar -->
-            </aside>
-
-            <!-- Right side column. Contains the navbar and content of the page -->
-            <aside class="right-side">
-
-                <section class="content">
-                    <div class="row">
-
-                  <div class="table table-responsive" style="width:98%;margin-left:10px" >
-                      <img src="{% static "helpline/pivot/excel.png" %}" width="30px" height="30px" onClick="tableToExcel('report_table', '{{ title }}Report')">
-
-
-                      {% block filterform %}
-
-                      <!-- Filter Form -->
-<form action="#">
-                                                          <!-- Date and time range -->
-                 <section style="border: 2px solid #dddddd; padding: 10px 40px; background: #dddddd;    border-radius: 8px;">
-              <table><tbody><tr><td width="350px">                   <div class="form-group">
-                                        <label>Choose Date and time Range:</label>
-                                        <div class="input-group">
-                                            <div class="input-group-addon">
-                                            </div>
-{{ form.datetime_range }}
-                                        </div><!-- /.input group -->
-                                    </div><!-- /.form group -->
-                         </td>
-                          <td><strong> &nbsp; &nbsp; </strong></td>
-                         <td width="350px">                  <div class="form-group">
-                                        <label>Enumerator:</label>
-                                        <div class="input-group">
-                                            <div class="input-group-addon">
-
-                                            </div>
-{{ form.agent }}
-                                        </div><!-- /.input group -->
-                                    </div><!-- /.form group -->
-                         </td>
-                         <td width="350px">                  <div class="form-group">
-                                        <label>Category:</label>
-                                        <div class="input-group">
-                                            <div class="input-group-addon">
-
-                                            </div>
-{{ form.category }}
-                                        </div><!-- /.input group -->
-                                    </div><!-- /.form group -->
-                         </td>
-                         {{ form.queueid }}
-                            <td>
-                            &nbsp; &nbsp;
-                            </td>
-                            <td>
-                            <br>
-                            <input type="button" value="Fetch Reports" id="total-calls-search-btn" class="btn btn-success btn-sm" onclick="sendtoReportFactory();">
-                            </td>
-                            </tr> </tbody></table></section>
-
-                                    <!-- Date and time range -->
-
-
-                    </form>
-
-                      <!-- End Filter Form -->
-                      {% endblock filterform %}
- {% block content %}
-{% endblock content %}
-                                </div>
-
-                    </div><!-- /.row (main row) -->
-					</section><!-- /.content -->
-            </aside><!-- /.right-side -->
+              <!-- End Filter Form -->
+            </div>
+            {% endblock filterform %}
+          </div>
         </div>
+        <div class="box-body">
+          <div class="row">
+            <div class="scrollmenu col-md-12">
+                <div>
+                  <table id="example1" class="table datatable">
+                    <thead>
+                      <th>#</th>
+                      <!-- <th>Case ID</th>
+                      <th>Agent</th> -->
+                      <th>Caller Phone</th>
+                      <th>Date</th>
+                      <th>Start time</th>
+                      <th>End Time</th>
+                      <th>Status</th>
+                    </thead>
+                  {% for rep in report_data %}
+                    <tr>
+                      <td>{{ forloop.counter}}.</td>
+                      <!-- <td>{{rep.caseid | default:''}}</td>
+                      <td>{{rep.agent | default:''}}</td> -->
+                      <td>{{rep.phone}}</td>
+                      <td>{{rep.date}}</td>
+                      <td>{{rep.start}}</td>
+                      <td>{{rep.ended}}</td>
+                      <td>{{rep.status}}</td>
+                    </tr>
+                  {% endfor %}
+                    
+                  </table>
+                </div>
+          </div>
+          <!-- /.col -->
+        </div>
+        <!-- /.row -->
+      </div>
+      <!-- ./box-body -->
+    </div>
+  </div>
+</section>
 
-
-        <!-- DATA TABES SCRIPT -->
-        <script src="{% static "helpline/js/plugins/datatables/jquery.dataTables.js" %}" type="text/javascript"></script>
-        <script src="{% static "helpline/js/plugins/datatables/dataTables.bootstrap.js" %}" type="text/javascript"></script>
-        <!-- AdminLTE App -->
-        <script src="{% static "helpline/js/AdminLTE/app.js" %}" type="text/javascript"></script>
-        <!-- page script -->
-        <script type="text/javascript">
-            $(function() {
-                $("#example1").dataTable();
-                $('#example2').dataTable({
-                    "bPaginate": true,
-                    "bLengthChange": false,
-                    "bFilter": false,
-                    "bSort": true,
-                    "bInfo": true,
-                    "bAutoWidth": false
-                });
-            });
-        </script>
-
-        <!-- InputMask -->
-        <script src="{% static 'helpline/js/plugins/input-mask/jquery.inputmask.js' %}" type="text/javascript"></script>
-        <script src="{% static 'helpline/js/plugins/input-mask/jquery.inputmask.date.extensions.js' %}" type="text/javascript"></script>
-        <script src="{% static 'helpline/js/plugins/input-mask/jquery.inputmask.extensions.js' %}" type="text/javascript"></script>
-        <!-- moment.js -->
-        <script src="{% static 'moment/min/moment.min.js' %}" type="text/javascript"></script>
-        <!-- date-range-picker -->
-        <script src="{% static 'bootstrap-daterangepicker/daterangepicker.js' %}" type="text/javascript"></script>
-        <!-- bootstrap color picker -->
-        <script src="{% static 'helpline/js/plugins/colorpicker/bootstrap-colorpicker.min.js' %}" type="text/javascript"></script>
-        <!-- bootstrap time picker -->
-        <script src="{% static 'helpline/js/plugins/timepicker/bootstrap-timepicker.min.js' %}" type="text/javascript"></script>
-        <!-- AdminLTE App -->
-        <script src="{% static 'helpline/js/AdminLTE/app.js' %}" type="text/javascript"></script>
-        <!-- AdminLTE for demo purposes -->
-        <!-- script src="js/AdminLTE/demo.js" type="text/javascript"></script -->
-  <script type="text/javascript">
-            $(function() {
-                //Datemask dd/mm/yyyy
-                $("#datemask").inputmask("dd/mm/yyyy", {"placeholder": "dd/mm/yyyy"});
-                //Datemask2 mm/dd/yyyy
-                $("#datemask2").inputmask("mm/dd/yyyy", {"placeholder": "mm/dd/yyyy"});
-                //Money Euro
-                $("[data-mask]").inputmask();
-
-                //Date range picker
-                $('#reservation').daterangepicker();
-                //Date range picker with time picker
-                $('#reservationtime').daterangepicker({
-                            timePicker: true,
-                            timePickerIncrement: 30,
-                            locale: {
-                                format: 'MM/DD/YYYY h:mm A'
-                            }
-                 });
-                //Date range as a button
-                $('#daterange-btn').daterangepicker(
-                        {
-                            ranges: {
-                                'Today': [moment(), moment()],
-                                'Yesterday': [moment().subtract('days', 1), moment().subtract('days', 1)],
-                                'Last 7 Days': [moment().subtract('days', 6), moment()],
-                                'Last 30 Days': [moment().subtract('days', 29), moment()],
-                                'This Month': [moment().startOf('month'), moment().endOf('month')],
-                                'Last Month': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
-                            },
-                            startDate: moment().subtract('days', 29),
-                            endDate: moment()
-                        },
-                function(start, end) {
-                    $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
-                }
-                );
-
-                //iCheck for checkbox and radio inputs
-                $('input[type="checkbox"].minimal, input[type="radio"].minimal').iCheck({
-                    checkboxClass: 'icheckbox_minimal',
-                    radioClass: 'iradio_minimal'
-                });
-                //Red color scheme for iCheck
-                $('input[type="checkbox"].minimal-red, input[type="radio"].minimal-red').iCheck({
-                    checkboxClass: 'icheckbox_minimal-red',
-                    radioClass: 'iradio_minimal-red'
-                });
-                //Flat red color scheme for iCheck
-                $('input[type="checkbox"].flat-red, input[type="radio"].flat-red').iCheck({
-                    checkboxClass: 'icheckbox_flat-red',
-                    radioClass: 'iradio_flat-red'
-                });
-
-                //Colorpicker
-                $(".my-colorpicker1").colorpicker();
-                //color picker with addon
-                $(".my-colorpicker2").colorpicker();
-
-                //Timepicker
-                $(".timepicker").timepicker({
-                    showInputs: false
-                });
-            });
-        </script>
-        <script src='{% static "bootstrap/dist/js/bootstrap.min.js" %}'></script>
-        <!-- AdminLTE App -->
-
-    </body>
-</html>
-
+<script type="text/javascript">
+  function sendtoReportFactory(){
+    var reservationtime = document.getElementById("datetimerange").value;
+    var queueid = document.getElementById("id_queueid").value;
+    var agent = document.getElementById("agent").value;
+    var c = document.getElementById("showustheresultsnow");
+    var query = document.getElementById("navbar-search-input").value;
+    //c.innerHTML = '<div align="center">Loading Report.. ';
+    $("#showustheresultsnow").fadeIn("slow");
+    $("#showustheresultsnow").load("{% url 'ajax_admin_report' report %}?datetime_range="+ encodeURIComponent(reservationtime) +'&sevc='+ encodeURIComponent(queueid) +'&agent='+ encodeURIComponent(agent)+'&q='+ encodeURIComponent(query));  
+  }
+</script>
+{% endblock content %}

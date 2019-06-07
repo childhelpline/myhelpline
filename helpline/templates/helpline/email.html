@@ -38,11 +38,11 @@
               			{% for mess in data_messages %}
               			<tr>
               				<td><input type="checkbox" /></td>
-              				<td class="mailbox-name"> <a href="read-mail.html">{{ mess.email_from }}</a> </td>
+              				<td class="mailbox-name"> <a href="{% url 'mysources' 'email' mess.pk %}">{{ mess.email_from }}</a> </td>
               				<td class="mailbox-subject"> <b>{{ mess.email_subject }}</b> <td>
               				<td class="mailbox-date">{{ mess.email_date}} </td>
                       <td>{{ mess.email_case|safe }}</td>
-              				<td class="mailbox-date"><!-- Reply  -->{%  if mess.email_case == 0 %} <a href='{% url "case_form" "mail" %}?sourceid={{mess.pk}}'>Create Case</a> {% endif %}</td>
+              				<td class="mailbox-date"><!-- Reply  -->{%  if mess.email_case == 0 %} <a href='{% url "case_form" "mail" %}?sourceid={{mess.pk}}'>Create Case</a> {% endif %}<a href=""> Reply </a></td>
               			</tr>
               			{% endfor %}
               		</tbody>

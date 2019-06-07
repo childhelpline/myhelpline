@@ -151,19 +151,30 @@ input:checked + .slider:before {
         <div class="navbar-custom-menu">
           <ul class="nav navbar-nav">
             <!-- Messages: style can be found in dropdown.less-->
-            {% block navbar_nav %}
+            {% if request.user.HelplineUser.hl_role == 'Supervisor' or request.user.HelplineUser.hl_role == 'Counsellor' or request.user.HelplineUser.hl_role == 'Casemanager' %}
 
             <li class="dropdown messages-menu">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                <i class="fa fa-bookmark"></i>{% trans "Average Talk Time" %}: {{ att.hours }}:{{ att.min }}:{{ att.seconds }}
+                <i class="fa fa-bookmark"></i>{% trans "Average Talk Time" %}: {{ call_stat.avgtalk }}
               </a>
             </li>
             <!-- Messages: style can be found in dropdown.less-->
             <li class="dropdown messages-menu">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                <i class="fa fa-bookmark"></i>{% trans "Average Wait Time" %}: {{ awt.hours }}:{{ awt.min }}:{{ awt.seconds }}
+                <i class="fa fa-bookmark"></i>{% trans "Average Wait Time" %}: {{ call_stat.avgwait }}
               </a>
             </li>
+
+            <!-- Messages: style can be found in dropdown.less-->
+            <li class="dropdown messages-menu">
+               <a href="#" class="leave hidden" onclick="leave_queue(this)" data-toggle="dropdown">
+                <i class="fa fa-phone"></i>{% trans "Leave Queue" %}
+              </a>
+              <a href="#" class="dropdown-toggle join" onclick="join_queue(this)" data-toggle="dropdown">
+                <i class="fa fa-phone"></i>{% trans "Join Queue" %}
+              </a>
+            </li>
+            {% endif %}
 
             <!-- Messages: style can be found in dropdown.less-->
             <li class="dropdown messages-menu">
@@ -188,63 +199,49 @@ input:checked + .slider:before {
               </ul>
             </li>
 
-            <!-- Messages: style can be found in dropdown.less-->
-            <li class="dropdown messages-menu">
-             {% if request.user.HelplineUser.hl_status == 'Available' or request.user.HelplineUser.hl_status == 'Pause' %}
-             <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-              <i class="fa fa-phone"></i>{% trans "Leave Queue" %}
-            </a>
-
-            <ul class="dropdown-menu">
-              <!-- Leave queue -->
-              <a href="{% url "queue_leave" %}">{% trans "Leave Queue" %}</a>
-              <!-- Leave queue -->
-            </ul>
-            {% else %}
-            <a href="#" class="dropdown-toggle" onclick="join_queue()" data-toggle="dropdown">
-              <i class="fa fa-phone"></i>{% trans "Join Queue" %}
-            </a>
-
-            <!--ul class="dropdown-menu">
-              <!-- Join queue ->
-              <form name = 'queue' method = 'POST' action = '{% url 'queue_log' %}'>
-                {% csrf_token %}
-                {{ queue_form.softphone }}
-                <input id = 'b' type = 'submit' value = 'LogIn'>
-              </form>
-              <!-- Join queue ->
-            </ul-->
-            {% endif %}
-
-          </li>
-          <li class="dropdown messages-menu">
+          <!-- <li class="dropdown messages-menu">
            {% if request.user.HelplineUser.hl_status == 'Available' %}
            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
             <i class="fa fa-pause"></i>{% trans "Break" %}
           </a>
 
           <ul class="dropdown-menu">
-            <!-- Pause queue -->
+            <!-- Pause queue ->
             <form action="{% url 'queue_pause' %}" method="post">{% csrf_token %}
               {{ queue_pause_form }}
               <input type="submit" value="Go" />
             </form>
-            <!-- Pause queue -->
+            <!-- Pause queue ->
           </ul>
           {% elif request.user.HelplineUser.hl_status == 'Pause' %}
           <a href="{% url 'queue_unpause' %}">
             <i class="fa fa-play"></i>{% trans "Continue" %}
           </a>
-          {% endif %}
+          {% endif %} 
+        </li>-->
 
-        </li>
-
-        {% endblock navbar_nav %}
 
         <!-- Notifications: style can be found in dropdown.less -->
         <li class="dropdown notifications-menu">
           <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-            <i class="fa fa-bell-o"></i>
+            <i class="fa fa-comment-o"></i>
+            {% live_notify_badge badge_class="label label-warning" %}
+          </a>
+          <ul class="dropdown-menu">
+            <li class="header">{% blocktrans %}You have {{ unread_count }} notification{{ unread_count|pluralize }}{% endblocktrans %}</li>
+            <li>
+              <!-- inner menu: contains the actual data -->
+              {% live_notify_list list_class="dropdown-menu" %}
+            </li>
+            <li class="footer"><a href="{% url "notifications:unread" %}">View all</a></li>
+          </ul>
+        </li>
+
+
+        <!-- Notifications: style can be found in dropdown.less -->
+        <li class="dropdown notifications-menu">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+            <i class="fa fa-envelope-o"></i>
             {% live_notify_badge badge_class="label label-warning" %}
           </a>
           <ul class="dropdown-menu">
@@ -284,13 +281,15 @@ input:checked + .slider:before {
         <!-- User Account: style can be found in dropdown.less -->
         <li class="dropdown user user-menu">
           <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-            {% avatar user 160 class="user-image" %}
-            <span class="hidden-xs">{{ request.user.get_full_name|default:request.user.username }}</span>
+            <img src="{{request.user.HelplineUser.hl_avatar  | default:'/media/blank-avatar.png'}}" alt="{{request.user.HelplineUser.hl_avatar}}" class="user-image" /> 
+            <!-- {% avatar request.user.avatar 160 class="user-image" %} -->
+            <span class="hiddenen-xs">{{ request.user.get_full_name|default:request.user.username }}</span>
           </a>
           <ul class="dropdown-menu">
             <!-- User image -->
             <li class="user-header">
-              {% avatar user 160 class="img-circle" %}
+              <!-- {% avatar user 160 class="img-circle" %} -->
+              <img src="{{request.user.HelplineUser.hl_avatar | default:'/media/blank-avatar.png'}}" alt="{{request.user.HelplineUser.hl_avatar}}" class="img-circle" /> 
 
               <p>
                {{ request.user.get_full_name|default:request.user.username }}
@@ -321,7 +320,7 @@ input:checked + .slider:before {
     <a href="{% url "myaccount" %}" class="btn btn-default btn-flat">Profile</a>
   </div>
   <div class="pull-right">
-    <a href="{% url 'logout' %}" class="btn btn-default btn-flat">Sign out</a>
+    <a href="{% url 'logout' %}" onclick="leave_queue(this)" class="btn btn-default btn-flat">Sign out</a>
   </div>
 </li>
 </ul>
@@ -342,15 +341,16 @@ input:checked + .slider:before {
     <!-- Sidebar user panel -->
     <div class="user-panel">
       <div class="pull-left image">
-        {% avatar user 160 class="img-circle" %}
+         <img src="{{request.user.HelplineUser.hl_avatar | default:'/media/blank-avatar.png'}}" alt="{{request.user.username}}" class="img-circle" /> <!-- {% avatar user 160 class="img-circle" %} -->
       </div>
       <div class="pull-left info">
         <p>{{ request.user.get_full_name|default:request.user.username }}</p>
+        <p><small><em>{{ request.user.HelplineUser.hl_status|default:'' }}</em></small></p>
         {% if request.user.HelplineUser.hl_status == 'Busy' %}
         <a href="{% url 'queue_log' %}"><i class="fa fa-circle text-danger"></i> {% trans "Busy" %}</a>
         {% elif request.user.HelplineUser.hl_status == 'Idle' %}
         <a href="{% url 'queue_log' %}"><i class="fa fa-circle text-warning"></i> {% trans "Idle" %}</a>
-        {% elif request.user.HelplineUser.hl_status == 'Available' %}
+        {% elif request.user.HelplineUser.hl_status == 'Online' %}
         <a href="{% url 'queue_log' %}"><i class="fa fa-circle text-success"></i> {% trans "Online" %}</a>
         {% elif request.user.HelplineUser.hl_status == 'OnCall' %}
         <a href="{% url 'queue_log' %}"><i class="fa fa-circle text-danger"></i> {% trans "OnCall" %}</a>
@@ -391,14 +391,14 @@ input:checked + .slider:before {
             <li>
               <a href="{% url "case_form" "walkin" %}" role="button"><i class="fa fa-circle-o"></i> {% trans "New WalkIn" %}
               </a></li>
-              <li><a href="{% url 'dashboardreports' 'today' 'case' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Today's Cases" %}
+              <li><a href="{% url 'dashboardreports' 'today' 'case' %}"><i class="fa fa-circle-o"></i> {% trans "Today's Cases" %}
                 <span class="pull-right-container">
-                  <span class="label label-success pull-right">{{ dashboard_stats.total_cases }}</span>
+                  <span class="label label-success pull-right">{{ home.total }}</span>
                 </span>
               </a></li>
-              <li><a href="{% url 'dashboardreports' 'escalated' 'case' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Escalated Cases" %}
+              <li><a href="{% url 'dashboardreports' 'escalated' 'case' %}"><i class="fa fa-circle-o"></i> {% trans "Escalated Cases" %}
                 <span class="pull-right-container">
-                  <span class="label label-warning pull-right">{{ dashboard_stats.open_cases }}</span>
+                  <span class="label label-warning pull-right">{{ home.escalate }}</span>
                 </span>
               </a></li>
               <!--li><a href="{% url 'dashboardreports' 'pendingcases' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Pending Cases" %}
@@ -406,13 +406,14 @@ input:checked + .slider:before {
                   <span class="label label-warning pull-right">{{ dashboard_stats.open_cases }}</span>
                 </span>
               </a></li-->
-              <li><a href="{% url 'dashboardreports' 'totalcases' 'case' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "All Cases" %}
+              <li><a href="{% url 'dashboardreports' 'totalcases' 'case' %}"><i class="fa fa-circle-o"></i> {% trans "All Cases" %}
                 <span class="pull-right-container">
-                  <span class="label label-info pull-right">{{ dashboard_stats.total_cases }}</span>
+                  <span class="label label-info pull-right">{{ home.total }}</span>
                 </span>
               </a></li>
             </ul>
           </li>
+          {% if request.user.HelplineUser.hl_role != 'Casemanager'  and request.user.HelplineUser.hl_role != 'Caseworker' %}
           <li class="treeview">
             <a href="#">
               <i class="fa fa-files-o"></i>
@@ -422,21 +423,31 @@ input:checked + .slider:before {
               </span>
             </a>
             <ul class="treeview-menu">
-              <li><a href="{% url 'dashboardreports' 'missedcalls' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Missed Calls" %}
+              <li>
+                <a href="{% url 'dashboardreports' 'missedcalls' %}">
+                  <i class="fa fa-circle-o"></i> {% trans "Missed Calls" %}
+                  <span class="pull-right-container">
+                    <span class="label label-danger pull-right">{{ home.call_stat.abandoned }}</span>
+                  </span>
+                </a>
+              </li>
+              <li><a href="{% url 'dashboardreports' 'answeredcalls' %}"><i class="fa fa-circle-o"></i> {% trans "Answered Calls" %}
                 <span class="pull-right-container">
-                  <span class="label label-danger pull-right">{{ dashboard_stats.total_cases }}</span>
+                  <span class="label label-success pull-right">{{ home.call_stat.answered }}</span>
                 </span>
               </a></li>
-              <li><a href="{% url 'dashboardreports' 'answeredcalls' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Answered Calls" %}
+              <li><a href="{% url 'dashboardreports' 'voicemails' %}"><i class="fa fa-circle-o"></i> {% trans "Voice Mails" %}
                 <span class="pull-right-container">
-                  <span class="label label-success pull-right">{{ dashboard_stats.answered_calls }}</span>
+                  <span class="label label-warning pull-right">{{ home.call_stat.voicemail }}</span>
                 </span>
-              </a></li>
-              <li><a href="{% url 'dashboardreports' 'voicemails' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Voice Mails" %}
+              </a>
+            </li>
+              <li><a href="{% url 'dashboardreports' 'totalcalls' %}"><i class="fa fa-circle-o"></i> {% trans "All Calls" %}
                 <span class="pull-right-container">
-                  <span class="label label-warning pull-right">{{ dashboard_stats.total_cases }}</span>
+                  <span class="label label-info pull-right">{{ home.call_stat.calls }}</span>
                 </span>
-              </a></li>
+              </a>
+            </li>
             </ul>
           </li>
           <li>
@@ -447,7 +458,7 @@ input:checked + .slider:before {
               </span>
             </a>
           </li>
-
+          {% endif %}
           <li class="treeview">
             <a href="javascript:void(0)">
               <i class="fa fa-pie-chart"></i> <span>{% trans "Sources" %}</span>
@@ -459,19 +470,23 @@ input:checked + .slider:before {
               <li>
                 <a href="{% url 'mysources' 'email' %}">
                   <i class="fa fa-circle-o"></i>
-                  <span>{% trans "Emails" %}</span><span class="label label-info pull-right"></span>
+                  <span>{% trans "Emails" %}</span><span class="pull-right-container">
+                  <span class="label label-info pull-right">{{ home.email }}</span>
+                </span>
                 </a>
               </li>
               <li class="treeview">
                 <a href="{% url 'mysources' 'sms' %}">
                   <i class="fa fa-circle-o"></i>
-                  <span>{% trans "SMS" %}</span><span class="label label-info pull-right"></span>
+                  <span>{% trans "SMS" %}</span><span class="pull-right-container">
+                  <span class="label label-success pull-right">{{ home.sms }}</span>
+                </span>
                 </a>
               </li>
               <li class="treeview">
                 <a href="{% url 'mysources' 'web' %}">
                   <i class="fa fa-circle-o"></i>
-                  <span>{% trans "Web Online" %}</span><span class="label label-info pull-right"></span>
+                  <span>{% trans "Web Online" %}</span><span class="label label-success pull-right"></span>
                 </a>
               </li>
               <!--li class="treeview">
@@ -482,7 +497,7 @@ input:checked + .slider:before {
               </li-->
             </ul>
           </li>
-          {% if request.user.HelplineUser.hl_role == 'Supervisor' %}
+          {% if request.user.HelplineUser.hl_role == 'Supervisor' or  request.user.HelplineUser.is_superuser %}
           <li class="treeview" >
             <a href="#">
               <i class="fa fa-files-o"></i>
@@ -497,54 +512,29 @@ input:checked + .slider:before {
             </a></li ?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }} -->
             <li><a href="{% url 'qa' 'analysis' %}"><i class="fa fa-circle-o"></i> {% trans "Call Cases" %}
               <span class="pull-right-container">
-                <span class="label label-info pull-right">{{ dashboard_stats.total_cases }}</span>
+                <span class="label label-info pull-right">{{ home.total_cases }}</span>
               </span>
             </a></li>
             <li><a href="{% url 'qa' 'analysed' %}"><i class="fa fa-circle-o"></i> {% trans "Analysed Cases" %}
               <span class="pull-right-container">
-                <span class="label label-success pull-right">{{ dashboard_stats.open_cases }}</span>
+                <span class="label label-success pull-right">{{ home.open_cases }}</span>
+              </span>
+            </a></li>
+            <li><a href="{% url 'qa' 'results' %}"><i class="fa fa-circle-o"></i> {% trans "Qa Results" %}
+              <span class="pull-right-container">
+                <span class="label label-success pull-right"></span>
               </span>
             </a></li>
           </ul>
         </li>
-        <li class="treeview" >
-          <a href="#">
-            <i class="fa fa-phone"></i>
-            <span>{% trans "Monitor" %}</span>
-            <span class="pull-right-container">
-              <i class="fa fa-angle-left pull-right"></i>
-            </span>
-          </a>
-          <ul class="treeview-menu">
-            {% for queue_name, queue in queues.items  %}
-            <li>
-              <a href="{% url 'queue' queue_name  %}">
-                <i class="fa fa-circle-o"></i>{{ queue_name }}
-                <span class="pull-right-container">
-                  <span class="label label-info pull-right">{{ queue.members | length }}</span>
-                </span>
-              </a>
-            </li>
-            {% endfor %}
-          </ul>
-        </li>
-        <!-- <li>
-          <a href="/admin/auth/user/">
-            <i class="fa fa-users"></i> <span>{% trans "Users" %}</span>
-            span class="pull-right-container">
-              <small class="label pull-right bg-green">new</small>
-            </span
-          </a>
-        </li> -->
+        {% endif %}
+        {% if request.user.HelplineUser.hl_role == 'Administrator'  or  request.user.is_superuser or request.user.HelplineUser.hl_role == 'Admin' %}
+
         <li>
           <a href="{% url 'manageusers' %}">
             <i class="fa fa-users"></i> <span>{% trans "Users" %}</span>
-            <!--span class="pull-right-container">
-              <small class="label pull-right bg-green">new</small>
-            </span-->
           </a>
         </li>
-
         <li>
           <a href="{% url 'user_profile' request.user.username %}">
             <i class="fa fa-wpforms"></i> <span>{% trans "Forms" %}</span>
@@ -555,35 +545,6 @@ input:checked + .slider:before {
             <i class="fa fa-tv"></i> <span>{% trans "Wall Board" %}</span>
           </a>
         </li>
-        {% endif %}
-
-        <li class="treeview {% block treeview_reports %}{% endblock treeview_reports %}">
-          <a href="{% url 'adminreports' 'callsummaryreport' %}">
-            <i class="fa fa-pie-chart"></i> <span>{% trans "Reports" %}</span>
-            <span class="pull-right-container">
-              <i class="fa fa-angle-left pull-right"></i>
-            </span>
-          </a>
-          <ul class="treeview-menu">
-            <li><a href="{% url 'dashboardreports' 'totalcalls' %}"><i class="fa fa-circle-o"></i>{% trans "Total Calls" %}
-            </a></li>
-            <li><a href="{% url 'dashboardreports' 'answeredcalls' %}"><i class="fa fa-circle-o"></i>{% trans "Answered Calls" %}
-            </a></li>
-            <li><a href="{% url 'dashboardreports' 'abandonedcalls' %}"><i class="fa fa-circle-o"></i>{% trans "Abandoned Calls" %}
-            </a></li>
-            <li><a href="{% url 'dashboardreports' 'voicemails' %}"><i class="fa fa-circle-o"></i>{% trans "Voice Mail" %}
-            </a></li>
-            <li><a href="{% url 'adminreports' 'callsummaryreport' %}"><i class="fa fa-circle-o"></i>{% trans "Call Summary Report" %}
-            </a></li>
-            <!--li><a href="{% url 'report_charts' 'callsummary' 'call' %}"><i class="fa fa-circle-o"></i>{% trans "Charts Inbound" %}
-            </a></li>
-            <li><a href="{% url 'adminreports' 'agentsessionreport' %}"><i class="fa fa-circle-o"></i>{% trans "Agent Session Report" %}
-            </a></li-->
-          </ul>
-        </li>
-
-
-
         <li class="treeview">
           <a href="{% url 'adminreports' 'callsummaryreport' %}">
             <i class="fa fa-pie-chart"></i> <span>{% trans "Settings" %}</span>
@@ -596,6 +557,38 @@ input:checked + .slider:before {
             </a></li>
             <li><a href="{% url 'dashboardreports' 'answeredcalls' %}"><i class="fa fa-circle-o"></i>{% trans "Hot Desk" %}
             </a></li>
+          </ul>
+        </li>
+        {% endif %}
+
+        <li class="treeview {% block treeview_reports %}{% endblock treeview_reports %}">
+          <a href="{% url 'adminreports' 'callsummaryreport' %}">
+            <i class="fa fa-pie-chart"></i> <span>{% trans "Reports" %}</span>
+            <span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+          </a>
+          <ul class="treeview-menu">
+            <li><a href="{% url 'general' 'cases' %}"><i class="fa fa-circle-o"></i>{% trans "Cases" %}
+            </a></li>
+            <li><a href="{% url 'dashboardreports' 'totalcalls' %}"><i class="fa fa-circle-o"></i>{% trans "Calls" %}
+            </a></li>
+            <li><a href="{% url 'general' 'sms' %}"><i class="fa fa-circle-o"></i>{% trans "SMS" %}
+            </a></li>
+            <li><a href="{% url 'general' 'emails' %}"><i class="fa fa-circle-o"></i>{% trans "Emails" %}
+            </a></li>
+            <li><a href="{% url 'general' 'voicemails' %}"><i class="fa fa-circle-o"></i>{% trans "Voice Mail" %}
+            </a></li>
+            <!-- <li><a href="{% url 'dashboardreports' 'answeredcalls' %}"><i class="fa fa-circle-o"></i>{% trans "Answered Calls" %}
+            </a></li>
+            <li><a href="{% url 'dashboardreports' 'abandonedcalls' %}"><i class="fa fa-circle-o"></i>{% trans "Abandoned Calls" %}
+            </a></li>
+            <li><a href="{% url 'adminreports' 'callsummaryreport' %}"><i class="fa fa-circle-o"></i>{% trans "Call Summary Report" %}
+            </a></li> -->
+            <!--li><a href="{% url 'report_charts' 'callsummary' 'call' %}"><i class="fa fa-circle-o"></i>{% trans "Charts Inbound" %}
+            </a></li>
+            <li><a href="{% url 'adminreports' 'agentsessionreport' %}"><i class="fa fa-circle-o"></i>{% trans "Agent Session Report" %}
+            </a></li-->
           </ul>
         </li>
 
@@ -669,6 +662,8 @@ input:checked + .slider:before {
 
  <!-- Bootstrap 3.3.6 -->
  <script src="{% static "bootstrap/dist/js/bootstrap.min.js" %}"></script>
+ <!-- Bootstrap 3.3.6 -->
+ <script src="{% static "helpline/js/bootbox.min.js" %}"></script>
  <!-- Datatables -->
  <script src="{% static "AdminLTE/plugins/datatables/jquery.dataTables.min.js" %}"></script>
  <script src="{% static "AdminLTE/plugins/datatables/dataTables.bootstrap.min.js" %}"></script>
@@ -714,10 +709,10 @@ input:checked + .slider:before {
 
  <script type="application/javascript">
   $(document).ready(function () {
-            getDataQueue(); //load data on page ready :)
-            setInterval(function () {
-              getDataQueue();
-            }, 3000);
+            //getDataQueue(); //load data on page ready :)
+            // setInterval(function () {
+            //   getDataQueue();
+            // }, 3000);
           });
 
         // Parse data and put values on view
@@ -952,65 +947,90 @@ $(document).ready(function(){
 
   }, 10000);
 
-  {% if request.user.HelplineUser.hl_status == 'Available' %}
+if(sessionStorage.getItem('in_queue') == 1){
   if(params.get('callcase') == null){
     var call = setInterval(function () {
-      $.post("{% setting "CALL_API_URL" %}/api/v1/call/agent?poll={{request.user.HelplineUser.hl_key | safe}}",function(data){
-        if(data.status == 'oncall'){
+      $.get("{% setting "CALL_API_URL" %}/clk/agent/?agent={{request.user.HelplineUser.hl_key | safe}}",function(data){
+        if(data.status == 'oncall' && (localStorage.getItem("on_case") == null || sessionStorage.getItem("on_case") == 0)){
+          sessionStorage.setItem("on_case", 1);
           window.location = "{% url "case_form" "call"  %}?callcase="+ data.data + '&phone=' + data.phone;
           $('#phone').html("Caller Number: " + data.phone)
           clearInterval(call);    
+        /*}else if(data.status == 'online'){
+          clearInterval(call);*/
         }else if(data.status == 'offline'){
+          sessionStorage.setItem("on_case", 0);
           clearInterval(call);
         }
       });
     }, 3000);
   }
- {% endif %}
+}
+  
 
   if(typeof(params.get("callcase")) !== undefined && params.get("callcase") !== null){
-    get_submissions('{{caller}}')
+       get_submissions('{{caller}}')
   }
 });
+//alert("Cheru: "  + sessionStorage.getItem('in_queue'))
+if(sessionStorage.getItem('in_queue') ==1){
+  $('.leave').removeClass('hidden');
+  $('.join').addClass('hidden')
+}else{
+  $('.join').removeClass('hidden');
+  $('.leave').addClass('hidden')
 
-function join_queue(){
-  var csrftoken = jQuery("[name=csrfmiddlewaretoken]").val(); //getCookie('csrftoken')
-  $.ajaxSetup({ headers: { 'csrftoken' :  csrftoken} });
-  // $.get('/helpline/log/',{'status':'Available'},function(response){
-  //       alert("DDDD: " + response)
-  //     })
-  
-  // $.post("{% setting "CALL_API_URL" %}/api/v1/call/agent?login={{request.user.HelplineUser.hl_key | safe}}",function(data){
-  //   if(data.status == 'online'){
-  //     $.post('/helpline/log/',{'status':'Available'},function(response){
-  //       alert("You have successfully joined queue")
-  //     })
-  //   }else{
-  //     alert("Error joining queue, try again")
-  //   }
-  // })
+}
 
-  var login = $.ajax({
-              method: 'POST',
-              url: '{% setting "CALL_API_URL" %}/api/v1/call/agent?login={{request.user.HelplineUser.hl_key | safe}}'
-            });
-            login.done(function (response) {
-              if(data.status == 'online'){
-                $.post('/helpline/log/',{'status':'Available'},function(response){
-                    alert("You have successfully joined queue")
-                  })
-                }else{
-                  alert("Error joining queue, try again")
-                }
-            });
-            login.fail(function (response) {
-              alert("Error: Could not join queue, try again: ")
-            });
-            login.always(function () {
-            });
-          }
+function leave_queue(item){
+    var values = {
+      'csrfmiddlewaretoken': '{{ csrf_token }}'
+    }
+  var logout = $(item).html()
+    //$.post("{% setting "CALL_API_URL" %}/clk/agent/",{"agent":841217489,"action":0},function(data){
+  $.ajax({
+    method: "POST",
+    url: "{% setting "CALL_API_URL" %}/clk/agent/",
+    data:{"agent":"{{request.user.HelplineUser.hl_key | safe}}","action":0},
+    success:function(data){
+      if(data.status || logout == 'Sign out'){
+        $.post("{% url 'queue_leave' %}",values)//,function(){}
+        sessionStorage.setItem("in_queue", 0);
+        $(item).addClass('hidden')
+        $('.join').removeClass('hidden')
+        alert("Success in leaving queue")
+      }else{
+        alert("Error leaving queue, try again")
+      }
+    },
+    error:function(){
+      alert("Error leaving queue");
+    }
+  })
+}
 
-//}
+function join_queue(item){
+  var values = {
+      'csrfmiddlewaretoken': '{{ csrf_token }}'
+    }//{{request.user.HelplineUser.hl_key | safe}}
+    $.ajax({
+      method: "POST",
+      url: "{% setting "CALL_API_URL" %}/clk/agent/",
+      dataType: 'json',
+      data:{"agent":"{{request.user.HelplineUser.hl_key | safe}}","action":1},
+      success:function(data){
+        if(data.status){
+          sessionStorage.setItem('in_queue',1)
+          $.post("{% url 'queue_log' %}",values)
+          $('.leave').removeClass('hidden')
+          $(item).addClass('hidden')
+          window.location.reload()
+        }else{
+          alert("Error joining queue: " + data.msg)
+        }
+    }
+    })
+}
 
 var timer = new Timer();
 $('#case_form_modal').on('hidden.bs.modal', function () {
@@ -1033,7 +1053,8 @@ $("#example1").DataTable({
   buttons: [
   'copy', 'csv', 'excel'
   ]
-} );
+});
+
 $('#example2').DataTable({
   "paging": false,
   "lengthChange": false,
@@ -1059,21 +1080,40 @@ function get_submissions(phone,name,param=true){
     return false
   }
 
+  if(phone > 0 && phone != ''){
+    phone = phone.substr(-9);
+  }
+
 
   //if fetching cases, fill selected contact
-  selected_contact = !param ? selected_cases.filter(function(selected_case){ return selected_case['reporter_details/reporter_phone'] === phone}):[]
+  selected_contact = !param ? selected_cases.filter(function(selected_case){ return selected_case['reporter_details/reporter/reporter_phone'] === phone}):[]
 
   $(load_to).html('<div class="overlay" style="width:100%" align="center"><h1><i class="fa fa-refresh fa-spin"></i></h1></div>');
   // Create a request variable and assign a new XMLHttpRequest object to it.
   var request = new XMLHttpRequest();
-
   //create query string [optional] based on the passed parameters
-  query_str = phone !== '' && name !== '' ? 'query={"reporter_details/reporter_phone":"' + phone + '","reporter_details/name":{"$i":"' + name + '"}}':(phone != '' && name == '' ? 'query={"reporter_details/reporter_phone":{"$i":"' + phone + '"}}&limit=1':(phone == '' && name !== '' ? 'query={"reporter_details/name":{"$i":"' + name + '"}}' : ''))
+  query_str = typeof(phone) !== 'undefined' && typeof(name) !== 'undefined' ? 'query={"reporter_details/reporter/reporter_phone":{"$i":"' + phone + '"},"reporter_details/reporter/name":{"$i":"' + name + '"}}':(typeof(phone) != 'undefined' && typeof(name) == 'undefined' ? 'query={"reporter_details/reporter/reporter_phone":{"$i":"' + phone + '"}}&limit=1':(typeof(phone) !== 'undefined' && typeof(name) !== 'undefined' ? 'query={"reporter_details/reporter/name":{"$i":"' + name + '"}}' : ''))
 
-  query_str += '&group="reporter_details/reporter_phone"&format=json'
+  query_str += '&group="reporter_details/reporter/reporter_phone"'
+  request.withCredentials = false;
+
+//   $.ajax({
+//     method: "GET",
+//     url: '{{ data_url |safe }}?format=json',
+//     dataType: 'json',
+//     xhrFields: {
+//         withCredentials: false
+//     },
+//     headers: {
+//         'Authorization': 'Token {{ data_token }}'
+//     },
+//     success:function(resp){}
+// });
 
   // Open a new connection, using the GET request on the URL endpoint
-  request.open('GET', '{{ data_url |safe }}?' + query_str, true);
+  var urstr  = '{{data_url |safe}}?' + query_str;
+  request.open('GET', '{% url "contact_search" %}?url=' + urstr, true);
+  request.setRequestHeader('Content-Type', 'application/json');
   request.setRequestHeader("Authorization", "Token {{ data_token }}");
 
   request.onload = function (data) {
@@ -1143,11 +1183,14 @@ function get_submissions(phone,name,param=true){
     */
     var iframe = document.getElementById("helpline-forms");
     var caseid = ''
-    $.get('/helpline/caseid/walkin',function(data){
+    $.get('/helpline/caseid/{{form_name}}',function(data){
       caseid = data
-
+      $('#id_case_number,#caseid').val(caseid) //for display and case disposition
       var url_str = !iframe.src.includes('?') ? '?d[case_number]=' + caseid + '':'&d[case_number]=' + caseid 
       url_str += '&d[case_owner]={{request.user.username}}'
+      {% if form_name == 'call' %}
+        url_str += '&d[/Case_Form/reporter_details/reporter/reporter_phone]={{caller}}' 
+      {% endif %}
       if(!newreporter){
         selected_contact = selected_contact[0]
         for(contact_key in selected_contact){

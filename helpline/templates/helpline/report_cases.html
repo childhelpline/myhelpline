@@ -91,47 +91,6 @@
                   </div><!-- /.input group -->
                 </div><!-- /.form group -->
 
-
-                <!--div class="form-group col-md-4">
-                  <label>Counsellor:</label>
-                  <div class="input-group">
-                    <div class="input-group-addon">
-                      <i class="fa fa-users"></i>
-                    </div>
-                    {{ form.agent }}
-                  </div><!-- /.input group ->
-                </div><!-- /.form group -->
-
-
-                <!--div class="form-group col-md-4">
-                  <label>Category:</label>
-                  <div class="input-group">
-                    <div class="input-group-addon">
-                      <i class="fa fa-th"></i>
-                    </div>
-                    {{ form.category }}
-                  </div><!-- /.input group ->
-                </div><!-- /.form group -->
-
-                <!--div class="form-group col-md-4">
-                  <label>Case Status:</label>
-                  <div class="input-group">
-                    <div class="input-group-addon">
-                      <i class="fa fa-th"></i>
-                    </div>
-                    {{ form.case_status }}
-                  </div><!-- /.input group ->
-                </div><!-- /.form group -->
-
-                <!--div class="form-group col-md-4">
-                  <label>Interventions:</label>
-                  <div class="input-group">
-                    <div class="input-group-addon">
-                      <i class="fa fa-th"></i>
-                    </div>
-                    {{ form.interventions }}
-                  </div><!- /.input group ->
-                </div><!- /.form group -->
                 {{ form.queueid }}
                 <br>
                 <div class="form-group col-md-4">
@@ -165,16 +124,16 @@
                   </thead>
                   <tbody>
                     {% for records in statrecords %}
-                    <tr ondblclick="window.location.href = '{% url 'caseview' 'Case_Form' records|get_item:'_id' %}'">
+                    <tr>
                       <td>{{ forloop.counter }}. </td>
-                      <td><a href="{% url 'caseview' 'Case_Form' records|get_item:'_id' %}">{{  records | get_item:'case_number' }}</a></td>
+                      <td>{{  records | get_item:'case_number' }}</td>
                       {% for item_key in recordkeys %}
                       {% if not '_' == item_key|first %}
-                      <td {% if 'narrative' in item_key or  'case_plan' in item_key %} style="min-width: 400px;"{% endif %}>
+                      <td>
                         {% if item_key == 'case_number' %}
                         <a href="/helpline/forms/{{ xform.id_string }}/{{ records | get_item:'_id' }}">{{  records | get_item:item_key }}</a>
                         {% elif forloop.last %}
-                        {{  records | get_item:'_submission_time' }}
+                        {{  records | get_item:'_submission_time' | slice:'10' }}
                         {% else %}
                         {{  records | get_item:item_key }}
                         {% endif %}

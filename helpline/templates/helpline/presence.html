@@ -4,7 +4,75 @@
 {% endblock navbar_nav %}
 {% block box %}
 {% endblock box %}
+
 {% block content %}
-                {% load django_tables2 %}
-                {% render_table connected_agents_table %}
+
+
+<section class="content-header">
+  <h1>
+    User Presence 
+  </h1>
+</section>
+
+<!-- Main content -->
+<section class="content">
+	<div class="row">
+		<div class="col-md-12">
+
+
+			<!-- TABLE: LATEST ORDERS -->
+			<div class="box box-info">
+				<div class="box-header with-border">
+					<h3 class="box-title">Current User Status</h3>
+
+					<!-- <div class="box-tools pull-right">
+						<button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
+						</button>
+						<button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+					</div> -->
+				</div>
+				<!-- /.box-header -->
+				<div class="box-body">
+					<div class="table-responsive">
+						<table class="table no-margin">
+							<thead>
+								<tr>
+									<th>#</th>
+									<th>Username</th>
+									<th>User Level</th>
+									<th>Status</th>
+									<th>Last Login</th>
+									<th>Queue Status</th>
+									<th>Action</th>
+								</tr>
+							</thead>
+							<tbody>
+								{% for user in users %}
+								<tr>
+									<td>{{forloop.counter}}.</td>
+									<td><a href="pages/examples/invoice.html">{{user.username | capfirst }}</a></td>
+									<td>{{ user.HelplineUser.hl_role | capfirst}}</td>
+									<td><span class="label label-warning">{{ user.HelplineUser.hl_status | capfirst}}</span></td>
+									<td>{{user.last_login}}</td>
+									<td><span class="label label-warning">{{ user.HelplineUser.hl_status | capfirst}}</span></td>
+									<td>
+										<a href="" class="btn btn-flat btn-sm btn-warning">Remove from Queue</a>
+										<a href="" class="btn btn-flat btn-sm btn-warning">Burge</a>
+									</td>
+								</tr>
+								{% endfor %}
+							</tbody>
+						</table>
+					</div>
+					<!-- /.table-responsive -->
+				</div>
+				<!-- /.box-body -->
+			</div>
+			<!-- /.box -->
+		</div>
+		<!-- /.col -->
+	</div>
+</section>
+
+
 {% endblock content %}

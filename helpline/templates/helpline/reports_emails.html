@@ -6,6 +6,7 @@
 {% endblock box %}
 {% block treeview_reports %}active{% endblock treeview_reports %}
 {% block navbar_nav %}
+
 <li class="dropdown messages-menu">
   <a href="#" class="dropdown-toggle" data-toggle="dropdown">
     <i class="fa fa-bookmark"></i>{% trans "Average Talk Time" %}: {{ dashboard_stats.att.hours }}:{{ dashboard_stats.att.min }}:{{ dashboard_stats.att.seconds }}
@@ -46,15 +47,21 @@
 {% block content %}
 <style>
 div.scrollmenu {
-  overflow: auto;
+	overflow: auto;
   white-space: nowrap;
 }
+
+  table tr td{
+    word-wrap: normal !important;
+    white-space: normal !important;
+  }
 </style>
 <section class="content-header">
   <h1>
     {% trans "REPORT" %} <i class="fa fa-angle-right"></i> {{ title }}
   </h1>
 </section>
+
 <!-- Main content -->
 <section class="content">
   <div class="row">
@@ -68,7 +75,7 @@ div.scrollmenu {
             <div id="form_collapse" class="in" style="height: auto;">
               {% block filterform %}
               <!-- Filter Form -->
-              <form action="">
+              <form action="#">
                 <!-- Date and time range -->
                 <script>
                   $(function() {
@@ -106,7 +113,7 @@ div.scrollmenu {
                 <br>
                 <div class="form-group col-md-4">
                   <div class="input-group pt-20">
-                    <input type="submit" value="Fetch Reports" id="total-calls-search-btn" class="btn btn-success btn-sm btn-flat">
+                    <input type="button" value="Fetch Reports" id="total-calls-search-btn" class="btn btn-success btn-sm btn-flat" onclick="sendtoReportFactory();">
                   </div><!-- /.input group -->
                 </div>
               </form>
@@ -118,29 +125,30 @@ div.scrollmenu {
         <div class="box-body">
           <div class="row">
             <div class="scrollmenu col-md-12">
-                <div>
-                  <table id="example1" class="table datatable">
+                <div class="table table-responsive">
+                  <table id="example1" class="table datatable" style="max-width: 100%;">
                     <thead>
-                      <th>#</th>
-                      <!-- <th>Case ID</th>-->
-                      <th>Caller Phone</th>
-                      <th>Date</th>
-                      <th>Start time</th>
-                      <th>End Time</th>
-                      <th>Status</th>
-                      <th>Action</th>
+                      <th width="5%;">#</th>
+                      <!-- <th>Case ID</th>
+                      <th>Agent</th> -->
+                      <th width="10%">Sender</th>
+                      <th width="20%">Subject</th>
+                      <th width="40%">Message</th>
+                      <th  width="5%">Status</th>
+                      <th  width="5%">Case Number</th>
+                      <th  width="5%">Date</th>
                     </thead>
                   {% for rep in report_data %}
                     <tr>
                       <td>{{ forloop.counter}}.</td>
-                      <!-- <td>{{rep.caseid | default:''}}</td> -->
-
-                      <td>{{rep.phone}}</td>
-                      <td>{{rep.date}}</td>
-                      <td>{{rep.start}}</td>
-                      <td>{{rep.ended}}</td>
-                      <td>{{rep.status}}</td>
-                      <td><a href="" class="btn btn-xs btn-info btn-flat"><i class="fa fa-volume-up"></i> Listen</a> | <a href="" class="btn btn-xs btn-warning btn-flat"><i class="fa fa-edit"></i> Create Case</a></td>
+                      <!-- <td>{{rep.caseid | default:''}}</td>
+                      <td>{{rep.agent | default:''}}</td> -->
+                      <td>{{rep.email_from}}</td>
+                      <td>{{rep.email_subject}}</td>
+                      <td style="word-wrap: break-word; max-width: 400px;">{{rep.email_body}}</td>
+                      <td>{{rep.email_status}}</td>
+                      <td>{{rep.email_date}}</td>
+                      <td>{{rep.email_case}}</td>
                     </tr>
                   {% endfor %}
                     
