@@ -557,13 +557,13 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, "static/")
 
 # Enketo URL
-ENKETO_PROTOCOL = 'https'
+ENKETO_PROTOCOL = 'http'
 ENKETO_URL = 'https://enketo.bitz-itc.com'
-ENKETO_API_SURVEY_PATH = '/api_v2/survey'
-ENKETO_API_INSTANCE_PATH = '/api_v2/instance'
+ENKETO_API_SURVEY_PATH = '/api/v2/survey'
+ENKETO_API_INSTANCE_PATH = '/api/v2/instance'
 ENKETO_PREVIEW_URL = urljoin(ENKETO_URL, ENKETO_API_SURVEY_PATH + '/preview')
 ENKETO_API_TOKEN = ''
-ENKETO_API_INSTANCE_IFRAME_URL = ENKETO_URL + "api_v2/instance/iframe"
+ENKETO_API_INSTANCE_IFRAME_URL = ENKETO_URL + "api/v2/instance/iframe"
 ENKETO_API_SALT = 'secretsalt'
 VERIFY_SSL = True
 
@@ -622,16 +622,15 @@ DEFAULT_SERVICE = 'Inbound'
 
 # Default dispositions.
 DISPOSITION_CHOICES = (
-    ('--', '--'),
+    ('--', 'Dispose'),
     ('Feedback', 'Feedback'),
-    ('Request', 'Request'),
     ('Inquiry', 'Inquiry'),
-    ('Agent', 'Agent'),
     ('Complaint', 'Complaint'),
     ('Transfer', 'Transfer'),
     ('Silent Call', 'Silent Call'),
     ('Dropped', 'Dropped'),
     ('Prank', 'Prank'),
+    ('Insufficient Information', 'Insufficient Information'),
 )
 
 BLACKBOX_API_KEY = ''
@@ -646,7 +645,8 @@ SENDSMS_BACKEND = 'custom_sms_backend.custom.AfricasTalkingSmsBackend'
 
 SITE_ID = 1
 
-EMAIL_BACKEND = "mailer.backend.DbBackend"
+# EMAIL_BACKEND = "mailer.backend.DbBackend"
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 # Email will be sent to Help Desk Emails on Escalation.
 HELPDESK_EMAILS = []

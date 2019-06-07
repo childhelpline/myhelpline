@@ -329,12 +329,14 @@ def sync_sms(request):
     if request.method == 'POST':        
         serializer = SmsSerializer(data=request.data)
         if serializer.is_valid():
+            # print "Cheru: POST %s" %(request.data.get('msg'))
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             # print serializer.errors
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     else:
+        # print "kkkkk: " + serializer.errors
         return JsonResponse({'status':400,'message':'INVALID REQUEST'})
     # error_message = None
     # state = True
@@ -374,6 +376,7 @@ def sync_emails(request):
         type, data = mail.search(None, 'SEEN')
         mail_ids = data[0]
 
+        #print('Cheru: %s' %(mail_ids))
 
         id_list = mail_ids.split() 
         mail_count = len(id_list)
@@ -1357,6 +1360,7 @@ def reports(request, report, casetype='Call'):
             request_string)
 
         call_data = requests.post(calls_url).json() 
+        print("%s Data: %s " % (calls_url,call_data))
 
         
         if report in callreports:
