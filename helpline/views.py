@@ -325,18 +325,14 @@ def sync_sms(request):
     state = 'False'
     error_message = 'No Success'
     
-    # if request.method == 'GET':
     if request.method == 'POST':        
         serializer = SmsSerializer(data=request.data)
         if serializer.is_valid():
-            # print "Cheru: POST %s" %(request.data.get('msg'))
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
-            # print serializer.errors
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     else:
-        # print "kkkkk: " + serializer.errors
         return JsonResponse({'status':400,'message':'INVALID REQUEST'})
     # error_message = None
     # state = True
@@ -375,8 +371,6 @@ def sync_emails(request):
 
         type, data = mail.search(None, 'SEEN')
         mail_ids = data[0]
-
-        #print('Cheru: %s' %(mail_ids))
 
         id_list = mail_ids.split() 
         mail_count = len(id_list)
@@ -853,7 +847,7 @@ def queue_log(request):
 
 def queue_leave(request):
     """Leave Asterisk queues."""
-    queue_status = requests.post('%s/clk/agent/?agent=%s' %(settings.CALL_API_URL,\
+    queue_status = requests.post('%s/clk/agent/?action=0&agent=%s' %(settings.CALL_API_URL,\
         request.user.HelplineUser.hl_key)).json()
     hl_user = HelplineUser.objects.get(hl_key=request.user.HelplineUser.hl_key)
     hl_user.hl_exten = ''
@@ -1175,9 +1169,9 @@ def general_reports(request, report='cases'):
         """For call reports"""
         htmltemplate = "helpline/report.html"
         if datetime_range == '':
-            call_url = "%s/clk/cdr" %(settings.CALL_API_URL)
+            call_url = "%s/clk/cdr/" %(settings.CALL_API_URL)
         else:
-            call_url = "%s/clk/cdr?chan_ts_f=%s" %(settings.CALL_API_URL, \
+            call_url = "%s/clk/cdr/?chan_ts_f=%s" %(settings.CALL_API_URL, \
             datetime_range)
         
 
@@ -1189,7 +1183,7 @@ def general_reports(request, report='cases'):
     if report.lower() == 'voicemails':
         """For call reports"""
         htmltemplate = "helpline/report.html"
-        call_url = "%s/clk/cdr?daterange=%s" %(settings.CALL_API_URL, \
+        call_url = "%s/clk/cdr/?chan_ts_f=%s" %(settings.CALL_API_URL, \
             datetime_range)
         call_data = requests.post(call_url).json()
         data['report_data'] = filter(lambda call_data: call_data['voicemail'], call_data)
@@ -1360,8 +1354,6 @@ def reports(request, report, casetype='Call'):
             request_string)
 
         call_data = requests.post(calls_url).json() 
-        print("%s Data: %s " % (calls_url,call_data))
-
         
         if report in callreports:
             htmltemplate = "helpline/reports.html"
@@ -1431,7 +1423,7 @@ def reports(request, report, casetype='Call'):
             data['report_data'] = dispositions
             htmltemplate = 'helpline/dispositions.html'
         elif casetype.lower() == 'qa':
-            call_data = requests.post("%s/clk/cdr?data=true" %(settings.CALL_API_URL)).json()
+            call_data = requests.post("%s/clk/cdr/?qa=true" %(settings.CALL_API_URL)).json()
         else:
             """For case reports"""
             # xforms = requests.get('http://%s/ona/api/v1/forms' % (current_site), \
@@ -1630,7 +1622,7 @@ def qa(request, report='analysed'):
         htmltemplate = 'helpline/qaresults.html'
     else:
         # Call CDR Data
-        result_data = requests.post("%s/clk/cdr/?data=true" %(settings.CALL_API_URL) + query_string).json()
+        result_data = requests.post("%s/clk/cdr/" %(settings.CALL_API_URL) + query_string).json()
         data['report_data'] = result_data
         htmltemplate = "helpline/nonanalysed.html"
 
@@ -2726,7 +2718,7 @@ def get_dashboard_stats(request, interval=None):
         date.today(), datetime_time.min).strftime('%m/%d/%Y %I:%M %p')
     now_string = timezone.now().strftime('%m/%d/%Y %I:%M %p')
 
-    call_statistics = requests.post('%s/clk/stats' %(settings.CALL_API_URL)).json()
+    call_statistics = requests.post('%s/clk/stats/' %(settings.CALL_API_URL)).json()
 
 
 

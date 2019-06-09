@@ -204,17 +204,18 @@ audio{
             },
             callback:function(transfer){
             if(transfer){
-              $.ajax({
-                url: "{% setting "CALL_API_URL" %}/clk/cdr", ///api/v1/call/transfer",
-                type: "POST",
-                contentType:'JSON',
-                data: {'cdr':'{{cdr}}','case':$('#caseid').val() != '' ? $('#caseid').val() : 'False','dispose':$(param).val(),'agent':'{{request.user.HelplineUser.hl_key | safe}}','transfer':transfer},
-                success: function(data) {
+              // $.ajax({
+              //   url: "{% setting "CALL_API_URL" %}/clk/cdr", ///api/v1/call/transfer",
+              //   type:"POST",
+              //   contentType:'JSON',
+              //   data: {'cdr':'{{cdr}}','case':$('#caseid').val() != '' ? $('#caseid').val() : 'False','dispose':$(param).val(),'agent':'{{request.user.HelplineUser.hl_key | safe}}','transfer':transfer},
+              //   success: function(data) {
+                $.post("{% setting "CALL_API_URL" %}/clk/cdr/",{'cdr':'{{cdr}}','case':$('#caseid').val() != '' ? $('#caseid').val() : 'False','dispose':$(param).val(),'agent':'{{request.user.HelplineUser.hl_key | safe}}','add':transfer}, function(data){
                   /////save disposition details
                   
                   $.ajax({
                     url: "{% url 'save_disposition_form' %}",
-                    type: "POST",
+                    type:"POST",
                     data: $("#disposeDet").serialize(),
                     success: function(data) {
                       if (!(data['success'])) {
@@ -231,22 +232,23 @@ audio{
                   });
 
                   ///
-                },
-                error: function() {
-                  $("#error-message").html("Error");
-                }
+                //}
+                // ,
+                // error: function() {
+                //   $("#error-message").html("Error");
+                // }
               })
             }
           }})
         }else{
-          $.ajax({
-          url: "{% setting "CALL_API_URL" %}/clk/cdr",
-          type: "POST",
-          contentType:'JSON',
-          data: {'cdr':'{{cdr}}','case':$('#caseid').val() != '' ? $('#caseid').val() : 'False','dispose':$(param).val(),'agent':'{{request.user.HelplineUser.hl_key | safe}}'},
-          success: function(data) {
+          // $.ajax({
+          // url: "{% setting "CALL_API_URL" %}/clk/cdr",
+          // type: "POST",
+          // contentType:'JSON',
+          // data: {'cdr':'{{cdr}}','case':$('#caseid').val() != '' ? $('#caseid').val() : 'False','dispose':$(param).val(),'agent':'{{request.user.HelplineUser.hl_key | safe}}'},
+          // success: function(data) {
             /////save disposition details
-            
+          $.post("{% setting "CALL_API_URL" %}/clk/cdr/",{'cdr':'{{cdr}}','case':$('#caseid').val() != '' ? $('#caseid').val() : 'False','dispose':$(param).val(),'agent':'{{request.user.HelplineUser.hl_key | safe}}'}, function(data){
             $.ajax({
               url: "{% url 'save_disposition_form' %}",
               type: "POST",
@@ -266,11 +268,7 @@ audio{
             });
 
             ///
-          },
-          error: function() {
-            $("#error-message").html("Error");
-          }
-        })
+          })
         }
 
         {% else %}
