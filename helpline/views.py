@@ -1798,7 +1798,7 @@ def case_form(request, form_name):
 
     trans_users = []
     # Query all logged in users based on id list
-    users = User.objects.filter(id__in=uid_list)
+    users = User.objects.filter(HelplineUser__hl_status__exact='Available').exclude(username__exact=request.user.username)
     for trans_user in users:
         if HelplineUser.objects.filter(user=trans_user):
                     trans_users.append({'text':str(trans_user.username),'value':str(trans_user.HelplineUser.hl_key)})

@@ -938,25 +938,4 @@ def logout_user(sender, request, user, **kwargs):
 user_logged_in.connect(login_user)
 user_logged_out.connect(logout_user)
 
-# class calls_detail(models.Model):
-#     """model for call records"""
-#     dataCreated = models.IntegerField(default=0)
-#     dataUpdated = models.IntegerField(default=0)
-#     cdrID = models.CharField(max_length = 500,blank=True, null=True) 
-#     cdrPhone = models.CharField(max_length = 500,blank=True, null=True)
-#     cdrApp = models.CharField(max_length = 500,blank=True, null=True)
-#     cdrStart = models.IntegerField(default=0)
-#     cdrStop = models.IntegerField(default=0)
-#     cdrStatus  = models.CharField(max_length = 500,blank=True, null=True)
-
-    # CALL RECORD MODEL
-    # datas['phone'] = _data.get('cdr_phone') datas['app'] = _data.get('cdr_app') \
-    # datas['start'] = _data.get('cdr_start') datas['answer'] = _data.get('cdr_answer') \
-    # datas['stop'] = _data.get('cdr_stop') datas['queue'] = _data.get('cdr_queue') \
-    # datas['status'] = _data.get('cdr_status') datas['type'] = _data.get('cdr_type') \
-    # datas['chan'] = _data.get('cdr_chan') datas['agent'] = _data.get('cdr_agent') \
-    # datas['transfer'] = _data.get('cdr_transfer') datas['record'] = _data.get('cdr_record') \
-    # datas['case'] = _data.get('cdr_case') datas['wrapup'] = _data.get('cdr_wrapup') \
-    # datas['bargein'] = _data.get('cdr_bargein') datas['voicemail'] = _data.get('cdr_voicemail') \
-    # datas['disposition'] = _data.get('cdr_exit') datas['pid'] = _data.get('cdr_pid')
         
