@@ -24,6 +24,8 @@ from onadata.apps.logger.models.xform import XForm
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+from django.contrib.auth.signals import user_logged_in, user_logged_out  
+
 class Address(models.Model):
     """Gives details about parties in a report"""
     hl_title = models.CharField(max_length=25, blank=True, null=True)
@@ -925,16 +927,27 @@ class Cases(models.Model):
     case_time   = models.DateTimeField(auto_now_add=True)
     case_disposition = models.CharField(max_length = 100,blank=True, null=True)
 
-class calls_detail(models.Model):
-    """model for call records"""
-    dataCreated = models.IntegerField(default=0)
-    dataUpdated = models.IntegerField(default=0)
-    cdrID = models.CharField(max_length = 500,blank=True, null=True) 
-    cdrPhone = models.CharField(max_length = 500,blank=True, null=True)
-    cdrApp = models.CharField(max_length = 500,blank=True, null=True)
-    cdrStart = models.IntegerField(default=0)
-    cdrStop = models.IntegerField(default=0)
-    cdrStatus  = models.CharField(max_length = 500,blank=True, null=True)
+def login_user(sender, request, user, **kwargs):
+    user.HelplineUser.hl_status = 'Available'
+    user.HelplineUser.save()
+
+def logout_user(sender, request, user, **kwargs):
+    user.HelplineUser.hl_status = 'Unavailable'
+    user.HelplineUser.save()
+    
+user_logged_in.connect(login_user)
+user_logged_out.connect(logout_user)
+
+# class calls_detail(models.Model):
+#     """model for call records"""
+#     dataCreated = models.IntegerField(default=0)
+#     dataUpdated = models.IntegerField(default=0)
+#     cdrID = models.CharField(max_length = 500,blank=True, null=True) 
+#     cdrPhone = models.CharField(max_length = 500,blank=True, null=True)
+#     cdrApp = models.CharField(max_length = 500,blank=True, null=True)
+#     cdrStart = models.IntegerField(default=0)
+#     cdrStop = models.IntegerField(default=0)
+#     cdrStatus  = models.CharField(max_length = 500,blank=True, null=True)
 
     # CALL RECORD MODEL
     # datas['phone'] = _data.get('cdr_phone') datas['app'] = _data.get('cdr_app') \

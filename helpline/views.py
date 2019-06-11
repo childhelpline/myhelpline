@@ -94,10 +94,6 @@ from helpline.forms import QueueLogForm,\
         ContactForm, DispositionForm, CaseSearchForm, RegisterProfileForm, RegisterUserForm, \
         ReportFilterForm, QueuePauseForm, CaseActionForm, ContactSearchForm
 
-# from helpline.qpanel.config import QPanelConfig
-# from helpline.qpanel.backend import Backend
-# if QPanelConfig().has_queuelog_config():
-#     from helpline.qpanel.model import queuelog_data_queue
 import json
 from django.template.defaulttags import register
 from onadata.apps.logger.models import Instance, XForm
@@ -108,23 +104,12 @@ from onadata.libs.utils.user_auth import (get_xform_and_perms, has_permission,
 from api.serializers import SmsSerializer
 
 
-
-# cfg = QPanelConfig()
-# backend = Backend()
-
 def success(request):
     return render(request, 'helpline/success.html')
     
 @login_required
 def home(request):
     "Dashboard home"
-
-    # try:
-    #     att = request.user.HelplineUser.get_average_talk_time()
-    #     awt = request.user.HelplineUser.get_average_wait_time()
-    # except Exception as e:
-    #     new = initialize_myaccount(request.user)
-    #     return redirect("/helpline/#%s/new%s" % (e, new))
 
     template = 'home'
 
@@ -186,9 +171,6 @@ def home(request):
 
     stype = 'case_action'
 
-    # if request.user.HelplineUser.hl_role == 'Caseworker' or \
-    # request.user.HelplineUser.hl_role == 'Casemanager':
-    #     template = 'homeworker'
     url = 'http://%s/ona/api/v1/charts/%s.json?field_name=reporter_county' \
      %(current_site, default_service_xform.pk)
     color = ['#CD5C5C','#000000','#8A2BE2','#A52A2A','#DEB887','#ADD8E6','#F08080','#90EE90','#F0E68C','#FFB6C1', \
@@ -199,10 +181,6 @@ def home(request):
     '#FFF0F5','#7CFC00','#FFFACD','#FAFAD2','#90EE90','#D3D3D3','#F0F8FF','#FAEBD7','#F0FFFF','#F5F5DC','#7FFFD4','#FFA07A'
     ]
     stype = 'reporter_county'
-    # else:
-    #     url = 'http://%s/ona/api/v1/charts/%s.json?field_name=case_action' \
-    #     %(current_site, default_service_xform.pk)
-    #     color = ['#f39c12','#00c0ef','#00a65a']
 
     #for case status 
     status_data = requests.get(url, headers=headers).json()
@@ -210,20 +188,6 @@ def home(request):
     ic = 0
     othercount = 0
     datas = get_item(status_data, 'data')
-    # for dt in sorted(get_item(status_data, 'data'),reverse=True):#  status_data['data']:
-    #     lbl = dt[str(stype)]
-    #     if isinstance(lbl, list):
-    #         lbl = lbl[0] if lbl[0] and len(lbl[0]) > 0 else "Others"
-    #     else:
-    #         lbl = lbl if not len(lbl) == 0 else "Others"
-
-    #     col = color[ic] if color[ic] else color[0]
-    #     if ic < 9 and lbl != 'Others':
-    #         if isinstance(lbl, int) and len(lbl) > 3:
-    #             stdata.append({"label":str(lbl), "data":str(str(dt['count'])), "color":str(col)})
-    #             ic += 1
-    #     else:
-    #         othercount = int(dt['count'])
     for dt in sorted(get_item(status_data, 'data'),reverse=True):#  status_data['data']:
         lbl = dt[str(stype)]
         if isinstance(lbl, list):
@@ -238,14 +202,10 @@ def home(request):
         elif lbl != '' and  lbl != None:
             othercount += dt['count']
             ic += 1
-
-        
-        # stdata.append({"label":str(lbl), "data":str(str(dt['count'])), "color":str(col)})
         
     col = color[ic]
     stdata.append({"label":'Others', "data":str(othercount), "color":str(col)})
 
-    #  get QA stats http://192.168.1.116/ona/api/v1/data/2?query={"case_owner":"clkadmin"}&format=json
     if request.user.HelplineUser.hl_role == 'Counsellor':
         url_qa = 'http://%s/ona/api/v1/data/%s?query={"case_owner":"%s"}' % (
             current_site,
@@ -268,7 +228,6 @@ def home(request):
                 if ev.encode('utf-8') == 'qa_results/note_results':
                     if not str(qa_stat.encode('utf-8')).lower() == 'nan':
                         stat_qa = stat_qa + float(qa_stat.encode('utf-8')) # '%s || %s || ' %(stat_qa, qa_stat.encode('utf-8'))
-                # stat_qa  = '%s || %s ||' %(str(stat_qa),str(get_item(qa_stat,'qa_results/note_results')))
             quiz += 1
 
     if quiz > 0:
@@ -281,8 +240,6 @@ def home(request):
             if str(ke_item['case_priority'][0]) == 'High Priority':
                 high_priority = ke_item['count']
 
-
-
     return render(request, 'helpline/%s.html' % template,
                 {
                    'att': '',
@@ -292,8 +249,6 @@ def home(request):
                    'gdata': gtdata,
                    'dt': stdata,
                    'priority_stat':high_priority,
-                   # 'status_stat':status_stats,
-                   # 'call_stat':call_statistics,
                    'qa_stat':stat_qa,
                    'status_data':status_data,
                    'home':home_statistics
@@ -334,33 +289,6 @@ def sync_sms(request):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     else:
         return JsonResponse({'status':400,'message':'INVALID REQUEST'})
-    # error_message = None
-    # state = True
-    # try:
-    #     if request.method == 'POST':
-    #         # data = request.POST.copy()
-    #         sms = SMSCDR()
-    #         sms.contact = data.POST.get('from_phone')
-    #         sms.msg = data.POST.get('message')
-    #         sms.time = data.POST.get('sent_timestamp')
-    #         sms.sms_time = timezone.now()
-
-    #         sms.save()
-    #         print "Saving SMS"
-    #     else:
-    #        sms_list = SMSCDR.objects.filter(sms_type='OUTBOX').order_by('-sms_time')
-    #        print "Fetching SMS"
-    # except Exception, e:
-    #     error_message = "Error: %s" %e
-    #     state = False
-
-    # payload = {
-    #         'payload':{
-    #                 'success':state,
-    #                 'error':error_message
-    #             }
-    #         }
-    # return Response(payload) 
 
 def sync_emails(request):
     message = {'message':'', 'count':0}
@@ -498,80 +426,13 @@ def manage_users(request,action=None,action_item=None):
             data['form'] = form
             data['profileform'] = profile_form
             data['messs'] = ''
-            # profile_form = RegisterProfileForm(request.POST, request.FILES)
-            # if form.is_valid() and profile_form.is_valid():
-            #     user = User()
-            #     try:
-            #         user = form.save()
-            #         user.refresh_from_db()
-
-            #         user.HelplineUser.hl_names = "%s %s" %(form.cleaned_data.get('first_name'), \
-            #             form.cleaned_data.get('last_name'))
-            #         user.HelplineUser.hl_nick = form.cleaned_data.get('username')
-            #         user.HelplineUser.hl_calls = 0
-            #         user.HelplineUser.hl_email = "%s" % profile_form.cleaned_data.get('useremail')
-
-            #         user.HelplineUser.hl_area = ''
-            #         user.HelplineUser.hl_phone = profile_form.cleaned_data.get('phone')
-            #         user.HelplineUser.hl_branch = ''
-            #         user.HelplineUser.hl_case = 0
-
-            #         user.HelplineUser.hl_status = 'Idle'
-            #         user.HelplineUser.hl_jabber = "" # "%s@%s" % (user.username, settings.BASE_DOMAIN)
-            #         user.HelplineUser.hl_pass = hashlib.md5("1234").hexdigest()
-
-            #         user.HelplineUser.hl_role = "%s" % profile_form.cleaned_data.get('userrole')
-            #         # user.save()
-
-            #         uploaded_file_url = ''                
-            #         filename = ''
-            #         if request.FILES['avatar']:
-            #             myfile = request.FILES['avatar']
-            #             fs = FileSystemStorage()
-            #             filename = fs.save(myfile.name, myfile)
-            #             uploaded_file_url = fs.url(filename)
-
-            #         user.HelplineUser.hl_avatar = uploaded_file_url
-            #         user.HelplineUser.hl_time = time.time()
-
-            #         user.HelplineUser.save()
-
-            #         # share case form
-            #         default_service = Service.objects.all().first()
-            #         default_service_xform = default_service.walkin_xform
-            #         default_service_auth_token = default_service_xform.user.auth_token
-            #         current_site = get_current_site(request)
-
-            #         if default_service != '' and default_service != 0 and default_service_xform:
-            #             url = 'http://%s/ona/api/v1/%s/share/' % (
-            #                 current_site,
-            #                 default_service_xform.pk
-            #             )
-            #             headers = {
-            #                 'Authorization': 'Token %s' % (default_service_auth_token),
-            #                 'username':user.username,
-            #                 'role':'manager'
-            #             }
-            #             requests.post(url, headers=headers)
-
-            #         messages.append("User saved successfully %s" % user.HelplineUser.hl_email)
-            #         form = RegisterUserForm()
-            #         profile_form = RegisterProfileForm()
-
-            #     except Exception as e:
-            #         form = RegisterUserForm(request.POST)
-            #         profile_form = RegisterProfileForm(request.POST, request.FILES)
-            #         messages.append('Error saving user: %s' % (e))
     
-    userlist = User.objects.filter(is_active=True).select_related('HelplineUser')
+    userlist = User.objects.filter(is_active=True).exclude(HelplineUser=None).select_related('HelplineUser')
     data['systemusers'] = userlist
     return render(request, 'helpline/%s.html' %(template), data)
 
 def increment_case_number():
-    case = Cases.objects.all().order_by('case_number').last() # Cases.objects.all().last()
-
-    # if case:
-    #     case = case.case_number
+    case = Cases.objects.all().order_by('case_number').last()
 
     if not case:
         return 100001
@@ -858,31 +719,6 @@ def queue_leave(request):
     request.session['queuestatus'] = ''
 
     hl_user.save()
-    # services = Service.objects.all()
-    # queue_form = QueueLogForm()
-    # user_id = request.user.pk
-    # HelplineUser.objects.filter(user_id=user_id).update(hl_status='Idle')
-
-    # try:
-    #     hotdesk = Hotdesk.objects.filter(agent__exact=request.user.HelplineUser.hl_key)
-    #     hl_user = HelplineUser.objects.get(hl_key=request.user.HelplineUser.hl_key)
-    #     hotdesk.update(agent=0)
-
-    #     request.session['queuejoin'] = 'out'
-    #     request.session['status'] = 'out'
-    #     request.session['jabber'] = ''
-    #     request.session['queuestatus'] = 'queueunpause'
-    #     message = backend.remove_from_queue(
-    #         agent=hl_user.hl_exten,
-    #         queue='Q718874580'
-    #     )
-    #     hl_user.hl_exten = ''
-    #     hl_user.hl_jabber = ''
-    #     hl_user.hl_status = 'Unavailable'
-    #     hl_user.save()
-
-    # except Exception as e:
-    #    message = e
     message = "The message"
     return redirect("/helpline/#%s" % (message))
 
@@ -893,24 +729,6 @@ def queue_remove(request, auth):
     agent = HelplineUser.objects.get(hl_auth=auth)
     agent.hl_status = 'Idle'
     data = {}
-    # try:
-    #     hotdesk = Hotdesk.objects.filter(agent__exact=agent.hl_key)
-    #     hotdesk.update(agent=0)
-    #     agent.hl_exten = ''
-    #     agent.hl_jabber = ''
-    #     schedules = Schedule.objects.filter(user=agent.user)
-    #     if schedules:
-    #         for schedule in schedules:
-    #             data = backend.remove_from_queue(
-    #                 agent="SIP/%s" % (request.session.get('extension')),
-    #                 queue='%s' % (schedule.service.queue),
-    #             )
-    #     else:
-    #         data = _("Agent does not have any assigned schedule")
-    #     agent.save()
-
-    # except Exception as e:
-    #     data = e
 
     return redirect("/helpline/status/web/presence/#%s" % (data))
 
@@ -948,18 +766,6 @@ def queue_unpause(request):
     schedules = Schedule.objects.filter(user=request.user)
     if schedules:
         message = _("Nothing to do")
-        # for schedule in schedules:
-        #     message = backend.pause_queue_member(
-        #         queue='%s' % (schedule.service.queue),
-        #         interface='%s' % (request.user.HelplineUser.hl_exten),
-        #         paused=False
-        #     )
-        #     clock = Clock()
-        #     clock.hl_clock = "Unpause"
-        #     clock.user = request.user
-        #     clock.service = schedule.service
-        #     clock.hl_time = int(time.time())
-        #     clock.save()
     else:
         message = _("Agent does not have any assigned schedule")
 
@@ -1133,35 +939,21 @@ def general_reports(request, report='cases'):
     query_string = ''
 
     if datetime_range != '':
-        start_date, end_date = [datetime_range.split(" - ")[0], datetime_range.split(" - ")[1]]
-        start_date = datetime.strptime(start_date, '%Y-%m-%d')
-        end_date = datetime.strptime(end_date, '%Y-%m-%d')
-        datetime_range = '%s-%s' %(start_date,end_date)
+        start_dates, end_dates = [datetime_range.split(" - ")[0], datetime_range.split(" - ")[1]]
+        # start_date = datetime.strptime(start_date, '%Y-%m-%d')
+        # end_date = datetime.strptime(end_date, '%Y-%m-%d')
+
+        start_date = datetime.strptime(start_dates, '%m/%d/%Y  %I:%M %p')
+        end_date = datetime.strptime(end_dates, '%m/%d/%Y  %I:%M %p')
+
+        d1 = start_date.strftime('%Y-%m-%d %H:%M')
+        d2 = end_date.strftime('%Y-%m-%d %H:%M')
+
+        datetime_range = '%s-%s' %(d1,d2)
     else:
         today = datetime.now()
-        datetime_range = datetime.strptime(today,'%Y-%m-%d')
+        datetime_range = '%s-%s' %(datetime.strftime(today,'%Y-%m-%d'),datetime.strftime(today,'%Y-%m-%d'))
 
-    # if datetime_range == '':
-    #     start_date, end_date = [datetime_range.split(" - ")[0], datetime_range.split(" - ")[1]]
-    #     start_date = datetime.strptime(start_date, '%m/%d/%Y')
-    #     end_date = datetime.strptime(end_date, '%m/%d/%Y')
-
-    # if report == 'escalated':
-    #     if request.user.HelplineUser.hl_role == 'Counsellor':
-    #         query_string = '"case_actions/case_action":{"$i":"escalate"}'
-    #     elif request.user.HelplineUser.hl_role == 'Caseworker':
-    #         query_string = '"case_actions/case_action":"escalate",\
-    #         "case_actions/escalate_caseworker":"%s"' %(request.user.pk)
-    #     elif request.user.HelplineUser.hl_role == 'Supervisor':
-    #         query_string = '"case_actions/case_action":"escalate",\
-    # #         "case_actions/supervisors":"14"' # %(request.user.pk)
-
-
-    # elif report == 'today':
-    #     td_date = datetime.today()
-    #     request_string += '&date_created__day=' + td_date.strftime('%d')
-    #     request_string += '&date_created__month=' + td_date.strftime('%m')
-    #     request_string += '&date_created__year=' + td_date.strftime('%Y')
 
     htmltemplate = 'helpline/report_cases.html'
 
@@ -1318,8 +1110,8 @@ def reports(request, report, casetype='Call'):
 
         d1 = start_date.strftime('%Y-%m-%d %H:%M')
         d2 = end_date.strftime('%Y-%m-%d %H:%M')
-        request_string = '%sto%s' %(d1,d2)
-
+        
+        datetime_range = '%sto%s' %(d1,d2)
 
         case_start = start_date.strftime('%Y-%m-%d')
         case_end = end_date.strftime('%Y-%m-%d')
@@ -1330,18 +1122,21 @@ def reports(request, report, casetype='Call'):
         start_date = nowdate.strftime('%Y-%m-%d  00:00')
         end_date = nowdate.strftime('%Y-%m-%d  23:59')
 
-        request_string = '%sto%s' %(start_date,end_date)
+        datetime_range = '%sto%s' %(start_date,end_date)
 
         case_start = nowdate.strftime('%Y-%m-%d')
         case_end = nowdate.strftime('%Y-%m-%d')
 
-    if agent != '':
-        agent = User.objects.get(pk__exact=agent)
+    if agent != '' or request.user.HelplineUser.hl_role == 'Counsellor':
+        if agent == '':
+            agent = request.user
+        else:
+            agent = User.objects.get(pk__exact=agent)
         agent = agent.HelplineUser.hl_key
         if request_string == '':
             request_string = '?usr_f=%s' % agent
         else:
-            request_string = '%s&usr_f=%s' % (request_string,agent)
+            request_string = '%s&usr_f=%s' % (datetime_range,agent)
 
     if str(casetype).lower() == 'call':
         """For call reports"""
@@ -1352,7 +1147,6 @@ def reports(request, report, casetype='Call'):
 
         calls_url = "%s/clk/cdr?chan_ts_f=%s" %(settings.CALL_API_URL, \
             request_string)
-
         call_data = requests.post(calls_url).json() 
         
         if report in callreports:
@@ -1361,7 +1155,7 @@ def reports(request, report, casetype='Call'):
             call_data = filter(lambda call_data: call_data['voicemail'] == 'true' and call_data['recording'] != '', call_data)
             htmltemplate = "helpline/voicemails.html"
 
-        agents = User.objects.filter().only("username", "HelplineUser__hl_key")
+        agents = User.objects.filter().only("username", "HelplineUser__hl_key").exclude(HelplineUser=None).select_related('HelplineUser')
         
         agent_list = {}
         agents = map(lambda x: agent_list.update({'%s'%x.HelplineUser.hl_key:str(x.username)}), agents)
@@ -1389,11 +1183,6 @@ def reports(request, report, casetype='Call'):
 
         owner = get_object_or_404(User, username__iexact=username)
         xform = get_form({'id_string__iexact': str(default_service.walkin_xform)})
-
-        # if datetime_range == '':
-        #     start_date, end_date = [datetime_range.split(" - ")[0], datetime_range.split(" - ")[1]]
-        #     start_date = datetime.strptime(start_date, '%m/%d/%Y')
-        #     end_date = datetime.strptime(end_date, '%m/%d/%Y')
         
         if report == 'escalated' or report == 'pending' or report == 'closed':
             rep_status = 'escalate' if report == 'escalated' else report
@@ -1426,15 +1215,6 @@ def reports(request, report, casetype='Call'):
             call_data = requests.post("%s/clk/cdr/?qa=true" %(settings.CALL_API_URL)).json()
         else:
             """For case reports"""
-            # xforms = requests.get('http://%s/ona/api/v1/forms' % (current_site), \
-            #     headers=headers).json()
-            # xformx = {}
-
-            #split to get xform object
-            # for xfrm in xforms:
-            #     if str(xfrm['id_string']) == id_string:
-            #         for key, frm in xfrm.items():
-            #             xformx.update({str(key):str(frm)})
 
             if request.user.HelplineUser.hl_role == 'Counsellor':
                 if query_string == '':
@@ -1444,7 +1224,7 @@ def reports(request, report, casetype='Call'):
 
             ur = 'http://%s/ona/api/v1/data/%s?query={%s}%s' %(current_site, \
                 default_service_xform.pk, query_string, request_string)
-
+        
             stat = requests.get(ur, headers=headers).json()
 
             data['ur'] = ur
@@ -3209,7 +2989,7 @@ def stat(request):
         status_stats['total'] += st_action['count']
 
     # agent status
-    url_agents = {} # '%s/api/v1/call/agent?webdata' %(settings.CALL_API_URL)
+    url_agents = '%s/clk/agent/' %(settings.CALL_API_URL)
 
     agent_status = requests.get(url_agents, headers=headers).json()
 
@@ -3224,7 +3004,7 @@ def stat(request):
     def get_queue_status(agent_id):
         ret_val = ''
         for ag in agent_status:
-            if ag['agent_id'] == agent_id:
+            if str(ag['agent']) == str(agent_id):
                 ret_val = str(ag['status']) 
         return ret_val   
 
