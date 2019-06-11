@@ -2999,7 +2999,7 @@ def stat(request):
     dashboard_stats = get_dashboard_stats(request.user)
     week_dashboard_stats = get_dashboard_stats(request.user, interval='weekly')
 
-    userlist = User.objects.filter(is_active=True,HelplineUser__hl_role='Counsellor').select_related('HelplineUser')
+    userlist = User.objects.filter(is_active=True,HelplineUser__hl_role='Counsellor',HelplineUser__hl_status='Available').select_related('HelplineUser')
     
     def get_queue_status(agent_id):
         ret_val = ''

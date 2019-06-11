@@ -221,9 +221,10 @@ tr:nth-child(odd) {
                 <thead>
                   <tr style="background: white;">
                     <th><i class="fa fa-user"></i> {% trans "Name" %}</th>
-                    <th><i class=" fa fa-question-circle "></i>{% trans "Status" %}</th>
+                    <th><i class=" fa fa-question-circle "></i>{% trans "Login Status" %}</th>
+                    <th><i class=" fa fa-question-circle "></i>{% trans "Call Queue Status" %}</th>
                     <th><i class="fa fa-bookmark"></i> {% trans "Calls" %}</th>
-                    <th><i class="fa fa-plug"></i> {% trans "Interface" %}</th>
+                    <!-- <th><i class="fa fa-plug"></i> {% trans "Interface" %}</th> -->
                     <th><i class="fa fa-clock-o"></i> {% trans "Last call at" %}</th>
                   </tr>
                 </thead>
@@ -231,9 +232,10 @@ tr:nth-child(odd) {
                   {% for user in users %}
                   <tr>
                     <td>{{ user.username | capfirst }}</td>
+                    <td>{{ user.HelplineUser.hl_status | capfirst }}</td>
                     <td class="{{ call_agents | get_item:user.username | default:'unavailable' | lower  }}">{{ call_agents | get_item:user.username | default:'Unavailable' | upper  }}</td>
                     <td></td>
-                    <td></td>
+                    <!-- <td></td> -->
                     <td></td>
                   </tr>
                   {% endfor %}
@@ -271,7 +273,7 @@ tr:nth-child(odd) {
               <!-- /.col -->
               <div class="col-sm-6 col-md-6" style="padding-right:2px; margin-top:10px; padding-left:2px;">
                 <div class="color-palette-set">
-                  <div class="bg-aqua color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.number_tickets }} </span><br />{% trans "Total Emails" %}</div>
+                  <div class="bg-aqua color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.number_tickets | default:0 }} </span><br />{% trans "Total Emails" %}</div>
                 </div>
               </div>
               <!-- /.col -->
@@ -279,7 +281,7 @@ tr:nth-child(odd) {
               <div class="col-sm-6 col-md-6" style="padding-right:2px; margin-top:10px; padding-left:2px;">
                 <div class="color-palette-set">
                   <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
-                  <div class="bg-aqua color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.total_sms }} </span><br />{% trans "Total SMS" %}</div>
+                  <div class="bg-aqua color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.total_sms | default:0 }} </span><br />{% trans "Total SMS" %}</div>
                   <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
                 </div>
               </div>
