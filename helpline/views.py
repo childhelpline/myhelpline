@@ -35,7 +35,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
 from django.template.context_processors import csrf
 from django.template.loader import render_to_string
-from django.db.models import Avg
+from django.db.models import (Avg,Count)
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import Q
@@ -102,7 +102,9 @@ from onadata.libs.utils.chart_tools import build_chart_data
 from onadata.libs.utils.user_auth import (get_xform_and_perms, has_permission,
                                           helper_auth_helper)
 from api.serializers import SmsSerializer
-
+from graphos.sources.model import ModelDataSource
+from graphos.sources.simple import SimpleDataSource
+from graphos.renderers.flot import LineChart
 
 def success(request):
     return render(request, 'helpline/success.html')
@@ -807,6 +809,9 @@ def get_item(dictionary, key):
 def setting(setting_item):
     return getattr(settings, setting_item, "")
 
+@register.filter("timestamp")
+def timestamp(value):
+    return datetime.fromtimestamp(value)
 
 @login_required
 def caseview(request, form_name, case_id):
@@ -1127,22 +1132,26 @@ def reports(request, report, casetype='Call'):
         case_start = nowdate.strftime('%Y-%m-%d')
         case_end = nowdate.strftime('%Y-%m-%d')
 
-    if agent != '' or request.user.HelplineUser.hl_role == 'Counsellor':
-        if agent == '':
-            agent = request.user
-        else:
-            agent = User.objects.get(pk__exact=agent)
-        agent = agent.HelplineUser.hl_key
-        if request_string == '':
-            request_string = '?usr_f=%s' % agent
-        else:
-            request_string = '%s&usr_f=%s' % (datetime_range,agent)
+    
 
     if str(casetype).lower() == 'call':
         """For call reports"""
         callreports = ["missedcalls", "totalcalls",
                        "answeredcalls", "abandonedcalls", "callsummaryreport",
                        "search", "agentsessionreport"]
+
+
+        if agent != '' or request.user.HelplineUser.hl_role == 'Counsellor':
+            if agent == '':
+                agent = request.user
+            else:
+                agent = User.objects.get(pk__exact=agent)
+            agent = agent.HelplineUser.hl_key
+            
+            if request_string == '':
+                request_string = '?usr_f=%s' % agent
+            else:
+                request_string = '%s&usr_f=%s' % (datetime_range,agent)
 
 
         calls_url = "%s/clk/cdr?chan_ts_f=%s" %(settings.CALL_API_URL, \
@@ -1199,7 +1208,7 @@ def reports(request, report, casetype='Call'):
 
         elif report == 'highpriority':
             query_string = '"case_narratives/case_priority":"high_priority"'
-        elif report == 'today':
+        elif report == 'today' or report == 'totalcases':
             td_date = datetime.today()
             request_string += '&date_created__day=' + td_date.strftime('%d')
             request_string += '&date_created__month=' + td_date.strftime('%m')
@@ -1208,15 +1217,20 @@ def reports(request, report, casetype='Call'):
         htmltemplate = ''
 
         if report == 'disposition':
-            dispositions = Cases.objects.all().order_by('case_number')
+            dispositions = Cases.objects.all()
+            dispx = Cases.objects.all().values('case_source').annotate(case_count=Count('case_number'))
+            print("The dispositions: %s " % dispx)
             data['report_data'] = dispositions
+
+            chart = LineChart(MyModelDataSource(queryset=dispositions, fields=['case_source','case_number']))
+            data['chart'] = chart
             htmltemplate = 'helpline/dispositions.html'
         elif casetype.lower() == 'qa':
             call_data = requests.post("%s/clk/cdr/?qa=true" %(settings.CALL_API_URL)).json()
         else:
             """For case reports"""
 
-            if request.user.HelplineUser.hl_role == 'Counsellor':
+            if request.user.HelplineUser.hl_role == 'Counsellor' and report != 'totalcases':
                 if query_string == '':
                     query_string = '"case_owner":{"$i":"%s"}' %(username)
                 else:
@@ -1224,6 +1238,8 @@ def reports(request, report, casetype='Call'):
 
             ur = 'http://%s/ona/api/v1/data/%s?query={%s}%s' %(current_site, \
                 default_service_xform.pk, query_string, request_string)
+
+            print("Reprt: %s, ur: %s" %(report,ur))
         
             stat = requests.get(ur, headers=headers).json()
 
@@ -2999,7 +3015,7 @@ def stat(request):
     dashboard_stats = get_dashboard_stats(request.user)
     week_dashboard_stats = get_dashboard_stats(request.user, interval='weekly')
 
-    userlist = User.objects.filter(is_active=True,HelplineUser__hl_role='Counsellor',HelplineUser__hl_status='Available').select_related('HelplineUser')
+    userlist = User.objects.filter(is_active=True,HelplineUser__hl_role='Counsellor').exclude(HelplineUser__hl_status='Unavailable').exclude(HelplineUser__hl_status='Offline').select_related('HelplineUser')
     
     def get_queue_status(agent_id):
         ret_val = ''
@@ -3109,47 +3125,15 @@ def queue_json(request, name=None):
     data = get_data_queues(name)
     return {'data': data}
 
-# @login_required
-# @json_view
-# def spy(request):
-#     channel = request.POST.get('channel', '')
-#     to_exten = request.POST.get('to_exten', '')
-#     r = backend.spy(channel, to_exten)
-#     return r
-
-
-# @login_required
-# @json_view
-# def whisper(request):
-#     channel = request.POST.get('channel', '')
-#     to_exten = request.POST.get('to_exten', '')
-#     r = backend.whisper(channel, to_exten)
-#     return r
-
-
-# @login_required
-# @json_view
-# def barge(request):
-#     channel = request.POST.get('channel', '')
-#     to_exten = request.POST.get('to_exten', '')
-#     r = backend.barge(channel, to_exten)
-#     return r
-
-
-# @login_required
-# @json_view
-# def hangup_call(request):
-#     channel = request.POST.get('channel', '')
-#     r = backend.hangup(channel)
-#     return r
-
-
-# @login_required
-# @json_view
-# def remove_from_queue(request):
-#     queue = request.POST.get('queue', '')
-#     agent = request.POST.get('agent', '')
-#     r = backend.remove_from_queue(agent, queue)
-#     return r
+class MyModelDataSource(ModelDataSource):
+    def get_data(self):
+        data = super(MyModelDataSource, self).get_data()
+        # header = data[0]
+        data_without_header = data
+        # for row in data_without_header:
+        #     # Assuming second column contains datetime
+        #     row[1] = row[1].year
+        # data_without_header.insert(0, header)
+        return data_without_header
 
 post_save.connect(report_save_handler, sender=Report)

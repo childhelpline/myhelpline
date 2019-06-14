@@ -5,6 +5,7 @@
 {% block box %}
 {% endblock box %}
 {% block treeview_reports %}active{% endblock treeview_reports %}
+
 {% block navbar_nav %}
 <li class="dropdown messages-menu">
   <a href="#" class="dropdown-toggle" data-toggle="dropdown">
@@ -119,10 +120,11 @@ div.scrollmenu {
           <div class="row">
             <div class="scrollmenu col-md-12">
                 <div>
-                  <table id="example1" class="table datatable">
+                  {{ chart.as_html }}
+                  <!-- <table id="example1" class="table datatable">
                     <thead>
                       <th>#</th>
-                      <!-- <th>Case ID</th>-->
+                      <!-- <th>Case ID</th>->
                       <th>Case Number</th>
                       <th>Source</th>
                       <th>Description</th>
@@ -131,7 +133,7 @@ div.scrollmenu {
                   {% for rep in report_data %}
                     <tr>
                       <td>{{ forloop.counter}}.</td>
-                      <!-- <td>{{rep.caseid | default:''}}</td> -->
+                      <!-- <td>{{rep.caseid | default:''}}</td> ->
 
                       <td>{{rep.case_number | safe}}</td>
                       <td>{{rep.case_source}}</td>
@@ -140,7 +142,7 @@ div.scrollmenu {
                     </tr>
                   {% endfor %}
                     
-                  </table>
+                  </table> -->
                 </div>
               <!--div id="showustheresultsnow">
                 <div class="col-md-4">
