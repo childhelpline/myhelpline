@@ -56,6 +56,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from django.db import transaction
+from django.utils.encoding import smart_text,smart_bytes
 
 from django.core import serializers
 # Django 1.10 breaks reverse imports.
@@ -95,6 +96,7 @@ from helpline.forms import QueueLogForm,\
         ReportFilterForm, QueuePauseForm, CaseActionForm, ContactSearchForm
 
 import json
+import yaml 
 from django.template.defaulttags import register
 from onadata.apps.logger.models import Instance, XForm
 
@@ -142,7 +144,6 @@ def home(request):
     gtdata = []
     stdata = []
     
-    # if default_service != '' and default_service > 0 and default_service_xform.pk  > 0:
     url = 'http://%s/ona/api/v1/charts/%s.json?field_name=_submission_time&limit=14' % (
         current_site,
         default_service_xform.pk
@@ -711,7 +712,7 @@ def queue_log(request):
 def queue_leave(request):
     """Leave Asterisk queues."""
     queue_status = requests.post('%s/clk/agent/?action=0&agent=%s' %(settings.CALL_API_URL,\
-        request.user.HelplineUser.hl_key)).json()
+        request.user.HelplineUser.hl_key)).json() or {}
     hl_user = HelplineUser.objects.get(hl_key=request.user.HelplineUser.hl_key)
     hl_user.hl_exten = ''
     hl_user.hl_jabber = ''
@@ -804,6 +805,17 @@ def faq(request):
 @register.filter
 def get_item(dictionary, key):
     return dictionary.get(key, "")
+
+@register.filter
+def split(str_val, key):
+    str_val = str_val.split(key)
+    ret_val = ""
+    ix = 0
+    for st in str_val:
+        ret_val += "%s " % str_val[ix].capitalize()
+        ix += 1
+
+    return ret_val 
 
 @register.simple_tag
 def setting(setting_item):
@@ -917,8 +929,9 @@ def general_reports(request, report='cases'):
 
     id_string = str(default_service_xform)
     username = request.user.username
+    xform_user = default_service_xform.user.username
 
-    owner = get_object_or_404(User, username__iexact=username)
+    owner = get_object_or_404(User, username__iexact=xform_user)
     xform = get_form({'id_string__iexact': str(default_service.walkin_xform)})
 
     query = request.GET.get('q', '')
@@ -926,7 +939,7 @@ def general_reports(request, report='cases'):
     agent = request.GET.get("agent")
     category = request.GET.get("category", "")
     form = ReportFilterForm(request.GET)
-    dashboard_stats = get_dashboard_stats(request.user)
+    # dashboard_stats = get_dashboard_stats(request.user)
     report_title = {report: _(str(report).capitalize() + " Reports")}
 
     data = {
@@ -936,7 +949,7 @@ def general_reports(request, report='cases'):
         'report': report,
         'form': form,
         'datetime_range': datetime_range,
-        'dashboard_stats': dashboard_stats,
+        # 'dashboard_stats': dashboard_stats,
         'query': query
     }
 
@@ -973,7 +986,7 @@ def general_reports(request, report='cases'):
         
 
 
-        call_data = requests.post(call_url).json()
+        call_data = requests.post(call_url).json() or {}
         data['report_data'] = call_data
         data['urls'] = call_url
 
@@ -1020,7 +1033,7 @@ def general_reports(request, report='cases'):
         stat = requests.get('http://%s/ona/api/v1/data/%s?query={%s}%s&page=1&page_size=50' %(current_site, \
             default_service_xform.pk, query_string,  request_string), headers=headers).json()
         # + '&sort={"_id":-1}'
-        # data['statss'] = "Cheru Data: %s" % stat
+
         data['ur'] = ur
         statrecords = []
         recordkeys = []
@@ -1089,7 +1102,7 @@ def reports(request, report, casetype='Call'):
     agent = request.GET.get("agent") or ''
     category = request.GET.get("category", "")
     form = ReportFilterForm(request.GET)
-    dashboard_stats = get_dashboard_stats(request.user)
+
     report_title = {report: _(str(report).capitalize() + " Reports")}
 
     request_string = ''
@@ -1153,15 +1166,19 @@ def reports(request, report, casetype='Call'):
             else:
                 request_string = '%s&usr_f=%s' % (datetime_range,agent)
 
+        if request_string != '':
+            calls_url = "%s/clk/cdr/?chan_ts_f=%s" %(settings.CALL_API_URL, \
+                request_string)
+        else:
+            calls_url = "%s/clk/cdr/" %(settings.CALL_API_URL)
 
-        calls_url = "%s/clk/cdr?chan_ts_f=%s" %(settings.CALL_API_URL, \
-            request_string)
-        call_data = requests.post(calls_url).json() 
+        call_data = requests.get(calls_url).json()
         
         if report in callreports:
             htmltemplate = "helpline/reports.html"
         elif report == 'voicemails': 
             call_data = filter(lambda call_data: call_data['voicemail'] == 'true' and call_data['recording'] != '', call_data)
+            data['report_data'] = call_data
             htmltemplate = "helpline/voicemails.html"
 
         agents = User.objects.filter().only("username", "HelplineUser__hl_key").exclude(HelplineUser=None).select_related('HelplineUser')
@@ -1187,17 +1204,48 @@ def reports(request, report, casetype='Call'):
             'Authorization': 'Token %s' % (default_service_auth_token)
         }
 
-        id_string = str(default_service_xform)
-        username = request.user.username
 
-        owner = get_object_or_404(User, username__iexact=username)
+
+        # form_choices = yaml.load(default_service_xform.json)['choices']
+
+        # # get dropdown fields
+        # data['choices'] = form_choices
+        # main_keys = form_choices.keys()
+
+        #get form headers
+        # heads = yaml.load(default_service_xform.json)[u'children']
+
+        # rec_rows = []
+        # recordkeys = []
+        # def fill_children(child):
+        #     for rows in child:
+        #         other_headers = ['group','repeater']
+        #         if hasattr(rows,'control') or rows['type'] in other_headers:# hasattr(rows,'type') and ('select' in rows['type'] or rows['type'] == 'group'):
+        #            fill_children(rows['children']) 
+        #         else:
+        #             if hasattr(rows,'bind'):
+        #                 rows = rows['bind']
+
+        #             if get_item(rows,'label') != '':
+        #                 rec_rows.append({rows['name']:get_item(rows,"label")})
+        #             else:
+        #                 rec_rows.append({rows['name']:rows['name']})
+        #         recordkeys.append(rows['name'])
+        # fill_children(heads)
+
+        id_string = str(default_service_xform)
+
+        username = request.user.username
+        xform_user = default_service_xform.user.username
+
+        owner = get_object_or_404(User, username__iexact=xform_user)
         xform = get_form({'id_string__iexact': str(default_service.walkin_xform)})
         
         if report == 'escalated' or report == 'pending' or report == 'closed':
             rep_status = 'escalate' if report == 'escalated' else report
             if request.user.HelplineUser.hl_role == 'Counsellor':
                 query_string = '"case_actions/case_action":{"$i":"%s"}' % rep_status
-            elif request.user.HelplineUser.hl_role == 'Caseworker':
+            elif request.user.HelplineUser.hl_role.lower() == 'caseworker':
                 query_string = '"case_actions/case_action":"%s",\
                 "case_actions/escalate_caseworker":"%s"' %(rep_status,str(username))
             elif request.user.HelplineUser.hl_role == 'Supervisor':
@@ -1215,20 +1263,43 @@ def reports(request, report, casetype='Call'):
             request_string += '&date_created__year=' + td_date.strftime('%Y')
 
         htmltemplate = ''
+        if report == 'pivot':
+            owner = get_object_or_404(User, username__iexact='helplineadmin')
+            
+            xform = get_form({'id_string__iexact': id_string, 'user': owner})
+            frm_json = yaml.load(str(xform.json))[u'children']   
+            data['xform'] = frm_json
 
+            htmltemplate = 'helpline/pivot.html'
         if report == 'disposition':
-            dispositions = Cases.objects.all()
-            dispx = Cases.objects.all().values('case_source').annotate(case_count=Count('case_number'))
-            print("The dispositions: %s " % dispx)
+            dispositions = Cases.objects.all().filter(case_number__gt=0,case_source="walkin")
+            chart_data = Cases.objects.all().exclude(case_source='').exclude(case_disposition=None).filter(case_number__gt=0).values('case_disposition').annotate(case_count=Count('case_number'))
+            
+            d_data = []
+            color = ['#CD5C5C','#000000','#8A2BE2','#A52A2A','#DEB887','#ADD8E6','#F08080','#90EE90','#F0E68C','#FFB6C1', \
+            '#5F9EA0','#7FFF00','#D2691E','#FF7F50','#6495ED','#FFF8DC','#DC143C','#00FFFF','#00008B','#008B8B','#B8860B','#A9A9A9', \
+            '#006400','#A9A9A9','#BDB76B','#8B008B','#556B2F','#FF8C00','#9932CC','#8B0000','#E9967A','#8FBC8F','#483D8B','#2F4F4F',\
+            '#2F4F4F','#00CED1','#9400D3','#FF1493','#00BFFF','#696969','#696969','#1E90FF','#B22222','#FFFAF0','#228B22','#DCDCDC',\
+            '#F8F8FF','#FFD700','#DAA520','#808080','#ADFF2F','#F0FFF0','#FF69B4','#FFE4C4','#4B0082','#FFFFF0','#E6E6FA',\
+            '#FFF0F5','#7CFC00','#FFFACD','#FAFAD2','#90EE90','#D3D3D3','#F0F8FF','#FAEBD7','#F0FFFF','#F5F5DC','#7FFFD4','#FFA07A'
+            ]
+
+            icc = 0
+            for case in  chart_data:
+                h_len = len(color)-icc-1
+                d_data.append({"label":str(case['case_disposition']),"highlight":str(color[h_len]),"value":int(case['case_count']), "color":str(color[icc])})
+                icc += 1
+            data['d_data'] = d_data
             data['report_data'] = dispositions
 
-            chart = LineChart(MyModelDataSource(queryset=dispositions, fields=['case_source','case_number']))
-            data['chart'] = chart
             htmltemplate = 'helpline/dispositions.html'
         elif casetype.lower() == 'qa':
-            call_data = requests.post("%s/clk/cdr/?qa=true" %(settings.CALL_API_URL)).json()
+            call_data = requests.post("%s/clk/cdr/?qa=true" %(settings.CALL_API_URL)).json() or {}
         else:
             """For case reports"""
+
+            xform = get_form({'id_string__iexact': id_string, 'user': owner})
+            frm_json = yaml.load(str(xform.json))[u'children']   
 
             if request.user.HelplineUser.hl_role == 'Counsellor' and report != 'totalcases':
                 if query_string == '':
@@ -1237,10 +1308,7 @@ def reports(request, report, casetype='Call'):
                     query_string += ',"case_owner":{"$i":"%s"}' %(username)
 
             ur = 'http://%s/ona/api/v1/data/%s?query={%s}%s' %(current_site, \
-                default_service_xform.pk, query_string, request_string)
-
-            print("Reprt: %s, ur: %s" %(report,ur))
-        
+                default_service_xform.pk, query_string, request_string) # 
             stat = requests.get(ur, headers=headers).json()
 
             data['ur'] = ur
@@ -1283,7 +1351,6 @@ def reports(request, report, casetype='Call'):
 
                 return record
 
-            
             for rec in stat:
                 if isinstance(rec, dict) and len(rec) > 1:
                     statrecords.append(get_records(rec))
@@ -1297,15 +1364,13 @@ def reports(request, report, casetype='Call'):
             if not case_start == '':
                 statrecords = filter(lambda statrecords: statrecords['_submission_time'] >= case_start and statrecords['_submission_time'] <= case_end, statrecords)
 
-            data['statrecords'] = statrecords
+            data['statrecords'] = statrecords #statrecords
             data['recordkeys'] = recordkeys
 
     
         if report == 'nonanalysed':
             data['report_data'] = filter(lambda call_data: not call_data['length'] and call_data['length'] <= 1, call_data)
             htmltemplate = "helpline/nonanalysed.html"
-        elif report == 'voicemails':
-            data['report_data'] = filter(lambda call_data: call_data['voicemail'], call_data)
         elif htmltemplate == '':
             htmltemplate = "helpline/report_body.html"
             # data['report_data'] = filter(lambda call_data: not call_data['voicemail'], call_data)
@@ -1321,14 +1386,6 @@ def qa(request, report='analysed'):
     username = xform.user.username
     default_service_auth_token = xform.user.auth_token
     current_site = get_current_site(request)
-
-    # service = Service.objects.all().first()
-    # xform = service._xform
-    # username = xform.user.username
-    # default_service_auth_token = xform.user.auth_token
-    # current_site = get_current_site(request)
-
-
     
     form = ReportFilterForm(request.POST)
 
@@ -1353,13 +1410,19 @@ def qa(request, report='analysed'):
 
     # Set Query Parameters
     query_string = ''
+    datetime_range = ''
     if request.method == 'POST':
         category = request.POST.get('contact_id', None)
         datetime_range = request.POST.get('datetime_range', None)
-        if datetime_range == '':
+        if datetime_range != '':
             start_date, end_date = [datetime_range.split(" - ")[0], datetime_range.split(" - ")[1]]
             start_date = datetime.strptime(start_date, '%m/%d/%Y %I:%M %p')
             end_date = datetime.strptime(end_date, '%m/%d/%Y %I:%M %p')
+
+            d1 = datetime.strftime(start_date, '%Y/%m/%d')
+            d2 = datetime.strftime(end_date, '%Y/%m/%d')
+
+            datetime_range = '%sto%s' %(d1,d2)
 
     if report == 'results':
         headers = {
@@ -1417,8 +1480,22 @@ def qa(request, report='analysed'):
 
         htmltemplate = 'helpline/qaresults.html'
     else:
-        # Call CDR Data
-        result_data = requests.post("%s/clk/cdr/" %(settings.CALL_API_URL) + query_string).json()
+        # Call CDR Data 
+        if datetime_range == '':
+            call_url = "%s/clk/cdr/?context_masq_f=queue" %(settings.CALL_API_URL)
+        else:
+            call_url = "%s/clk/cdr/?context_masq_f=queue&chan_ts_f=%s" %(settings.CALL_API_URL, \
+            datetime_range) 
+        
+        agents = User.objects.filter().only("username", "HelplineUser__hl_key").exclude(HelplineUser=None).select_related('HelplineUser')
+        
+        agent_list = {}
+        agents = map(lambda x: agent_list.update({'%s'%x.HelplineUser.hl_key:str(x.username)}), agents)
+
+        data['agents'] = agent_list
+
+        result_data = requests.get(call_url).json() or {}
+        result_data = filter(lambda result_data: result_data['agent'] != 116 and  result_data['agent'] != '', result_data) 
         data['report_data'] = result_data
         htmltemplate = "helpline/nonanalysed.html"
 
@@ -1894,7 +1971,7 @@ def case_form(request, form_name):
             # Use https for the iframe parent window uri, always.
             # uri = uri.replace('http://', 'https://')
 
-            caseid_str = '&d[case_owner]=%s' % (request.user.username)
+            caseid_str = '&d[case_owner]=%s$d[owner_level]=%s' % (request.user.username,request.user.HelplineUser.hl_role)
 
             caseid_str = caseid_str + '&d[case_number]=%s'% (caseid) if caseid else ''
             # Poor mans iframe url gen
@@ -2488,10 +2565,9 @@ def get_dashboard_stats(request, interval=None):
         response = redirect('/ona/%s' % request.user.username)
         return response
 
-    default_service_qa = default_service.qa_xform
-
     default_service_auth_token = ''
     
+
     if hasattr(default_service_xform,'user'):
         default_service_auth_token = default_service_xform.user.auth_token
     else:
@@ -2499,11 +2575,16 @@ def get_dashboard_stats(request, interval=None):
         return False #redirect('/ona/%s?message=%s' %(request.user,message))
 
     current_site = get_current_site(request)
-
     # Set headers
     headers = {
         'Authorization': 'Token %s' % (default_service_auth_token)
     }
+
+    default_service_qa = default_service.qa_xform
+
+    form_choices = yaml.load(default_service_xform.json)['choices']
+
+    form_details = requests.get('http://%s/ona/api/v1/forms/%s.json' % (current_site, default_service_xform.pk),headers=headers).json()
 
     # date time
     midnight_datetime = datetime.combine(
@@ -2514,12 +2595,10 @@ def get_dashboard_stats(request, interval=None):
         date.today(), datetime_time.min).strftime('%m/%d/%Y %I:%M %p')
     now_string = timezone.now().strftime('%m/%d/%Y %I:%M %p')
 
-    call_statistics = requests.post('%s/clk/stats/' %(settings.CALL_API_URL)).json()
-
-
+    call_statistics = requests.get('%s/clk/stats/' %(settings.CALL_API_URL)).json() or []
 
     home_statistics = {'escalate':0,'closed':0,'pending':0,'total':0,'call_stat':call_statistics,\
-    'midnight': midnight,'midnight_string': midnight_string,'now_string': now_string,}
+    'midnight': midnight,'midnight_string': midnight_string,'now_string': now_string,'today':form_details['submission_count_for_today'],"total_submissions":form_details['num_of_submissions']}
     # SMS stats
     home_statistics['sms'] = SMSCDR.objects.filter(sms_time__date=datetime.today()).count()
     # Email stats
@@ -2527,6 +2606,8 @@ def get_dashboard_stats(request, interval=None):
     # case status statistics
     url_status = 'http://%s/ona/api/v1/charts/%s.json?field_name=case_action' \
     %(current_site, default_service_xform.pk)
+
+
 
     status_stat = requests.get(url_status, headers= headers).json()
 
@@ -2957,15 +3038,73 @@ def ajax_get_sub_subcategory(request, category):
         hl_subcategory=category).values('hl_subsubcat', 'hl_subsubcat')
     data = {'data': list(results)}
     return data
-
-@login_required
-def pivot(request):
-    report = {}
+def form_drops(form_id):
+    def dictfetchall(cursor): 
+        "Returns all rows from a cursor as a dict" 
+        desc = cursor.description 
+        return [
+                dict(zip([col[0] for col in desc], row)) 
+                for row in cursor.fetchall() 
+        ]
     with connection.cursor() as cursor:
-            query = 'SELECT json from logger_xform where id = 1'
+            query = 'SELECT json from logger_xform where id = %s' % form_id
             cursor.execute(query)
-            report['data'] = namedtuplefetchall(cursor).json
-    return render(request, 'helpline/report_pivot.html',report)
+            rec = dictfetchall(cursor)[0][u'json']
+            rec_rows = [] 
+            prop_recs = yaml.load(str(rec))[u'children']
+            
+            def fill_children(child):
+                for rows in child:
+                    other_headers = ['group','repeater']
+                    if rows['type'] and not rows['type']  in other_headers and rows['name']:
+                        if get_item(rows,'label'):
+                            rec_rows.append({rows['name']:rows['label']})
+                        else:
+                            rec_rows.append({rows['name']:rows['name']})
+                    elif rows['children']:
+                        fill_children(rows['children'])
+
+            fill_children(prop_recs)
+            
+            report['data'] = rec_rows
+
+def pivot(request):
+    report = {}     
+    def dictfetchall(cursor): 
+        "Returns all rows from a cursor as a dict" 
+        desc = cursor.description 
+        return [
+                dict(zip([col[0] for col in desc], row)) 
+                for row in cursor.fetchall() 
+        ]
+    with connection.cursor() as cursor:
+            query = 'SELECT json from logger_xform where id = %s' % 1
+            cursor.execute(query)
+            rec = dictfetchall(cursor)[0][u'json']
+            rec_rows = [] 
+            prop_recs = yaml.load(str(rec))[u'children']
+            
+            def fill_children(child):
+                for rows in child:
+                    other_headers = ['group','repeater']
+                    if rows['type'] and 'select' in rows['type']:
+                        fill_children(rows['children'])                        
+                    elif not rows['type']:
+                        if get_item(rows,'label'):
+                            rec_rows.append({rows['name']:rows['label']})
+                        else:
+                            rec_rows.append({rows['name']:rows['name']})
+            
+            fill_children(prop_recs)
+            
+            report['data'] = rec_rows
+    return render(request, 'helpline/pivot.html',report)
+@login_required
+def pivots(request):
+    report = {'data':''}
+    report['data'] = form_fields(1)
+
+    return render(request, 'helpline/pivot.html',report)
 
 @login_required
 def wall(request):
@@ -3007,10 +3146,10 @@ def stat(request):
     # agent status
     url_agents = '%s/clk/agent/' %(settings.CALL_API_URL)
 
-    agent_status = requests.get(url_agents, headers=headers).json()
+    agent_status = requests.get(url_agents, headers=headers).json() or []
 
     # call statistics
-    call_statistics = requests.post('%s/clk/stats/' %(settings.CALL_API_URL)).json()
+    call_statistics = requests.post('%s/clk/stats/' %(settings.CALL_API_URL)).json() or []
 
     dashboard_stats = get_dashboard_stats(request.user)
     week_dashboard_stats = get_dashboard_stats(request.user, interval='weekly')
@@ -3124,16 +3263,5 @@ def queue(request, name=None):
 def queue_json(request, name=None):
     data = get_data_queues(name)
     return {'data': data}
-
-class MyModelDataSource(ModelDataSource):
-    def get_data(self):
-        data = super(MyModelDataSource, self).get_data()
-        # header = data[0]
-        data_without_header = data
-        # for row in data_without_header:
-        #     # Assuming second column contains datetime
-        #     row[1] = row[1].year
-        # data_without_header.insert(0, header)
-        return data_without_header
 
 post_save.connect(report_save_handler, sender=Report)

@@ -32,10 +32,10 @@
    <link rel="stylesheet" href="{% static "AdminLTE/dist/css/skins/_all-skins.min.css" %}">
 
    <link rel="stylesheet" href="{% static "helpline/css/style.css" %}">
-   <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+   <!-- <script type="text/javascript" src="https://www.google.com/jsapi"></script>
   <script type="text/javascript">
       google.load("visualization", "1", {packages:["corechart"]});
-  </script>
+  </script> -->
 
    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -397,7 +397,7 @@ input:checked + .slider:before {
               </a></li>
               <li><a href="{% url 'dashboardreports' 'today' 'case' %}"><i class="fa fa-circle-o"></i> {% trans "Today's Cases" %}
                 <span class="pull-right-container">
-                  <span class="label label-success pull-right">{{ home.total }}</span>
+                  <span class="label label-success pull-right">{{ home.today }}</span>
                 </span>
               </a></li>
               <li><a href="{% url 'dashboardreports' 'escalated' 'case' %}"><i class="fa fa-circle-o"></i> {% trans "Escalated Cases" %}
@@ -412,7 +412,7 @@ input:checked + .slider:before {
               </a></li-->
               <li><a href="{% url 'dashboardreports' 'totalcases' 'case' %}"><i class="fa fa-circle-o"></i> {% trans "All Cases" %}
                 <span class="pull-right-container">
-                  <span class="label label-info pull-right">{{ home.total }}</span>
+                  <span class="label label-info pull-right">{{ home.total_submissions }}</span>
                 </span>
               </a></li>
             </ul>
@@ -454,14 +454,14 @@ input:checked + .slider:before {
             </li>
             </ul>
           </li>
-          <li>
+          <!-- <li>
             <a href="http://159.89.21.204/mibew/index.php/operator">
               <i class="fa fa-comments"></i> <span>chat</span>
               <span class="pull-right-container">
                 <small class="label pull-right bg-green" id="sms-notify-badge"></small>
               </span>
             </a>
-          </li>
+          </li> -->
           {% endif %}
           <li class="treeview">
             <a href="javascript:void(0)">
@@ -1191,7 +1191,7 @@ function get_submissions(phone,name,param=true){
       caseid = data
       $('#id_case_number,#caseid').val(caseid) //for display and case disposition
       var url_str = !iframe.src.includes('?') ? '?d[case_number]=' + caseid + '':'&d[case_number]=' + caseid 
-      url_str += '&d[case_owner]={{request.user.username}}'
+      url_str += '&d[case_owner]={{request.user.username}}&d[owner_level]={{request.user.HelplineUser.hl_role}}'
       {% if form_name == 'call' %}
         url_str += '&d[/Case_Form/reporter_details/reporter/reporter_phone]={{caller}}' 
       {% endif %}
@@ -1224,8 +1224,7 @@ function get_submissions(phone,name,param=true){
 <script src="{% static "AdminLTE/plugins/flot/jquery.flot.pie.min.js" %}"></script>
 <!-- FLOT CATEGORIES PLUGIN - Used to draw bar charts -->
 <script src="{% static "AdminLTE/plugins/flot/jquery.flot.categories.min.js" %}"></script>
-
-
+<!--script src="{% static "AdminLTE/plugins/chartjs/Chart.min.js" %}"></script-->
 {% block script_end %}
 {% endblock script_end %}
 <script src="{% static "helpline/js/custom.js" %}" type="text/javascript"></script>
