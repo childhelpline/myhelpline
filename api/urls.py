@@ -9,6 +9,7 @@ router.register(r'sms', views.SmsViewSet)
 router.register(r'helplineusers', views.HelplineUserViewSet)
 router.register(r'helplinecases', views.HelplineCaseViewSet)
 router.register(r'caseworkers', views.CaseWorkerViewSet)
+router.register(r'casemanagers', views.CaseManagerViewSet)
 router.register(r'supervisors', views.SupervisorViewSet)
 router.register(r'cdrlist',views.MainCdrViewSet, base_name='MainCdr')
 

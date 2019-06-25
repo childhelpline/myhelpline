@@ -64,6 +64,13 @@ class CaseWorkerViewSet(viewsets.ModelViewSet):
     queryset = User.objects.filter(HelplineUser__hl_role='Caseworker').order_by('-date_joined')
     serializer_class = UserSerializer
 
+class CaseManagerViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows users to be viewed or edited.
+    """
+    queryset = User.objects.filter(HelplineUser__hl_role='Casemanager').order_by('-date_joined')
+    serializer_class = UserSerializer
+
 class SupervisorViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows users to be viewed or edited.
