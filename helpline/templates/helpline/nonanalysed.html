@@ -166,12 +166,12 @@ div.scrollmenu {
                 <tr>
                   <td>{{ forloop.counter}}.</td>
                   <!-- <td>{{rep.caseid | default:''}}</td> -->
-                  <td>{{rep.agent | default:''}}</td>
+                  <td>{{ agents | get_item:rep.agent | default:rep.agent}}</td>
                   <td>{{rep.phone}}</td>
                   <td>{{rep.date}}</td>
                   <td>{{rep.start}}</td>
-                  <td>{{rep.stop}}</td>
-                  <td><a href="#" data-target="#case_form_modal" class="qa_btn btn btn-sm btn-warning" data-toggle="modal" data-number="{{rep.caseid}}" data-key="/audios/{{rep.media}}">Assess <i class="fa fa-volume-up"></i></a></td>
+                  <td>{{rep.ended}}</td>
+                  <td><a href="#" data-target="#case_form_modal" class="qa_btn btn btn-sm btn-warning" data-toggle="modal" data-number="{{rep.caseid}}" data-key="{% setting 'CALL_API_URL' %}/clk/cdr/?media={{rep.uniqueid}}">Assess <i class="fa fa-volume-up"></i></a></td>
                 </tr>
                 {% endfor %}
 
