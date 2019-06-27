@@ -35,6 +35,15 @@
 audio{
   margin:-30px 10px;
 }
+#div_id_disposition label{
+  float:left !important;
+  color:yellow;
+  padding-right: 2px;
+}
+
+#div_id_disposition .controls{
+  float:left !important;
+}
 </style>
 
 
@@ -325,10 +334,10 @@ audio{
                   <div class="row">
                     <div class="col-sm-12">
                       <div class="modal-body" style="padding: 0px;">
-                        <div id="contact-search" class=>
+                        <div id="contact-search">
                           <div class="row">
                             <!-- accepted payments column -->
-                            <div class="col-xs-6 col-md-12 contact-search {% if form_name == 'call' %} hidden {% endif %}">
+                            <div class="col-xs-6 col-md-6 contact-search {% if form_name == 'call' %} hidden {% endif %}">
                               <p class="lead">Contact Search:</p>
                               <div class="text-muted well well-sm no-shadow">
                                 <!-- form start -->
@@ -348,13 +357,13 @@ audio{
                               </div>
                             </div>
                             <!-- /.col -->
-                              <div class="table-responsive text-muted well-sm no-shadow" style="min-height: 242px;">
-                                <button type="button" class="btn btn-primary pull-right" onclick="create_case();$('#contact-search').addClass('hidden');$('#frame_iframe').removeClass('hidden');$('#frame-contact').addClass('hidden');">New Reporter</button>
-                              </div>
-
-                              
                           </div>
                           <!-- /.row -->
+                          <div class="row" style="padding:10px;">
+                            <div class="col-md-12" style="border-top:solid thin #5cb85c; padding:10px 0px;">
+                              <button type="button" class="btn btn-success btn-lg btn-flat pull-right" onclick="create_case();$('#contact-search').addClass('hidden');$('#frame_iframe').removeClass('hidden');$('#frame-contact').addClass('hidden');">New Reporter</button>
+                            </div>
+                          </div>
                         </div>
 
 

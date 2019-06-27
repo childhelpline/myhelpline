@@ -393,8 +393,10 @@ input:checked + .slider:before {
             <a href="{% url "case_form" "webonline" %}" role="button"><i class="fa fa-circle-o"></i> {% trans "Web Online" %}
             </a></li>
             <li>
+              {% if  request.user.HelplineUser.hl_role != 'Casemanager'%}
               <a href="{% url "case_form" "walkin" %}" role="button"><i class="fa fa-circle-o"></i> {% trans "New WalkIn" %}
               </a></li>
+              {% endif %}
               <li><a href="{% url 'dashboardreports' 'today' 'case' %}"><i class="fa fa-circle-o"></i> {% trans "Today's Cases" %}
                 <span class="pull-right-container">
                   <span class="label label-success pull-right">{{ home.today }}</span>
@@ -462,7 +464,7 @@ input:checked + .slider:before {
               </span>
             </a>
           </li> -->
-          {% endif %}
+          
           <li class="treeview">
             <a href="javascript:void(0)">
               <i class="fa fa-pie-chart"></i> <span>{% trans "Sources" %}</span>
@@ -501,6 +503,7 @@ input:checked + .slider:before {
               </li-->
             </ul>
           </li>
+          {% endif %}
           {% if request.user.HelplineUser.hl_role == 'Supervisor' or  request.user.HelplineUser.is_superuser %}
           <li class="treeview" >
             <a href="#">
@@ -1043,6 +1046,14 @@ $('#case_form_modal').on('hidden.bs.modal', function () {
 });
 
 {% if iframe_url %}
+if ('{{form_name}}' == 'call'){
+  //leave_que
+}else{
+  //leave queue
+  var item = $('.leave')
+  if(!item.hasClass('hidden'))
+      leave_queue(item)
+}
 $('#case_form_modal').modal({backdrop: 'static', keyboard: false}).show()
 timer.start();
 timer.addEventListener('secondsUpdated', function (e) {
@@ -1189,11 +1200,12 @@ function get_submissions(phone,name,param=true){
     var caseid = ''
     $.get('/helpline/caseid/{{form_name}}',function(data){
       caseid = data
-      $('#id_case_number,#caseid').val(caseid) //for display and case disposition
+      $('#caseid').html("CASE NUMBER: " + caseid)
+      $('#id_case_number').val(caseid) //for display and case disposition
       var url_str = !iframe.src.includes('?') ? '?d[case_number]=' + caseid + '':'&d[case_number]=' + caseid 
       url_str += '&d[case_owner]={{request.user.username}}&d[owner_level]={{request.user.HelplineUser.hl_role}}'
       {% if form_name == 'call' %}
-        url_str += '&d[/Case_Form/reporter_details/reporter/reporter_phone]={{caller}}' 
+        url_str += '&d[/Case_Form/reporter_details/reporter_phone]={{caller}}' 
       {% endif %}
       if(!newreporter){
         selected_contact = selected_contact[0]
