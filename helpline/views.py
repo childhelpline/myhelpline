@@ -971,13 +971,20 @@ def general_reports(request, report='cases'):
     request_string = ''
     query_string = ''
 
+    start_dates=''
+    end_dates = ''
     if datetime_range != '':
         start_dates, end_dates = [datetime_range.split(" - ")[0], datetime_range.split(" - ")[1]]
+
         # start_date = datetime.strptime(start_date, '%Y-%m-%d')
         # end_date = datetime.strptime(end_date, '%Y-%m-%d')
 
-        start_date = datetime.strptime(start_dates, '%m/%d/%Y  %I:%M %p')
-        end_date = datetime.strptime(end_dates, '%m/%d/%Y  %I:%M %p')
+        start_date = datetime.strptime(start_dates, '%m/%d/%Y  %H:%M %p')
+        end_date = datetime.strptime(end_dates, '%m/%d/%Y  %H:%M %p')
+
+
+        start_dates = datetime.strftime(start_date, '%d/%m/%Y  %H:%M %p')
+        end_dates = datetime.strftime(end_date, '%d/%m/%Y  %H:%M %p')
 
         d1 = start_date.strftime('%Y-%m-%d %H:%M')
         d2 = end_date.strftime('%Y-%m-%d %H:%M')
@@ -985,6 +992,9 @@ def general_reports(request, report='cases'):
         datetime_range = '%s-%s' %(d1,d2)
     else:
         today = datetime.now()
+
+        start_dates = datetime.strftime(today, '%d/%m/%Y  %H:%M %p')
+        end_dates = datetime.strftime(today, '%d/%m/%Y  %H:%M %p')
         datetime_range = '%s-%s' %(datetime.strftime(today,'%Y-%m-%d'),datetime.strftime(today,'%Y-%m-%d'))
 
 
@@ -1027,9 +1037,9 @@ def general_reports(request, report='cases'):
 
         # request_string = 'agent= % ' % (request.GET.get('agent') or '')
         if datetime_range != '':
-            start_dates,end_dates = [datetime_range.split("-")[0],datetime_range.split("-")[1]]
+            # start_dates,end_dates = [datetime_range.split("-")[0],datetime_range.split("-")[1]]
             request_string = " and date_created between '{0}' and '{1}'".format(start_dates,end_dates)
-        
+            print("Cheru: %s " % request_string)
         # if agent != '':
         #     request_string = " and json='{\"case_owner\":\"{0}\"}'".format(agent)        
         def dictfetchall(cursor): 
@@ -1090,7 +1100,9 @@ def general_reports(request, report='cases'):
                     if rows.get('itemset',False) and '.csv' in rows['itemset']:
                         options = dict_from_csv(rows.get('itemset',''),default_service_xform.user.username) or []
                         rows.update({'children':options})
-                    if (rows.get('type',False) and rows.get('type',False) == 'hidden') or (rows.get('bind',False) and rows['bind'].get('required',False) and str(rows['bind']['required']).lower() == 'yes'):
+                    if (rows.get('type',False) and rows.get('type',False) == 'hidden') or \
+                    (rows.get('bind',False) and rows['bind'].get('required',False) and \
+                        str(rows['bind']['required']).lower() == 'yes'):
                         rec_rows.append(rows)
 
         fill_children(prop_recs,"")
@@ -1100,7 +1112,8 @@ def general_reports(request, report='cases'):
         recs = ''
         # get data 
         with connection.cursor() as cursor:
-                query = "SELECT date_created,json from logger_instance where version = '%s' %s " %(str(default_service_xform.version),daterange)
+                query = "SELECT date_created,json from logger_instance where version = '%s' \
+                %s " %(str(default_service_xform.version),request_string)
                 cursor.execute(query)
                 recs = dictfetchall(cursor)
 
@@ -1167,8 +1180,8 @@ def reports(request, report, casetype='Call'):
     else:
         nowdate = datetime.now()
 
-        start_date = nowdate.strftime('%Y-%m-%d  00:00')
-        end_date = nowdate.strftime('%Y-%m-%d  23:59')
+        start_date = nowdate.strftime('%d-%m-%Y  00:00 AM')
+        end_date = nowdate.strftime('%d-%m-%Y  23:59 PM')
 
         datetime_range = '%sto%s' %(start_date,end_date)
 
@@ -3208,7 +3221,7 @@ def pivot(request):
 def current_user(request):
     user = request.user
 
-    user_json = (("name","label"),("username",user.username),("userlevel",user.HelplineUser.hl_role))
+    user_json = (("name_key","name"),("username",user.username),("userlevel",user.HelplineUser.hl_role))
    
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="currentuser.csv"'
