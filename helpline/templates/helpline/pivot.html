@@ -84,6 +84,25 @@ div.scrollmenu {
                  });
                   });
                 </script>
+
+                <!-- <div class="form-group col-md-4" style="padding-left: 0px;">
+                    <label>{% trans "Select Column" %}:</label>
+                  <div class="input-group">
+                    <div class="input-group-addon">
+                      <i class="fa fa-calendar"></i>
+                    </div>
+                  </div><!-- /.input group ->
+                  <div class="input-group">
+                    <div class="input-group-addon">
+                      <i class="fa fa-calendar"></i>
+                    </div>
+                    <select id="field-options">
+                      {% for field in fields %}
+                      <option value="{{field.name}}">{{field.label}}</option>
+                      {% endfor%}
+                    </select>
+                  </div>
+                </div> --><!-- /.form group -->
                 <div class="form-group col-md-4" style="padding-left: 0px;">
                     <label>{% trans "Choose Date and time Range" %}:</label>
                   <div class="input-group">
@@ -118,47 +137,50 @@ div.scrollmenu {
         </div>
         <div class="box-body">
           <div class="row">
-            <div style="border:solid thin red;">{{data}}</div>
-            <div class="scrollmenu col-md-12">
-                <div>
-                 
-                  <!--  {{ chart.as_html }}<table id="example1" class="table datatable">
-                    <thead>
-                      <th>#</th>
-                      <!-- <th>Case ID</th>->
-                      <th>Case Number</th>
-                      <th>Source</th>
-                      <th>Description</th>
-                      <th>Date</th>
-                    </thead>
-                  {% for rep in report_data %}
+            <div class="table-responsive">
+                <table id="example1" class="table table-bordered table-striped">
+                  <thead>
                     <tr>
-                      <td>{{ forloop.counter}}.</td>
-                      <!-- <td>{{rep.caseid | default:''}}</td> ->
-
-                      <td>{{rep.case_number | safe}}</td>
-                      <td>{{rep.case_source}}</td>
-                      <td>{{rep.case_disposition}}</td>
-                      <td>{{rep.case_time}}</td>
+                      {% for field in fields %}
+                      <th>{{field.label}}</th>
+                      {% if forloop.last %}
+                      <th>Date Created</th>
+                      {% endif %}
+                      {% endfor %}
                     </tr>
-                  {% endfor %}
-                    
-                  </table> -->
-                </div>
-              <!--div id="showustheresultsnow">
-                <div class="col-md-4">
-                  {% for format in table.export_formats %}
-                  <a class="btn btn-app"  href="{% querystring '_export'=format %}">
-                    <i class="fa fa-save"></i> <strong>{% trans "Export" %} .{{ format }}</strong>
-                  </a>
-                  {% endfor %}
-                </div>
-                {% if table %}
-                {% render_table table %}
-                {% endif %}
-              </div>
-            </div-->
-          </div>
+                  </thead>
+                  <tbody>
+                    {% for dat in data %}
+                    <tr>
+                      {% for fieldx in fields %}
+                      {% if 'select' in fieldx.type %}
+                      {% with val=dat.json|get_item:fieldx.item_path  %}
+                      <td>
+                        {{ fieldx.children | get_name:val }}                      
+                      </td>
+                      {% endwith %}
+                      {% else %}
+                      <td>{{dat.json | get_item:fieldx.item_path}}</td>
+                      {% endif %}
+                      {% if forloop.last %}
+                      <td>{{dat.date_created}}</td>
+                      {% endif %}
+                      {% endfor %}
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      {% for field in fields %}
+                      <th>{{field.label}}</th>
+                      {% if forloop.last %}
+                      <th>Date Created</th>
+                      {% endif %}
+                      {% endfor %}
+                    </tr>
+                  </tfoot>
+                </table>
+            </div>
           <!-- /.col -->
         </div>
         <!-- /.row -->
@@ -167,7 +189,6 @@ div.scrollmenu {
     </div>
   </div>
 </section>
-
 <script type="text/javascript">
   // function sendtoReportFactory(){
   //   var reservationtime = document.getElementById("datetimerange").value;

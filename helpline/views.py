@@ -4,10 +4,12 @@
 import os
 import calendar
 
+import io,csv
 import time
 from random import randint
 import hashlib
 import urllib
+import dpath
 
 import imaplib,smtplib
 import email
@@ -104,9 +106,7 @@ from onadata.libs.utils.chart_tools import build_chart_data
 from onadata.libs.utils.user_auth import (get_xform_and_perms, has_permission,
                                           helper_auth_helper)
 from api.serializers import SmsSerializer
-from graphos.sources.model import ModelDataSource
-from graphos.sources.simple import SimpleDataSource
-from graphos.renderers.flot import LineChart
+import django_excel as excel
 
 def success(request):
     return render(request, 'helpline/success.html')
@@ -174,7 +174,7 @@ def home(request):
 
     stype = 'case_action'
 
-    url = 'http://%s/ona/api/v1/charts/%s.json?field_name=reporter_county' \
+    url = 'http://%s/ona/api/v1/charts/%s.json?field_name=reporter_district' \
      %(current_site, default_service_xform.pk)
     color = ['#CD5C5C','#000000','#8A2BE2','#A52A2A','#DEB887','#ADD8E6','#F08080','#90EE90','#F0E68C','#FFB6C1', \
     '#5F9EA0','#7FFF00','#D2691E','#FF7F50','#6495ED','#FFF8DC','#DC143C','#00FFFF','#00008B','#008B8B','#B8860B','#A9A9A9', \
@@ -803,8 +803,23 @@ def faq(request):
     return render(request, 'helpline/callform.html')
 
 @register.filter
+def get_name(arr,name):
+    ret_val = ''
+    if(isinstance(arr,list)) and name != '':
+        for ar in arr:
+            if ar.get('name',"")==name:
+                ret_val = ar.get('label',"")
+    return ret_val
+
+@register.filter
 def get_item(dictionary, key):
-    return dictionary.get(key, "")
+    if isinstance(dictionary,dict):
+        return dictionary.get(key, "")
+    elif isinstance(dictionary,unicode):
+        dic = yaml.load(dictionary)
+        return dic.get(key, "")
+    else:
+        return None
 
 @register.filter
 def split(str_val, key):
@@ -1009,74 +1024,89 @@ def general_reports(request, report='cases'):
         data['report_data'] = sms_data
         htmltemplate = "helpline/reports_sms.html"
     elif report.lower() == 'cases':
-        """For case reports"""
 
-        xforms = requests.get('http://%s/ona/api/v1/forms' % (current_site), \
-            headers=headers).json()
-        xformx = {}
+        # request_string = 'agent= % ' % (request.GET.get('agent') or '')
+        if datetime_range != '':
+            start_dates,end_dates = [datetime_range.split("-")[0],datetime_range.split("-")[1]]
+            request_string = " and date_created between '{0}' and '{1}'".format(start_dates,end_dates)
+        
+        # if agent != '':
+        #     request_string = " and json='{\"case_owner\":\"{0}\"}'".format(agent)        
+        def dictfetchall(cursor): 
+            "Returns all rows from a cursor as a dict" 
+            desc = cursor.description 
+            return [
+                    dict(zip([col[0] for col in desc], row)) 
+                    for row in cursor.fetchall() 
+            ]
+        def dict_from_csv(csv_file,form_user):
+            file_path = str('%s%s/formid-media/%s' %(settings.MEDIA_ROOT,form_user,csv_file))
 
-        #split to get xform object
-        for xfrm in xforms:
-            if str(xfrm['id_string']) == id_string:
-                for key, frm in xfrm.items():
-                    xformx.update({str(key):str(frm)})
+            if(os.path.isfile(file_path)):
+                file_path = open(file_path, mode='r')
 
-        if request.user.HelplineUser.hl_role == 'Counsellor':
-            if query_string == '':
-                query_string = '"case_owner":{"$i":"%s"}' %(username)
+                with  file_path as csv_file:
+                    csv_reader = csv.reader(csv_file,delimiter=',', quotechar='"')
+
+                    return dict((rows[0],rows[1]) for rows in csv_reader)
             else:
-                query_string += ',"case_owner":{"$i":"%s"}' %(username)
+                url= str("http://%s/api/v1/%s" %(current_site,csv_file))
+                webpage = urllib.urlopen(url)
+                datareader = csv.DictReader(webpage)
 
-        ur = 'http://%s/ona/api/v1/data/%s?query={%s}%s&page=1&page_size=50' %(current_site, \
-            default_service_xform.pk, query_string, request_string)
+                #Creating empty list to be inserted.
+                data = []
+                for row in datareader:
+                    data.append(row)
+                return data
 
-        stat = requests.get('http://%s/ona/api/v1/data/%s?query={%s}%s&page=1&page_size=50' %(current_site, \
-            default_service_xform.pk, query_string,  request_string), headers=headers).json()
-        # + '&sort={"_id":-1}'
-
-        data['ur'] = ur
-        statrecords = []
-        recordkeys = []
-
-        ##brings up data only for existing records
-        def get_records(recs):
-            return_obj = []
-            record = {}
-
-            for key, value in recs.items():
-                #if not (key.startswith('_') and key.endswith('_')):# str(key) == "_id":
-                key = str(key)
-                if key.find('/') != -1:
-                    k = key.split('/')
-                    l = len(k)
-                    kk = str(k[l-1])
+        rec = default_service_xform.json
+        prop_recs = yaml.load(str(rec))[u'children']
+        rec_rows = []
+        item_path = ''
+        level_path = {}
+        def fill_children(child,level_key):
+            n = ''
+            other_headers = ['group','repeat']
+            ix = 0;
+            for rows in child:
+                ix += 1
+                if rows.get('type',False) and rows.get('type',False) in other_headers:
+                    if level_key == "":
+                        level_path.update({ix:rows.get('name',"")})
+                    else:
+                        x_p = "%s/%s" %(level_path.get(ix,""),rows.get('name',""))
+                        level_path.update({ix:x_p}) 
+                    fill_children(rows.get('children',[]),level_path.get(ix,""))                        
                 else:
-                    kk = str(key)
-                if isinstance(value, dict) and len(value) >= 1:
-                    record.update(get_records(value))
-                elif isinstance(value, list) and len(value) >= 1:
-                    if isinstance(value[0], dict):
-                        record.update(get_records(value[0]))
-                else:
-                    if not kk in recordkeys and not kk.endswith('ID') and str(value) != 'yes' and \
-                    str(value) != 'no' and str(kk) != 'case_number'  and str(kk) != 'uuid':
-                        recordkeys.append(kk)
-                    record.update({kk : str(value).capitalize()})
-            return record
+                    if rows.get('name',False):
+                        n = rows.get('name','')
 
+                    if level_key != "":
+                        n = "/%s" %n
+                    item_path = "%s%s" %(str(level_key),str(n))
+                    rows.update({'item_path':item_path})
+                    item_path = ''
+                    if rows.get('itemset',False) and '.csv' in rows['itemset']:
+                        options = dict_from_csv(rows.get('itemset',''),default_service_xform.user.username) or []
+                        rows.update({'children':options})
+                    if (rows.get('type',False) and rows.get('type',False) == 'hidden') or (rows.get('bind',False) and rows['bind'].get('required',False) and str(rows['bind']['required']).lower() == 'yes'):
+                        rec_rows.append(rows)
 
-        for rec in stat:
-            if isinstance(rec, dict) and len(rec) > 1:
-                statrecords.append(get_records(rec))
+        fill_children(prop_recs,"")
 
-        if len(recordkeys) > 0:
-            recordkeys.append('Date Created')
-        else:
-            recordkeys = False
+        data['fields'] = rec_rows
 
+        recs = ''
+        # get data 
+        with connection.cursor() as cursor:
+                query = "SELECT date_created,json from logger_instance where version = '%s' %s " %(str(default_service_xform.version),daterange)
+                cursor.execute(query)
+                recs = dictfetchall(cursor)
 
-        data['statrecords'] = statrecords
-        data['recordkeys'] = recordkeys
+        data['data'] = recs # yaml.load(str(rec[0]['json']))
+        htmltemplate = 'helpline/pivot.html'
+
 
     
     # if report == 'nonanalysed':
@@ -1123,8 +1153,8 @@ def reports(request, report, casetype='Call'):
     if not datetime_range == '':
         start_dates, end_dates = [datetime_range.split(" - ")[0], datetime_range.split(" - ")[1]]
         
-        start_date = datetime.strptime(start_dates, '%m/%d/%Y  %I:%M %p')
-        end_date = datetime.strptime(end_dates, '%m/%d/%Y  %I:%M %p')
+        start_date = datetime.strptime(start_dates, '%d/%m/%Y  %I:%M %p')
+        end_date = datetime.strptime(end_dates, '%d/%m/%Y  %I:%M %p')
 
         d1 = start_date.strftime('%Y-%m-%d %H:%M')
         d2 = end_date.strftime('%Y-%m-%d %H:%M')
@@ -1263,14 +1293,14 @@ def reports(request, report, casetype='Call'):
             request_string += '&date_created__year=' + td_date.strftime('%Y')
 
         htmltemplate = ''
-        if report == 'pivot':
-            owner = get_object_or_404(User, username__iexact='helplineadmin')
+        # if report == 'pivot':
+        #     owner = get_object_or_404(User, username__iexact='helplineadmin')
             
-            xform = get_form({'id_string__iexact': id_string, 'user': owner})
-            frm_json = yaml.load(str(xform.json))[u'children']   
-            data['xform'] = frm_json
+        #     xform = get_form({'id_string__iexact': id_string, 'user': owner})
+        #     frm_json = yaml.load(str(xform.json))[u'children']   
+        #     data['xform'] = frm_json
 
-            htmltemplate = 'helpline/pivot.html'
+        #     htmltemplate = 'helpline/pivot.html'
         if report == 'disposition':
             dispositions = Cases.objects.all().filter(case_number__gt=0,case_source="walkin")
             chart_data = Cases.objects.all().exclude(case_source='').exclude(case_disposition=None).filter(case_number__gt=0).values('case_disposition').annotate(case_count=Count('case_number'))
@@ -1374,9 +1404,8 @@ def reports(request, report, casetype='Call'):
         elif htmltemplate == '':
             htmltemplate = "helpline/report_body.html"
             # data['report_data'] = filter(lambda call_data: not call_data['voicemail'], call_data)
-
+        print("Cheru: %s " % recordkeys)
     return render(request, htmltemplate, data)
-
 
 @login_required
 def qa(request, report='analysed'):
@@ -1416,8 +1445,8 @@ def qa(request, report='analysed'):
         datetime_range = request.POST.get('datetime_range', None)
         if datetime_range != '':
             start_date, end_date = [datetime_range.split(" - ")[0], datetime_range.split(" - ")[1]]
-            start_date = datetime.strptime(start_date, '%m/%d/%Y %I:%M %p')
-            end_date = datetime.strptime(end_date, '%m/%d/%Y %I:%M %p')
+            start_date = datetime.strptime(start_date, '%d/%m/%Y %I:%M %p')
+            end_date = datetime.strptime(end_date, '%d/%m/%Y %I:%M %p')
 
             d1 = datetime.strftime(start_date, '%Y/%m/%d')
             d2 = datetime.strftime(end_date, '%Y/%m/%d')
@@ -1495,9 +1524,16 @@ def qa(request, report='analysed'):
         data['agents'] = agent_list
 
         result_data = requests.get(call_url).json() or {}
-        result_data = filter(lambda result_data: result_data['agent'] != 116 and  result_data['agent'] != '', result_data) 
+
+        if(report == 'analysis'):
+            htmltemplate = "helpline/nonanalysed.html"
+            result_data = filter(lambda result_data: result_data['agent'] != 116 and  result_data['agent'] != '' and not result_data['qa'], result_data)
+        else:
+            htmltemplate = "helpline/analysed_qa.html"
+            result_data = filter(lambda result_data: result_data['agent'] != 116 and  result_data['agent'] != '' and result_data['qa'], result_data)
+         
         data['report_data'] = result_data
-        htmltemplate = "helpline/nonanalysed.html"
+        
 
     
     data['report'] = report
@@ -1858,8 +1894,6 @@ def contact_search(request, search_string=None):
 @login_required
 def case_form(request, form_name):
     """Handle Walkin and CallForm POST and GET Requests"""
-
-
     service = Service.objects.all().first()
 
     if hasattr(service,'walkin_xform') and service.walkin_xform:
@@ -1891,7 +1925,7 @@ def case_form(request, form_name):
 
     trans_users = []
     # Query all logged in users based on id list
-    users = User.objects.filter(HelplineUser__hl_status__exact='Available').exclude(username__exact=request.user.username)
+    users = User.objects.filter(HelplineUser__hl_status__exact='Available',HelplineUser__hl_role__exact='Counsellor').exclude(username__exact=request.user.username)
     for trans_user in users:
         if HelplineUser.objects.filter(user=trans_user):
                     trans_users.append({'text':str(trans_user.username),'value':str(trans_user.HelplineUser.hl_key)})
@@ -2133,10 +2167,13 @@ def case_edit(request, form_name, case_id):
         'Authorization': 'Token %s' %(default_service_auth_token)
     }
 
-    url = 'http://%s/ona/api/v1/data/%s/%s/enketo?return_url=http://%s/helpline/success/&format=json' \
+    url = 'http://%s/ona/api/v1/data/%s/%s/enketo?return_url=http://%s/helpline/success/&format=json&d[owner_level]=Supervisor' \
     % (current_site, default_service_xform.pk, case_id, current_site)
+
     req = requests.get(url, headers=headers).json()
-    return render(request,'helpline/case_form_edit.html', {'case':case_id, 'iframe_url':get_item(req, 'url')})
+    print("The req: %s " % req)
+    return render(request,'helpline/case_form_edit.html', {'case':case_id, 'iframe_url':get_item(req, 'url'),\
+        'owner_role':request.user.HelplineUser.hl_role})
 
 class DashboardTable(tables.Table):
     """Where most of the dashboard reporting happens"""
@@ -3069,7 +3106,28 @@ def form_drops(form_id):
             report['data'] = rec_rows
 
 def pivot(request):
-    report = {}     
+    report = {} 
+    # Case statistics
+
+    default_service = Service.objects.all().first()
+    default_service_xform = default_service.walkin_xform
+
+    default_service_auth_token = default_service_xform.user.auth_token
+    current_site = get_current_site(request)
+
+    report['xform_key'] = default_service_xform.pk
+    
+    request_string = ''
+    form = ReportFilterForm(request.GET)
+    datetime_range = request.GET.get("datetime_range") or ''
+    report['form'] = form
+
+    # request_string = 'agent= % ' % (request.GET.get('agent') or '')
+    if datetime_range != '':
+        start_dates,end_dates = [datetime_range.split("-")[0],datetime_range.split("-")[1]]
+        request_string = " and date_created between '{0}' and '{1}'".format(start_dates,end_dates)
+    if agent != '':
+        request_string = " and json='{\"case_owner\":\"{0}\"}'".format(agent)        
     def dictfetchall(cursor): 
         "Returns all rows from a cursor as a dict" 
         desc = cursor.description 
@@ -3077,34 +3135,91 @@ def pivot(request):
                 dict(zip([col[0] for col in desc], row)) 
                 for row in cursor.fetchall() 
         ]
+    def dict_from_csv(csv_file,form_user):
+        file_path = str('%s%s/formid-media/%s' %(settings.MEDIA_ROOT,form_user,csv_file))
+
+        if(os.path.isfile(file_path)):
+            file_path = open(file_path, mode='r')
+
+            with  file_path as csv_file:
+                csv_reader = csv.reader(csv_file,delimiter=',', quotechar='"')
+
+                return dict((rows[0],rows[1]) for rows in csv_reader)
+        else:
+            url= str("http://%s/api/v1/%s" %(current_site,csv_file))
+            webpage = urllib.urlopen(url)
+            datareader = csv.DictReader(webpage)
+
+            #Creating empty list to be inserted.
+            data = []
+            for row in datareader:
+                data.append(row)
+            return data
+
+    rec = default_service_xform.json
+    prop_recs = yaml.load(str(rec))[u'children']
+    rec_rows = []
+    item_path = ''
+    level_path = {}
+    def fill_children(child,level_key):
+        n = ''
+        other_headers = ['group','repeat']
+        ix = 0;
+        for rows in child:
+            ix += 1
+            if rows.get('type',False) and rows.get('type',False) in other_headers:
+                if level_key == "":
+                    level_path.update({ix:rows.get('name',"")})
+                else:
+                    x_p = "%s/%s" %(level_path.get(ix,""),rows.get('name',""))
+                    level_path.update({ix:x_p}) 
+                fill_children(rows.get('children',[]),level_path.get(ix,""))                        
+            else:
+                if rows.get('name',False):
+                    n = rows.get('name','')
+
+                if level_key != "":
+                    n = "/%s" %n
+                item_path = "%s%s" %(str(level_key),str(n))
+                rows.update({'item_path':item_path})
+                item_path = ''
+                if rows.get('itemset',False) and '.csv' in rows['itemset']:
+                    options = dict_from_csv(rows.get('itemset',''),default_service_xform.user.username) or []
+                    rows.update({'children':options})
+                if (rows.get('type',False) and rows.get('type',False) == 'hidden') or (rows.get('bind',False) and rows['bind'].get('required',False) and str(rows['bind']['required']).lower() == 'yes'):
+                    rec_rows.append(rows)
+
+    fill_children(prop_recs,"")
+
+    report['fields'] = rec_rows
+
+    recs = ''
+    # get data 
     with connection.cursor() as cursor:
-            query = 'SELECT json from logger_xform where id = %s' % 1
+            query = "SELECT date_created,json from logger_instance where version = '%s' %s " %(str(default_service_xform.version),daterange)
             cursor.execute(query)
-            rec = dictfetchall(cursor)[0][u'json']
-            rec_rows = [] 
-            prop_recs = yaml.load(str(rec))[u'children']
-            
-            def fill_children(child):
-                for rows in child:
-                    other_headers = ['group','repeater']
-                    if rows['type'] and 'select' in rows['type']:
-                        fill_children(rows['children'])                        
-                    elif not rows['type']:
-                        if get_item(rows,'label'):
-                            rec_rows.append({rows['name']:rows['label']})
-                        else:
-                            rec_rows.append({rows['name']:rows['name']})
-            
-            fill_children(prop_recs)
-            
-            report['data'] = rec_rows
-    return render(request, 'helpline/pivot.html',report)
-@login_required
-def pivots(request):
-    report = {'data':''}
-    report['data'] = form_fields(1)
+            recs = dictfetchall(cursor)
+
+    report['data'] = recs # yaml.load(str(rec[0]['json']))
 
     return render(request, 'helpline/pivot.html',report)
+
+@login_required
+def current_user(request):
+    user = request.user
+
+    user_json = (("name","label"),("username",user.username),("userlevel",user.HelplineUser.hl_role))
+   
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="currentuser.csv"'
+
+    writer = csv.writer(response)
+
+    writer.writerows(user_json)
+    # for k in user_json:
+    #     writer.writerow(k)
+
+    return response
 
 @login_required
 def wall(request):
