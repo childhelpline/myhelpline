@@ -106,7 +106,6 @@ from onadata.libs.utils.chart_tools import build_chart_data
 from onadata.libs.utils.user_auth import (get_xform_and_perms, has_permission,
                                           helper_auth_helper)
 from api.serializers import SmsSerializer
-import django_excel as excel
 
 def success(request):
     return render(request, 'helpline/success.html')
@@ -183,7 +182,7 @@ def home(request):
     '#F8F8FF','#FFD700','#DAA520','#808080','#ADFF2F','#F0FFF0','#FF69B4','#FFE4C4','#4B0082','#FFFFF0','#E6E6FA',\
     '#FFF0F5','#7CFC00','#FFFACD','#FAFAD2','#90EE90','#D3D3D3','#F0F8FF','#FAEBD7','#F0FFFF','#F5F5DC','#7FFFD4','#FFA07A'
     ]
-    stype = 'reporter_county'
+    stype = 'reporter_district'
 
     #for case status 
     status_data = requests.get(url, headers=headers).json()
@@ -1207,7 +1206,7 @@ def reports(request, report, casetype='Call'):
             if request_string == '':
                 request_string = '?usr_f=%s' % agent
             else:
-                request_string = '%s&usr_f=%s' % (datetime_range,agent)
+                request_string = '%s&usr_f=%s' % (datetime_ranges,agent)
 
         if request_string != '':
             calls_url = "%s/clk/cdr/?chan_ts_f=%s" %(settings.CALL_API_URL, \
