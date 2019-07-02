@@ -255,7 +255,7 @@ class ReportFilterForm(forms.Form):
         widget=forms.TextInput(attrs={'class': 'form-control pull-right',
                                       'name': 'datetimerange',
                                       'id': 'datetimerange',
-                                      'width': '200px'}),
+                                      'width': '200px',}),
         required=False,
     )
     agent = forms.ModelChoiceField(
@@ -330,13 +330,18 @@ class LoginForm(forms.Form):
 class RegisterUserForm(UserCreationForm):
     class Meta:
         model = User
-        fields = ('first_name','last_name','username', 'password1', 'password2', )
+        fields = ('first_name','last_name','username', 'password1', 'password2')
+
+class EditUserForm(ModelForm):
+    class Meta:
+        model = User
+        fields = ('first_name','last_name')
 
 class RegisterProfileForm(ModelForm):
-    useremail = forms.EmailField(label="Email:", max_length=30,
+    hl_email = forms.EmailField(label="Email:", max_length=30,
                                widget=forms.EmailInput(attrs={'class': 'form-control', 'name': 'useremail'}))
-    avatar = forms.ImageField(label="Picture:", max_length=30)
-    userrole = forms.ChoiceField(label="Role",
+    hl_avatar = forms.ImageField(label="Picture:", max_length=30)
+    hl_role = forms.ChoiceField(label="Role",
                                 widget=forms.Select(
                                     attrs={
                                         'name': 'userrole',
@@ -347,7 +352,7 @@ class RegisterProfileForm(ModelForm):
                                 required=False)
     class Meta:
         model = HelplineUser
-        fields = ('useremail','hl_phone', 'userrole', 'avatar')
+        fields = ('hl_email','hl_phone','hl_role', 'hl_avatar')
 
 class QueuePauseForm(forms.Form):
     """Queue pause form"""

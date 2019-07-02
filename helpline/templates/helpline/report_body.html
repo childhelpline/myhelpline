@@ -158,7 +158,7 @@
                       <th style="white-space: nowrap;">Case ID</th>
                       {% for itemx in recordkeys %}
                       {% if not "_" == itemx|first %}
-                        <th>{{ itemx }}</th>
+                        <th>{{ itemx | split:"_"}}</th>
                       {% endif %}
                       {% endfor %}                    
                     </tr>
@@ -176,7 +176,7 @@
                         {% elif forloop.last %}
                         {{  records | get_item:'_submission_time' }}
                         {% else %}
-                        {{  records | get_item:item_key }}
+                        {{  records | get_item:item_key  }}
                         {% endif %}
                       </td>
                       {% endif %}
@@ -191,7 +191,7 @@
                       <th>Case ID</th>
                       {% for recordkey in recordkeys %}
                       {% if not "_" == recordkey|first %}
-                      <th>{{ recordkey }}</th>
+                      <th>{{ recordkey | split:"_" }}</th>
                       {% endif %}
                       {% endfor %}                       
                     </tr>

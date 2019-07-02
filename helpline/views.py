@@ -95,7 +95,7 @@ from helpline.models import Report, HelplineUser,\
 
 from helpline.forms import QueueLogForm,\
         ContactForm, DispositionForm, CaseSearchForm, RegisterProfileForm, RegisterUserForm, \
-        ReportFilterForm, QueuePauseForm, CaseActionForm, ContactSearchForm
+        ReportFilterForm, QueuePauseForm, CaseActionForm, ContactSearchForm,EditUserForm
 
 import json
 import yaml 
@@ -315,7 +315,6 @@ def sync_emails(request):
             return HttpResponse("No new mails found ")
 
 
-
         for i in range(latest_email_id, first_email_id-1, -1):
             typ, data = mail.fetch(i, '(RFC822)')
             for response_part in data:
@@ -395,7 +394,7 @@ def myaccount(request):
 def manage_users(request,action=None,action_item=None):
     """View user management page"""
     
-    message = ""
+    messages =[]
     data = {}
     # userlist = User.objects.all().filter(is_active=True)
     template = 'users'
@@ -403,31 +402,69 @@ def manage_users(request,action=None,action_item=None):
     if action != None and action_item != None:
         action_user = User.objects.filter(HelplineUser__hl_key__exact=action_item).first()
         if action == 'delete':
-            # del_user = new User()
-            action_user.is_active = False;
-            action_user.save()
+            action_user.HelplineUser.delete()
+            action_user.delete()
             message = "User successfully deleted"
         elif action == 'profile':
             template = 'profile'
             data['template'] = 'user'
         elif action == 'edit':
-            user = User.objects.get(HelplineUser__hl_key__exact=action_item)
-            profile = user.HelplineUser
+            # user = User.objects.get(HelplineUser__hl_key__exact=action_item)
+            profile = action_user.HelplineUser
+            currentrole = request.user.HelplineUser.hl_role
+            
+            perms = ['Supervisor','Admin']
+            
 
-            form = RegisterUserForm(instance=user)
-            profile_form = RegisterProfileForm(instance=profile)
+            form = EditUserForm(request.POST or None, request.FILES,instance=action_user)
+            profile_form = RegisterProfileForm(request.POST or None, request.FILES,instance=profile)
+            
+            if request.method == "POST" and form.is_valid() and profile_form.is_valid():
+                if request.user.id == action_user.id or currentrole in perms:
+                    try:
+                        user_form = User()
+                        uploaded_file_url = ''                
+                        filename = ''
+                        if request.FILES['hl_avatar']:
+                            myfile = request.FILES['hl_avatar']
+                            fs = FileSystemStorage()
+                            filename = fs.save(myfile.name, myfile)
+                            uploaded_file_url = fs.url(filename)
 
-            if request.user.is_authenticated() and request.user.id == user.id:
-                if request.method == "POST":
-                    # form = RegisterProfileForm(request.POST, request.FILES, instance=profile)            
-                    form = RegisterUserForm(request.POST or None, request.FILES,instance=action_user)
-                    profile_form = RegisterProfileForm(request.POST or None, request.FILES,instance=user_prof)
+                        user_form = form.save()
+                        custom_form = profile_form.save(False)
+
+                        custom_form.user = user_form
+                        custom_form.save()
+                        user_form.refresh_from_db()
+
+                        user_form.HelplineUser.hl_avatar = "%s" % uploaded_file_url
+                        user_form.HelplineUser.hl_time = time.time()
+                        user_form.HelplineUser.hl_names = "%s %s" %(form.cleaned_data.get('first_name'), \
+                        form.cleaned_data.get('last_name'))
+
+                        user_form.HelplineUser.save()
+
+                        user_form.save()
+
+                        messages.append('Successfully updated user')
+                        
+                    except Exception as e:
+                        form = EditUserForm(request.POST)
+                        profile_form = RegisterProfileForm(request.POST, request.FILES)
+                        messages.append('Error saving user: %s' % (e))
+                else:
+                    form = EditUserForm(request.POST)
+                    profile_form = RegisterProfileForm(request.POST, request.FILES)
+            else:
+                form = EditUserForm(instance=action_user)
+                profile_form = RegisterProfileForm(instance=profile)
 
             data['template'] = 'user'
             template = 'user'
             data['form'] = form
             data['profileform'] = profile_form
-            data['messs'] = ''
+            data['messages'] = messages
     
     userlist = User.objects.filter(is_active=True).exclude(HelplineUser=None).select_related('HelplineUser')
     data['systemusers'] = userlist
@@ -472,7 +509,7 @@ def new_user(request):
                 user.HelplineUser.hl_email = "%s" % profile_form.cleaned_data.get('useremail')
 
                 user.HelplineUser.hl_area = ''
-                user.HelplineUser.hl_phone = profile_form.cleaned_data.get('phone')
+                user.HelplineUser.hl_phone = "%s" % profile_form.cleaned_data.get('phone')
                 user.HelplineUser.hl_branch = ''
                 user.HelplineUser.hl_case = 0
 
@@ -953,7 +990,7 @@ def general_reports(request, report='cases'):
     agent = request.GET.get("agent")
     category = request.GET.get("category", "")
     form = ReportFilterForm(request.GET)
-    # dashboard_stats = get_dashboard_stats(request.user)
+    dashboard_stats = get_dashboard_stats(request.user)
     report_title = {report: _(str(report).capitalize() + " Reports")}
 
     data = {
@@ -963,7 +1000,7 @@ def general_reports(request, report='cases'):
         'report': report,
         'form': form,
         'datetime_range': datetime_range,
-        # 'dashboard_stats': dashboard_stats,
+        'dashboard_stats': dashboard_stats,
         'query': query
     }
 
@@ -975,9 +1012,6 @@ def general_reports(request, report='cases'):
     if datetime_range != '':
         start_dates, end_dates = [datetime_range.split(" - ")[0], datetime_range.split(" - ")[1]]
 
-        # start_date = datetime.strptime(start_date, '%Y-%m-%d')
-        # end_date = datetime.strptime(end_date, '%Y-%m-%d')
-
         start_date = datetime.strptime(start_dates, '%m/%d/%Y  %H:%M %p')
         end_date = datetime.strptime(end_dates, '%m/%d/%Y  %H:%M %p')
 
@@ -988,13 +1022,13 @@ def general_reports(request, report='cases'):
         d1 = start_date.strftime('%Y-%m-%d %H:%M')
         d2 = end_date.strftime('%Y-%m-%d %H:%M')
 
-        datetime_range = '%s-%s' %(d1,d2)
+        datetime_range = '%sto%s' %(d1,d2)
     else:
         today = datetime.now()
 
-        start_dates = datetime.strftime(today, '%d/%m/%Y  %H:%M %p')
-        end_dates = datetime.strftime(today, '%d/%m/%Y  %H:%M %p')
-        datetime_range = '%s-%s' %(datetime.strftime(today,'%Y-%m-%d'),datetime.strftime(today,'%Y-%m-%d'))
+        start_dates = datetime.strftime(today, '%d/%m/%Y  00:00')
+        end_dates = datetime.strftime(today, '%d/%m/%Y  23:59')
+        datetime_range = '%sto%s' %(datetime.strftime(today,'%Y-%m-%d'),datetime.strftime(today,'%Y-%m-%d'))
 
 
     htmltemplate = 'helpline/report_cases.html'
@@ -1033,12 +1067,9 @@ def general_reports(request, report='cases'):
         data['report_data'] = sms_data
         htmltemplate = "helpline/reports_sms.html"
     elif report.lower() == 'cases':
-
-        # request_string = 'agent= % ' % (request.GET.get('agent') or '')
+        agent= request.GET.get('agent') or ''
         if datetime_range != '':
-            # start_dates,end_dates = [datetime_range.split("-")[0],datetime_range.split("-")[1]]
             request_string = " and date_created between '{0}' and '{1}'".format(start_dates,end_dates)
-            print("Cheru: %s " % request_string)
         # if agent != '':
         #     request_string = " and json='{\"case_owner\":\"{0}\"}'".format(agent)        
         def dictfetchall(cursor): 
@@ -1149,6 +1180,7 @@ def reports(request, report, casetype='Call'):
 
     request_string = ''
     query_string = ''
+    datetime_range_call = ''
 
     home_statistics = get_dashboard_stats(request)
 
@@ -1168,10 +1200,10 @@ def reports(request, report, casetype='Call'):
         start_date = datetime.strptime(start_dates, '%d/%m/%Y  %I:%M %p')
         end_date = datetime.strptime(end_dates, '%d/%m/%Y  %I:%M %p')
 
-        d1 = start_date.strftime('%Y-%m-%d %H:%M')
-        d2 = end_date.strftime('%Y-%m-%d %H:%M')
+        d1 = start_date.strftime('%Y-%m-%d')
+        d2 = end_date.strftime('%Y-%m-%d')
         
-        datetime_range = '%sto%s' %(d1,d2)
+        datetime_range_call = '%sto%s' %(d1,d2)
 
         case_start = start_date.strftime('%Y-%m-%d')
         case_end = end_date.strftime('%Y-%m-%d')
@@ -1179,13 +1211,18 @@ def reports(request, report, casetype='Call'):
     else:
         nowdate = datetime.now()
 
-        start_date = nowdate.strftime('%d-%m-%Y  00:00 AM')
-        end_date = nowdate.strftime('%d-%m-%Y  23:59 PM')
+        start_date = nowdate.strftime('%d-%m-%Y  00:00 %p')
+        end_date = nowdate.strftime('%d-%m-%Y  23:59 %p')
 
-        datetime_range = '%sto%s' %(start_date,end_date)
+        datetime_range = '%s-%s' %(start_date,end_date)
 
         case_start = nowdate.strftime('%Y-%m-%d')
         case_end = nowdate.strftime('%Y-%m-%d')
+
+        d1 = nowdate.strftime('%Y-%m-%d')
+        d2 = nowdate.strftime('%Y-%m-%d')
+        
+        datetime_range_call = '%sto%s' %(d1,d2)
 
     
 
@@ -1201,21 +1238,27 @@ def reports(request, report, casetype='Call'):
                 agent = request.user
             else:
                 agent = User.objects.get(pk__exact=agent)
+
             agent = agent.HelplineUser.hl_key
             
             if request_string == '':
                 request_string = '?usr_f=%s' % agent
             else:
-                request_string = '%s&usr_f=%s' % (datetime_ranges,agent)
+                request_string += '&usr_f=%s' % (datetime_ranges,agent)
 
-        if request_string != '':
-            calls_url = "%s/clk/cdr/?chan_ts_f=%s" %(settings.CALL_API_URL, \
+        if request_string == '':
+            request_string = '?chan_ts_f=%s' % datetime_range_call
+        else:
+            request_string += '&chan_ts_f=%s' % (datetime_range_call)
+
+        if  request_string != '':
+            calls_url = "%s/clk/cdr/%s" %(settings.CALL_API_URL, \
                 request_string)
         else:
             calls_url = "%s/clk/cdr/" %(settings.CALL_API_URL)
 
         call_data = requests.get(calls_url).json()
-        
+
         if report in callreports:
             htmltemplate = "helpline/reports.html"
         elif report == 'voicemails': 
@@ -1416,7 +1459,6 @@ def reports(request, report, casetype='Call'):
         elif htmltemplate == '':
             htmltemplate = "helpline/report_body.html"
             # data['report_data'] = filter(lambda call_data: not call_data['voicemail'], call_data)
-        print("Cheru: %s " % recordkeys)
     return render(request, htmltemplate, data)
 
 @login_required
@@ -2183,7 +2225,6 @@ def case_edit(request, form_name, case_id):
     % (current_site, default_service_xform.pk, case_id, current_site)
 
     req = requests.get(url, headers=headers).json()
-    print("The req: %s " % req)
     return render(request,'helpline/case_form_edit.html', {'case':case_id, 'iframe_url':get_item(req, 'url'),\
         'owner_role':request.user.HelplineUser.hl_role})
 
@@ -2558,7 +2599,7 @@ def initialize_myaccount(user):
         myaccount.hl_case = 0
         myaccount.hl_clock = 0
         myaccount.hl_time = 0
-        myaccount.hl_status = 'Idle'
+        myaccount.hl_status = 'Offline'
         # TODO: Update this so site specific
         myaccount.hl_jabber = "%s@%s" % (user.username, 'im.helpline.co.ke')
         myaccount.hl_pass = hashlib.md5("1234").hexdigest()
@@ -2985,14 +3026,14 @@ def ajax_admin_report(request, report, casetype='all'):
 
 def login(request, template_name="helpline/login.html"):
     """Helpline login handler"""
-    request.user.HelplineUser.hl_status = "Idle"
+    request.user.HelplineUser.hl_status = "Available"
     request.user.HelplineUser.save()
     return django_login(request, **{"template_name": template_name})
 
 
 @login_required
 def logout(request, template_name="helpline/loggedout.html"):
-    request.user.HelplineUser.hl_status = "Unavailable"
+    request.user.HelplineUser.hl_status = "Offline"
     request.user.HelplineUser.save()
 
     try:
