@@ -1159,8 +1159,8 @@ def general_reports(request, report='cases'):
         recs = ''
         # get data 
         with connection.cursor() as cursor:
-                query = "SELECT date_created,json from logger_instance where version = '%s' \
-                %s " %(str(default_service_xform.version),request_string)
+                query = "SELECT date_created,json from logger_instance where xform_id = '%s' \
+                %s " %(str(default_service_xform.pk),request_string)
                 cursor.execute(query)
                 recs = dictfetchall(cursor)
 
@@ -1169,13 +1169,13 @@ def general_reports(request, report='cases'):
 
 
     
-    # if report == 'nonanalysed':
-    #     data['report_data'] = filter(lambda _call_data: not _call_data['length'] and _call_data['length'] <= 1, call_data)
-    #     htmltemplate = "helpline/nonanalysed.html"
-    # elif report == 'voicemails':
-    #     data['report_data'] = filter(lambda _call_data: _call_data['voicemail'], call_data)
-    # elif htmltemplate == '':
-    #     htmltemplate = "helpline/report_body.html"
+    if report == 'nonanalysed':
+        data['report_data'] = filter(lambda _call_data: not _call_data['length'] and _call_data['length'] <= 1, call_data)
+        htmltemplate = "helpline/nonanalysed.html"
+    elif report == 'voicemails':
+        data['report_data'] = filter(lambda _call_data: _call_data['voicemail'], call_data)
+    elif htmltemplate == '':
+        htmltemplate = "helpline/report_body.html"
 
     return render(request, htmltemplate, data)
 
@@ -1442,7 +1442,7 @@ def reports(request, report, casetype='Call'):
             recs = ''
             # get data 
             with connection.cursor() as cursor:
-                    query = "SELECT date_created,json from logger_instance where version = '%s' %s " %(str(default_service_xform.version),request_string)
+                    query = "SELECT date_created,json from logger_instance where xform_id = '%s' %s " %(str(default_service_xform.pk),request_string)
                     cursor.execute(query)
                     recs = dictfetchall(cursor)
 
@@ -3248,7 +3248,7 @@ def pivot(request):
                 if rows.get('name',False):
                     n = rows.get('name','')
 
-                
+
                 rows.update({'r_name':n.replace('_', ' ').capitalize()})
                 if level_key != "":
                     n = "/%s" %n
@@ -3268,7 +3268,7 @@ def pivot(request):
     recs = ''
     # get data 
     with connection.cursor() as cursor:
-            query = "SELECT date_created,json from logger_instance where version = '%s' %s " %(str(default_service_xform.version),request_string)
+            query = "SELECT date_created,json from logger_instance where xform_id = '%s' %s " %(str(default_service_xform.pk),request_string)
             cursor.execute(query)
             recs = dictfetchall(cursor)
 
