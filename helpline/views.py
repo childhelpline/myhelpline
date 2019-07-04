@@ -905,7 +905,6 @@ def caseview(request, form_name, case_id):
     request_string = ''
 
     stat = requests.get(url + case_id + request_string, headers=headers).json()
-    print("Cheru: %s,%s " %(case_id,stat))
     history = requests.get(url + case_id + '/history', headers=headers).json()
 
     statrecords = []
@@ -1024,6 +1023,8 @@ def general_reports(request, report='cases'):
         start_dates = datetime.strftime(start_date, '%d/%m/%Y  %H:%M %p')
         end_dates = datetime.strftime(end_date, '%d/%m/%Y  %H:%M %p')
 
+        datetime_range = "%s-%s" %(start_date.strftime('%Y/%m/%d %I:%M'),end_date.strftime('%Y/%m/%d %I:%M'))
+
         d1 = start_date.strftime('%Y-%m-%d %H:%M')
         d2 = end_date.strftime('%Y-%m-%d %H:%M')
 
@@ -1033,7 +1034,7 @@ def general_reports(request, report='cases'):
 
         month = today.month -1 if today.month > 1 else 12
 
-        start_date = '%02d/%02d/%d 00:00' %(today.day,month,today.year)
+        start_date = '%02d/%02d/%d 00:00' %(today.year,month,today.day)
         end_date = today.strftime('%d/%m/%Y  23:59')
 
         datetime_range = '%s-%s' %(start_date,end_date)
@@ -1218,6 +1219,7 @@ def reports(request, report, casetype='Call'):
         d1 = start_date.strftime('%Y-%m-%d')
         d2 = end_date.strftime('%Y-%m-%d')
         
+        datetime_range = "%s-%s" %(start_date.strftime('%Y/%m/%d %I:%M'),end_date.strftime('%Y/%m/%d %I:%M'))
         datetime_range_call = '%sto%s' %(d1,d2)
 
         case_start = start_date.strftime('%Y-%m-%d')
@@ -1226,12 +1228,12 @@ def reports(request, report, casetype='Call'):
     else:
         nowdate = datetime.now()
 
-        start_date = nowdate.strftime('%d/%m/%Y  00:00')
-        end_date = nowdate.strftime('%d/%m/%Y  23:59')
+        start_date = nowdate.strftime('%Y/%m/%d  00:00')
+        end_date = nowdate.strftime('%Y/%m/%d 23:59')
 
         if report == 'totalcases':
             month = nowdate.month -1 if nowdate.month > 1 else 12
-            start_date = '%02d/%02d/%d 00:00' %(nowdate.day,month,nowdate.year)
+            start_date = '%02d/%02d/%d 00:00' %(nowdate.year,month,nowdate.day)
 
         datetime_range = '%s-%s' %(start_date,end_date)
 

@@ -42,6 +42,17 @@
 {% endblock navbar_nav %}
 
 {% block content %}
+<style type="text/css">
+tbody tr td{
+overflow: hidden;
+text-overflow: ellipsis;
+white-space: nowrap;
+max-width:300px;
+//display:inline-block;
+}
+  
+</style>
+
 <section class="content-header">
   <h1>
     {% trans "REPORT" %} <i class="fa fa-angle-right"></i> {{ title }}<small>My Cases  [<a href="{% url "form-show" owner.username xform.id_string %}">{{ xform.title }}</a>]</small>
