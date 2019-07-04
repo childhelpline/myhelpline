@@ -489,7 +489,11 @@ def get_case_number(case_source):
 def case_number(request, case_source):
     caseid = get_case_number(case_source)
     return HttpResponse(caseid)
-
+@login_required
+def available_users(request):
+    if request.user.is_authenticated():
+        usrlist = User.objects.filter(HelplineUser__hl_role='Counsellor',HelplineUser__hl_status='Available')
+        return usrlist
 @login_required
 def new_user(request):
     messages = []
@@ -901,6 +905,7 @@ def caseview(request, form_name, case_id):
     request_string = ''
 
     stat = requests.get(url + case_id + request_string, headers=headers).json()
+    print("Cheru: %s,%s " %(case_id,stat))
     history = requests.get(url + case_id + '/history', headers=headers).json()
 
     statrecords = []
@@ -1012,8 +1017,8 @@ def general_reports(request, report='cases'):
     if datetime_range != '':
         start_dates, end_dates = [datetime_range.split(" - ")[0], datetime_range.split(" - ")[1]]
 
-        start_date = datetime.strptime(start_dates, '%m/%d/%Y  %H:%M %p')
-        end_date = datetime.strptime(end_dates, '%m/%d/%Y  %H:%M %p')
+        start_date = datetime.strptime(start_dates, '%d/%m/%Y  %H:%M %p')
+        end_date = datetime.strptime(end_dates, '%d/%m/%Y  %H:%M %p')
 
 
         start_dates = datetime.strftime(start_date, '%d/%m/%Y  %H:%M %p')
@@ -1022,13 +1027,18 @@ def general_reports(request, report='cases'):
         d1 = start_date.strftime('%Y-%m-%d %H:%M')
         d2 = end_date.strftime('%Y-%m-%d %H:%M')
 
-        datetime_range = '%sto%s' %(d1,d2)
+        datetime_range_call = '%sto%s' %(d1,d2)
     else:
         today = datetime.now()
 
-        start_dates = datetime.strftime(today, '%d/%m/%Y  00:00')
-        end_dates = datetime.strftime(today, '%d/%m/%Y  23:59')
-        datetime_range = '%sto%s' %(datetime.strftime(today,'%Y-%m-%d'),datetime.strftime(today,'%Y-%m-%d'))
+        month = today.month -1 if today.month > 1 else 12
+
+        start_date = '%02d/%02d/%d 00:00' %(today.day,month,today.year)
+        end_date = today.strftime('%d/%m/%Y  23:59')
+
+        datetime_range = '%s-%s' %(start_date,end_date)
+
+        datetime_range_call = '%sto%s' %(datetime.strftime(today,'%Y-%m-%d'),datetime.strftime(today,'%Y-%m-%d'))
 
 
     htmltemplate = 'helpline/report_cases.html'
@@ -1040,7 +1050,7 @@ def general_reports(request, report='cases'):
             call_url = "%s/clk/cdr/" %(settings.CALL_API_URL)
         else:
             call_url = "%s/clk/cdr/?chan_ts_f=%s" %(settings.CALL_API_URL, \
-            datetime_range)
+            datetime_range_call)
         
 
 
@@ -1052,7 +1062,7 @@ def general_reports(request, report='cases'):
         """For call reports"""
         htmltemplate = "helpline/report.html"
         call_url = "%s/clk/cdr/?chan_ts_f=%s" %(settings.CALL_API_URL, \
-            datetime_range)
+            datetime_range_call)
         call_data = requests.post(call_url).json()
         data['report_data'] = filter(lambda call_data: call_data['voicemail'], call_data)
     elif report.lower() == 'emails':
@@ -1066,12 +1076,17 @@ def general_reports(request, report='cases'):
         sms_data = SMSCDR.objects.all()
         data['report_data'] = sms_data
         htmltemplate = "helpline/reports_sms.html"
-    elif report.lower() == 'cases':
-        agent= request.GET.get('agent') or ''
+    elif report.lower() == 'cases':     
+        agent = request.GET.get('agent') or ''
+
         if datetime_range != '':
-            request_string = " and date_created between '{0}' and '{1}'".format(start_dates,end_dates)
-        # if agent != '':
-        #     request_string = " and json='{\"case_owner\":\"{0}\"}'".format(agent)        
+            start_dates,end_dates = [datetime_range.split("-")[0],datetime_range.split("-")[1]]
+            request_string += " and date_created >= '{0}' and date_created <= '{1}'".format(start_dates,end_dates)
+        
+        if agent != '':
+
+            request_string += " and json='{\"case_owner\":\"{0}\"}'".format(agent)  
+
         def dictfetchall(cursor): 
             "Returns all rows from a cursor as a dict" 
             desc = cursor.description 
@@ -1211,8 +1226,12 @@ def reports(request, report, casetype='Call'):
     else:
         nowdate = datetime.now()
 
-        start_date = nowdate.strftime('%d-%m-%Y  00:00 %p')
-        end_date = nowdate.strftime('%d-%m-%Y  23:59 %p')
+        start_date = nowdate.strftime('%d/%m/%Y  00:00')
+        end_date = nowdate.strftime('%d/%m/%Y  23:59')
+
+        if report == 'totalcases':
+            month = nowdate.month -1 if nowdate.month > 1 else 12
+            start_date = '%02d/%02d/%d 00:00' %(nowdate.day,month,nowdate.year)
 
         datetime_range = '%s-%s' %(start_date,end_date)
 
@@ -1290,34 +1309,6 @@ def reports(request, report, casetype='Call'):
         }
 
 
-
-        # form_choices = yaml.load(default_service_xform.json)['choices']
-
-        # # get dropdown fields
-        # data['choices'] = form_choices
-        # main_keys = form_choices.keys()
-
-        #get form headers
-        # heads = yaml.load(default_service_xform.json)[u'children']
-
-        # rec_rows = []
-        # recordkeys = []
-        # def fill_children(child):
-        #     for rows in child:
-        #         other_headers = ['group','repeater']
-        #         if hasattr(rows,'control') or rows['type'] in other_headers:# hasattr(rows,'type') and ('select' in rows['type'] or rows['type'] == 'group'):
-        #            fill_children(rows['children']) 
-        #         else:
-        #             if hasattr(rows,'bind'):
-        #                 rows = rows['bind']
-
-        #             if get_item(rows,'label') != '':
-        #                 rec_rows.append({rows['name']:get_item(rows,"label")})
-        #             else:
-        #                 rec_rows.append({rows['name']:rows['name']})
-        #         recordkeys.append(rows['name'])
-        # fill_children(heads)
-
         id_string = str(default_service_xform)
 
         username = request.user.username
@@ -1342,20 +1333,11 @@ def reports(request, report, casetype='Call'):
         elif report == 'highpriority':
             query_string = '"case_narratives/case_priority":"high_priority"'
         elif report == 'today' or report == 'totalcases':
-            td_date = datetime.today()
-            request_string += '&date_created__day=' + td_date.strftime('%d')
-            request_string += '&date_created__month=' + td_date.strftime('%m')
-            request_string += '&date_created__year=' + td_date.strftime('%Y')
+            request_string = ''
 
         htmltemplate = ''
-        # if report == 'pivot':
-        #     owner = get_object_or_404(User, username__iexact='helplineadmin')
-            
-        #     xform = get_form({'id_string__iexact': id_string, 'user': owner})
-        #     frm_json = yaml.load(str(xform.json))[u'children']   
-        #     data['xform'] = frm_json
+        report = {}
 
-        #     htmltemplate = 'helpline/pivot.html'
         if report == 'disposition':
             dispositions = Cases.objects.all().filter(case_number__gt=0,case_source="walkin")
             chart_data = Cases.objects.all().exclude(case_source='').exclude(case_disposition=None).filter(case_number__gt=0).values('case_disposition').annotate(case_count=Count('case_number'))
@@ -1383,82 +1365,90 @@ def reports(request, report, casetype='Call'):
         else:
             """For case reports"""
 
-            xform = get_form({'id_string__iexact': id_string, 'user': owner})
-            frm_json = yaml.load(str(xform.json))[u'children']   
+            if datetime_range != '':
+                start_dates,end_dates = [datetime_range.split("-")[0],datetime_range.split("-")[1]]
+                request_string = " and date_created >= '{0}' and date_created <= '{1}'".format(start_dates,end_dates)
+            if agent != '':
+                request_string = " and json='{\"case_owner\":\"{0}\"}'".format(agent)        
+            def dictfetchall(cursor): 
+                "Returns all rows from a cursor as a dict" 
+                desc = cursor.description 
+                return [
+                        dict(zip([col[0] for col in desc], row)) 
+                        for row in cursor.fetchall() 
+                ]
+            def dict_from_csv(csv_file,form_user):
+                file_path = str('%s%s/formid-media/%s' %(settings.MEDIA_ROOT,form_user,csv_file))
 
-            if request.user.HelplineUser.hl_role == 'Counsellor' and report != 'totalcases':
-                if query_string == '':
-                    query_string = '"case_owner":{"$i":"%s"}' %(username)
+                if(os.path.isfile(file_path)):
+                    file_path = open(file_path, mode='r')
+
+                    with  file_path as csv_file:
+                        csv_reader = csv.reader(csv_file,delimiter=',', quotechar='"')
+
+                        return dict((rows[0],rows[1]) for rows in csv_reader)
                 else:
-                    query_string += ',"case_owner":{"$i":"%s"}' %(username)
+                    url= str("http://%s/api/v1/%s" %(current_site,csv_file))
+                    webpage = urllib.urlopen(url)
+                    datareader = csv.DictReader(webpage)
 
-            ur = 'http://%s/ona/api/v1/data/%s?query={%s}%s' %(current_site, \
-                default_service_xform.pk, query_string, request_string) # 
-            stat = requests.get(ur, headers=headers).json()
+                    #Creating empty list to be inserted.
+                    data = []
+                    for row in datareader:
+                        data.append(row)
+                    return data
 
-            data['ur'] = ur
-            statrecords = []
-            recordkeys = []
-
-            ##brings up data only for existing records
-            def get_records(recs):
-                return_obj = []
-                record = {}
-
-                for key, value in recs.items():
-                    key = str(key)
-                    if key.find('/') != -1:
-                        k = key.split('/')
-                        l = len(k)
-                        kk = str(k[l-1])
+            rec = default_service_xform.json
+            prop_recs = yaml.load(str(rec))[u'children']
+            rec_rows = []
+            item_path = ''
+            level_path = {}
+            def fill_children(child,level_key):
+                n = ''
+                other_headers = ['group','repeat']
+                ix = 0;
+                for rows in child:
+                    ix += 1
+                    if rows.get('type',False) and rows.get('type',False) in other_headers:
+                        if level_key == "":
+                            level_path.update({ix:rows.get('name',"")})
+                        else:
+                            x_p = "%s/%s" %(level_path.get(ix,""),rows.get('name',""))
+                            level_path.update({ix:x_p}) 
+                        fill_children(rows.get('children',[]),level_path.get(ix,""))                        
                     else:
-                        kk = str(key)
-                    if isinstance(value, dict) and len(value) >= 1:
-                        record.update(get_records(value))
-                    elif isinstance(value, list) and len(value) >= 1:
-                        if isinstance(value[0], dict):
-                            record.update(get_records(value[0]))
-                    else:
-                        if not kk in recordkeys and not kk.endswith('ID') and str(value) != 'yes' and \
-                        str(value) != 'no' and str(kk) != 'case_number'  and str(kk) != 'uuid':
-                            recordkeys.append(kk)
-                        record.update({kk : str(value).capitalize()})
+                        if rows.get('name',False):
+                            n = rows.get('name','')
 
-                    # format submission date to allow later filter by date
-                    if record.get('_submission_time',None) != None:
-                        cr_time = record['_submission_time']
-                        cr_time = str(cr_time)
+                        if level_key != "":
+                            n = "/%s" %n
+                        item_path = "%s%s" %(str(level_key),str(n))
+                        rows.update({'item_path':item_path})
+                        item_path = ''
+                        if rows.get('itemset',False) and '.csv' in rows['itemset']:
+                            options = dict_from_csv(rows.get('itemset',''),default_service_xform.user.username) or []
+                            rows.update({'children':options})
+                        if (rows.get('type',False) and rows.get('type',False) == 'hidden') or (rows.get('bind',False) and rows['bind'].get('required',False) and str(rows['bind']['required']).lower() == 'yes'):
+                            rec_rows.append(rows)
 
-                        if 't' in cr_time:
-                            cr_time = datetime.strptime(cr_time, '%Y-%m-%dt%H:%M:%S')
-                            cr_time = cr_time.strftime('%Y-%m-%d')
-                        record['_submission_time'] = cr_time
+            fill_children(prop_recs,"")
 
-                return record
+            data['fields'] = rec_rows
 
-            for rec in stat:
-                if isinstance(rec, dict) and len(rec) > 1:
-                    statrecords.append(get_records(rec))
+            recs = ''
+            # get data 
+            with connection.cursor() as cursor:
+                    query = "SELECT date_created,json from logger_instance where version = '%s' %s " %(str(default_service_xform.version),request_string)
+                    cursor.execute(query)
+                    recs = dictfetchall(cursor)
 
-            if len(recordkeys) > 0:
-                recordkeys.append('Date Created')
-            else:
-                recordkeys = False
+            data['data'] = recs 
 
-            # filter by date submitted
-            if not case_start == '':
-                statrecords = filter(lambda statrecords: statrecords['_submission_time'] >= case_start and statrecords['_submission_time'] <= case_end, statrecords)
-
-            data['statrecords'] = statrecords #statrecords
-            data['recordkeys'] = recordkeys
-
-    
         if report == 'nonanalysed':
             data['report_data'] = filter(lambda call_data: not call_data['length'] and call_data['length'] <= 1, call_data)
             htmltemplate = "helpline/nonanalysed.html"
         elif htmltemplate == '':
             htmltemplate = "helpline/report_body.html"
-            # data['report_data'] = filter(lambda call_data: not call_data['voicemail'], call_data)
     return render(request, htmltemplate, data)
 
 @login_required
@@ -1978,12 +1968,7 @@ def case_form(request, form_name):
         uid_list.append(data.get('_auth_user_id', None))
 
     trans_users = []
-    # Query all logged in users based on id list
-    users = User.objects.filter(HelplineUser__hl_status__exact='Available',HelplineUser__hl_role__exact='Counsellor').exclude(username__exact=request.user.username)
-    for trans_user in users:
-        if HelplineUser.objects.filter(user=trans_user):
-                    trans_users.append({'text':str(trans_user.username),'value':str(trans_user.HelplineUser.hl_key)})
-
+    
     message = ''
     initial = {}
     data = {}
@@ -2003,7 +1988,21 @@ def case_form(request, form_name):
         data['form_name'] = 'call'
         data['caller'] = request.GET.get('phone')
         data['cdr'] = request.GET.get('callcase')
-        data['api_url'] = settings.CALL_API_URL + '/api/v1'
+        data['api_url'] = settings.CALL_API_URL + '/clk'
+
+        # Query all logged in users based on id list
+        queue_list = requests.get('%s/clk/agent/' % settings.CALL_API_URL).json()
+        users = User.objects.filter(HelplineUser__hl_status__exact='Available',HelplineUser__hl_role__exact='Counsellor').exclude(username__exact=request.user.username)
+        
+        usr_k = {}
+        for trans_user in users:
+            if HelplineUser.objects.filter(user=trans_user):
+                usr_k.update({str(trans_user.HelplineUser.hl_key):str(trans_user.username)})
+
+        for usr in queue_list:
+            if usr_k.get(usr['agent'],False):
+                trans_users.append({'text':str(usr_k.get(usr['agent'],"")),'value':str(usr['agent'])})
+
     elif form_name == 'qa':
         xform = service.qa_xform
         data['form_name'] = 'qa'
@@ -3172,13 +3171,27 @@ def pivot(request):
     
     request_string = ''
     form = ReportFilterForm(request.GET)
+
     datetime_range = request.GET.get("datetime_range") or ''
+
+    if datetime_range == '':
+        nowdate = datetime.now()
+
+        month = nowdate.month -1 if nowdate.month > 1 else 12
+
+        start_date = '%02d/%02d/%d 00:00' %(nowdate.day,month,nowdate.year)
+        end_date = nowdate.strftime('%d/%m/%Y  23:59')
+
+        datetime_range = '%s-%s' %(start_date,end_date)
+
     report['form'] = form
 
-    # request_string = 'agent= % ' % (request.GET.get('agent') or '')
+    agent = request.GET.get('agent') or ''
+
     if datetime_range != '':
         start_dates,end_dates = [datetime_range.split("-")[0],datetime_range.split("-")[1]]
-        request_string = " and date_created between '{0}' and '{1}'".format(start_dates,end_dates)
+        request_string = " and date_created >= '{0}' and date_created <= '{1}'".format(start_dates,end_dates)
+    
     if agent != '':
         request_string = " and json='{\"case_owner\":\"{0}\"}'".format(agent)        
     def dictfetchall(cursor): 
@@ -3249,7 +3262,7 @@ def pivot(request):
     recs = ''
     # get data 
     with connection.cursor() as cursor:
-            query = "SELECT date_created,json from logger_instance where version = '%s' %s " %(str(default_service_xform.version),daterange)
+            query = "SELECT date_created,json from logger_instance where version = '%s' %s " %(str(default_service_xform.version),request_string)
             cursor.execute(query)
             recs = dictfetchall(cursor)
 
@@ -3325,19 +3338,24 @@ def stat(request):
     userlist = User.objects.filter(is_active=True,HelplineUser__hl_role='Counsellor').exclude(HelplineUser__hl_status='Unavailable').exclude(HelplineUser__hl_status='Offline').select_related('HelplineUser')
     
     def get_queue_status(agent_id):
-        ret_val = ''
+        ret_val = {'status':'','last_call':'','answered_calls':0}
         for ag in agent_status:
             if str(ag['agent']) == str(agent_id):
-                ret_val = str(ag['status']) 
-        return ret_val   
+                ret_val['status'] = str(ag['status'])
+                ret_val['last_call'] = str(ag['lastcall'])
+                ret_val['answered_calls']=ag['answered']
+        return ret_val
 
-    agent_status_x = {}
+    agent_status_x = []
 
     for user_x in userlist:
-        agent_status_x.update({str(user_x.username):get_queue_status(user_x.HelplineUser.hl_key)})
+        q_status = get_queue_status(user_x.HelplineUser.hl_key)
+        if len(q_status) > 0:
+            agent_status_x.append({'username':user_x.username,'queue_status':q_status['status'],\
+            'lastcall':q_status['last_call'],'answered_calls':q_status['answered_calls'],'login_status':user_x.HelplineUser.hl_status})
 
     statistics = {'case': status_stats,'call':call_statistics,'dashboard_stats': dashboard_stats,
-                   'week_dashboard_stats': week_dashboard_stats,'users':userlist,'call_agents':agent_status_x}
+                   'week_dashboard_stats': week_dashboard_stats,'users':userlist,'call_agents':agent_status_x,"call_status":agent_status}
     return render(request, 'helpline/wall.html',statistics)
 
 @login_required

@@ -71,7 +71,7 @@
                      opens: 'left',
                      timePicker: true,
                      locale: {
-                      format: 'MM/DD/YYYY h:mm A'
+                      format: 'DD/MM/YYYY h:mm A'
                     }
 
                   }, function(start, end, label) {
@@ -151,49 +151,51 @@
             <div class="col-md-12">
               <div class="data-table-data table table-responsive">
                 <table id="example1" class="table table-bordered table-striped dataTable">
-                  {% if recordkeys %}
+                  {% if fields %}
                   <thead>
-                    <tr onclick="">
-                      <th>#</th>
-                      <th style="white-space: nowrap;">Case ID</th>
-                      {% for itemx in recordkeys %}
-                      {% if not "_" == itemx|first %}
-                        <th>{{ itemx | split:"_"}}</th>
+                    <tr>
+                      {% for field in fields %}
+                      <th>{{field.label}}</th>
+                      {% if forloop.last %}
+                      <th>Date Created</th>
                       {% endif %}
-                      {% endfor %}                    
+                      {% endfor %}
                     </tr>
                   </thead>
                   <tbody>
-                    {% for records in statrecords %}
-                    <tr ondblclick="window.location.href = '{% url 'caseview' 'Case_Form' records|get_item:'_id' %}'">
-                      <td>{{ forloop.counter }}. </td>
-                      <td><a href="{% url 'caseview' 'Case_Form' records|get_item:'_id' %}">{{  records | get_item:'case_number' }}</a></td>
-                      {% for item_key in recordkeys %}
-                      {% if not '_' == item_key|first %}
-                      <td {% if 'narrative' in item_key or  'case_plan' in item_key %} style="min-width: 400px;"{% endif %}>
-                        {% if item_key == 'case_number' %}
-                        <a href="/helpline/forms/{{ xform.id_string }}/{{ records | get_item:'_id' }}">{{  records | get_item:item_key }}</a>
-                        {% elif forloop.last %}
-                        {{  records | get_item:'_submission_time' }}
-                        {% else %}
-                        {{  records | get_item:item_key  }}
-                        {% endif %}
+                    {% for dat in data %}
+                    <tr>
+                      {% for fieldx in fields %}
+                      {% if fieldx.name == 'case_number' %}
+                      <td>
+                        {% with caseid=dat.json|get_item:'_id' %}
+                        <a href="{% url 'caseview' xform.id_string  caseid %}"> {{dat.json | get_item:fieldx.item_path }} </a>
+                        {% endwith %}                 
                       </td>
+                      {% elif 'select' in fieldx.type %}
+                      {% with val=dat.json|get_item:fieldx.item_path  %}
+                      <td>
+                        {{ fieldx.children | get_name:val }}                      
+                      </td>
+                      {% endwith %}
+                      {% else %}
+                      <td>{{dat.json | get_item:fieldx.item_path}}</td>
                       {% endif %}
-
+                      {% if forloop.last %}
+                      <td>{{dat.date_created}}</td>
+                      {% endif %}
                       {% endfor %}
                     </tr>
                     {% endfor %}
                   </tbody>
-                  <tfooter>
+                  <tfoot>
                     <tr>
-                      <th>#</th>
-                      <th>Case ID</th>
-                      {% for recordkey in recordkeys %}
-                      {% if not "_" == recordkey|first %}
-                      <th>{{ recordkey | split:"_" }}</th>
+                      {% for field in fields %}
+                      <th>{{field.label}}</th>
+                      {% if forloop.last %}
+                      <th>Date Created</th>
                       {% endif %}
-                      {% endfor %}                       
+                      {% endfor %}
                     </tr>
                   </tfooter>
                   {% else %}
