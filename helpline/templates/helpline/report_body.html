@@ -166,7 +166,7 @@ max-width:300px;
                   <thead>
                     <tr>
                       {% for field in fields %}
-                      <th>{{field.label}}</th>
+                      <th>{{field.r_name}}</th>
                       {% if forloop.last %}
                       <th>Date Created</th>
                       {% endif %}
@@ -202,7 +202,7 @@ max-width:300px;
                   <tfoot>
                     <tr>
                       {% for field in fields %}
-                      <th>{{field.label}}</th>
+                      <th>{{field.r_name}}</th>
                       {% if forloop.last %}
                       <th>Date Created</th>
                       {% endif %}

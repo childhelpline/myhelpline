@@ -1138,6 +1138,7 @@ def general_reports(request, report='cases'):
                     if rows.get('name',False):
                         n = rows.get('name','')
 
+                    rows.update({'r_name':n.replace('_', ' ').capitalize()})
                     if level_key != "":
                         n = "/%s" %n
                     item_path = "%s%s" %(str(level_key),str(n))
@@ -1422,6 +1423,7 @@ def reports(request, report, casetype='Call'):
                         if rows.get('name',False):
                             n = rows.get('name','')
 
+                        rows.update({'r_name':n.replace('_', ' ').capitalize()})
                         if level_key != "":
                             n = "/%s" %n
                         item_path = "%s%s" %(str(level_key),str(n))
@@ -3246,6 +3248,8 @@ def pivot(request):
                 if rows.get('name',False):
                     n = rows.get('name','')
 
+                
+                rows.update({'r_name':n.replace('_', ' ').capitalize()})
                 if level_key != "":
                     n = "/%s" %n
                 item_path = "%s%s" %(str(level_key),str(n))
