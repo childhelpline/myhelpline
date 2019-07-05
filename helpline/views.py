@@ -1029,18 +1029,21 @@ def general_reports(request, report='cases'):
         d1 = start_date.strftime('%Y-%m-%d %H:%M')
         d2 = end_date.strftime('%Y-%m-%d %H:%M')
 
-        datetime_range_call = '%sto%s' %(d1,d2)
+        if d1 == d2:
+            datetime_range_call = '%s' %(d1)
+        else:
+            datetime_range_call = '%sto%s' %(d1,d2)
     else:
         today = datetime.now()
 
         month = today.month-1 if today.month > 1 else 12
 
-        start_date = '%02d/%02d/%d 00:00' %(today.year,month,today.day)
+        start_date = '%02d/%02d/%d' %(today.year,month,today.day)
         end_date = today.strftime('%Y/%m/%d  23:59')
 
         datetime_range = '%s-%s' %(start_date,end_date)
 
-        datetime_range_call = '%sto%s' %(datetime.strftime(today,'%Y-%m-%d'),datetime.strftime(today,'%Y-%m-%d'))
+        datetime_range_call = '%s' %(datetime.strftime(today,'%Y-%m-%d'))
         
     htmltemplate = 'helpline/report_cases.html'
 
@@ -1224,7 +1227,11 @@ def reports(request, report, casetype='Call'):
         d2 = end_date.strftime('%Y-%m-%d')
         
         datetime_range = "%s-%s" %(start_date.strftime('%Y/%m/%d %I:%M'),end_date.strftime('%Y/%m/%d %I:%M'))
-        datetime_range_call = '%sto%s' %(d1,d2)
+        
+        if d1 == d2:
+            datetime_range_call = '%s' %(d1)
+        else:
+            datetime_range_call = '%sto%s' %(d1,d2)
 
         case_start = start_date.strftime('%Y-%m-%d')
         case_end = end_date.strftime('%Y-%m-%d')
@@ -1247,7 +1254,7 @@ def reports(request, report, casetype='Call'):
         d1 = nowdate.strftime('%Y-%m-%d')
         d2 = nowdate.strftime('%Y-%m-%d')
         
-        datetime_range_call = '%sto%s' %(d1,d2)
+        datetime_range_call = '%s' %(d1)
 
     
 
@@ -1281,9 +1288,10 @@ def reports(request, report, casetype='Call'):
                 request_string)
         else:
             calls_url = "%s/clk/cdr/" %(settings.CALL_API_URL)
-
+        
         call_data = requests.get(calls_url).json()
 
+       
         if report in callreports:
             htmltemplate = "helpline/reports.html"
         elif report == 'voicemails': 
@@ -1321,6 +1329,7 @@ def reports(request, report, casetype='Call'):
             else:
                  request_string += " and json->>'case_owner' = '{}'".format(agent)
 
+        username = request.user.username
         # Graph data
         headers = {
             'Authorization': 'Token %s' % (default_service_auth_token)
@@ -1340,13 +1349,13 @@ def reports(request, report, casetype='Call'):
                 request_string += " and json->>'case_actions/case_action' = '{0}'".format(rep_status)
             elif request.user.HelplineUser.hl_role.lower() == 'caseworker':
                 request_string += " and json->>'case_actions/case_action' = '{0}' \
-                and json->>'case_actions/escalate_caseworker' = '{1}'".format(rep_status,agent)
+                and json->>'case_actions/escalate_caseworker' = '{1}'".format(rep_status,username)
             elif request.user.HelplineUser.hl_role.lower() == 'casemanager':
                 request_string += " and json->>'case_actions/case_action' = '{0}' \
-                and json->>'case_actions/escalate_casemanager' = '{1}'".format(rep_status,agent)
+                and json->>'case_actions/escalate_casemanager' = '{1}'".format(rep_status,username)
             elif request.user.HelplineUser.hl_role == 'Supervisor':
                 request_string += " and json->>'case_actions/case_action' = '{0}' \
-                and json->>'case_actions/supervisors' = '{1}'".format(rep_status,agent)
+                and json->>'case_actions/supervisors' = '{1}'".format(rep_status,username)
             else:
                 request_string += " and json->>'case_actions/case_action' = '{0}'".format(rep_status)
 
@@ -1381,7 +1390,7 @@ def reports(request, report, casetype='Call'):
 
             htmltemplate = 'helpline/dispositions.html'
         elif casetype.lower() == 'qa':
-            call_data = requests.post("%s/clk/cdr/?qa=true" %(settings.CALL_API_URL)).json() or {}
+            call_data = requests.post("%s/clk/cdr/?qa=false" %(settings.CALL_API_URL)).json() or {}
         else:
             """For case reports"""
 
@@ -1504,18 +1513,34 @@ def qa(request, report='analysed'):
     # Set Query Parameters
     query_string = ''
     datetime_range = ''
-    if request.method == 'POST':
-        category = request.POST.get('contact_id', None)
-        datetime_range = request.POST.get('datetime_range', None)
-        if datetime_range != '':
-            start_date, end_date = [datetime_range.split(" - ")[0], datetime_range.split(" - ")[1]]
-            start_date = datetime.strptime(start_date, '%d/%m/%Y %I:%M %p')
-            end_date = datetime.strptime(end_date, '%d/%m/%Y %I:%M %p')
 
-            d1 = datetime.strftime(start_date, '%Y/%m/%d')
-            d2 = datetime.strftime(end_date, '%Y/%m/%d')
+    category = request.GET.get('contact_id', None) or ''
+    datetime_range = request.GET.get('datetime_range', None) or ''
 
+    if datetime_range != '':
+        start_date, end_date = [datetime_range.split(" - ")[0], datetime_range.split(" - ")[1]]
+        start_date = datetime.strptime(start_date, '%d/%m/%Y %I:%M %p')
+        end_date = datetime.strptime(end_date, '%d/%m/%Y %I:%M %p')
+
+        d1 = datetime.strftime(start_date, '%Y/%m/%d')
+        d2 = datetime.strftime(end_date, '%Y/%m/%d')
+
+        if d1 == d2:
+            datetime_range = '%s' %(d1)
+        else:
             datetime_range = '%sto%s' %(d1,d2)
+    else:
+
+        today = datetime.now()
+
+        month = today.month-1 if today.month > 1 else 12
+
+        start_date = '%02d/%02d/%d' %(today.year,month,today.day)
+        end_date = today.strftime('%Y/%m/%d  23:59')
+
+        datetime_range = '%s-%s' %(start_date,end_date)
+
+        datetime_range = '%s' %(datetime.strftime(today,'%Y-%m-%d'))
 
     if report == 'results':
         headers = {
@@ -1591,10 +1616,10 @@ def qa(request, report='analysed'):
 
         if(report == 'analysis'):
             htmltemplate = "helpline/nonanalysed.html"
-            result_data = filter(lambda result_data: result_data['agent'] != 116 and  result_data['agent'] != '' and not result_data['qa'], result_data)
+            # result_data = filter(lambda result_data: result_data['agent'] != '' and not result_data['qa'], result_data)
         else:
             htmltemplate = "helpline/analysed_qa.html"
-            result_data = filter(lambda result_data: result_data['agent'] != 116 and  result_data['agent'] != '' and result_data['qa'], result_data)
+            # result_data = filter(lambda result_data: result_data['agent'] != '' and result_data['qa'], result_data)
          
         data['report_data'] = result_data
         
@@ -2720,7 +2745,7 @@ def get_dashboard_stats(request, interval=None,wall=True):
 
     date_time = datetime.now()
     
-    request_string += " and CAST(date_created AS DATE) = '{0}'".format(date_time.strftime('%d-%m-%Y'))
+    request_string += " and CAST(date_created AS DATE) = '{0}'".format(date_time.strftime('%Y-%m-%d'))
 
     home_statistics = {'high_priority':0,'escalate':0,'closed':0,'pending':0,'total':0,'call_stat':'',\
     'midnight': midnight,'midnight_string': midnight_string,'now_string': now_string,'today':form_details['submission_count_for_today'],"total_submissions":form_details['num_of_submissions']}
@@ -2739,8 +2764,8 @@ def get_dashboard_stats(request, interval=None,wall=True):
             request_string += " and json->>'case_owner' = '{0}' \
             OR json->>'case_actions/escalate_caseworker' = '{0}'".format(username)
         elif request.user.HelplineUser.hl_role.lower() == 'casemanager':
-            request_string += " and json->>'case_owner' = '{0}' \
-            OR json->>'case_actions/escalate_casemanager' = '{0}'".format(username)
+            request_string += " and json->>'case_actions/escalate' = '{0}' \
+            AND json->>'case_actions/escalate_casemanager' = '{1}'".format('escalate',username)
 
     recs = []
 
@@ -3249,8 +3274,8 @@ def pivot(request):
 
         month = nowdate.month -1 if nowdate.month > 1 else 12
 
-        start_date = '%02d/%02d/%d 00:00' %(nowdate.day,month,nowdate.year)
-        end_date = nowdate.strftime('%d/%m/%Y  23:59')
+        start_date = '%02d/%02d/%d 00:00' %(nowdate.year,month,nowdate.day)
+        end_date = nowdate.strftime('%Y/%m/%d  23:59')
 
         datetime_range = '%s-%s' %(start_date,end_date)
 
