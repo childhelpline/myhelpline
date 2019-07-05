@@ -199,31 +199,31 @@
                 <div class="col-sm-6 col-md-6" style="padding-right:2px; padding-left:2px;">
                   <div class="color-palette-set">
                     <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
-                    <div class="bg-primary color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ case.total }} </span><br />{% trans "Total Cases" %}</div>
+                    <div class="bg-primary color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ total }} </span><br />{% trans "Total Cases" %}</div>
                   </div>
                 </div>
                 <!-- /.col -->
                 <div class="col-sm-6 col-md-6" style="padding-right:2px; padding-left:2px;">
                   <div class="color-palette-set">
-                    <div class="bg-yellow color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ case.pending }} </span><br />{% trans "Pending Cases" %}</div>
+                    <div class="bg-yellow color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ pending }} </span><br />{% trans "Pending Cases" %}</div>
                   </div>
                 </div>
                 <!-- /.col -->
                 <div class="col-sm-6 col-md-6" style="padding-right:2px; margin-top:10px; padding-left:2px;">
                   <div class="color-palette-set">
-                    <div class="bg-green color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ case.closed }} </span><br />{% trans "Closed Cases" %}</div>
+                    <div class="bg-green color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ closed }} </span><br />{% trans "Closed Cases" %}</div>
                   </div>
                 </div>
                 <!-- /.col -->
                 <div class="col-sm-6 col-md-6" style="padding-right:2px; margin-top:10px; padding-left:2px;">
                   <div class="color-palette-set">
-                    <div class="bg-red color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ case.escalate }} </span><br />{% trans "Escalated Cases" %}</div>
+                    <div class="bg-red color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ escalate }} </span><br />{% trans "Escalated Cases" %}</div>
                   </div>
                 </div>
                 <!-- /.col -->
                 <div class="col-sm-6 col-md-6" style="padding-right:2px; margin-top:10px; padding-left:2px;">
                   <div class="color-palette-set">
-                    <div class="bg-aqua color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.number_tickets | default:0 }} </span><br />{% trans "Total Emails" %}</div>
+                    <div class="bg-aqua color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ emails | default:0 }} </span><br />{% trans "Total Emails" %}</div>
                   </div>
                 </div>
                 <!-- /.col -->
@@ -231,7 +231,7 @@
                 <div class="col-sm-6 col-md-6" style="padding-right:2px; margin-top:10px; padding-left:2px;">
                   <div class="color-palette-set">
                     <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
-                    <div class="bg-aqua color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ dashboard_stats.total_sms | default:0 }} </span><br />{% trans "Total SMS" %}</div>
+                    <div class="bg-aqua color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ total_sms | default:0 }} </span><br />{% trans "Total SMS" %}</div>
                     <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
                   </div>
                 </div>

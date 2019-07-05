@@ -198,6 +198,7 @@ audio{
       var dispose_form = '#disposeDet';
 
         if($(param).val() == 'Transfer'){
+          $.get('get_users')
           bootbox.prompt({title:'Select user',
               inputType: 'select',
               inputOptions: {{users | safe}},
@@ -412,9 +413,43 @@ audio{
           var resp = JSON.parse(event.data)
           if(resp.enketoEvent == 'submissionsuccess' || resp.status == 201){
           /////try pass filled form data for records
+          {% if form_name == 'qa' %}
+            $.ajax({
+                url: "{% setting "CALL_API_URL" %}/clk/qa/",
+                type: "POST",
+                contentType:'JSON',
+                data: {'call_id':'{{cdr}}','case':$('#caseid').val() != '' ? $('#caseid').val() : 'False','dispose':'Complete Call','supervisor':'{{request.user.HelplineUser.hl_key | safe}}'},
+                success: function(data) {
+
+                      $.ajax({
+                        url: "{% url 'save_disposition_form' %}",
+                        type: "POST",
+                        data: $("#disposeDet").serialize(),
+                        success: function(data) {
+                          if (!(data['success'])) {
+                            $(dispose_form).replaceWith(data['form_html']);
+                          }
+                          else{
+                            alert("Form Successfully disposed")
+                            document.location.href = '/helpline/'
+                          }
+                        },
+                        error: function() {
+                          $("#error-message").html("Error");
+                        }
+                      });
+
+
+                },
+                error: function() {
+                  $("#error-message").html("Error");
+                }
+
+          {% endif %}
+
           {% if form_name == 'call' %}
               $.ajax({
-                url: "{% setting "CALL_API_URL" %}/api/v1/call/case",
+                url: "{% setting "CALL_API_URL" %}/clk/cdr/",
                 type: "GET",
                 contentType:'JSON',
                 data: {'cdr':'{{cdr}}','case':$('#caseid').val() != '' ? $('#caseid').val() : 'False','dispose':'Complete Call','agent':'{{request.user.HelplineUser.hl_key | safe}}'},

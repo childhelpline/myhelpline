@@ -1337,18 +1337,18 @@ def reports(request, report, casetype='Call'):
         if report == 'escalated' or report == 'pending' or report == 'closed':
             rep_status = 'escalate' if report == 'escalated' else report
             if request.user.HelplineUser.hl_role.lower() == 'counsellor':
-                request_string += " and json->>'case_actions/case_action' = '{}'".format(rep_status)
+                request_string += " and json->>'case_actions/case_action' = '{0}'".format(rep_status)
             elif request.user.HelplineUser.hl_role.lower() == 'caseworker':
                 request_string += " and json->>'case_actions/case_action' = '{0}' \
-                and json->>'case_actions/escalate_caseworker' = '{1}'".format(rep_status,username)
+                and json->>'case_actions/escalate_caseworker' = '{1}'".format(rep_status,agent)
             elif request.user.HelplineUser.hl_role.lower() == 'casemanager':
                 request_string += " and json->>'case_actions/case_action' = '{0}' \
-                and json->>'case_actions/escalate_casemanager' = '{1}'".format(rep_status,username)
+                and json->>'case_actions/escalate_casemanager' = '{1}'".format(rep_status,agent)
             elif request.user.HelplineUser.hl_role == 'Supervisor':
                 request_string += " and json->>'case_actions/case_action' = '{0}' \
-                and json->>'case_actions/supervisors' = '{1}'".format(rep_status,username)
+                and json->>'case_actions/supervisors' = '{1}'".format(rep_status,agent)
             else:
-                request_string += " and json->>'case_actions/case_action' = '{}'".format(rep_status)
+                request_string += " and json->>'case_actions/case_action' = '{0}'".format(rep_status)
 
         elif report == 'priority':
             request_string += " and json->>'case_narratives/case_priority' = 'high_priority'"
@@ -1458,7 +1458,7 @@ def reports(request, report, casetype='Call'):
             recs = ''
             # get data 
             with connection.cursor() as cursor:
-                    query = "SELECT date_created,json from logger_instance where xform_id = '%s' %s " %(str(default_service_xform.pk),request_string)
+                    query = "SELECT date_created,json from logger_instance where xform_id = '%s' %s order by date_created desc" %(str(default_service_xform.pk),request_string)
                     cursor.execute(query)
                     recs = dictfetchall(cursor)
 
@@ -2674,14 +2674,17 @@ def dictfetchall(cursor):
     ]
 def get_dashboard_stats(request, interval=None,wall=True):
     default_service = Service.objects.all().first()
-    username = request.user.username
     request_string = ''
     query_string = ''
+
+    username = ''
+    if not wall:
+        username = request.user.username
 
     if hasattr(default_service,'walkin_xform') and default_service.walkin_xform:
         default_service_xform = default_service.walkin_xform
     else:
-        response = redirect('/ona/%s' % request.user.username)
+        response = redirect('/ona/%s' % username)
         return response
 
     default_service_auth_token = ''
@@ -2716,8 +2719,8 @@ def get_dashboard_stats(request, interval=None,wall=True):
     now_string = timezone.now().strftime('%m/%d/%Y %I:%M %p')
 
     date_time = datetime.now()
-    if wall:
-        request_string += " and date_created = '{}'".format(date_time.strftime('%d-%m-%Y'))
+    
+    request_string += " and date_created = '{}'".format(date_time.strftime('%d-%m-%Y'))
 
     home_statistics = {'high_priority':0,'escalate':0,'closed':0,'pending':0,'total':0,'call_stat':'',\
     'midnight': midnight,'midnight_string': midnight_string,'now_string': now_string,'today':form_details['submission_count_for_today'],"total_submissions":form_details['num_of_submissions']}
@@ -2728,15 +2731,16 @@ def get_dashboard_stats(request, interval=None,wall=True):
     home_statistics['email'] = Emails.objects.filter(email_time__date=datetime.today()).count()
 
     # filter by user    
-    if request.user.HelplineUser.hl_role.lower() == 'counsellor':
-        request_string += " and json->>'case_owner' = '{}'".format(request.user.HelplineUser.hl_key)
-        query_string += '?usr_f=%s' % username if query_string == '' else '&use_f=%s'% username
-    elif request.user.HelplineUser.hl_role.lower() == 'caseworker':
-        request_string += " and json->>'case_owner' = '{0}' \
-        and json->>'case_actions/escalate_caseworker' = '{0}'".format(username)
-    elif request.user.HelplineUser.hl_role.lower() == 'casemanager':
-        request_string += " and json->>'case_owner' = '{}' \
-        and json->>'case_actions/escalate_casemanager' = '{}'".format(username)
+    if not wall:
+        if request.user.HelplineUser.hl_role.lower() == 'counsellor':
+            request_string += " and json->>'case_owner' = '{}'".format(request.user.HelplineUser.hl_key)
+            query_string += '?usr_f=%s' % username if query_string == '' else '&use_f=%s'% username
+        elif request.user.HelplineUser.hl_role.lower() == 'caseworker':
+            request_string += " and json->>'case_owner' = '{0}' \
+            and json->>'case_actions/escalate_caseworker' = '{0}'".format(username)
+        elif request.user.HelplineUser.hl_role.lower() == 'casemanager':
+            request_string += " and json->>'case_owner' = '{}' \
+            and json->>'case_actions/escalate_casemanager' = '{}'".format(username)
 
     recs = []
 
@@ -2744,7 +2748,7 @@ def get_dashboard_stats(request, interval=None,wall=True):
 
     #Call stat
     call_statistics = requests.get('%s/clk/stats/%s' %(settings.CALL_API_URL,query_string)).json() or []
-    home_statistics.update({'call_stat':call_statistics})
+    home_statistics.update({'call':call_statistics})
 
     #CASE STATS
     with connection.cursor() as cursor:
@@ -3330,7 +3334,7 @@ def pivot(request):
     recs = ''
     # get data 
     with connection.cursor() as cursor:
-            query = "SELECT date_created,json from logger_instance where xform_id = '%s' %s " %(str(default_service_xform.pk),request_string)
+            query = "SELECT date_created,json from logger_instance where xform_id = '%s' %s  order by date_created desc" %(str(default_service_xform.pk),request_string)
             cursor.execute(query)
             recs = dictfetchall(cursor)
 
@@ -3376,30 +3380,30 @@ def stat(request):
         'Authorization': 'Token %s' % (default_service_auth_token)
     }
 
-    url_status = 'http://%s/ona/api/v1/charts/%s.json?field_name=case_action' \
-    %(current_site, default_service_xform.pk)
+    # url_status = 'http://%s/ona/api/v1/charts/%s.json?field_name=case_action' \
+    # %(current_site, default_service_xform.pk)
 
-    status_stat = requests.get(url_status, headers= headers).json() or {}
+    # status_stat = requests.get(url_status, headers= headers).json() or {}
 
-    status_stats = {'escalate':0,'closed':0,'pending':0,'total':0}
-    rrr = []
-    for st_action in status_stat['data']:
-        for sts in status_stats:
-            r_str = str(st_action['case_action'][0]).lower()
-            if sts == r_str:
-                status_stats[sts] =  st_action['count']
-        status_stats['total'] += st_action['count']
+    # status_stats = {'escalate':0,'closed':0,'pending':0,'total':0}
+    # rrr = []
+    # for st_action in status_stat['data']:
+    #     for sts in status_stats:
+    #         r_str = str(st_action['case_action'][0]).lower()
+    #         if sts == r_str:
+    #             status_stats[sts] =  st_action['count']
+    #     status_stats['total'] += st_action['count']
 
     # agent status
     url_agents = '%s/clk/agent/' %(settings.CALL_API_URL)
 
     agent_status = requests.get(url_agents, headers=headers).json() or []
 
-    # call statistics
-    call_statistics = requests.post('%s/clk/stats/' %(settings.CALL_API_URL)).json() or []
+    # # call statistics
+    # call_statistics = requests.post('%s/clk/stats/' %(settings.CALL_API_URL)).json() or []
 
-    dashboard_stats = get_dashboard_stats(request.user)
-    week_dashboard_stats = get_dashboard_stats(request.user, interval='weekly')
+    dashboard_stats = get_dashboard_stats(request,None,True)
+    week_dashboard_stats = get_dashboard_stats(request.user,'weekly',True)
 
     userlist = User.objects.filter(is_active=True,HelplineUser__hl_role='Counsellor').exclude(HelplineUser__hl_status='Unavailable').exclude(HelplineUser__hl_status='Offline').select_related('HelplineUser')
     
@@ -3420,9 +3424,14 @@ def stat(request):
             agent_status_x.append({'username':user_x.username,'queue_status':q_status['status'],\
             'lastcall':q_status['last_call'],'answered_calls':q_status['answered_calls'],'login_status':user_x.HelplineUser.hl_status})
 
-    statistics = {'case': status_stats,'call':call_statistics,'dashboard_stats': dashboard_stats,
-                   'week_dashboard_stats': week_dashboard_stats,'users':userlist,'call_agents':agent_status_x,"call_status":agent_status}
-    return render(request, 'helpline/wall.html',statistics)
+    dashboard_stats['users'] = userlist
+    dashboard_stats['call_agents'] = agent_status_x
+    dashboard_stats['week_dashboard_stats'] = week_dashboard_stats 
+    dashboard_stats["call_status"] = agent_status
+
+    # statistics = {'case': status_stats,'call':call_statistics,'dashboard_stats': dashboard_stats,
+    #                 'week_dashboard_stats': week_dashboard_stats,'users':userlist,'call_agents':agent_status_x,"call_status":agent_status}
+    return render(request, 'helpline/wall.html',dashboard_stats)
 
 @login_required
 def sources(request, source=None,itemid=None):
