@@ -157,11 +157,11 @@ def home(request):
 
 
     # case priority statistics
-    url = 'http://%s/ona/api/v1/charts/%s.json?field_name=case_priority' % (
-        current_site,
-        default_service_xform.pk
-    )
-    statex = requests.get(url, headers=headers).json() or {}
+    # url = 'http://%s/ona/api/v1/charts/%s.json?field_name=case_priority' % (
+    #     current_site,
+    #     default_service_xform.pk
+    # )
+    # statex = requests.get(url, headers=headers).json() or {}
     
     forloop = 0
     for dt in get_item(stat, 'data'):
@@ -236,11 +236,11 @@ def home(request):
         stat_qa = stat_qa/quiz
 
 
-    high_priority = 0
-    if statex.get('data',None) != None:
-        for ke_item in statex['data']:
-            if str(ke_item['case_priority'][0]) == 'High Priority':
-                high_priority = ke_item['count']
+    # high_priority = 0
+    # if statex.get('data',None) != None:
+    #     for ke_item in statex['data']:
+    #         if str(ke_item['case_priority'][0]) == 'High Priority':
+    #             high_priority = ke_item['count']
 
     return render(request, 'helpline/%s.html' % template,
                 {
@@ -250,7 +250,6 @@ def home(request):
                    'status_count': status_count,
                    'gdata': gtdata,
                    'dt': stdata,
-                   'priority_stat':high_priority,
                    'qa_stat':stat_qa,
                    'status_data':status_data,
                    'home':home_statistics
@@ -993,6 +992,9 @@ def general_reports(request, report='cases'):
     agent = request.GET.get("agent")
     category = request.GET.get("category", "")
     form = ReportFilterForm(request.GET)
+
+    agent = User.objects.get(pk=agent)
+    agent = agent.username
     dashboard_stats = get_dashboard_stats(request.user)
     report_title = {report: _(str(report).capitalize() + " Reports")}
 
@@ -1076,14 +1078,15 @@ def general_reports(request, report='cases'):
         data['report_data'] = sms_data
         htmltemplate = "helpline/reports_sms.html"
     elif report.lower() == 'cases':     
-        agent = request.GET.get('agent') or ''
-
         if datetime_range != '':
             start_dates,end_dates = [datetime_range.split("-")[0],datetime_range.split("-")[1]]
             request_string += " and date_created >= '{0}' and date_created <= '{1}'".format(start_dates,end_dates)
         
         if agent != '':
-            request_string += " and json='{\"case_owner\":\"{0}\"}'".format(agent)  
+            if request_string == '':
+                request_string = " and json->>'case_owner' = '{}'".format(agent)
+            else:
+                 request_string += " and json->>'case_owner' = '{}'".format(agent)    #str(' and json="{\"case_owner\":\"{0}\"}"'.format(agent) )         
 
         def dictfetchall(cursor): 
             "Returns all rows from a cursor as a dict" 
@@ -1156,8 +1159,9 @@ def general_reports(request, report='cases'):
         recs = ''
         # get data 
         with connection.cursor() as cursor:
-                query = "SELECT date_created,json from logger_instance where xform_id = '%s' \
-                %s " %(str(default_service_xform.pk),request_string)
+                # query = "SELECT date_created,json from logger_instance where xform_id = '%s' \
+                # %s " %(str(default_service_xform.pk),request_string)
+                query = "SELECT date_created,json from logger_instance where xform_id = '{0}' {1}".format(default_service_xform.pk,request_string) # %(str(default_service_xform.pk),request_string)
                 cursor.execute(query)
                 recs = dictfetchall(cursor)
 
@@ -1186,7 +1190,9 @@ def namedtuplefetchall(cursor):
 def reports(request, report, casetype='Call'):
     query = request.GET.get('q', '')
     datetime_range = request.GET.get("datetime_range") or ''
+    
     agent = request.GET.get("agent") or ''
+
     category = request.GET.get("category", "")
     form = ReportFilterForm(request.GET)
 
@@ -1303,6 +1309,18 @@ def reports(request, report, casetype='Call'):
         data['owner'] = default_service_xform.user
         data['xform'] = default_service_xform
 
+        if agent != '' and agent > 0:
+            agent = User.objects.get(pk=agent)
+            agent = agent.username
+        elif request.user.HelplineUser.hl_role.lower() == 'counsellor':
+            agent = request.user.username
+
+        if agent != '':
+            if request_string == '':
+                request_string = " and json->>'case_owner' = '{}'".format(agent)
+            else:
+                 request_string += " and json->>'case_owner' = '{}'".format(agent)
+
         # Graph data
         headers = {
             'Authorization': 'Token %s' % (default_service_auth_token)
@@ -1311,7 +1329,6 @@ def reports(request, report, casetype='Call'):
 
         id_string = str(default_service_xform)
 
-        username = request.user.username
         xform_user = default_service_xform.user.username
 
         owner = get_object_or_404(User, username__iexact=xform_user)
@@ -1319,19 +1336,22 @@ def reports(request, report, casetype='Call'):
         
         if report == 'escalated' or report == 'pending' or report == 'closed':
             rep_status = 'escalate' if report == 'escalated' else report
-            if request.user.HelplineUser.hl_role == 'Counsellor':
-                query_string = '"case_actions/case_action":{"$i":"%s"}' % rep_status
+            if request.user.HelplineUser.hl_role.lower() == 'counsellor':
+                request_string += " and json->>'case_actions/case_action' = '{}'".format(rep_status)
             elif request.user.HelplineUser.hl_role.lower() == 'caseworker':
-                query_string = '"case_actions/case_action":"%s",\
-                "case_actions/escalate_caseworker":"%s"' %(rep_status,str(username))
+                request_string += " and json->>'case_actions/case_action' = '{0}' \
+                and json->>'case_actions/escalate_caseworker' = '{1}'".format(rep_status,username)
+            elif request.user.HelplineUser.hl_role.lower() == 'casemanager':
+                request_string += " and json->>'case_actions/case_action' = '{0}' \
+                and json->>'case_actions/escalate_casemanager' = '{1}'".format(rep_status,username)
             elif request.user.HelplineUser.hl_role == 'Supervisor':
-                query_string = '"case_actions/case_action":"%s",\
-                "case_actions/supervisors":"%s"' %(rep_status,str(username))
+                request_string += " and json->>'case_actions/case_action' = '{0}' \
+                and json->>'case_actions/supervisors' = '{1}'".format(rep_status,username)
             else:
-                query_string = '"case_actions/case_action":"%s"'  % rep_status
+                request_string += " and json->>'case_actions/case_action' = '{}'".format(rep_status)
 
-        elif report == 'highpriority':
-            query_string = '"case_narratives/case_priority":"high_priority"'
+        elif report == 'priority':
+            request_string += " and json->>'case_narratives/case_priority' = 'high_priority'"
         elif report == 'today' or report == 'totalcases':
             request_string = ''
 
@@ -1367,9 +1387,8 @@ def reports(request, report, casetype='Call'):
 
             if datetime_range != '':
                 start_dates,end_dates = [datetime_range.split("-")[0],datetime_range.split("-")[1]]
-                request_string = " and date_created >= '{0}' and date_created <= '{1}'".format(start_dates,end_dates)
-            if agent != '':
-                request_string = " and json='{\"case_owner\":\"{0}\"}'".format(agent)        
+                request_string += " and date_created >= '{0}' and date_created <= '{1}'".format(start_dates,end_dates)
+            
             def dictfetchall(cursor): 
                 "Returns all rows from a cursor as a dict" 
                 desc = cursor.description 
@@ -2646,8 +2665,18 @@ def get_status_count():
                     'busy_on_call': busy_on_call}
     return status_count
 
-def get_dashboard_stats(request, interval=None):
+def dictfetchall(cursor): 
+    "Returns all rows from a cursor as a dict" 
+    desc = cursor.description 
+    return [
+            dict(zip([col[0] for col in desc], row)) 
+            for row in cursor.fetchall() 
+    ]
+def get_dashboard_stats(request, interval=None,wall=True):
     default_service = Service.objects.all().first()
+    username = request.user.username
+    request_string = ''
+    query_string = ''
 
     if hasattr(default_service,'walkin_xform') and default_service.walkin_xform:
         default_service_xform = default_service.walkin_xform
@@ -2676,6 +2705,7 @@ def get_dashboard_stats(request, interval=None):
 
     form_details = requests.get('http://%s/ona/api/v1/forms/%s.json' % (current_site, default_service_xform.pk),headers=headers).json()
 
+
     # date time
     midnight_datetime = datetime.combine(
             date.today(), datetime_time.min)
@@ -2685,32 +2715,67 @@ def get_dashboard_stats(request, interval=None):
         date.today(), datetime_time.min).strftime('%m/%d/%Y %I:%M %p')
     now_string = timezone.now().strftime('%m/%d/%Y %I:%M %p')
 
-    call_statistics = requests.get('%s/clk/stats/' %(settings.CALL_API_URL)).json() or []
+    date_time = datetime.now()
+    if wall:
+        request_string += " and date_created = '{}'".format(date_time.strftime('%d-%m-%Y'))
 
-    home_statistics = {'escalate':0,'closed':0,'pending':0,'total':0,'call_stat':call_statistics,\
+    home_statistics = {'high_priority':0,'escalate':0,'closed':0,'pending':0,'total':0,'call_stat':'',\
     'midnight': midnight,'midnight_string': midnight_string,'now_string': now_string,'today':form_details['submission_count_for_today'],"total_submissions":form_details['num_of_submissions']}
+    
     # SMS stats
     home_statistics['sms'] = SMSCDR.objects.filter(sms_time__date=datetime.today()).count()
     # Email stats
     home_statistics['email'] = Emails.objects.filter(email_time__date=datetime.today()).count()
-    # case status statistics
-    url_status = 'http://%s/ona/api/v1/charts/%s.json?field_name=case_action' \
-    %(current_site, default_service_xform.pk)
 
+    # filter by user    
+    if request.user.HelplineUser.hl_role.lower() == 'counsellor':
+        request_string += " and json->>'case_owner' = '{}'".format(request.user.HelplineUser.hl_key)
+        query_string += '?usr_f=%s' % username if query_string == '' else '&use_f=%s'% username
+    elif request.user.HelplineUser.hl_role.lower() == 'caseworker':
+        request_string += " and json->>'case_owner' = '{0}' \
+        and json->>'case_actions/escalate_caseworker' = '{0}'".format(username)
+    elif request.user.HelplineUser.hl_role.lower() == 'casemanager':
+        request_string += " and json->>'case_owner' = '{}' \
+        and json->>'case_actions/escalate_casemanager' = '{}'".format(username)
 
+    recs = []
 
-    status_stat = requests.get(url_status, headers= headers).json()
+    query_string += '?chan_ts_f=%s' % date_time.strftime('%Y-%m-%d') if query_string == '' else '&chan_ts_f=%s'% date_time.strftime('%Y-%m-%d')
 
-    status_text = {'escalate':0,'closed':0,'pending':0,'total':0}
-    rrr = [] 
+    #Call stat
+    call_statistics = requests.get('%s/clk/stats/%s' %(settings.CALL_API_URL,query_string)).json() or []
+    home_statistics.update({'call_stat':call_statistics})
 
-    if status_stat.get('data',None) != None:
-        for st_action in status_stat.get('data',{}):
-            for sts in status_text:
-                r_str = str(st_action['case_action'][0]).lower()
-                if sts == r_str:
-                    home_statistics[sts] =  st_action['count']
-            home_statistics['total'] += st_action['count']
+    #CASE STATS
+    with connection.cursor() as cursor:
+        query = "SELECT CAST(COUNT(json->>'case_actions/case_action') AS INTEGER) case_count,json->>'case_actions/case_action' as status_column from logger_instance \
+         where xform_id = '%s' %s GROUP BY json->>'case_actions/case_action'" %(str(default_service_xform.pk),request_string)
+        cursor.execute(query)
+        recs = dictfetchall(cursor)
+
+    if len(recs) > 0:
+        for row in recs:
+            home_statistics.update({row['status_column']:row['case_count']})
+            home_statistics['total'] += row['case_count']
+
+    #CASE STATS WITH PRIORITY
+    recs_p = []
+    with connection.cursor() as cursor:
+        query = "SELECT CAST(COUNT(json->>'case_narratives/case_priority') AS INTEGER) case_count,json->>'case_narratives/case_priority' as status_column from logger_instance \
+         where xform_id = '%s' %s GROUP BY json->>'case_narratives/case_priority'" %(str(default_service_xform.pk),request_string)
+        cursor.execute(query)
+        recs_p = dictfetchall(cursor)
+
+    if len(recs_p) > 0:
+        for row in recs_p:
+            if 'high' in row['status_column']:
+                home_statistics['high_priority'] = row['case_count']
+
+            if 'low' in row['status_column']:
+                home_statistics['low_priority'] = row['case_count']
+
+            if 'medium' in row['status_column']:
+                home_statistics['medium_priority'] = row['case_count']
 
     return home_statistics
 

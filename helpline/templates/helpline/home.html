@@ -22,13 +22,13 @@
             <div class="row home-pallete">
               <div class="col-sm-4 col-md-2 palette-item">
                 <div class="color-palette-set">
-                  <div class="bg-blue color-palette" align="center" onclick="window.location = '{% url 'dashboardreports' 'totalcalls' %}?datetime_range={{ home.midnight_string }} - {{ home.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ home.total }} </a></span><br>{% trans "Total Cases" %}</div>
+                  <div class="bg-blue color-palette" align="center" onclick="window.location = '{% url 'dashboardreports' 'totalcases' 'cases' %}?datetime_range={{ home.midnight_string }} - {{ home.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ home.total }} </a></span><br>{% trans "Total Cases" %}</div>
                 </div>
               </div>
               <!-- /.col -->
               <div class="col-sm-4 col-md-2 palette-item">
                 <div class="color-palette-set">
-                  <div class="bg-red color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"  onclick="window.location = '{% url 'dashboardreports' 'abandonedcalls' %}?datetime_range={{ home.midnight_string }} - {{ home.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ home.call_stat.abandoned }} </span><br>{% trans "High Priority Cases" %}</div>
+                  <div class="bg-red color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"  onclick="window.location = '{% url 'dashboardreports' 'priority' 'cases' %}?datetime_range={{ home.midnight_string }} - {{ home.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ home.high_priority }} </span><br>{% trans "High Priority Cases" %}</div>
 
                   <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
                 </div>
@@ -37,7 +37,7 @@
               <div class="col-sm-4 col-md-2 palette-item" onclick="window.location = '{% url 'dashboardreports' 'voicemails' %}?datetime_range={{ home.midnight_string }} - {{ home.now_string }}'">
                 <div class="color-palette-set">
                   <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
-                  <div class="bg-yellow color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ home.closed | default:0 }} </span><br>{% trans "Closed Cases" %}</div>
+                  <div class="bg-yellow color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"   onclick="window.location = '{% url 'dashboardreports' 'closed' 'cases' %}?datetime_range={{ home.midnight_string }} - {{ home.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ home.closed | default:0 }} </span><br>{% trans "Closed Cases" %}</div>
                   <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
                 </div>
               </div>
@@ -307,14 +307,14 @@
 
                   <div class="info-box-content">
                     <span class="info-box-text">{% trans "High Priority Cases" %}</span>
-                    <span class="info-box-number">{{ priority_stat |intcomma }}</span>
+                    <span class="info-box-number">{{ home.high_priority |intcomma }}</span>
 
                     <div class="progress">
-                      <div class="progress-bar" style="width: {% widthratio priority_stat home.total 100 %}%"></div>
+                      <div class="progress-bar" style="width: {% widthratio home.high_priority home.total 100 %}%"></div>
                       }
                     </div>
                     <span class="progress-description">
-                      {% widthratio priority_stat home.total 100 %}% {% trans "Critical Cases" %}
+                      {% widthratio home.high_priority home.total 100 %}% {% trans "Critical Cases" %}
                     </span>
                   </div>
                   <!-- /.info-box-content -->
