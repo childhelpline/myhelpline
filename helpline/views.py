@@ -392,8 +392,7 @@ def myaccount(request):
 
 @login_required
 def manage_users(request,action=None,action_item=None):
-    """View user management page"""
-    
+    """View user management page"""    
     messages =[]
     data = {}
     # userlist = User.objects.all().filter(is_active=True)
@@ -404,7 +403,9 @@ def manage_users(request,action=None,action_item=None):
         if action == 'delete':
             action_user.HelplineUser.delete()
             action_user.delete()
-            message = "User successfully deleted"
+            messages.append("User successfully deleted")
+            return HttpResponseRedirect(
+                    reverse('manageusers'))
         elif action == 'profile':
             template = 'profile'
             data['template'] = 'user'
@@ -413,7 +414,7 @@ def manage_users(request,action=None,action_item=None):
             profile = action_user.HelplineUser
             currentrole = request.user.HelplineUser.hl_role
             
-            perms = ['Supervisor','Admin']
+            perms = ['Supervisor','Admin','Administrator']
             
 
             form = EditUserForm(request.POST or None, request.FILES,instance=action_user)
@@ -505,29 +506,27 @@ def new_user(request):
             try:
                 user = form.save()
                 user.refresh_from_db()
-
                 user.HelplineUser.hl_names = "%s %s" %(form.cleaned_data.get('first_name'), \
                     form.cleaned_data.get('last_name'))
                 user.HelplineUser.hl_nick = form.cleaned_data.get('username')
                 user.HelplineUser.hl_calls = 0
-                user.HelplineUser.hl_email = "%s" % profile_form.cleaned_data.get('useremail')
+                user.HelplineUser.hl_email = "%s" % profile_form.cleaned_data.get('hl_email')
 
                 user.HelplineUser.hl_area = ''
-                user.HelplineUser.hl_phone = "%s" % profile_form.cleaned_data.get('phone')
+                user.HelplineUser.hl_phone = "%s" % profile_form.cleaned_data.get('hl_phone')
                 user.HelplineUser.hl_branch = ''
                 user.HelplineUser.hl_case = 0
 
-                user.HelplineUser.hl_status = 'Idle'
+                user.HelplineUser.hl_status = 'Unavailable'
                 user.HelplineUser.hl_jabber = "" # "%s@%s" % (user.username, settings.BASE_DOMAIN)
-                user.HelplineUser.hl_pass = hashlib.md5("1234").hexdigest()
+                # user.HelplineUser.hl_pass = hashlib.md5("1234").hexdigest()
 
-                user.HelplineUser.hl_role = "%s" % profile_form.cleaned_data.get('userrole')
-                # user.save()
+                user.HelplineUser.hl_role = "%s" % profile_form.cleaned_data.get('hl_role')
 
                 uploaded_file_url = ''                
                 filename = ''
-                if request.FILES['avatar']:
-                    myfile = request.FILES['avatar']
+                if request.FILES['hl_avatar']:
+                    myfile = request.FILES['hl_avatar']
                     fs = FileSystemStorage()
                     filename = fs.save(myfile.name, myfile)
                     uploaded_file_url = fs.url(filename)
