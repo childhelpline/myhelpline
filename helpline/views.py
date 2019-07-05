@@ -1080,7 +1080,7 @@ def general_reports(request, report='cases'):
     elif report.lower() == 'cases':     
         if datetime_range != '':
             start_dates,end_dates = [datetime_range.split("-")[0],datetime_range.split("-")[1]]
-            request_string += " and date_created >= '{0}' and date_created <= '{1}'".format(start_dates,end_dates)
+            request_string += " and CAST(date_created AS DATE) >= '{0}' and CAST(date_created AS DATE) <= '{1}'".format(start_dates,end_dates)
         
         if agent != '':
             if request_string == '':
@@ -1387,7 +1387,7 @@ def reports(request, report, casetype='Call'):
 
             if datetime_range != '':
                 start_dates,end_dates = [datetime_range.split("-")[0],datetime_range.split("-")[1]]
-                request_string += " and date_created >= '{0}' and date_created <= '{1}'".format(start_dates,end_dates)
+                request_string += " and CAST(date_created AS DATE) >= '{0}' and CAST(date_created AS DATE) <= '{1}'".format(start_dates,end_dates)
             
             def dictfetchall(cursor): 
                 "Returns all rows from a cursor as a dict" 
@@ -1458,7 +1458,7 @@ def reports(request, report, casetype='Call'):
             recs = ''
             # get data 
             with connection.cursor() as cursor:
-                    query = "SELECT date_created,json from logger_instance where xform_id = '%s' %s order by date_created desc" %(str(default_service_xform.pk),request_string)
+                    query = "SELECT date_created,json from logger_instance where xform_id = '%s' %s order by CAST(date_created AS DATE) desc" %(str(default_service_xform.pk),request_string)
                     cursor.execute(query)
                     recs = dictfetchall(cursor)
 
@@ -2720,27 +2720,27 @@ def get_dashboard_stats(request, interval=None,wall=True):
 
     date_time = datetime.now()
     
-    request_string += " and date_created = '{}'".format(date_time.strftime('%d-%m-%Y'))
+    request_string += " and CAST(date_created AS DATE) = '{0}'".format(date_time.strftime('%d-%m-%Y'))
 
     home_statistics = {'high_priority':0,'escalate':0,'closed':0,'pending':0,'total':0,'call_stat':'',\
     'midnight': midnight,'midnight_string': midnight_string,'now_string': now_string,'today':form_details['submission_count_for_today'],"total_submissions":form_details['num_of_submissions']}
     
     # SMS stats
-    home_statistics['sms'] = SMSCDR.objects.filter(sms_time__date=datetime.today()).count()
+    home_statistics['total_sms'] = SMSCDR.objects.filter(sms_time__date=datetime.today()).count()
     # Email stats
     home_statistics['email'] = Emails.objects.filter(email_time__date=datetime.today()).count()
 
     # filter by user    
     if not wall:
         if request.user.HelplineUser.hl_role.lower() == 'counsellor':
-            request_string += " and json->>'case_owner' = '{}'".format(request.user.HelplineUser.hl_key)
+            request_string += " and json->>'case_owner' = '{0}'".format(request.user.HelplineUser.hl_key)
             query_string += '?usr_f=%s' % username if query_string == '' else '&use_f=%s'% username
         elif request.user.HelplineUser.hl_role.lower() == 'caseworker':
             request_string += " and json->>'case_owner' = '{0}' \
-            and json->>'case_actions/escalate_caseworker' = '{0}'".format(username)
+            OR json->>'case_actions/escalate_caseworker' = '{0}'".format(username)
         elif request.user.HelplineUser.hl_role.lower() == 'casemanager':
-            request_string += " and json->>'case_owner' = '{}' \
-            and json->>'case_actions/escalate_casemanager' = '{}'".format(username)
+            request_string += " and json->>'case_owner' = '{0}' \
+            OR json->>'case_actions/escalate_casemanager' = '{0}'".format(username)
 
     recs = []
 
@@ -3260,7 +3260,7 @@ def pivot(request):
 
     if datetime_range != '':
         start_dates,end_dates = [datetime_range.split("-")[0],datetime_range.split("-")[1]]
-        request_string = " and date_created >= '{0}' and date_created <= '{1}'".format(start_dates,end_dates)
+        request_string = " and CAST(date_created AS DATE) >= '{0}' and CAST(date_created as DATE) <= '{1}'".format(start_dates,end_dates)
     
     if agent != '':
         request_string = " and json='{\"case_owner\":\"{0}\"}'".format(agent)        
@@ -3334,7 +3334,7 @@ def pivot(request):
     recs = ''
     # get data 
     with connection.cursor() as cursor:
-            query = "SELECT date_created,json from logger_instance where xform_id = '%s' %s  order by date_created desc" %(str(default_service_xform.pk),request_string)
+            query = "SELECT date_created,json from logger_instance where xform_id = '%s' %s  order by CAST(date_created AS DATE) desc" %(str(default_service_xform.pk),request_string)
             cursor.execute(query)
             recs = dictfetchall(cursor)
 
