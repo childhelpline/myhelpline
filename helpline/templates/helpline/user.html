@@ -5,6 +5,26 @@
 {% load humanize %}
 
 {% block content %}
+<style type="text/css">
+  
+  form p{
+    width: 50%;
+    padding:5px 20px;
+  }
+  form p label{
+    display: block;
+  }
+  form p input{
+    display: block;
+  }
+  .helptext{
+    color: #32C23C;
+  }
+  .errorlist{
+    width: 50% !important;
+    max-height: 50px;
+  }
+</style>
     <!-- Content Header (Page header) -->
     <section class="content-header">
       <h1>
@@ -28,13 +48,16 @@
             <!-- /.box-header -->
             <div class="box-body">
                 
-                  {% if messs != '' %}
-                  <div class="alert alert-info"> 
-                    {% for mess in messs %}
-                      {{ mess }}
+                <!-- /.box-header -->
+                <div class="box-body">
+                  {% if messages %}
+                  <div class="alert alert-info">
+                    {% for message in messages %}
+                        {{ message }}
                     {% endfor %}
                   </div>
                   {% endif %}
+                <div>
                
                 <form method="POST" action="" enctype="multipart/form-data">
                   {% csrf_token %}
@@ -42,7 +65,7 @@
                     {{ form.as_p }}
                     {{ profileform.as_p }}
                     <div class="form-group">
-                      <div class="input-group col-md-12">
+                      <div class="input-group col-md-12" style="padding: 20px;">
                         <button type="submit" class="save btn btn-flat btn-primary">{% trans 'Save' %}</button>
                         <button type="reset" class="save btn btn-flat btn-default pull-right">{% trans 'Cancel' %}</button>
                       </div>
@@ -62,3 +85,21 @@
     <!-- /.content -->
 
   {% endblock content %}
+  {% block script_end %}
+
+<script type="text/javascript">
+  $('input,select').each(function(){
+    if($(this).hasClass('form-control')){}
+      else{
+        $(this).addClass('form-control')
+      }
+  })
+  // if($('input,select').hasClass('form-control')){
+  //   alert("Cheru")
+
+  // }else{
+  //   alert("Cheru")
+  //   $('input').addClass('form-control')
+  // }
+</script>
+{% endblock script_end %}

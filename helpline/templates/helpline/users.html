@@ -27,13 +27,14 @@
             </div>
             <!-- /.box-header -->
             <div class="box-body">
-              <div class="alert alert-info">{{ message }}</div>
-              <div>
-            {% if messages %}
+              {% if messages %}
+              <div class="alert alert-info">
                 {% for message in messages %}
                     {{ message }}
                 {% endfor %}
-            {% endif %}
+              </div>
+              {% endif %}
+            <div>
           </div>
 
               <table id="example1" class="table table-bordered table-striped">

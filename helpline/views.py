@@ -1032,16 +1032,15 @@ def general_reports(request, report='cases'):
     else:
         today = datetime.now()
 
-        month = today.month -1 if today.month > 1 else 12
+        month = today.month-1 if today.month > 1 else 12
 
         start_date = '%02d/%02d/%d 00:00' %(today.year,month,today.day)
-        end_date = today.strftime('%d/%m/%Y  23:59')
+        end_date = today.strftime('%Y/%m/%d  23:59')
 
         datetime_range = '%s-%s' %(start_date,end_date)
 
         datetime_range_call = '%sto%s' %(datetime.strftime(today,'%Y-%m-%d'),datetime.strftime(today,'%Y-%m-%d'))
-
-
+        
     htmltemplate = 'helpline/report_cases.html'
 
     if report.lower() == 'calls':
@@ -1085,7 +1084,6 @@ def general_reports(request, report='cases'):
             request_string += " and date_created >= '{0}' and date_created <= '{1}'".format(start_dates,end_dates)
         
         if agent != '':
-
             request_string += " and json='{\"case_owner\":\"{0}\"}'".format(agent)  
 
         def dictfetchall(cursor): 
@@ -3293,12 +3291,10 @@ def current_user(request):
 
     return response
 
-@login_required
 def wall(request):
     ret = stat(request)
     return HttpResponse(ret)
 
-@login_required
 def stat(request):
     """Display statistics for the wall board"""
 
