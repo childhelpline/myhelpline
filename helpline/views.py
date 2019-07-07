@@ -1354,15 +1354,16 @@ def reports(request, report, casetype='Call'):
                 request_string += " and json->>'case_actions/case_action' = '{0}' \
                 and json->>'case_actions/escalate_casemanager' = '{1}'".format(rep_status,username)
             elif request.user.HelplineUser.hl_role == 'Supervisor':
-                request_string += " and json->>'case_actions/case_action' = '{0}' \
-                and json->>'case_actions/supervisors' = '{1}'".format(rep_status,username)
+                request_string += " and json->>'case_actions/case_action' = '{0}'".format(rep_status)
+                # and json->>'case_actions/supervisors' = '{1}'".format(rep_status,username)
             else:
                 request_string += " and json->>'case_actions/case_action' = '{0}'".format(rep_status)
 
         elif report == 'priority':
             request_string += " and json->>'case_narratives/case_priority' = 'high_priority'"
         elif report == 'today' or report == 'totalcases':
-            request_string = ''
+            if request.user.HelplineUser.hl_role.lower() == 'counsellor' or request.user.HelplineUser.hl_role.lower() == 'caseworker':
+                request_string += " and json->>'case_owner' = '{0}'".format(username)
 
         htmltemplate = ''
         report = {}
@@ -2697,7 +2698,7 @@ def dictfetchall(cursor):
             dict(zip([col[0] for col in desc], row)) 
             for row in cursor.fetchall() 
     ]
-def get_dashboard_stats(request, interval=None,wall=True):
+def get_dashboard_stats(request, interval=None,wall=False):
     default_service = Service.objects.all().first()
     request_string = ''
     query_string = ''
@@ -2766,6 +2767,16 @@ def get_dashboard_stats(request, interval=None,wall=True):
         elif request.user.HelplineUser.hl_role.lower() == 'casemanager':
             request_string += " and json->>'case_actions/escalate' = '{0}' \
             AND json->>'case_actions/escalate_casemanager' = '{1}'".format('escalate',username)
+
+
+        if request.user.HelplineUser.hl_role.lower() == 'counsellor' or request.user.HelplineUser.hl_role.lower() == 'caseworker':
+            records = []
+            with connection.cursor() as cursor:
+                query = "SELECT CAST(COUNT(json->>'case_owner') AS INTEGER) case_count from logger_instance \
+                 where xform_id = '%s' and json->>'case_owner' = '%s'" %(str(default_service_xform.pk),username)
+                cursor.execute(query)
+                recs = dictfetchall(cursor)
+                home_statistics.update({'total_submissions':records[0]['case_count']})
 
     recs = []
 

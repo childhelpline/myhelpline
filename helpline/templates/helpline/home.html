@@ -120,7 +120,7 @@
               <div class="{% if request.user.HelplineUser.hl_role == 'Supervisor' %} col-sm-4 col-md-4 {% else %} col-sm-6 col-md-6 {% endif %} palette-item">
                 <div class="color-palette-set">
                   <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
-                  <div class="bg-gray color-palette" align="center" style=" padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ home.sms }}</span><br>SMS</div>
+                  <div class="bg-gray color-palette" align="center" style=" padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ home.sms |default:0 }}</span><br>SMS</div>
                   <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
                 </div>
               </div>

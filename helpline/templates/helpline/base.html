@@ -399,7 +399,7 @@ input:checked + .slider:before {
               {% endif %}
               <li><a href="{% url 'dashboardreports' 'today' 'case' %}"><i class="fa fa-circle-o"></i> {% trans "Today's Cases" %}
                 <span class="pull-right-container">
-                  <span class="label label-success pull-right">{{ home.today }}</span>
+                  <span class="label label-success pull-right">{{ home.total }}</span>
                 </span>
               </a></li>
               <li><a href="{% url 'dashboardreports' 'escalated' 'case' %}"><i class="fa fa-circle-o"></i> {% trans "Escalated Cases" %}
@@ -953,6 +953,7 @@ $(document).ready(function(){
     }
   }, 10000);
 
+var poll_count = 0;
 if(sessionStorage.getItem('in_queue') == 1){
   if(params.get('callcase') == null){
     var call = setInterval(function () {
@@ -965,8 +966,12 @@ if(sessionStorage.getItem('in_queue') == 1){
         /*}else if(data.status == 'online'){
           clearInterval(call);*/
         }else if(data.status == 'offline'){
-          sessionStorage.setItem("on_case", 0);
-          clearInterval(call);
+          if(poll_count < 3)
+              poll_count += 1
+          else{
+            sessionStorage.setItem("on_case", 0);
+            clearInterval(call);
+          }
         }
       });
     }, 3000);
