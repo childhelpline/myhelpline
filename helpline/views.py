@@ -993,8 +993,10 @@ def general_reports(request, report='cases'):
     category = request.GET.get("category", "")
     form = ReportFilterForm(request.GET)
 
-    agent = User.objects.get(pk=agent)
-    agent = agent.username
+    if agent != '' and agent > 0:
+        agent = User.objects.get(pk=agent)
+        agent = agent.username
+    
     dashboard_stats = get_dashboard_stats(request)
     report_title = {report: _(str(report).capitalize() + " Reports")}
 
