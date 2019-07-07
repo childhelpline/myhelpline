@@ -2775,8 +2775,9 @@ def get_dashboard_stats(request, interval=None,wall=False):
                 query = "SELECT CAST(COUNT(json->>'case_owner') AS INTEGER) case_count from logger_instance \
                  where xform_id = '%s' and json->>'case_owner' = '%s'" %(str(default_service_xform.pk),username)
                 cursor.execute(query)
-                recs = dictfetchall(cursor)
-                home_statistics.update({'total_submissions':records[0]['case_count']})
+                records = dictfetchall(cursor)
+                num = records[0]['case_count'] if len(records) > 0 else 0
+                home_statistics.update({'total_submissions':num})
 
     recs = []
 
