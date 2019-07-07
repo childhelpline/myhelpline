@@ -995,7 +995,7 @@ def general_reports(request, report='cases'):
 
     agent = User.objects.get(pk=agent)
     agent = agent.username
-    dashboard_stats = get_dashboard_stats(request.user)
+    dashboard_stats = get_dashboard_stats(request)
     report_title = {report: _(str(report).capitalize() + " Reports")}
 
     data = {
@@ -3439,7 +3439,7 @@ def stat(request):
     # call_statistics = requests.post('%s/clk/stats/' %(settings.CALL_API_URL)).json() or []
 
     dashboard_stats = get_dashboard_stats(request,None,True)
-    week_dashboard_stats = get_dashboard_stats(request.user,'weekly',True)
+    week_dashboard_stats = get_dashboard_stats(request,'weekly',True)
 
     userlist = User.objects.filter(is_active=True,HelplineUser__hl_role='Counsellor').exclude(HelplineUser__hl_status='Unavailable').exclude(HelplineUser__hl_status='Offline').select_related('HelplineUser')
     

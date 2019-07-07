@@ -71,80 +71,67 @@
               <!-- /.col -->
               <div class="col-sm-4 col-md-2 palette-item">
                 <div class="color-palette-set">
-                  <div class="bg-aqua color-palette" align="center" style="padding-right:5px; padding-bottom:5px;" onclick="window.location = '{% url 'dashboardreports' 'answeredcalls' %}?datetime_range={{ home.midnight_string }} - {{ home.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ home.call.answered}}</span><br>{% trans "Answered Calls" %}</div>
+                  <div class="bg-green color-palette" align="center" style="padding-right:5px; padding-bottom:5px;" onclick="window.location = '{% url 'dashboardreports' 'answeredcalls' %}?datetime_range={{ home.midnight_string }} - {{ home.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ home.call.answered}}</span><br>{% trans "Answered Calls" %}</div>
                   <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
                 </div>
               </div>
               <!-- /.col -->
+              {% if request.user.HelplineUser.hl_role == 'Supervisor' %}
               <div class="col-sm-4 col-md-2 palette-item">
                 <div class="color-palette-set">
-                  <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
-                  {% if request.user.HelplineUser.hl_role == 'Supervisor' %}
-                  <div class="bg-red color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"  onclick="window.location = '{% url 'dashboardreports' 'abandonedcalls' %}?datetime_range={{ home.midnight_string }} - {{ home.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ home.call.abandoned }} </span><br>{% trans "Abandoned Calls" %}</div>
-                  {% else %}
-                  <div class="bg-red color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ home.call.abandoned | default:0 }} </span><br>{% trans "Missed Calls" %}</div>
-                  {% endif %}
+                  <div class="bg-yellow color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"  onclick="window.location = '{% url 'dashboardreports' 'abandonedcalls' %}?datetime_range={{ home.midnight_string }} - {{ home.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ home.call.abandoned }} </span><br>{% trans "Abandoned Calls" %}</div>
+                </div>
+              </div>
+              <!-- /.col -->
+              {% endif %}
 
-                  <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
+              <div class="col-sm-4 col-md-2 palette-item">
+                <div class="color-palette-set">
+                  <div class="bg-red color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"  onclick="window.location = '{% url 'dashboardreports' 'missedcalls' %}?datetime_range={{ home.midnight_string }} - {{ home.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ home.call.missed }} </span><br>{% trans "Missed Calls" %}</div>
                 </div>
               </div>
               <!-- /.col -->
               <div class="col-sm-4 col-md-2 palette-item" onclick="window.location = '{% url 'dashboardreports' 'voicemails' %}?datetime_range={{ home.midnight_string }} - {{ home.now_string }}'">
                 <div class="color-palette-set">
                   <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
-                  <div class="bg-yellow color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ home.call.voicemail | default:0 }} </span><br>{% trans "Voice Mails" %}</div>
+                  <div class="bg-aqua color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ home.call.voicemail | default:0 }} </span><br>{% trans "Voice Mails" %}</div>
                   <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
                 </div>
               </div>
               <div class="col-sm-4 col-md-2 palette-item">
                 <div class="color-palette-set">
                   <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
-                  <div class="bg-gray color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ home.call.dropped | default:0 }}</span><br>{% trans "Dropped Calls" %}</div>
+                  <div class="bg-gray color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ home.call.ivr | default:0 }}</span><br>{% trans "IVR Calls" %}</div>
                   <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
                 </div>
               </div>
-              <!-- /.col -->
-              <div class="col-sm-4 col-md-2 palette-item">
-                <div class="color-palette-set">
-                  <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
-                  <div class="bg-gray color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ home.email }}</span><br>{% trans "Mails" %}</div>
-                  <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
-                </div>
-              </div>
-              <!-- /.col -->
               <!-- /.col -->
             </div>
           </div>
           <div class="col-md-4 qa-presence">
             <div class="row">
-              <div class="{% if request.user.HelplineUser.hl_role == 'Supervisor' %} col-sm-4 col-md-4 {% else %} col-sm-6 col-md-6 {% endif %} palette-item">
+              <div class="{% if request.user.HelplineUser.hl_role == 'Supervisor' %} col-sm-3 col-md-3 {% else %} col-sm-4 col-md-4 {% endif %} palette-item" style="padding-right:2px; padding-left:2px; width: 20%;">
                 <div class="color-palette-set">
-                  <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
-                  <div class="bg-gray color-palette" align="center" style=" padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ home.sms |default:0 }}</span><br>SMS</div>
-                  <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
+                  <div class="bg-gray color-palette" align="center" style="padding-right:0px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ home.email }}</span><br>{% trans "Mails" %}</div>
                 </div>
               </div>
-              <div class="{% if request.user.HelplineUser.hl_role == 'Supervisor' %} col-sm-4 col-md-4 {% else %} col-sm-6 col-md-6 {% endif %}">
+              <div class="{% if request.user.HelplineUser.hl_role == 'Supervisor' %} col-sm-4 col-md-3 {% else %} col-sm-4 col-md-4 {% endif %} palette-item" style="padding-right:2px; padding-left:2px;">
                 <div class="color-palette-set">
-                  <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
-                  <div class="bg-aqua color-palette" align="center" style="border-radius:0px; padding-right:5px; padding-bottom:5px;"><a href="{% url 'qa' 'analysed' %}"><span style="font-size:50px; font-weight:800;">{{ qa_stat | floatformat:2 }}</span><br />Percentage (%)</a></div>
-                  <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
+                  <div class="bg-gray color-palette" align="center" style=" padding-left:0px; padding-right:0px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ home.sms |default:0 }}</span><br>SMS</div>
+                </div>
+              </div>
+              <div class="{% if request.user.HelplineUser.hl_role == 'Supervisor' %} col-sm-4 col-md-3 {% else %} col-sm-4 col-md-4 {% endif %}" style="padding: 0px;">
+                <div class="color-palette-set">
+                  <div class="bg-aqua color-palette" align="center" style="border-radius:0px; padding-right:5px; padding-bottom:5px;"><a href="{% url 'qa' 'analysed' %}"><span style="font-size:50px; font-weight:800;">{{ qa_stat | floatformat:0 }}</span><br />Percentage (%)</a></div>
                 </div>
               </div>
               {% if request.user.HelplineUser.hl_role == 'Supervisor' %}
-              <div class="col-sm-4 col-md-4">
-
-                <!--div class="color-palette-set" style="border:solid thin #09F; padding:2px;" align="center">
-                  <div class="bg-green disabled color-palette" style="height:30px;"><span>{{ status_count.available }} Available | {% widthratio status_count.available  status_count.total 100 %}%</span></div>
-                  <div class="bg-yellow-active color-palette" style="height:30px;"><span>{{ status_count.idle }} Idle | {% widthratio status_count.idle  status_count.total 100 %}%</span></div>
-                  <div class="bg-red-active color-palette" style="height:30px;"><span>{{ status_count.busy_on_call }} Busy | {% widthratio status_count.busy_on_call  status_count.total 100 %}%</span></div>
-                </div-->
-
+              <div class="col-sm-3 col-md-3">
                 <div class="box-body no-padding">
                   <table class="table table-condensed" onclick="window.location = '{% url 'web_presence' %}'">
                     <tbody>
                       <tr class="bg-green-active color-palette">
-                        <td width="56"><strong>Available </strong></td>
+                        <td width="56"><strong>Avail'e </strong></td>
                         <td width="29"><span class="badge bg-blue">{{ home.call_stat.agents.online }}</span></td>
                         <td width="29"><span class="badge bg-blue">{% widthratio status_count.available  status_count.total 100 %}%</span></td>
                       </tr>
