@@ -5,7 +5,11 @@
 
 {% block content %}
 
-
+<style type="text/css">
+  .palette-item{
+    cursor:default;
+  }
+</style>
 <section class="content" style="padding-top:0px;">
   <div class="row">
     <div class="col-md-12">
@@ -76,7 +80,7 @@
                 </div>
               </div>
               <!-- /.col -->
-              {% if request.user.HelplineUser.hl_role == 'Supervisor' %}
+              {% if request.user.HelplineUser.hl_role != 'Counsellor' %}
               <div class="col-sm-4 col-md-2 palette-item">
                 <div class="color-palette-set">
                   <div class="bg-yellow color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"  onclick="window.location = '{% url 'dashboardreports' 'abandonedcalls' %}?datetime_range={{ home.midnight_string }} - {{ home.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ home.call.abandoned }} </span><br>{% trans "Abandoned Calls" %}</div>
@@ -98,7 +102,7 @@
                   <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
                 </div>
               </div>
-              <div class="col-sm-4 col-md-2 palette-item">
+              <div class="col-sm-4 col-md-2 palette-item" onclick="window.location = '{% url 'dashboardreports' 'ivr' %}?datetime_range={{ home.midnight_string }} - {{ home.now_string }}'">
                 <div class="color-palette-set">
                   <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
                   <div class="bg-gray color-palette" align="center" style="padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ home.call.ivr | default:0 }}</span><br>{% trans "IVR Calls" %}</div>

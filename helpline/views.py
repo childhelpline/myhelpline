@@ -154,14 +154,6 @@ def home(request):
     }
 
     stat = requests.get(url, headers=headers).json() or {}
-
-
-    # case priority statistics
-    # url = 'http://%s/ona/api/v1/charts/%s.json?field_name=case_priority' % (
-    #     current_site,
-    #     default_service_xform.pk
-    # )
-    # statex = requests.get(url, headers=headers).json() or {}
     
     forloop = 0
     for dt in get_item(stat, 'data'):
@@ -235,12 +227,6 @@ def home(request):
     if quiz > 0:
         stat_qa = stat_qa/quiz
 
-
-    # high_priority = 0
-    # if statex.get('data',None) != None:
-    #     for ke_item in statex['data']:
-    #         if str(ke_item['case_priority'][0]) == 'High Priority':
-    #             high_priority = ke_item['count']
 
     return render(request, 'helpline/%s.html' % template,
                 {
@@ -413,6 +399,7 @@ def manage_users(request,action=None,action_item=None):
             profile = action_user.HelplineUser
             currentrole = request.user.HelplineUser.hl_role
             
+            data['pic'] = action_user.HelplineUser.hl_avatar
             perms = ['Supervisor','Admin','Administrator']
             
 
@@ -425,11 +412,13 @@ def manage_users(request,action=None,action_item=None):
                         user_form = User()
                         uploaded_file_url = ''                
                         filename = ''
-                        if request.FILES['hl_avatar']:
-                            myfile = request.FILES['hl_avatar']
-                            fs = FileSystemStorage()
-                            filename = fs.save(myfile.name, myfile)
-                            uploaded_file_url = fs.url(filename)
+
+                        if len(request.FILES) != 0:
+                            if request.FILES['hl_avatar']:
+                                myfile = request.FILES['hl_avatar']
+                                fs = FileSystemStorage()
+                                filename = fs.save(myfile.name, myfile)
+                                uploaded_file_url = fs.url(filename)
 
                         user_form = form.save()
                         custom_form = profile_form.save(False)
@@ -438,7 +427,10 @@ def manage_users(request,action=None,action_item=None):
                         custom_form.save()
                         user_form.refresh_from_db()
 
-                        user_form.HelplineUser.hl_avatar = "%s" % uploaded_file_url
+                        if uploaded_file_url != '':
+                            user_form.HelplineUser.hl_avatar = "%s" % uploaded_file_url
+                        else:
+                            user_form.HelplineUser.hl_avatar = user_form.HelplineUser.hl_avatar
                         user_form.HelplineUser.hl_time = time.time()
                         user_form.HelplineUser.hl_names = "%s %s" %(form.cleaned_data.get('first_name'), \
                         form.cleaned_data.get('last_name'))
@@ -569,169 +561,138 @@ def new_user(request):
         profile_form = RegisterProfileForm()
     return render(request, 'helpline/user.html', {'form':form, 'profileform':profile_form, 'messs':messages})
 
-@login_required
-def edit_user(request,userid):
+# @login_required
+# def edit_user(request,userid):
 
-    user = get_object_or_404(User,pk=pk) 
-    user = User.objects.get(pk=pk)
-    user_profile = User.HelplineUser
-    user_form = RegisterUserForm(request.POST or None, instance=user)
-    profile_form = RegisterProfileForm(request.POST or None,instance=user_profile)
-    messages = []
-    if request.method == 'POST':
-        form = RegisterUserForm(request.POST, request.FILES)
-        profile_form = RegisterProfileForm(request.POST, request.FILES)
-        if form.is_valid() and profile_form.is_valid():
-            user = User()
-            try:
-                user = form.save()
-                user.refresh_from_db()
+#     user = get_object_or_404(User,pk=pk) 
+#     user = User.objects.get(pk=pk)
+#     user_profile = User.HelplineUser
+#     user_form = RegisterUserForm(request.POST or None, instance=user)
+#     profile_form = RegisterProfileForm(request.POST or None,instance=user_profile)
+#     messages = []
+#     if request.method == 'POST':
+#         form = RegisterUserForm(request.POST, request.FILES)
+#         profile_form = RegisterProfileForm(request.POST, request.FILES)
+#         if form.is_valid() and profile_form.is_valid():
+#             user = User()
+#             try:
+#                 user = form.save()
+#                 user.refresh_from_db()
 
-                user.HelplineUser.hl_names = "%s %s" %(form.cleaned_data.get('first_name'), \
-                    form.cleaned_data.get('first_name'))
-                user.HelplineUser.hl_nick = form.cleaned_data.get('username')
-                user.HelplineUser.hl_calls = 0
-                user.HelplineUser.hl_email = "%s" % profile_form.cleaned_data.get('useremail')
+#                 user.HelplineUser.hl_names = "%s %s" %(form.cleaned_data.get('first_name'), \
+#                     form.cleaned_data.get('first_name'))
+#                 user.HelplineUser.hl_nick = form.cleaned_data.get('username')
+#                 user.HelplineUser.hl_calls = 0
+#                 user.HelplineUser.hl_email = "%s" % profile_form.cleaned_data.get('useremail')
 
-                user.HelplineUser.hl_area = ''
-                user.HelplineUser.hl_phone = profile_form.cleaned_data.get('phone')
-                user.HelplineUser.hl_branch = ''
-                user.HelplineUser.hl_case = 0
+#                 user.HelplineUser.hl_area = ''
+#                 user.HelplineUser.hl_phone = profile_form.cleaned_data.get('phone')
+#                 user.HelplineUser.hl_branch = ''
+#                 user.HelplineUser.hl_case = 0
 
-                user.HelplineUser.hl_status = 'Idle'
-                user.HelplineUser.hl_jabber = "" # "%s@%s" % (user.username, settings.BASE_DOMAIN)
-                user.HelplineUser.hl_pass = hashlib.md5("1234").hexdigest()
+#                 user.HelplineUser.hl_status = 'Idle'
+#                 user.HelplineUser.hl_jabber = "" # "%s@%s" % (user.username, settings.BASE_DOMAIN)
+#                 user.HelplineUser.hl_pass = hashlib.md5("1234").hexdigest()
 
-                user.HelplineUser.hl_role = "%s" % profile_form.cleaned_data.get('userrole')
-                # user.save()
+#                 user.HelplineUser.hl_role = "%s" % profile_form.cleaned_data.get('userrole')
+#                 # user.save()
 
-                uploaded_file_url = ''                
-                filename = ''
-                if request.FILES['avatar']:
-                    myfile = request.FILES['avatar']
-                    fs = FileSystemStorage()
-                    filename = fs.save(myfile.name, myfile)
-                    uploaded_file_url = fs.url(filename)
+#                 uploaded_file_url = ''                
+#                 filename = ''
+#                 if request.FILES['avatar']:
+#                     myfile = request.FILES['avatar']
+#                     fs = FileSystemStorage()
+#                     filename = fs.save(myfile.name, myfile)
+#                     uploaded_file_url = fs.url(filename)
 
-                user.HelplineUser.hl_avatar = uploaded_file_url
-                user.HelplineUser.hl_time = time.time()
+#                 user.HelplineUser.hl_avatar = uploaded_file_url
+#                 user.HelplineUser.hl_time = time.time()
 
-                user.HelplineUser.save()
+#                 user.HelplineUser.save()
 
-                # share case form
-                default_service = Service.objects.all().first()
-                default_service_xform = default_service.walkin_xform
-                default_service_auth_token = default_service_xform.user.auth_token
-                current_site = get_current_site(request)
+#                 # share case form
+#                 default_service = Service.objects.all().first()
+#                 default_service_xform = default_service.walkin_xform
+#                 default_service_auth_token = default_service_xform.user.auth_token
+#                 current_site = get_current_site(request)
 
-                if default_service != '' and default_service != 0 and default_service_xform:
-                    url = 'http://%s/ona/api/v1/%s/share/' % (
-                        current_site,
-                        default_service_xform.pk
-                    )
-                    headers = {
-                        'Authorization': 'Token %s' % (default_service_auth_token),
-                        'username':user.username,
-                        'role':'dataentry'
-                    }
-                    requests.post(url, headers=headers)
+#                 if default_service != '' and default_service != 0 and default_service_xform:
+#                     url = 'http://%s/ona/api/v1/%s/share/' % (
+#                         current_site,
+#                         default_service_xform.pk
+#                     )
+#                     headers = {
+#                         'Authorization': 'Token %s' % (default_service_auth_token),
+#                         'username':user.username,
+#                         'role':'dataentry'
+#                     }
+#                     requests.post(url, headers=headers)
 
-                messages.append("User saved successfully")
-                form = RegisterUserForm()
-                profile_form = RegisterProfileForm()
+#                 messages.append("User saved successfully")
+#                 form = RegisterUserForm()
+#                 profile_form = RegisterProfileForm()
 
-            except Exception as e:
-                form = RegisterUserForm(request.POST)
-                profile_form = RegisterProfileForm(request.POST, request.FILES)
-                messages.append('Error saving user: %s' % (e))
-        else:
-            # messages.error(request, "Error")
-            messages.append("Invalid form")
-    else:
-        form = RegisterUserForm()
-        profile_form = RegisterProfileForm()
-    return render(request, 'helpline/user.html', {'form':form, 'profileform':profile_form, 'messs':messages})
+#             except Exception as e:
+#                 form = RegisterUserForm(request.POST)
+#                 profile_form = RegisterProfileForm(request.POST, request.FILES)
+#                 messages.append('Error saving user: %s' % (e))
+#         else:
+#             # messages.error(request, "Error")
+#             messages.append("Invalid form")
+#     else:
+#         form = RegisterUserForm()
+#         profile_form = RegisterProfileForm()
+#     return render(request, 'helpline/user.html', {'form':form, 'profileform':profile_form, 'messs':messages})
 
 
-@login_required
-def user_profile(request, user_id):
-    user_edit = User.objects.get(HelplineUser__hl_key__exact=user_id) # get_object_or_404(HelplineUser, user_id)
-    user_prof = user_edit.HelplineUser
-    message = ''
-    form = RegisterUserForm(request.POST or None, request.FILES,instance=user_edit)
-    profile_form = RegisterProfileForm(request.POST or None, request.FILES,instance=user_prof)
-    if request.method == 'POST':
-        form = RegisterUserForm(request.POST, request.FILES,instance=user_edit)
-        if form.is_valid():
-            user = HelplineUser()
-            try:
-                user.hl_key = randint(123456789, 999999999)
-                user.hl_auth = randint(1234, 9999)
-                user.user_id = 2
-                user.hl_role = form.cleaned_data['userrole']
-                user.hl_names = form.cleaned_data['names']
-                user.hl_nick = form.cleaned_data['username']
-                user.hl_email = form.cleaned_data['useremail']
-                user.hl_phone = form.cleaned_data['phone']
+# @login_required
+# def user_profile(request, user_id):
+#     user_edit = User.objects.get(HelplineUser__hl_key__exact=user_id) # get_object_or_404(HelplineUser, user_id)
+#     user_prof = user_edit.HelplineUser
+#     message = ''
+#     form = RegisterUserForm(request.POST or None, request.FILES,instance=user_edit)
+#     profile_form = RegisterProfileForm(request.POST or None, request.FILES,instance=user_prof)
+#     if request.method == 'POST':
+#         form = RegisterUserForm(request.POST, request.FILES,instance=user_edit)
+#         if form.is_valid():
+#             user = HelplineUser()
+#             try:
+#                 user.hl_key = randint(123456789, 999999999)
+#                 user.hl_auth = randint(1234, 9999)
+#                 user.user_id = 2
+#                 user.hl_role = form.cleaned_data['userrole']
+#                 user.hl_names = form.cleaned_data['names']
+#                 user.hl_nick = form.cleaned_data['username']
+#                 user.hl_email = form.cleaned_data['useremail']
+#                 user.hl_phone = form.cleaned_data['phone']
 
-                uploaded_file_url = ''
-                filename = ''
-                if request.FILES['avatar']:
-                    myfile = request.FILES['avatar']
-                    fs = FileSystemStorage()
-                    filename = fs.save(myfile.name, myfile)
-                    uploaded_file_url = fs.url(filename)
+#                 uploaded_file_url = ''
+#                 filename = ''
+#                 if request.FILES['avatar']:
+#                     myfile = request.FILES['avatar']
+#                     fs = FileSystemStorage()
+#                     filename = fs.save(myfile.name, myfile)
+#                     uploaded_file_url = fs.url(filename)
 
                 
 
-                user.hl_avatar = uploaded_file_url
-                user.hl_time = time.time()
-                user.save()
-                message = "User saved succeefully"
+#                 user.hl_avatar = uploaded_file_url
+#                 user.hl_time = time.time()
+#                 user.save()
+#                 message = "User saved succeefully"
 
-            except Exception as e:
-                message = 'Error saving user: %s' % e
-        else:
-            messages.error(request, "Error")
-            message = "Invalid form"
-    else:
-        form = RegisterUserForm(instance=user_edit)
-        user_form = RegisterProfileForm(instance=user_prof)
+#             except Exception as e:
+#                 message = 'Error saving user: %s' % e
+#         else:
+#             messages.error(request, "Error")
+#             message = "Invalid form"
+#     else:
+#         form = RegisterUserForm(instance=user_edit)
+#         user_form = RegisterProfileForm(instance=user_prof)
 
-    return render(request, 'helpline/user.html', {'form':form,'profileform':profile_form, 'message':message})
+#     return render(request, 'helpline/user.html', {'form':form,'profileform':profile_form, 'message':message})
 
 
-
-@login_required
-def queue_logx(request):
-    """Join Asterisk queues."""
-    services = Service.objects.all()
-    if request.method == 'POST':
-        queue_form = QueueLogForm(request.POST)
-        if queue_form.is_valid():
-            extension = queue_form.cleaned_data['softphone']
-            try:
-                queue_status = True # requests.post('%s/api/v1/call/login?login=%s&exten=%s' %(settings.CALL_API_URL,request.user.HelplineUser.hl_key,extension)).json()
-                if queue_status:
-                    # Get the hotline object from the extension.
-                    hotdesk = Hotdesk.objects.get(extension=extension)
-
-                    hotdesk.jabber = 'helpline@jabber'
-                    hotdesk.status = 'Available'
-                    hotdesk.agent = request.user.HelplineUser.hl_key
-                    hotdesk.user = request.user
-
-                    agent = request.user.HelplineUser
-                    agent.hl_status = 'Available'
-                    agent.hl_exten = "%s/%s" % (hotdesk.extension_type, hotdesk.extension)
-                    agent.save()
-
-                    message = "Successfully joined queue"
-                else:
-                    message = "Could not successfully join queue, try again!"
-            except Exception as e:
-                message = e
-            return redirect("/helpline/#%s" % message)
 
 @login_required
 def queue_log(request):
@@ -1176,8 +1137,7 @@ def general_reports(request, report='cases'):
 
     
     if report == 'nonanalysed':
-        data['report_data'] = filter(lambda _call_data: not _call_data['length'] and _call_data['length'] <= 1, call_data)
-        htmltemplate = "helpline/nonanalysed.html"
+        data['report_data'] = filter(lambda _call_data: not _call_data['qa'], call_data)
     elif report == 'voicemails':
         data['report_data'] = filter(lambda _call_data: _call_data['voicemail'], call_data)
     elif htmltemplate == '':
@@ -1265,7 +1225,7 @@ def reports(request, report, casetype='Call'):
         callreports = ["missedcalls", "totalcalls",
                        "answeredcalls", "abandonedcalls", "callsummaryreport",
                        "search", "agentsessionreport"]
-
+        reportparams = {"missedcalls":'missed', 'ivr':'ivr','abandonedcalls':'abandoned','answeredcalls':'answered','voice_mails    ':'voicemail'}
 
         if agent != '' or request.user.HelplineUser.hl_role == 'Counsellor':
             if agent == '':
@@ -1279,6 +1239,14 @@ def reports(request, report, casetype='Call'):
                 request_string = '?usr_f=%s' % agent
             else:
                 request_string += '&usr_f=%s' % (datetime_ranges,agent)
+
+
+        if report in reportparams.keys():
+            htmltemplate = 'helpline/reports.html'
+            if request_string == '':
+                request_string = '?call_status=%s' % reportparams[report]
+            else:
+                request_string += '&call_status=%s' % (reportparams[report])
 
         if request_string == '':
             request_string = '?chan_ts_f=%s' % datetime_range_call
@@ -1297,8 +1265,8 @@ def reports(request, report, casetype='Call'):
         if report in callreports:
             htmltemplate = "helpline/reports.html"
         elif report == 'voicemails': 
-            call_data = filter(lambda call_data: call_data['voicemail'] == 'true' and call_data['recording'] != '', call_data)
-            data['report_data'] = call_data
+            # call_data = filter(lambda call_data: call_data['voicemail'] == 'true' and call_data['recording'] != '', call_data)
+            # data['report_data'] = call_data
             htmltemplate = "helpline/voicemails.html"
 
         agents = User.objects.filter().only("username", "HelplineUser__hl_key").exclude(HelplineUser=None).select_related('HelplineUser')
@@ -1497,21 +1465,6 @@ def qa(request, report='analysed'):
     data = {
         'form': form}
 
-    form_url = get_form_url(request, username, settings.ENKETO_PROTOCOL)
-
-    try:
-        url = enketo_url(form_url, xform.id_string)
-        uri = request.build_absolute_uri()
-
-        # Use https for the iframe parent window uri, always.
-        # uri = uri.replace('http://', 'https://')
-        # Poor mans iframe url gen
-        parent_window_origin = urllib.quote_plus(uri)
-        iframe_url = url[:url.find("::")] + "i/" + url[url.find("::"):]+\
-          "?&parentWindowOrigin=" + parent_window_origin
-        data['iframe_url'] = iframe_url
-    except Exception as e:
-        data['iframe_url'] = "URL Error: %s" % e
 
     # Set Query Parameters
     query_string = ''
@@ -1546,6 +1499,22 @@ def qa(request, report='analysed'):
         datetime_range = '%s' %(datetime.strftime(today,'%Y-%m-%d'))
 
     if report == 'results':
+        form_url = get_form_url(request, username, settings.ENKETO_PROTOCOL)
+
+        try:
+            url = enketo_url(form_url, xform.id_string)
+            uri = request.build_absolute_uri()
+
+            # Use https for the iframe parent window uri, always.
+            # uri = uri.replace('http://', 'https://')
+            # Poor mans iframe url gen
+            parent_window_origin = urllib.quote_plus(uri)
+            iframe_url = url[:url.find("::")] + "i/" + url[url.find("::"):]+\
+              "?&parentWindowOrigin=" + parent_window_origin
+            data['iframe_url'] = iframe_url
+        except Exception as e:
+            data['iframe_url'] = "URL Error: %s" % e
+        
         headers = {
             'Authorization': 'Token %s' % (default_service_auth_token)
         }
@@ -1619,10 +1588,10 @@ def qa(request, report='analysed'):
 
         if(report == 'analysis'):
             htmltemplate = "helpline/nonanalysed.html"
-            # result_data = filter(lambda result_data: result_data['agent'] != '' and not result_data['qa'], result_data)
+            result_data = filter(lambda result_data: str(result_data[u'agent']) != '' and str(result_data[u'qa']) == 'false', result_data)
         else:
             htmltemplate = "helpline/analysed_qa.html"
-            # result_data = filter(lambda result_data: result_data['agent'] != '' and result_data['qa'], result_data)
+            result_data = filter(lambda result_data: str(result_data[u'qa']) == 'true', result_data)
          
         data['report_data'] = result_data
         
@@ -1632,110 +1601,110 @@ def qa(request, report='analysed'):
     # data['users'] = HelplineUser.objects.all()
     
     return render(request, htmltemplate, data)
-@login_required
-def analysed_qa(request, report='analysed'):
-    """
-    Process QA result reports for the current service case form
-    """
-    default_service = Service.objects.all().first()
-    default_service_xform = default_service.qa_xform
-    default_service_auth_token = default_service_xform.user.auth_token
-    current_site = get_current_site(request)
+# @login_required
+# def analysed_qa(request, report='analysed'):
+#     """
+#     Process QA result reports for the current service case form
+#     """
+#     default_service = Service.objects.all().first()
+#     default_service_xform = default_service.qa_xform
+#     default_service_auth_token = default_service_xform.user.auth_token
+#     current_site = get_current_site(request)
 
 
-    url = 'http://%s/ona/api/v1/data/%s' % (
-        current_site,
-        default_service_xform.pk
-    )
+#     url = 'http://%s/ona/api/v1/data/%s' % (
+#         current_site,
+#         default_service_xform.pk
+#     )
 
-    # Graph data
-    headers = {
-        'Authorization': 'Token %s' % (default_service_auth_token)
-    }
+#     # Graph data
+#     headers = {
+#         'Authorization': 'Token %s' % (default_service_auth_token)
+#     }
 
-    id_string = str(default_service_xform)
-    username = request.user.username
+#     id_string = str(default_service_xform)
+#     username = request.user.username
 
-    owner = get_object_or_404(User, username__iexact=username)
-    xform = get_form({'id_string__iexact': str(id_string)})
-
-
-    request_string = ''
-
-    # if datetime_range == '':
-    #    start_date, end_date = [datetime_range.split(" - ")[0], datetime_range.split(" - ")[1]]
-    #    start_date = datetime.strptime(start_date, '%m/%d/%Y %I:%M %p')
-    #    end_date = datetime.strptime(end_date, '%m/%d/%Y %I:%M %p')
-
-    td_date = datetime.today()
-    request_string = '&date_created__day=' + td_date.strftime('%d')
-    request_string += '&date_created__month=' + td_date.strftime('%m')
-    request_string += '&date_created__year=' + td_date.strftime('%Y')
-
-    xforms = requests.get('http://%s/ona/api/v1/forms' % (current_site), headers=headers).json();
-    xformx = {}
-
-    #split to get xform object, this will allow us to obtain xform fields
-    for xfrm in xforms:
-        if str(xfrm['id_string']) == id_string:
-            for key, frm in xfrm.items():
-                xformx.update({str(key):str(frm)})
-
-    if request.user.HelplineUser.hl_role == 'Counsellor':
-        request_string += '&case_owner=%s' %(request.user.username)
+#     owner = get_object_or_404(User, username__iexact=username)
+#     xform = get_form({'id_string__iexact': str(id_string)})
 
 
-    stat = requests.get('http://%s/ona/api/v1/data/%s?page=1&page_size=50%s' %(current_site, default_service_xform.pk,\
-        request_string), headers=headers).json();
-    # + '&sort={"_id":-1}'
-    statrecords = []
-    recordkeys = []
+#     request_string = ''
 
-    ##brings up data only for existing records
-    def get_records(recs):
-        return_obj = []
-        record = {}
+#     # if datetime_range == '':
+#     #    start_date, end_date = [datetime_range.split(" - ")[0], datetime_range.split(" - ")[1]]
+#     #    start_date = datetime.strptime(start_date, '%m/%d/%Y %I:%M %p')
+#     #    end_date = datetime.strptime(end_date, '%m/%d/%Y %I:%M %p')
 
-        for key, value in recs.items():
-            #if not (key.startswith('_') and key.endswith('_')):# str(key) == "_id":
-            key = str(key)
-            if key.find('/') != -1:
-                k = key.split('/')
-                l = len(k)
-                kk = str(k[l-1])
-            else:
-                kk = str(key)
-            if isinstance(value, dict) and len(value) >= 1:
-                record.update(get_records(value))
-            elif isinstance(value, list) and len(value) >= 1:
-                if isinstance(value[0], dict):
-                    record.update(get_records(value[0]))
-            else:
-                if not kk in recordkeys and not kk.endswith('ID') and str(value) != 'yes' and str(value) != 'no'\
-                 and str(kk) != 'case_number'  and str(kk) != 'uuid':
-                    recordkeys.append(kk)
-                record.update({kk : str(value).capitalize()})
-        return record
+#     td_date = datetime.today()
+#     request_string = '&date_created__day=' + td_date.strftime('%d')
+#     request_string += '&date_created__month=' + td_date.strftime('%m')
+#     request_string += '&date_created__year=' + td_date.strftime('%Y')
+
+#     xforms = requests.get('http://%s/ona/api/v1/forms' % (current_site), headers=headers).json();
+#     xformx = {}
+
+#     #split to get xform object, this will allow us to obtain xform fields
+#     for xfrm in xforms:
+#         if str(xfrm['id_string']) == id_string:
+#             for key, frm in xfrm.items():
+#                 xformx.update({str(key):str(frm)})
+
+#     if request.user.HelplineUser.hl_role == 'Counsellor':
+#         request_string += '&case_owner=%s' %(request.user.username)
 
 
-    for rec in stat:
-        if isinstance(rec, dict) and len(rec) > 1:
-            statrecords.append(get_records(rec))
+#     stat = requests.get('http://%s/ona/api/v1/data/%s?page=1&page_size=50%s' %(current_site, default_service_xform.pk,\
+#         request_string), headers=headers).json();
+#     # + '&sort={"_id":-1}'
+#     statrecords = []
+#     recordkeys = []
 
-    if len(recordkeys) > 0:
-        recordkeys.append('Date Created')
-    else:
-        recordkeys = False
+#     ##brings up data only for existing records
+#     def get_records(recs):
+#         return_obj = []
+#         record = {}
 
-    return render(request, 'helpline/analysed_qa.html', {
-        'title': 'Analysed QA Results',
-        'report': report,
-        'xform':id_string,
-        'form': 'Qa Form',
-        'dashboard_stats': '',
-        'statrecords': statrecords,
-        'recordkeys': recordkeys
-        })
+#         for key, value in recs.items():
+#             #if not (key.startswith('_') and key.endswith('_')):# str(key) == "_id":
+#             key = str(key)
+#             if key.find('/') != -1:
+#                 k = key.split('/')
+#                 l = len(k)
+#                 kk = str(k[l-1])
+#             else:
+#                 kk = str(key)
+#             if isinstance(value, dict) and len(value) >= 1:
+#                 record.update(get_records(value))
+#             elif isinstance(value, list) and len(value) >= 1:
+#                 if isinstance(value[0], dict):
+#                     record.update(get_records(value[0]))
+#             else:
+#                 if not kk in recordkeys and not kk.endswith('ID') and str(value) != 'yes' and str(value) != 'no'\
+#                  and str(kk) != 'case_number'  and str(kk) != 'uuid':
+#                     recordkeys.append(kk)
+#                 record.update({kk : str(value).capitalize()})
+#         return record
+
+
+#     for rec in stat:
+#         if isinstance(rec, dict) and len(rec) > 1:
+#             statrecords.append(get_records(rec))
+
+#     if len(recordkeys) > 0:
+#         recordkeys.append('Date Created')
+#     else:
+#         recordkeys = False
+
+#     return render(request, 'helpline/analysed_qa.html', {
+#         'title': 'Analysed QA Results',
+#         'report': report,
+#         'xform':id_string,
+#         'form': 'Qa Form',
+#         'dashboard_stats': '',
+#         'statrecords': statrecords,
+#         'recordkeys': recordkeys
+#         })
 
 
 def pairwise(iterable):

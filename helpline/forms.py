@@ -340,7 +340,7 @@ class EditUserForm(ModelForm):
 class RegisterProfileForm(ModelForm):
     hl_email = forms.EmailField(label="Email:", max_length=30,
                                widget=forms.EmailInput(attrs={'class': 'form-control', 'name': 'useremail'}))
-    hl_avatar = forms.ImageField(label="Picture:", max_length=30)
+    hl_avatar = forms.ImageField(label="Picture:",required=False, max_length=30)
     hl_role = forms.ChoiceField(label="Role",
                                 widget=forms.Select(
                                     attrs={

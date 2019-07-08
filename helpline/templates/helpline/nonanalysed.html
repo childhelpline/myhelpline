@@ -77,7 +77,7 @@ div.scrollmenu {
                      opens: 'left',
                      timePicker: true,
                      locale: {
-                      format: 'MM/DD/YYYY h:mm A'
+                      format: 'DD/MM/YYYY h:mm A'
                     }
                   }, function(start, end, label) {
                    console.log("A new date selection was made: " + start.format('M/DD hh:mm A') + ' to ' + end.format('M/DD hh:mm A'));
@@ -171,7 +171,7 @@ div.scrollmenu {
                   <td>{{rep.date}}</td>
                   <td>{{rep.start}}</td>
                   <td>{{rep.ended}}</td>
-                  <td><a href="#" data-target="#case_form_modal" class="qa_btn btn btn-sm btn-warning" data-toggle="modal" data-number="{{rep.caseid}}" data-key="{% setting 'CALL_API_URL' %}/clk/cdr/?media={{rep.uniqueid}}">Assess <i class="fa fa-volume-up"></i></a></td>
+                  <td><a href="#" data-target="#case_form_modal" class="qa_btn btn btn-sm btn-warning" data-toggle="modal" data-number="{{rep.caseid}}" data-cdr='{{rep.uniqueid}}' data-key="{% setting 'CALL_API_URL' %}/clk/cdr/?media={{rep.uniqueid}}">Assess <i class="fa fa-volume-up"></i></a></td>
                 </tr>
                 {% endfor %}
 
@@ -226,6 +226,8 @@ div.scrollmenu {
 
   }
 
+  var cdr = ''
+  var caseid = ''
   $('.qa_btn').click(function(){
     //get selected audio link
     var audioElement = document.getElementById('qa_audio');
@@ -233,8 +235,9 @@ div.scrollmenu {
 
     //add case number to form
     var iframe = document.getElementById("helpline-forms");
-
-    var url_str = !iframe.src.includes('?') ? '?d[case_number]=' + $(this).data('number') + '':'&d[case_number]=' + $(this).data('number') 
+    cdr = $(this).data('cdr')
+    caseid = $(this).data('number')
+    var url_str = !iframe.src.includes('?') ? '?d[case_number]=' + caseid + '':'&d[case_number]=' + caseid 
     url_str += '&d[case_owner]={{request.user.username}}'
     iframe.src += encodeURI(url_str) //append new parameters
     $('#qa_form').modal({backdrop: 'static', keyboard: false}).show()
@@ -243,5 +246,37 @@ div.scrollmenu {
     var audioElement = document.getElementById('qa_audio');
     audioElement.pause()
   })
+
+
+
+
 </script>
 {% endblock content %}
+
+{% block script_end %}
+<script type="text/javascript">
+  window.addEventListener("message", receiveMessage, false);
+
+  function receiveMessage(event)
+  {
+    if(event.data){
+      var resp = JSON.parse(event.data)
+      if(resp.enketoEvent == 'submissionsuccess' || resp.status == 201){
+
+          $.post("{% setting "CALL_API_URL" %}/clk/qa/",{'call_id':cdr,'dispose':'Complete QA','supervisor':'{{request.user.HelplineUser.hl_key | safe}}'},
+              function(data) {
+                data = JSON.parse(data)
+                if(data.status == 'success'){
+                  window.location.reload()
+                  alert("Analysis submitted successfully")
+                }else{
+                  alert("Error submitting: " + data.message)
+                }
+              })
+      }
+    }
+  }
+</script>
+
+{% endblock script_end %}
+

@@ -1,22 +1,24 @@
 {% extends 'helpline/base.html' %}
+{% load staticfiles %}
 {% load i18n %}
-{% block additional-headers %}
-{% endblock %}
-{% block box %}{% endblock %}
+
+{% block box %}
+{% endblock box %}
+{% block treeview_reports %}active{% endblock treeview_reports %}
 {% block navbar_nav %}
-<!--li class="dropdown messages-menu">
+<li class="dropdown messages-menu">
   <a href="#" class="dropdown-toggle" data-toggle="dropdown">
     <i class="fa fa-bookmark"></i>{% trans "Average Talk Time" %}: {{ dashboard_stats.att.hours }}:{{ dashboard_stats.att.min }}:{{ dashboard_stats.att.seconds }}
   </a>
 </li>
-<!-- Messages: style can be found in dropdown.less->
+<!-- Messages: style can be found in dropdown.less-->
 <li class="dropdown messages-menu">
   <a href="#" class="dropdown-toggle" data-toggle="dropdown">
     <i class="fa fa-bookmark"></i>{% trans "Average Wait Time" %}: {{ dashboard_stats.awt.hours }}:{{ dashboard_stats.awt.min }}:{{ dashboard_stats.awt.seconds }}
   </a>
 </li>
 
-<!-- Messages: style can be found in dropdown.less->
+<!-- Messages: style can be found in dropdown.less-->
 <li class="dropdown messages-menu">
   <a href="#" class="dropdown-toggle" data-toggle="dropdown">
     <i class="fa fa-clock-o"></i>  <span id="clock">0:00 AM</span>
@@ -37,30 +39,37 @@
     <li class="footer">
     </li>
   </ul>
-</li-->
+</li>
 
 {% endblock navbar_nav %}
 
 {% block content %}
+<style>
+div.scrollmenu {
+  overflow: auto;
+  white-space: nowrap;
+}
+</style>
 <section class="content-header">
-  <ol class="breadcrumb">
-    <li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
-    <li><a href="#">Cases</a></li>
-    <li class="active">{{ xform.title }}</li>
-  </ol>
+  <h1>
+    {% trans "REPORT" %} <i class="fa fa-angle-right"></i> {{ title }}
+  </h1>
 </section>
 <!-- Main content -->
-<section class="content"  id="data-view">
+<section class="content">
   <div class="row">
     <div class="col-md-12">
       <div class="box">
         <div class="box-header with-border">
+          <!--h3 class="box-title">Filter Parameters:</h3-->
+
           <div class="col-md-12 report-filters">
             {% load django_tables2 %}
             <div id="form_collapse" class="in" style="height: auto;">
               {% block filterform %}
               <!-- Filter Form -->
-              <form action="#">
+              <form action="#" method="POST">
+                {% csrf_token %}
                 <!-- Date and time range -->
                 <script>
                   $(function() {
@@ -68,16 +77,13 @@
                      opens: 'left',
                      timePicker: true,
                      locale: {
-                      format: 'MM/DD/YYYY h:mm A'
+                      format: 'DD/MM/YYYY h:mm A'
                     }
-
                   }, function(start, end, label) {
                    console.log("A new date selection was made: " + start.format('M/DD hh:mm A') + ' to ' + end.format('M/DD hh:mm A'));
                  });
                   });
                 </script>
-
-
                 <div class="form-group col-md-4" style="padding-left: 0px;">
                   <label>Choose Date and time Range:</label>
                   <div class="input-group">
@@ -87,20 +93,16 @@
                     {{ form.datetime_range }}
                   </div><!-- /.input group -->
                 </div><!-- /.form group -->
-
-
-                <!--div class="form-group col-md-4">
+                <div class="form-group col-md-4">
                   <label>Counsellor:</label>
                   <div class="input-group">
                     <div class="input-group-addon">
                       <i class="fa fa-users"></i>
                     </div>
                     {{ form.agent }}
-                  </div><!-- /.input group ->
-                </div><!-- /.form group -->
-
-
-                <!--div class="form-group col-md-4">
+                  </div><!-- /.input group -->
+                </div><!-- /.form group ->
+                <div class="form-group col-md-4">
                   <label>Category:</label>
                   <div class="input-group">
                     <div class="input-group-addon">
@@ -108,9 +110,11 @@
                     </div>
                     {{ form.category }}
                   </div><!-- /.input group ->
-                </div><!-- /.form group -->
+                </div><!-- /.form group ->
 
-                <!--div class="form-group col-md-4">
+
+
+                <div class="form-group col-md-4"  style="padding-left: 0px;">
                   <label>Case Status:</label>
                   <div class="input-group">
                     <div class="input-group-addon">
@@ -118,22 +122,24 @@
                     </div>
                     {{ form.case_status }}
                   </div><!-- /.input group ->
-                </div><!-- /.form group -->
+                </div><!-- /.form group ->
 
-                <!--div class="form-group col-md-4">
+
+                <div class="form-group col-md-4">
                   <label>Interventions:</label>
                   <div class="input-group">
                     <div class="input-group-addon">
                       <i class="fa fa-th"></i>
                     </div>
                     {{ form.interventions }}
-                  </div><!-- /.input group ->
+                  </div><!-- /.input group - >
                 </div><!-- /.form group -->
+
+
                 {{ form.queueid }}
-                <br>
                 <div class="form-group col-md-4">
-                  <div class="input-group" style="padding-top: 5px;">
-                    <input type="submit" value="Fetch Reports" id="total-calls-search-btn" class="btn btn-success btn-md btn-flat" onclick="sendtoReportFactory();">
+                  <div class="input-group" style="padding-top: 25px;">
+                    <input type="submit" value="Fetch Reports" id="total-calls-search-btn" class="btn btn-success btn-sm btn-flat" "><!-- onclick="sendtoReportFactory(); -->
                   </div><!-- /.input group -->
                 </div>
               </form>
@@ -142,78 +148,106 @@
             {% endblock filterform %}
           </div>
         </div>
-        <!-- /.box-header -->
         <div class="box-body">
           <div class="row">
-            <div class="col-md-12">
-              <div class="data-table-data table table-responsive">
-                <table id="example1" class="table table-bordered table-striped dataTable">
-                  {% if recordkeys %}
-                  <thead>
-                    <tr onclick="">
-                      <th>#</th>
-                      <th style="white-space: nowrap;">Case ID</th>
-                      {% for itemx in recordkeys %}
-                      {% if not "_" == itemx|first %}
-                        <th>{{ itemx }}</th>
-                      {% endif %}
-                      {% endfor %}                    
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for records in statrecords %}
-                    <tr ondblclick="window.location.href = '{% url 'caseview' 'Case_Form' records|get_item:'_id' %}'">
-                      <td>{{ forloop.counter }}. </td>
-                      <td><a href="{% url 'caseview' 'Case_Form' records|get_item:'_id' %}">{{  records | get_item:'case_id' }}</a></td>
-                      {% for item_key in recordkeys %}
-                      {% if not '_' == item_key|first %}
-                      <td>
-                        {% if item_key == 'case_id' %}
-                        <a href="/helpline/forms/{{ xform.id_string }}/{{ records | get_item:'_id' }}">{{  records | get_item:item_key }}</a>
-                        {% elif forloop.last %}
-                        {{  records | get_item:'_submission_time' | slice:'10' }}
-                        {% else %}
-                        {{  records | get_item:item_key }}
-                        {% endif %}
-                      </td>
-                      {% endif %}
+            <div class="scrollmenu col-md-12">
+              <table id="example1" class="table datatable">
+                <thead>
+                  <th>#</th>
+                  <th>Case ID</th>
+                  <th>Agent</th>
+                  <th>Caller Phone</th>
+                  <th>Date</th>
+                  <th>Start time</th>
+                  <th>End Time</th>
+                </thead>
+                {% for rep in report_data %}
+                <tr>
+                  <td>{{ forloop.counter}}.</td>
+                  <td>{{rep.caseid | default:''}}</td>
+                  <td>{{ agents | get_item:rep.agent | default:rep.agent}}</td>
+                  <td>{{rep.phone}}</td>
+                  <td>{{rep.date}}</td>
+                  <td>{{rep.start}}</td>
+                  <td>{{rep.ended}}</td>                
+                </tr>
+                {% endfor %}
 
-                      {% endfor %}
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-                  <tfooter>
-                    <tr>
-                      <th>#</th>
-                      <th>Case ID</th>
-                      {% for recordkey in recordkeys %}
-                      {% if not "_" == recordkey|first %}
-                      <th>{{ recordkey }}</th>
-                      {% endif %}
-                      {% endfor %}                       
-                    </tr>
-                  </tfooter>
-                  {% else %}
-                  <thead>
-                    <tr>
-                      <th style="display: none;"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                  </tbody>
-                  {% endif %}
-                </table>
-              </div>
-              <div style="clear: both;"></div>
+              </table>
             </div>
+          </div>
+          <!-- /.col -->
+        </div>
+        <!-- /.row -->
+      </div>
+      <!-- ./box-body -->
+    </div>
+  </div>
+</section>
+
+<div class="modal fade"  id="qa_form" data-backdrop="false" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog" role="document" style="width: 80%;">
+    <div class="modal-content">
+      <div class="modal-header bg-light-blue-active">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <!-- <a href="{% url 'dashboard_home' %}" class="close" style="color:#ffffff;"><span aria-hidden="true">&times;</span></a> -->
+        <h4 class="modal-title" id="myModalLabel">{% trans "Form" %} > QA 
+          <span class="pull-right">
+            <audio id="qa_audio" controls autoplay="autoplay"><!-- 
+              <source src="horse.ogg" type="audio/ogg" />
+              <source src="/opt/asterisk/helpline/media/bridge/{{sourceid}}.wav" type="audio/mpeg" />
+             --></audio> 
+          </span>
+        </h4>
+      </div>
+      <div class="modal-body" style="padding: 0px; height: 80vh;" >
+        <div id="frame_iframes">
+          <div id="frame_iframe">
+            <iframe src="{{ iframe_url }}" id="helpline-forms" style="width: 100%; height: 80vh; border: none;"></iframe>
           </div>
         </div>
       </div>
     </div>
   </div>
-</section>
-{% endblock %}
+</div>
+<script type="text/javascript">
+  function sendtoReportFactory(){
+    var reservationtime = document.getElementById("datetimerange").value;
+    var queueid = document.getElementById("id_queueid").value;
+    var agent = document.getElementById("agent").value;
+    var c = document.getElementById("showustheresultsnow");
+    var query = document.getElementById("navbar-search-input").value;
+    var category = document.getElementById("category").value;
+    //c.innerHTML = '<div align="center">Loading Report.. ';
+    $("#showustheresultsnow").fadeIn("slow");
+    $("#showustheresultsnow").load("{% url 'ajax_admin_report' report %}?datetime_range="+ encodeURIComponent(reservationtime) +'&sevc='+ encodeURIComponent(queueid) +'&agent='+ encodeURIComponent(agent)+'&q='+ encodeURIComponent(query)+'&category='+ encodeURIComponent(category));  
 
-{% block javascripts %}
-{{ block.super }}
-{% endblock %}
+  }
+
+  var cdr = ''
+  var caseid = ''
+  $('.qa_btn').click(function(){
+    //get selected audio link
+    var audioElement = document.getElementById('qa_audio');
+    audioElement.setAttribute('src', $(this).data('key'));
+
+    //add case number to form
+    var iframe = document.getElementById("helpline-forms");
+    cdr = $(this).data('cdr')
+    caseid = $(this).data('number')
+    var url_str = !iframe.src.includes('?') ? '?d[case_number]=' + caseid + '':'&d[case_number]=' + caseid 
+    url_str += '&d[case_owner]={{request.user.username}}'
+    iframe.src += encodeURI(url_str) //append new parameters
+    $('#qa_form').modal({backdrop: 'static', keyboard: false}).show()
+  })
+  $('.close').click(function(){
+    var audioElement = document.getElementById('qa_audio');
+    audioElement.pause()
+  })
+
+
+
+
+</script>
+{% endblock content %}
+
