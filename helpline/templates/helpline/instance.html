@@ -18,7 +18,7 @@
 <!-- Main content -->
 <section class="content"  id="data-view">
   <div class="row">
-    <div class="col-md-7">
+    <div class="col-md-12">
       <div class="box box-default">
         <div class="box-header with-border">
           <h4>{% trans "Case Details" %}</h4>
@@ -27,6 +27,26 @@
           <table class="table table-bordered table-striped dataTable no-footer">
             <tbody>
               <tr>
+                {% for field in fields %}
+                {% if 'narrative' in field.r_name %} 
+                </tr><tr><td colspan="8"><strong>{{field.r_name}}</strong><br />{{stat | get_item:field.item_path}}</td><tr>
+
+                {% elif 'select' in field.type %}
+                {% with val=stat|get_item:field.item_path  %}
+                <td>
+                  <strong>{{field.r_name}}</strong><br />{{ field.children | get_name:val }}                      
+                </td>
+                {% endwith %}
+
+                {% elif field.r_name != 'Instanceid' %}
+                <td><strong>{{field.r_name}}</strong><br />{{stat | get_item:field.item_path}}</td>
+                {% endif %}
+                {% if forloop.counter|mod:16 == 0 or forloop.counter|mod:16 == 8 %}
+                </tr><tr>
+                {% endif %}
+                {% endfor %}
+              </tr>
+              <!-- <tr>
                 {% for keys in recordkeys %}
                 {% if not '_' == keys|first %}
                 <th width="25%">{{ keys }}</th>
@@ -42,7 +62,7 @@
               </tr><tr>
                 {% endif %}
                 {% endfor %}
-              </tr>
+              </tr> -->
             </tbody>
           </table>
           <hr style="clear: both;" />
@@ -50,34 +70,61 @@
         </div>
       </div>
     </div>
-    <div class="col-md-5">
+    <div class="col-md-12">
       <div class="box box-default">
         <div class="box-header with-border">
           <h4>{% trans "Case Updates" %}</h4>
         </div>
         <div class="box-body" style="overflow-y:scroll; height: 100vh">
-          <table class="table table-bordered table-striped dataTable no-footer">
-            <tbody>
-              {% for hists in history %}
-              {% with forloop.counter as outer_loop %}
-              <tr><th colspan="4"><h4 style="color: blue;">Update: {{ outer_loop }}</h4></th></tr>
+          <div class="table table-responsive">
+            <table class="table table-bordered table-striped dataTable no-footer">
+              {% for hist in history %}
               <tr>
-                {% for hist in hists %}
-                {% if not '_' == hist|first %}
-                  <td>{{ hist }}</td><td>{{ hists|get_item:hist }}</td>
-                {% endif %}
+                {% for field in fields %}
+                {% if 'narrative' in field.r_name %} 
+                </tr><tr><td colspan="8"><strong>{{field.r_name}}</strong><br />{{stat | get_item:field.item_path}}</td><tr>
 
-                {% if forloop.counter|mod:4 == 1 %}
-                  </tr><tr>
+                
+                {% elif 'select' in field.type %}
+                {% with val=stat|get_item:field.item_path  %}
+                <td>
+                  <strong>{{field.r_name}}</strong><br />{{ field.children | get_name:val }}                      
+                </td>
+                {% endwith %}
+                {% elif field.r_name != 'Instanceid' %}
+                <td><strong>{{field.r_name}}</strong><br />{{stat | get_item:field.item_path}}</td>
                 {% endif %}
-                </tr>
+                {% if forloop.counter|mod:16 == 0 or forloop.counter|mod:16 == 8 %}
+                </tr><tr>
+                {% endif %}
                 {% endfor %}
-                <tr><td>Date of History: {{ hists|get_item:'_submission_time'}}</td></tr>
-              {% endwith %}
-            {% endfor %}
+              </tr>
+              <tr><td colspan="8"></td></tr>
+              {% endfor %}
+              <!-- <tbody>
+                {% for hists in history %}
+                {% with forloop.counter as outer_loop %}
+                <tr><th colspan="4"><h4 style="color: blue;">Update: {{ outer_loop }}</h4></th></tr>
+                <tr>
+                  {% for hist in hists %}
+                  {% if not '_' == hist|first %}
+                    <td>{{ hist }}</td><td>{{ hists|get_item:hist }}</td>
+                  {% endif %}
+
+                  {% if forloop.counter|mod:4 == 1 %}
+                    </tr><tr>
+                  {% endif %}
+                  </tr>
+                  {% endfor %}
+                  <tr><td>Date of History: {{ hists|get_item:'_submission_time'}}</td></tr>
+                {% endwith %}
+              {% endfor %}
+            
+          </tbody> -->
+        </table>
+            
+          </div>
           
-        </tbody>
-      </table>
         </div>
       </div>
       

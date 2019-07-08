@@ -858,6 +858,49 @@ def caseview(request, form_name, case_id):
         'Authorization': 'Token %s' % (default_service_auth_token)
     }
 
+
+    data = {}
+    rec = default_service_xform.json
+    prop_recs = yaml.load(str(rec))[u'children']
+    rec_rows = []
+    item_path = ''
+    level_path = {}
+    
+    def fill_children(child,level_key):
+        n = ''
+        other_headers = ['group','repeat']
+        ix = 0;
+        for rows in child:
+            ix += 1
+            if rows.get('type',False) and rows.get('type',False) in other_headers:
+                if level_key == "":
+                    level_path.update({ix:rows.get('name',"")})
+                else:
+                    x_p = "%s/%s" %(level_path.get(ix,""),rows.get('name',""))
+                    level_path.update({ix:x_p}) 
+                fill_children(rows.get('children',[]),level_path.get(ix,""))                        
+            else:
+                if rows.get('name',False):
+                    n = rows.get('name','')
+
+                rows.update({'r_name':n.replace('_', ' ').capitalize()})
+                if level_key != "":
+                    n = "/%s" %n
+                item_path = "%s%s" %(str(level_key),str(n))
+                rows.update({'item_path':item_path})
+                item_path = ''
+                if rows.get('itemset',False) and '.csv' in rows['itemset']:
+                    options = dict_from_csv(request,rows.get('itemset',''),default_service_xform.user.username) or []
+                    rows.update({'children':options})
+                    
+                rec_rows.append(rows)
+
+    fill_children(prop_recs,"")
+
+    data['fields'] = rec_rows
+
+
+
     # Data Request and processing
     # Get default service
     xform_det = default_service.walkin_xform
@@ -866,58 +909,65 @@ def caseview(request, form_name, case_id):
     stat = requests.get(url + case_id + request_string, headers=headers).json()
     history = requests.get(url + case_id + '/history', headers=headers).json()
 
-    statrecords = []
-    recordkeys = []
-    history_rec = []
+    data['stat'] = stat
+    data['history'] = history
+    data['xform'] = default_service_xform
+    data['kemcount'] = 0
+    
+    # statrecords = []
+    # recordkeys = []
+    # history_rec = []
 
-    ##brings up data only for existing records
-    def get_records(recs):
-        return_obj = []
-        record = {}
+    # ##brings up data only for existing records
+    # def get_records(recs):
+    #     return_obj = []
+    #     record = {}
 
-        for key, value in recs.items():
-            #if not (key.startswith('_') and key.endswith('_')):# str(key) == "_id":
-            key = str(key)
-            if key.find('/') != -1:
-                k = key.split('/')
-                l = len(k)
-                kk = str(k[l-1])
-            else:
-                kk = str(key)
-            if isinstance(value, dict) and len(value) >= 1:
-                record.update(get_records(value))
-            elif isinstance(value, list) and len(value) >= 1:
-                if isinstance(value[0], dict):
-                    record.update(get_records(value[0]))
-            else:
-                if not kk in recordkeys and not kk.endswith('ID') and str(value) != 'yes' \
-                and str(value) != 'no' and not (kk.startswith('_') and kk != '_id' and kk != '_submission_time'  \
-                    and kk != '_last_edited'):
-                    recordkeys.append(kk)
-                record.update({kk : str(value).capitalize()})
-        return record
+    #     for key, value in recs.items():
+    #         #if not (key.startswith('_') and key.endswith('_')):# str(key) == "_id":
+    #         key = str(key)
+    #         if key.find('/') != -1:
+    #             k = key.split('/')
+    #             l = len(k)
+    #             kk = str(k[l-1])
+    #         else:
+    #             kk = str(key)
+    #         if isinstance(value, dict) and len(value) >= 1:
+    #             record.update(get_records(value))
+    #         elif isinstance(value, list) and len(value) >= 1:
+    #             if isinstance(value[0], dict):
+    #                 record.update(get_records(value[0]))
+    #         else:
+    #             if not kk in recordkeys and not kk.endswith('ID') and str(value) != 'yes' \
+    #             and str(value) != 'no' and not (kk.startswith('_') and kk != '_id' and kk != '_submission_time'  \
+    #                 and kk != '_last_edited'):
+    #                 recordkeys.append(kk)
+    #             record.update({kk : str(value).capitalize()})
+    #     return record
 
 
-    if isinstance(stat, dict) and len(stat) > 1:
-        statrecords.append(get_records(stat))
+    # if isinstance(stat, dict) and len(stat) > 1:
+    #     statrecords.append(get_records(stat))
 
-    for hist in history:
-        if isinstance(hist, dict) and len(hist) > 1:
-            history_rec.append(get_records(hist))
+    # for hist in history:
+    #     if isinstance(hist, dict) and len(hist) > 1:
+    #         history_rec.append(get_records(hist))
 
-    if len(recordkeys) > 0:
-        recordkeys.append('Date Created')
-    else:
-        recordkeys = False
+    # if len(recordkeys) > 0:
+    #     recordkeys.append('Date Created')
+    # else:
+    #     recordkeys = False
 
-    data = {
-        'stat':stat,
-        'statrecords':statrecords[0],
-        'recordkeys':recordkeys,
-        'history':history_rec,
-        'xform': default_service_xform,
-        'kemcount':0
-    }
+    # data = {
+    #     'stat':stat,
+    #     'statrecords':statrecords[0],
+    #     'recordkeys':recordkeys,
+    #     'history':history_rec,
+    #     'xform': default_service_xform,
+    #     'kemcount':0
+    # }
+
+
     htmltemplate = "helpline/instance.html"
 
     return render(request, htmltemplate, data)
@@ -1151,6 +1201,30 @@ def namedtuplefetchall(cursor):
     nt_result = namedtuple('Result', [col[0] for col in desc])
     return [nt_result(*row) for row in cursor.fetchall()]
 
+
+
+def dict_from_csv(request,csv_file,form_user):
+    current_site = get_current_site(request)
+    file_path = str('%s%s/formid-media/%s' %(settings.MEDIA_ROOT,form_user,csv_file))
+
+    if(os.path.isfile(file_path)):
+        file_path = open(file_path, mode='r')
+
+        with  file_path as csv_file:
+            csv_reader = csv.reader(csv_file,delimiter=',', quotechar='"')
+
+            return dict((rows[0],rows[1]) for rows in csv_reader)
+    else:
+        url= str("http://%s/api/v1/%s" %(current_site,csv_file))
+        webpage = urllib.urlopen(url)
+        datareader = csv.DictReader(webpage)
+
+        #Creating empty list to be inserted.
+        data = []
+        for row in datareader:
+            data.append(row)
+        return data
+
 @login_required
 def reports(request, report, casetype='Call'):
     query = request.GET.get('q', '')
@@ -1376,32 +1450,13 @@ def reports(request, report, casetype='Call'):
                         dict(zip([col[0] for col in desc], row)) 
                         for row in cursor.fetchall() 
                 ]
-            def dict_from_csv(csv_file,form_user):
-                file_path = str('%s%s/formid-media/%s' %(settings.MEDIA_ROOT,form_user,csv_file))
-
-                if(os.path.isfile(file_path)):
-                    file_path = open(file_path, mode='r')
-
-                    with  file_path as csv_file:
-                        csv_reader = csv.reader(csv_file,delimiter=',', quotechar='"')
-
-                        return dict((rows[0],rows[1]) for rows in csv_reader)
-                else:
-                    url= str("http://%s/api/v1/%s" %(current_site,csv_file))
-                    webpage = urllib.urlopen(url)
-                    datareader = csv.DictReader(webpage)
-
-                    #Creating empty list to be inserted.
-                    data = []
-                    for row in datareader:
-                        data.append(row)
-                    return data
 
             rec = default_service_xform.json
             prop_recs = yaml.load(str(rec))[u'children']
             rec_rows = []
             item_path = ''
             level_path = {}
+
             def fill_children(child,level_key):
                 n = ''
                 other_headers = ['group','repeat']
@@ -1426,7 +1481,7 @@ def reports(request, report, casetype='Call'):
                         rows.update({'item_path':item_path})
                         item_path = ''
                         if rows.get('itemset',False) and '.csv' in rows['itemset']:
-                            options = dict_from_csv(rows.get('itemset',''),default_service_xform.user.username) or []
+                            options = dict_from_csv(request,rows.get('itemset',''),default_service_xform.user.username) or []
                             rows.update({'children':options})
                         if (rows.get('type',False) and rows.get('type',False) == 'hidden') or (rows.get('bind',False) and rows['bind'].get('required',False) and str(rows['bind']['required']).lower() == 'yes'):
                             rec_rows.append(rows)
@@ -3423,8 +3478,10 @@ def stat(request):
         for ag in agent_status:
             if str(ag['agent']) == str(agent_id):
                 ret_val['status'] = str(ag['status'])
-                ret_val['last_call'] = str(ag['lastcall'])
-                ret_val['answered_calls']=ag['answered']
+                ret_val['lastcall'] = str(ag['lastcall'])
+                ret_val['answered']=ag['answered']
+                ret_val['missed']=ag['missed']
+                ret_val['talktime']=ag['talktime']
         return ret_val
 
     agent_status_x = []
@@ -3433,7 +3490,7 @@ def stat(request):
         q_status = get_queue_status(user_x.HelplineUser.hl_key)
         if len(q_status) > 0:
             agent_status_x.append({'username':user_x.username,'queue_status':q_status['status'],\
-            'lastcall':q_status['last_call'],'answered_calls':q_status['answered_calls'],'login_status':user_x.HelplineUser.hl_status})
+            'lastcall':q_status['lastcall'],'answered':q_status['answered'],'missed':q_status['missed'],'talktime':q_status['talktime'],'login_status':user_x.HelplineUser.hl_status})
 
     dashboard_stats['users'] = userlist
     dashboard_stats['call_agents'] = agent_status_x
