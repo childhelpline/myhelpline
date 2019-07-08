@@ -2750,7 +2750,8 @@ def get_dashboard_stats(request, interval=None,wall=False):
     
     request_string += " and CAST(date_created AS DATE) = '{0}'".format(date_time.strftime('%Y-%m-%d'))
 
-    home_statistics = {'high_priority':0,'escalate':0,'closed':0,'pending':0,'total':0,'call_stat':'',\
+
+    home_statistics = {'all_calls':0,'high_priority':0,'escalate':0,'closed':0,'pending':0,'total':0,'call_stat':'',\
     'midnight': midnight,'midnight_string': midnight_string,'now_string': now_string,'today':form_details['submission_count_for_today'],"total_submissions":form_details['num_of_submissions']}
     
     # SMS stats
@@ -2787,7 +2788,9 @@ def get_dashboard_stats(request, interval=None,wall=False):
 
     #Call stat
     call_statistics = requests.get('%s/clk/stats/%s' %(settings.CALL_API_URL,query_string)).json() or []
+    all_calls = requests.get('%s/clk/cdr/' %(settings.CALL_API_URL)).json() or []
     home_statistics.update({'call':call_statistics})
+    home_statistics.update({'all_calls':len(all_calls)})
 
     #CASE STATS
     with connection.cursor() as cursor:

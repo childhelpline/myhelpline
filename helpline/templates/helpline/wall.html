@@ -85,13 +85,14 @@
           <!-- /.info-box -->
         </div>
         <!-- /.col -->
+
         <div class="col-md-2 col-sm-6 col-xs-12">
           <div class="info-box">
-            <span class="info-box-icon bg-red"><i class="ion ion-ios-telephone-outline"></i></span>
+            <span class="info-box-icon bg-green"><i class="ion ion-ios-telephone-outline"></i></span>
 
             <div class="info-box-content">
-              <span class="info-box-text">Calls <br />Abandoned</span>
-              <span class="info-box-number">{{call.abandoned | default:0 }}</span>
+              <span class="info-box-text">Calls <br /> Recieved</span>
+              <span class="info-box-number">{{call.answered | default:0 }}</span>
             </div>
             <!-- /.info-box-content -->
           </div>
@@ -104,11 +105,11 @@
 
         <div class="col-md-2 col-sm-6 col-xs-12">
           <div class="info-box">
-            <span class="info-box-icon bg-aqua"><i class="ion ion-ios-telephone-outline"></i></span>
+            <span class="info-box-icon bg-yellow"><i class="ion ion-ios-telephone-outline"></i></span>
 
             <div class="info-box-content">
-              <span class="info-box-text">Calls <br /> Recieved</span>
-              <span class="info-box-number">{{call.answered | default:0 }}</span>
+              <span class="info-box-text">Calls <br />Abandoned</span>
+              <span class="info-box-number">{{call.abandoned | default:0 }}</span>
             </div>
             <!-- /.info-box-content -->
           </div>
@@ -120,6 +121,22 @@
             <span class="info-box-icon bg-red"><i class="ion ion-ios-telephone-outline"></i></span>
 
             <div class="info-box-content">
+              <span class="info-box-text">Missed<br />Calls</span>
+              <span class="info-box-number">{{call.missed | default:0 }}</span>
+            </div>
+            <!-- /.info-box-content -->
+          </div>
+          <!-- /.info-box -->
+        </div>
+        <!-- /.col -->
+        <!-- fix for small devices only -->
+        <div class="clearfix visible-sm-block"></div>
+
+        <div class="col-md-2 col-sm-6 col-xs-12">
+          <div class="info-box">
+            <span class="info-box-icon bg-aqua"><i class="ion ion-ios-telephone-outline"></i></span>
+
+            <div class="info-box-content">
               <span class="info-box-text">Voice<br />Mails</span>
               <span class="info-box-number">{{call.voicemail | default:0 }}</span>
             </div>
@@ -128,26 +145,14 @@
           <!-- /.info-box -->
         </div>
         <!-- /.col -->
+
         <div class="col-md-2 col-sm-6 col-xs-12">
           <div class="info-box">
             <span class="info-box-icon bg-yellow"><i class="ion ion-ios-telephone-outline"></i></span>
 
             <div class="info-box-content">
-              <span class="info-box-text">Calls <br /> In Queue</span>
-              <span class="info-box-number" id="total_callers"></span>
-            </div>
-            <!-- /.info-box-content -->
-          </div>
-          <!-- /.info-box -->
-        </div>
-        <!-- /.col -->
-        <div class="col-md-2 col-sm-6 col-xs-12">
-          <div class="info-box">
-            <span class="info-box-icon bg-green"><i class="ion ion-ios-telephone-outline"></i></span>
-
-            <div class="info-box-content">
-              <span class="info-box-text">Calls <br /> Completed</span>
-              <span class="info-box-number">{{ dashboard_stats.answered_calls }}</span>
+              <span class="info-box-text">IVR <br /> CALLS</span>
+              <span class="info-box-number">{{call.ivr | default:0 }}</span>
             </div>
             <!-- /.info-box-content -->
           </div>
@@ -163,7 +168,7 @@
         <!-- /.box-header -->
         <div class="box-body">
           <div class="row">
-            <div class="col-sm-8 col-xs-12">
+            <div class="col-sm-6 col-xs-12">
               <h3 class="box-title">{% trans "Counsellors" %} <small><!-- <em>Offline: {{ call.agents.offline}} |  -->On Call: {{call.agents.oncall}} | Online: {{ call.agents.online}} | On Wrapup: {{ call.agents.wrapup}} </em></h3>
               <div class="table-responsive">
                 <table class="table no-margin" id="agents">
@@ -194,45 +199,70 @@
               </div>
               <!-- /.table-responsive -->
             </div>
-            <div class="col-sm-4 col-xs-12" style="border-left:solid thin #0CF;">
+            <div class="col-sm-6 col-xs-12" style="border-left:solid thin #0CF;">
               <div class="row">
-                <div class="col-sm-6 col-md-6" style="padding-right:2px; padding-left:2px;">
+
+
+
+                <div class="col-sm-6 col-md-4" style="padding:2px;">
                   <div class="color-palette-set">
                     <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
                     <div class="bg-primary color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ total }} </span><br />{% trans "Total Cases" %}</div>
                   </div>
                 </div>
                 <!-- /.col -->
-                <div class="col-sm-6 col-md-6" style="padding-right:2px; padding-left:2px;">
+                <div class="col-sm-6 col-md-4" style="padding:2px;">
                   <div class="color-palette-set">
                     <div class="bg-yellow color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ pending }} </span><br />{% trans "Pending Cases" %}</div>
                   </div>
                 </div>
                 <!-- /.col -->
-                <div class="col-sm-6 col-md-6" style="padding-right:2px; margin-top:10px; padding-left:2px;">
+                <div class="col-sm-6 col-md-4" style="padding:2px;">
                   <div class="color-palette-set">
-                    <div class="bg-green color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ closed }} </span><br />{% trans "Closed Cases" %}</div>
+                    <div class="bg-black color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ call.queued }} </span><br />{% trans "Queued Calls" %}</div>
                   </div>
                 </div>
                 <!-- /.col -->
-                <div class="col-sm-6 col-md-6" style="padding-right:2px; margin-top:10px; padding-left:2px;">
+
+
+                <div class="col-sm-6 col-md-4" style="padding:2px;">
                   <div class="color-palette-set">
                     <div class="bg-red color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ escalate }} </span><br />{% trans "Escalated Cases" %}</div>
                   </div>
                 </div>
                 <!-- /.col -->
-                <div class="col-sm-6 col-md-6" style="padding-right:2px; margin-top:10px; padding-left:2px;">
+                <div class="col-sm-6 col-md-4" style="padding:2px;">
+                  <div class="color-palette-set">
+                    <div class="bg-green color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ closed }} </span><br />{% trans "Closed Cases" %}</div>
+                  </div>
+                </div>
+                <!-- /.col -->
+                <div class="col-sm-6 col-md-4" style="padding:2px;">
+                  <div class="color-palette-set">
+                    <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
+                    <div class="bg-black color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ total_submissions }} </span><br />{% trans "All Cases" %}</div>
+                  </div>
+                </div>
+                <!-- /.col -->
+
+                <div class="col-sm-6 col-md-4" style="padding:2px;">
                   <div class="color-palette-set">
                     <div class="bg-aqua color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ emails | default:0 }} </span><br />{% trans "Total Emails" %}</div>
                   </div>
                 </div>
                 <!-- /.col -->
                 <!-- /.col -->
-                <div class="col-sm-6 col-md-6" style="padding-right:2px; margin-top:10px; padding-left:2px;">
+                <div class="col-sm-6 col-md-4" style="padding:2px;">
                   <div class="color-palette-set">
                     <!--div class="bg-light-blue disabled color-palette"><span>Disabled</span></div-->
                     <div class="bg-aqua color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ total_sms | default:0 }} </span><br />{% trans "Total SMS" %}</div>
                     <!--div class="bg-light-blue-active color-palette"><span>Active</span></div-->
+                  </div>
+                </div>
+                <!-- /.col -->
+                <div class="col-sm-6 col-md-4" style="padding:2px;">
+                  <div class="color-palette-set">
+                    <div class="bg-black color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ all_calls }} </span><br />{% trans "All Calls" %}</div>
                   </div>
                 </div>
                 <!-- /.col -->

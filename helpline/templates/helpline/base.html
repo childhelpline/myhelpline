@@ -393,10 +393,8 @@ input:checked + .slider:before {
             <a href="{% url "case_form" "webonline" %}" role="button"><i class="fa fa-circle-o"></i> {% trans "Web Online" %}
             </a></li>
             <li>
-              {% if  request.user.HelplineUser.hl_role != 'Casemanager'%}
               <a href="{% url "case_form" "walkin" %}" role="button"><i class="fa fa-circle-o"></i> {% trans "New WalkIn" %}
               </a></li>
-              {% endif %}
               <li><a href="{% url 'dashboardreports' 'today' 'case' %}"><i class="fa fa-circle-o"></i> {% trans "Today's Cases" %}
                 <span class="pull-right-container">
                   <span class="label label-success pull-right">{{ home.total }}</span>
@@ -1009,7 +1007,8 @@ function leave_queue(item){
         sessionStorage.setItem("in_queue", 0);
         $(item).addClass('hidden')
         $('.join').removeClass('hidden')
-        alert("Success in leaving queue")
+        if logout != 'Sign out'
+          alert("Success in leaving queue")
       }else{
         alert("Error leaving queue, try again")
       }
