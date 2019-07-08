@@ -2743,8 +2743,8 @@ def get_dashboard_stats(request, interval=None,wall=False):
     midnight = calendar.timegm(midnight_datetime.timetuple())
 
     midnight_string = datetime.combine(
-        date.today(), datetime_time.min).strftime('%m/%d/%Y %I:%M %p')
-    now_string = timezone.now().strftime('%m/%d/%Y %I:%M %p')
+        date.today(), datetime_time.min).strftime('%d/%m/%Y %I:%M %p')
+    now_string = timezone.now().strftime('%d/%m/%Y %I:%M %p')
 
     date_time = datetime.now()
     
