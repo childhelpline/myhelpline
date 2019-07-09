@@ -24,11 +24,13 @@
           <h4>{% trans "Case Details" %}</h4>
         </div>
         <div class="box-body">
+          <button class="btn btn-default" onclick="print_doc('case')"><i class="fa fa-print"></i></button>
+          <div  id="case">
           <table class="table table-bordered table-striped dataTable no-footer">
             <tbody>
               <tr>
                 {% for field in fields %}
-                {% if 'narrative' in field.r_name %} 
+                {% if 'narrative' in field.r_name or 'plan' in field.r_name %} 
                 </tr><tr><td colspan="8"><strong>{{field.r_name}}</strong><br />{{stat | get_item:field.item_path}}</td><tr>
 
                 {% elif 'select' in field.type %}
@@ -65,8 +67,9 @@
               </tr> -->
             </tbody>
           </table>
+        </div>
           <hr style="clear: both;" />
-          <a href="{% url 'case_edit' xform.id_string statrecords|get_item:'_id' %}" class="btn btn-md btn-primary btn-flat pull-right" style="margin-right: 50px;">Edit</a>
+          <a href="{% url 'case_edit' xform.id_string stat|get_item:'_id' %}" class="btn btn-md btn-primary btn-flat pull-right" style="margin-right: 50px;">Edit</a>
         </div>
       </div>
     </div>
@@ -84,7 +87,7 @@
                 {% if 'narrative' in field.r_name %} 
                 </tr><tr><td colspan="8"><strong>{{field.r_name}}</strong><br />{{stat | get_item:field.item_path}}</td><tr>
 
-                
+
                 {% elif 'select' in field.type %}
                 {% with val=stat|get_item:field.item_path  %}
                 <td>
@@ -147,4 +150,24 @@
             </div>
           </div>
 {% endblock %}
+{% block script_end %}
+<script type="text/javascript">
+  function print_doc(doc_id){
+    var divToPrint=document.getElementById(doc_id);
+
+    var newWin=window.open('','Print-Window');
+
+    newWin.document.open();
+
+    newWin.document.write('<html><head><title>Case Printout - {{case_number}}</title><link media="print" type="text/css" rel="stylesheet" href="/static/bootstrap/dist/css/bootstrap.css"><link media="print" type="text/css" rel="stylesheet" href="/static/AdminLTE/plugins/datatables/dataTables.bootstrap.css"><link media="print" type="text/css" rel="stylesheet" href="/static/AdminLTE/dist/css/AdminLTE.min.css"></head><body onload="window.print()">'+divToPrint.innerHTML+'</body></html>');
+
+    newWin.document.close();
+    setTimeout(function(){newWin.close();},10);
+  }
+  
+</script>
+
+            
+{% endblock script_end %}
+
 

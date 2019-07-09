@@ -102,38 +102,6 @@ max-width:300px;
                   </div><!-- /.input group -->
                 </div><!-- /.form group -->
 
-
-                <!--div class="form-group col-md-4">
-                  <label>Counsellor:</label>
-                  <div class="input-group">
-                    <div class="input-group-addon">
-                      <i class="fa fa-users"></i>
-                    </div>
-                    {{ form.agent }}
-                  </div><!-- /.input group ->
-                </div><!-- /.form group -->
-
-
-                <!--div class="form-group col-md-4">
-                  <label>Category:</label>
-                  <div class="input-group">
-                    <div class="input-group-addon">
-                      <i class="fa fa-th"></i>
-                    </div>
-                    {{ form.category }}
-                  </div><!-- /.input group ->
-                </div><!-- /.form group -->
-
-                <!--div class="form-group col-md-4">
-                  <label>Case Status:</label>
-                  <div class="input-group">
-                    <div class="input-group-addon">
-                      <i class="fa fa-th"></i>
-                    </div>
-                    {{ form.case_status }}
-                  </div><!-- /.input group ->
-                </div><!-- /.form group -->
-
                 <!--div class="form-group col-md-4">
                   <label>Interventions:</label>
                   <div class="input-group">
@@ -165,8 +133,12 @@ max-width:300px;
                   {% if fields %}
                   <thead>
                     <tr>
+                      <th>Case Number</th>
+                      <th>Case Owner</th>
                       {% for field in fields %}
+                      {% if field.name != 'case_owner' and field.name != 'case_number'  %}
                       <th>{{field.r_name}}</th>
+                      {% endif %}
                       {% if forloop.last %}
                       <th>Date Created</th>
                       {% endif %}
@@ -176,33 +148,37 @@ max-width:300px;
                   <tbody>
                     {% for dat in data %}
                     <tr>
-                      {% for fieldx in fields %}
-                      {% if fieldx.name == 'case_number' %}
                       <td>
                         {% with caseid=dat.json|get_item:'_id' %}
-                        <a href="{% url 'caseview' xform.id_string  caseid %}"> {{dat.json | get_item:fieldx.item_path }} </a>
+                        <a href="{% url 'caseview' xform.id_string  caseid %}"> {{dat.json | get_item:'case_number' }} </a>
                         {% endwith %}                 
                       </td>
-                      {% elif 'select' in fieldx.type %}
-                      {% with val=dat.json|get_item:fieldx.item_path  %}
-                      <td>
-                        {{ fieldx.children | get_name:val }}                      
-                      </td>
-                      {% endwith %}
-                      {% else %}
-                      <td>{{dat.json | get_item:fieldx.item_path}}</td>
-                      {% endif %}
-                      {% if forloop.last %}
-                      <td>{{dat.date_created}}</td>
-                      {% endif %}
+                      <td>{{dat.json | get_item:'case_owner' | capfirst}}</td>
+                      {% for fieldx in fields %}
+                        {% if 'select' in fieldx.type %}
+                          {% with val=dat.json|get_item:fieldx.item_path  %}
+                          <td>
+                            {{ fieldx.children | get_name:val }}                      
+                          </td>
+                          {% endwith %}
+                        {% elif fieldx.name != 'case_number' and fieldx.name != 'case_owner' %}
+                          <td>{{dat.json | get_item:fieldx.item_path}}</td>   
+                        {% endif %}
+                        {% if forloop.last %}
+                          <td>{{dat.date_created}}</td>
+                        {% endif %}
                       {% endfor %}
                     </tr>
                     {% endfor %}
                   </tbody>
                   <tfoot>
                     <tr>
+                      <th>Case Number</th>
+                      <th>Case Owner</th>
                       {% for field in fields %}
+                      {% if field.name != 'case_owner' and field.name != 'case_number'  %}
                       <th>{{field.r_name}}</th>
+                      {% endif %}
                       {% if forloop.last %}
                       <th>Date Created</th>
                       {% endif %}

@@ -862,6 +862,8 @@ def caseview(request, form_name, case_id):
     data = {}
     rec = default_service_xform.json
     prop_recs = yaml.load(str(rec))[u'children']
+
+    data['fld'] = yaml.load(str(rec))[u'children']
     rec_rows = []
     item_path = ''
     level_path = {}
@@ -882,7 +884,6 @@ def caseview(request, form_name, case_id):
             else:
                 if rows.get('name',False):
                     n = rows.get('name','')
-
                 rows.update({'r_name':n.replace('_', ' ').capitalize()})
                 if level_key != "":
                     n = "/%s" %n
@@ -892,14 +893,12 @@ def caseview(request, form_name, case_id):
                 if rows.get('itemset',False) and '.csv' in rows['itemset']:
                     options = dict_from_csv(request,rows.get('itemset',''),default_service_xform.user.username) or []
                     rows.update({'children':options})
-                    
+
                 rec_rows.append(rows)
 
     fill_children(prop_recs,"")
 
     data['fields'] = rec_rows
-
-
 
     # Data Request and processing
     # Get default service
@@ -913,6 +912,7 @@ def caseview(request, form_name, case_id):
     data['history'] = history
     data['xform'] = default_service_xform
     data['kemcount'] = 0
+    data['case_number'] = stat.get('case_number','')
     
     # statrecords = []
     # recordkeys = []
@@ -1487,7 +1487,6 @@ def reports(request, report, casetype='Call'):
                             rec_rows.append(rows)
 
             fill_children(prop_recs,"")
-
             data['fields'] = rec_rows
 
             recs = ''
@@ -3474,7 +3473,7 @@ def stat(request):
     userlist = User.objects.filter(is_active=True,HelplineUser__hl_role='Counsellor').exclude(HelplineUser__hl_status='Unavailable').exclude(HelplineUser__hl_status='Offline').select_related('HelplineUser')
     
     def get_queue_status(agent_id):
-        ret_val = {'status':'','last_call':'','answered_calls':0}
+        ret_val = {} # {'status':'','last_call':'','answered_calls':0}
         for ag in agent_status:
             if str(ag['agent']) == str(agent_id):
                 ret_val['status'] = str(ag['status'])
