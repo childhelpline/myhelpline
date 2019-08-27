@@ -189,10 +189,13 @@ audio{
 
 
   function disposeCase(param){
-
     if($(param).val() == '--')
       return false
-
+    
+    var conf = confirm("Do you really want to dispose the form?")
+     if(!conf){
+      return false
+     }
     /////try pass filled form data for records
    {% if form_name == 'call' %}
       var dispose_form = '#disposeDet';
@@ -232,8 +235,8 @@ audio{
                         $(dispose_form).replaceWith(data['form_html']);
                       }
                       else{
-                        alert("Form Successfully disposed")
-                        document.location.href = '/helpline/'
+                          alert("Form Successfully disposed")
+                          document.location.href = '/helpline/'
                       }
                     },
                     error: function() {
@@ -320,10 +323,14 @@ audio{
         <!--button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button-->
         <!-- <a href="{% url 'dashboard_home' %}" class="close" style="color:#ffffff;"><span aria-hidden="true">&times;</span></a> -->
         <h4 class="modal-title" id="myModalLabel">{% trans "Form" %} > {{ form_name }} 
-          <span id="caseid">{{ case }}</span>
+          <span id="id_case_number">{{ case }}</span>
+          <input type="hidden" id="caseid" name="" placeholder="DO NOT DELETE, FOR CASEID TO SYSTEM" />
           {% if form_name == 'call' %}<span id="phone">Caller Number: {{ caller }}</span>{% endif %}
           <span id="editedBadge"></span>
           <span class="pull-right" id="formTimer" style="font-size: 24px; color: #fff; margin-right: 30px;">00:00:00</span>
+          {% if frm == 'voicemail' %}
+          <span class="pull-right" style="font-size: 24px; margin-top:-28px; color: #fff; margin-right: 30px;"><audio id="case_audio" style="height: 30px; !important;" controls src="{% setting 'CALL_API_URL' %}/clk/cdr/?media={{callcase}}"></audio></span>
+          {% endif %}
           <span class="col-md-3 pull-right">{% crispy disposition_form disposition_form.helper %}</span>
           <h4>
           </div>
@@ -338,7 +345,7 @@ audio{
                         <div id="contact-search">
                           <div class="row">
                             <!-- accepted payments column -->
-                            <div class="col-xs-6 col-md-6 contact-search {% if form_name == 'call' %} hidden {% endif %}">
+                            <div class="col-xs-12 col-md-6 col-sm-12 contact-search {% if form_name == 'call' %} hidden {% endif %}">
                               <p class="lead">Contact Search:</p>
                               <div class="text-muted well well-sm no-shadow">
                                 <!-- form start -->
@@ -351,7 +358,7 @@ audio{
                               </div>
                             </div>
                             <!-- /.col -->
-                            <div class="col-xs-6 contact-results {% if form_name != 'call' %} hidden {% endif %}">
+                            <div class="col-xs-12 col-md-6 col-sm-12 contact-results {% if form_name != 'call' %} hidden {% endif %}">
                               <p class="lead">Contact Search Results</p>
                               <div class="table-responsive text-muted well-sm no-shadow" style="min-height: 242px;">
                                 <div id="contact-search-results"></div>
@@ -403,6 +410,10 @@ audio{
       <!--END FORMs-->
 
     </div>
+
+{% endblock content %}
+
+{% block script_end %}
     <script>
       sessionStorage.setItem("on_case", 1);
       window.addEventListener("message", receiveMessage, false);
@@ -412,48 +423,9 @@ audio{
         if(event.data){
           var resp = JSON.parse(event.data)
           if(resp.enketoEvent == 'submissionsuccess' || resp.status == 201){
-          /////try pass filled form data for records
-          {% if form_name == 'qa' %}
-            $.ajax({
-                url: "{% setting "CALL_API_URL" %}/clk/qa/",
-                type: "POST",
-                contentType:'JSON',
-                data: {'call_id':'{{cdr}}','case':$('#caseid').val() != '' ? $('#caseid').val() : 'False','dispose':'Complete Call','supervisor':'{{request.user.HelplineUser.hl_key | safe}}'},
-                success: function(data) {
-
-                      $.ajax({
-                        url: "{% url 'save_disposition_form' %}",
-                        type: "POST",
-                        data: $("#disposeDet").serialize(),
-                        success: function(data) {
-                          if (!(data['success'])) {
-                            $(dispose_form).replaceWith(data['form_html']);
-                          }
-                          else{
-                            alert("Form Successfully disposed")
-                            document.location.href = '/helpline/'
-                          }
-                        },
-                        error: function() {
-                          $("#error-message").html("Error");
-                        }
-                      });
-
-
-                },
-                error: function() {
-                  $("#error-message").html("Error");
-                }
-
-          {% endif %}
-
           {% if form_name == 'call' %}
-              $.ajax({
-                url: "{% setting "CALL_API_URL" %}/clk/cdr/",
-                type: "GET",
-                contentType:'JSON',
-                data: {'cdr':'{{cdr}}','case':$('#caseid').val() != '' ? $('#caseid').val() : 'False','dispose':'Complete Call','agent':'{{request.user.HelplineUser.hl_key | safe}}'},
-                success: function(data) {
+              $.post("{% setting "CALL_API_URL" %}/clk/cdr/",{'cdr':'{{cdr}}','case':$('#caseid').val() != '' ? $('#caseid').val() : 'False','dispose':'Complete Call','agent':'{{request.user.HelplineUser.hl_key | safe}}'},
+                function(data) {
                   /////save disposition details
                   var formData = new FormData()
                   formData.append('case_numer',$('#caseid').val())
@@ -473,11 +445,7 @@ audio{
                       }
                     })
                     ///
-                  },
-                  error: function() {
-                    $("#error-message").html("Error");
-                  }
-                })
+                  })
 
               {% else %}
                  /////save disposition details
@@ -520,4 +488,5 @@ audio{
       });
 
     </script>
-    {% endblock content %}
+
+{% endblock script_end %}

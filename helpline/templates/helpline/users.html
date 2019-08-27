@@ -16,6 +16,16 @@
       </ol>
     </section>
 
+    <style>
+        table tr td{
+         max-width:150px !important;
+        }
+        table tr td img{
+        max-width:50px !important;
+        }
+    </style>
+
+
     <!-- Main content -->
     <section class="content">
       <div class="row">
@@ -57,7 +67,7 @@
                     <tr>
                       <td>{{ forloop.counter }}.</td>
                       <td><img src="{{ user.HelplineUser.hl_avatar }}" height="50px" alt="{{ user.HelplineUser.hl_avatar | default:''}}" /></td>
-                      <td>{{user.HelplineUser.hl_names | default:''}}</td>
+                      <td>{{user.HelplineUser.hl_names | default:user.first_name}}</td>
                       <td>{{ user.HelplineUser.hl_nick | default:'' }}</td>
                       <td>{{ user.HelplineUser.hl_email | default:'' }}</td>
                       <td>{{ user.HelplineUser.hl_phone | default:'' }}</td>
@@ -77,6 +87,7 @@
                   <th>Email</th>
                   <th>Phone</th>
                   <th>User Role</th>
+                  <th>Status</th>
                   <th>Date Created</th>
                   <th>Action</th>
                 </tr>

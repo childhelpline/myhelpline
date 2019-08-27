@@ -50,7 +50,15 @@ white-space: nowrap;
 max-width:300px;
 //display:inline-block;
 }
-  
+.low{
+  color: green;
+}
+.medium{
+  color:orange;
+}
+.high{
+  color:red;
+}
 </style>
 
 <section class="content-header">
@@ -126,6 +134,8 @@ max-width:300px;
         </div>
         <!-- /.box-header -->
         <div class="box-body">
+          <div class="alert alert-danger">{{fields}}
+          </div>
           <div class="row">
             <div class="col-md-12">
               <div class="data-table-data table table-responsive">
@@ -157,7 +167,7 @@ max-width:300px;
                       {% for fieldx in fields %}
                         {% if 'select' in fieldx.type %}
                           {% with val=dat.json|get_item:fieldx.item_path  %}
-                          <td>
+                          <td class="{% if 'priority' in fieldx.name %}{{ fieldx.children | get_name:val | lower }}{% endif %}">
                             {{ fieldx.children | get_name:val }}                      
                           </td>
                           {% endwith %}

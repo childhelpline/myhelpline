@@ -389,22 +389,39 @@ input:checked + .slider:before {
           </span>
         </a>
         <ul class="treeview-menu">
-          <li>
+         <!--  <li>
             <a href="{% url "case_form" "webonline" %}" role="button"><i class="fa fa-circle-o"></i> {% trans "Web Online" %}
-            </a></li>
+            </a></li> -->
             <li>
               <a href="{% url "case_form" "walkin" %}" role="button"><i class="fa fa-circle-o"></i> {% trans "New WalkIn" %}
               </a></li>
+
+              {% if request.user.HelplineUser.hl_role == 'Casemanager'  or request.user.HelplineUser.hl_role == 'Caseworker' %}
+              <li><a href="{% url 'dashboardreports' 'today' 'case' %}"><i class="fa fa-circle-o"></i> {% trans "My Walkin Cases" %}
+                <span class="pull-right-container">
+                  <span class="label label-success pull-right">{{ home.total }}</span>
+                </span>
+              </a></li>
+              {% else %}
               <li><a href="{% url 'dashboardreports' 'today' 'case' %}"><i class="fa fa-circle-o"></i> {% trans "Today's Cases" %}
                 <span class="pull-right-container">
                   <span class="label label-success pull-right">{{ home.total }}</span>
                 </span>
               </a></li>
+              {% endif %}
               <li><a href="{% url 'dashboardreports' 'escalated' 'case' %}"><i class="fa fa-circle-o"></i> {% trans "Escalated Cases" %}
                 <span class="pull-right-container">
                   <span class="label label-warning pull-right">{{ home.escalate }}</span>
                 </span>
               </a></li>
+
+              {% if request.user.HelplineUser.hl_role == 'Casemanager' %}
+              <li><a href="{% url 'dashboardreports' 'assigned' 'case' %}"><i class="fa fa-circle-o"></i> {% trans "Escalated Out Cases" %}
+                <span class="pull-right-container">
+                  <span class="label label-warning pull-right">{{ home.escalate }}</span>
+                </span>
+              </a></li>
+              {% endif %}
               <!--li><a href="{% url 'dashboardreports' 'pendingcases' %}?datetime_range={{ dashboard_stats.midnight_string }} - {{ dashboard_stats.now_string }}"><i class="fa fa-circle-o"></i> {% trans "Pending Cases" %}
                 <span class="pull-right-container">
                   <span class="label label-warning pull-right">{{ dashboard_stats.open_cases }}</span>
@@ -576,6 +593,7 @@ input:checked + .slider:before {
           <ul class="treeview-menu">
             <li><a href="{% url 'general' 'cases' %}"><i class="fa fa-circle-o"></i>{% trans "Cases" %}
             </a></li>
+            {% if request.user.HelplineUser.hl_role == 'Casemanager'  and request.user.HelplineUser.hl_role == 'Caseworker' %}
             <li><a href="{% url 'dashboardreports' 'totalcalls' %}"><i class="fa fa-circle-o"></i>{% trans "Calls" %}
             </a></li>
             <li><a href="{% url 'general' 'sms' %}"><i class="fa fa-circle-o"></i>{% trans "SMS" %}
@@ -584,6 +602,7 @@ input:checked + .slider:before {
             </a></li>
             <li><a href="{% url 'general' 'voicemails' %}"><i class="fa fa-circle-o"></i>{% trans "Voice Mail" %}
             </a></li>
+            {% endif %}
             <!-- <li><a href="{% url 'dashboardreports' 'answeredcalls' %}"><i class="fa fa-circle-o"></i>{% trans "Answered Calls" %}
             </a></li>
             <li><a href="{% url 'dashboardreports' 'abandonedcalls' %}"><i class="fa fa-circle-o"></i>{% trans "Abandoned Calls" %}
@@ -1007,7 +1026,7 @@ function leave_queue(item){
         sessionStorage.setItem("in_queue", 0);
         $(item).addClass('hidden')
         $('.join').removeClass('hidden')
-        if logout != 'Sign out'
+        if(logout != 'Sign out')
           alert("Success in leaving queue")
       }else{
         alert("Error leaving queue, try again")
@@ -1194,8 +1213,8 @@ function get_submissions(phone,name,param=true){
     var caseid = ''
     $.get('/helpline/caseid/{{form_name}}',function(data){
       caseid = data
-      $('#caseid').html("CASE NUMBER: " + caseid)
-      $('#id_case_number').val(caseid) //for display and case disposition
+      $('#id_case_number').html("CASE NUMBER: " + caseid)
+      $('#caseid').val(caseid) //for display and case disposition
       var url_str = !$(iframe).data('src').includes('?') ? '?d[case_number]=' + caseid + '':'&d[case_number]=' + caseid 
       url_str += '&&d[case_source]={{form_name}}&d[case_owner]={{request.user.username}}&d[owner_level]={{request.user.HelplineUser.hl_role}}'
       {% if form_name == 'call' %}

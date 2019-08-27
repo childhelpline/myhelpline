@@ -86,7 +86,7 @@ max-width:300px;
                      opens: 'left',
                      timePicker: true,
                      locale: {
-                      format: 'MM/DD/YYYY h:mm A'
+                      format: 'DD/MM/YYYY h:mm A'
                     }
                   }, function(start, end, label) {
                    console.log("A new date selection was made: " + start.format('M/DD hh:mm A') + ' to ' + end.format('M/DD hh:mm A'));
@@ -146,7 +146,7 @@ max-width:300px;
         </div>
         <div class="box-body">
           <div class="row">
-            <div class="table-responsive">
+            <div class="table-responsive" style="padding: 10px;">
                 <table id="example1" class="table table-bordered table-striped">
                   <thead>
                     <tr>
@@ -162,10 +162,18 @@ max-width:300px;
                     {% for dat in data %}
                     <tr>
                       {% for fieldx in fields %}
-                      {% if 'select' in fieldx.type %}
+                      {% if fieldx.repeater %}
+                      <td>
+                        {% with itx=dat.json|get_item:fieldx.rpath %}
+                        {% for r_item in itx %} 
+                        {{r_item | get_item:fieldx.item_path}} 
+                        {% endfor %} 
+                        {% endwith %}                 
+                      </td>
+                      {% elif 'select' in fieldx.type %}
                       {% with val=dat.json|get_item:fieldx.item_path  %}
                       <td>
-                        {{ fieldx.children | get_name:val }}                      
+                        {{ fieldx.children | get_name:val |default:val}}                     
                       </td>
                       {% endwith %}
                       {% else %}

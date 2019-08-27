@@ -19,6 +19,8 @@ import subprocess  # noqa, used by included files
 import sys
 from imp import reload
 
+from django.http import request
+
 from future.moves.urllib.parse import urljoin
 
 from past.builtins import basestring
@@ -122,6 +124,8 @@ INSTALLED_APPS = (
     'helpline',
     'mathfilters',
     )
+FILE_UPLOAD_HANDLERS = ("django_excel.ExcelMemoryFileUploadHandler",
+                        "django_excel.TemporaryExcelFileUploadHandler")
 
 OAUTH2_PROVIDER = {
     # this is the list of available scopes
@@ -556,9 +560,24 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, "static/")
 
-# Enketo URL
+def get_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # doesn't even have to be reachable
+        s.connect(('10.255.255.255', 1))
+        IP = s.getsockname()[0]
+    except:
+        IP = socket.gethostbyname(socket.getfqdn())
+    finally:
+        s.close()
+    return IP
+
+HOST_IP = get_ip()
+
 ENKETO_PROTOCOL = 'http'
-ENKETO_URL = 'https://enketo.bitz-itc.com'
+ENKETO_URL = ENKETO_PROTOCOL + "://" + HOST_IP + ':8005'
+HOST_URL = HOST_IP + ':8000'
+
 ENKETO_API_SURVEY_PATH = '/api/v2/survey'
 ENKETO_API_INSTANCE_PATH = '/api/v2/instance'
 ENKETO_PREVIEW_URL = urljoin(ENKETO_URL, ENKETO_API_SURVEY_PATH + '/preview')
@@ -670,7 +689,7 @@ SALESFORCE_LEAD_ORGID = ""
 
 HELPLINE_SPOOL_DIR = ''
 
-TESTING_MODE = True
+TESTING_MODE = False
 
 SLAVE_DATABASES = []
 

@@ -68,7 +68,7 @@ div.scrollmenu {
             <div id="form_collapse" class="in" style="height: auto;">
               {% block filterform %}
               <!-- Filter Form -->
-              <form action="#" method="POST">
+              <form action="">
                 {% csrf_token %}
                 <!-- Date and time range -->
                 <script>
@@ -160,6 +160,7 @@ div.scrollmenu {
                   <th>Date</th>
                   <th>Start time</th>
                   <th>End Time</th>
+                  <th>Duration</th>
                   <th>Action</th>
                 </thead>
                 {% for rep in report_data %}
@@ -171,7 +172,8 @@ div.scrollmenu {
                   <td>{{rep.date}}</td>
                   <td>{{rep.start}}</td>
                   <td>{{rep.ended}}</td>
-                  <td><a href="#" data-target="#case_form_modal" class="qa_btn btn btn-sm btn-warning" data-toggle="modal" data-number="{{rep.caseid}}" data-cdr='{{rep.uniqueid}}' data-key="{% setting 'CALL_API_URL' %}/clk/cdr/?media={{rep.uniqueid}}">Assess <i class="fa fa-volume-up"></i></a></td>
+                  <td>{{rep.talk_time}}</td>
+                  <td><a href="#" class="qa_btn btn btn-sm btn-warning" data-number="{{rep.caseid}}" data-cdr='{{rep.uniqueid}}' data-key="{% setting 'CALL_API_URL' %}/clk/cdr/?media={{rep.uniqueid}}">Assess <i class="fa fa-volume-up"></i></a></td>
                 </tr>
                 {% endfor %}
 
@@ -240,6 +242,7 @@ div.scrollmenu {
     var url_str = !iframe.src.includes('?') ? '?d[case_number]=' + caseid + '':'&d[case_number]=' + caseid 
     url_str += '&d[case_owner]={{request.user.username}}'
     iframe.src += encodeURI(url_str) //append new parameters
+
     $('#qa_form').modal({backdrop: 'static', keyboard: false}).show()
   })
   $('.close').click(function(){

@@ -26,7 +26,7 @@
             <div class="row home-pallete">
               <div class="col-sm-4 col-md-2 palette-item">
                 <div class="color-palette-set">
-                  <div class="bg-blue color-palette" align="center" onclick="window.location = '{% url 'dashboardreports' 'totalcases' 'cases' %}?datetime_range={{ home.midnight_string }} - {{ home.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ home.total }} </a></span><br>{% trans "Total Cases" %}</div>
+                  <div class="bg-blue color-palette" align="center" onclick="window.location = '{% url 'dashboardreports' 'totalcases' 'cases' %}?datetime_range={{ home.midnight_string }} - {{ home.now_string }}'"><span style="font-size:50px; font-weight:800;">{{ home.total_submissions }} </a></span><br>{% trans "Total Cases" %}</div>
                 </div>
               </div>
               <!-- /.col -->

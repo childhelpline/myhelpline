@@ -30,7 +30,23 @@
             <tbody>
               <tr>
                 {% for field in fields %}
-                {% if 'narrative' in field.r_name or 'plan' in field.r_name %} 
+
+                {% if field.repeater %}
+                <td>
+                  {% with itx=stat|get_item:field.rpath %}
+                      {% for r_item in itx %}                   
+                        <strong>{{field.r_name}}</strong><br />
+                        {% if 'select' in field.type %}
+                          {% with val=r_item|get_item:field.item_path  %}
+                          {{ field.children | get_name:val }}
+                          {% endwith %}
+                        {% else %}
+                            {{r_item | get_item:field.item_path}} 
+                        {% endif %}
+                      {% endfor %}             
+                  {% endwith %}             
+                </td>
+                {% elif 'narrative' in field.r_name or 'plan' in field.r_name %} 
                 </tr><tr><td colspan="8"><strong>{{field.r_name}}</strong><br />{{stat | get_item:field.item_path}}</td><tr>
 
                 {% elif 'select' in field.type %}
@@ -48,23 +64,6 @@
                 {% endif %}
                 {% endfor %}
               </tr>
-              <!-- <tr>
-                {% for keys in recordkeys %}
-                {% if not '_' == keys|first %}
-                <th width="25%">{{ keys }}</th>
-                {% if forloop.last %}
-                <td width="25%">{{ statrecords | get_item:'_submission_time' }}</td>
-                <th width="25%">Last Update On: </th><td width="25%">{{ statrecords | get_item:'_last_edited' }}</td>
-              </tr>
-              {% else %}
-                <td width="25%">{{ statrecords | get_item:keys }}</td>
-                {% endif %}
-                {% endif %}
-                {% if forloop.counter|mod:4 == 0 or forloop.counter|mod:4 == 2 %}
-              </tr><tr>
-                {% endif %}
-                {% endfor %}
-              </tr> -->
             </tbody>
           </table>
         </div>
@@ -82,27 +81,42 @@
           <div class="table table-responsive">
             <table class="table table-bordered table-striped dataTable no-footer">
               {% for hist in history %}
+              <tr><td colspan="8" style="background-color: black; color: white;"><h4>Update {{forloop.counter}}</h4></td></tr>
               <tr>
                 {% for field in fields %}
-                {% if 'narrative' in field.r_name %} 
-                </tr><tr><td colspan="8"><strong>{{field.r_name}}</strong><br />{{stat | get_item:field.item_path}}</td><tr>
 
+                {% if field.repeater %}
+                <td>
+                  {% with itx=hist|get_item:field.rpath %}
+                      {% for r_item in itx %}                   
+                        <strong>{{field.r_name}}</strong><br />
+                        {% if 'select' in field.type %}
+                          {% with val=r_item|get_item:field.item_path  %}
+                          {{ field.children | get_name:val }}
+                          {% endwith %}
+                        {% else %}
+                            {{r_item | get_item:field.item_path}} 
+                        {% endif %}
+                      {% endfor %}             
+                  {% endwith %}             
+                </td>
 
+                {% elif 'narrative' in field.r_name %} 
+                </tr><tr><td colspan="8"><strong>{{field.r_name}}</strong><br />{{hist | get_item:field.item_path}}</td><tr>
                 {% elif 'select' in field.type %}
-                {% with val=stat|get_item:field.item_path  %}
+                {% with val=hist|get_item:field.item_path  %}
                 <td>
                   <strong>{{field.r_name}}</strong><br />{{ field.children | get_name:val }}                      
                 </td>
                 {% endwith %}
                 {% elif field.r_name != 'Instanceid' %}
-                <td><strong>{{field.r_name}}</strong><br />{{stat | get_item:field.item_path}}</td>
+                <td><strong>{{field.r_name}}</strong><br />{{hist | get_item:field.item_path}}</td>
                 {% endif %}
                 {% if forloop.counter|mod:16 == 0 or forloop.counter|mod:16 == 8 %}
                 </tr><tr>
                 {% endif %}
                 {% endfor %}
               </tr>
-              <tr><td colspan="8"></td></tr>
               {% endfor %}
               <!-- <tbody>
                 {% for hists in history %}

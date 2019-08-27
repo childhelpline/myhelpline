@@ -140,7 +140,8 @@ div.scrollmenu {
                       <td>{{rep.start}}</td>
                       <td>{{rep.ended}}</td>
                       <td>{{rep.status}}</td>
-                      <td><a href="" class="btn btn-xs btn-info btn-flat"><i class="fa fa-volume-up"></i> Listen </a> | <a href="" class="btn btn-xs btn-warning btn-flat"><i class="fa fa-edit"></i> Create Case</a></td>
+                      <td>
+                        <audio id="qa_audio" style="height: 20px;" controls src="{% setting 'CALL_API_URL' %}/clk/cdr/?media={{rep.uniqueid}}"></audio> | <a href="{% url 'case_form' 'voicemail' %}?callcase={{rep.uniqueid}}&phone={{rep.phone}}" class="btn btn-xs btn-warning btn-flat"><i class="fa fa-edit"></i> Create Case</a></td>
                     </tr>
                   {% endfor %}
                     

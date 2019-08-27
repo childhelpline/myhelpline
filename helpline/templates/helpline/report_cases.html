@@ -42,6 +42,16 @@
 {% endblock navbar_nav %}
 
 {% block content %}
+<style type="text/css">
+  tbody tr td{
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width:300px;
+    //display:inline-block;
+  }
+
+</style>
 <section class="content-header">
   <h1>
     {% trans "REPORT" %} <i class="fa fa-angle-right"></i> {{ title }}<small>My Cases  [<a href="{% url "form-show" owner.username xform.id_string %}">{{ xform.title }}</a>]</small>
@@ -117,7 +127,7 @@
                       <th style="white-space: nowrap;">Case ID</th>
                       {% for itemx in recordkeys %}
                       {% if not "_" == itemx|first %}
-                        <th>{{ itemx }}</th>
+                        <th>{{ itemx | split:"_"}}</th>
                       {% endif %}
                       {% endfor %}                    
                     </tr>
@@ -150,7 +160,7 @@
                       <th>Case ID</th>
                       {% for recordkey in recordkeys %}
                       {% if not "_" == recordkey|first %}
-                      <th>{{ recordkey }}</th>
+                      <th>{{ recordkey | split:"_" }}</th>
                       {% endif %}
                       {% endfor %}                       
                     </tr>
