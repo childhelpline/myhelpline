@@ -25,26 +25,26 @@
     background-color: #EDF1F0;
   }
   .info-box-text {
-  	font-size:16px;
+    font-size:16px;
   }
   .description-text{
-  	font-size:16px;
+    font-size:16px;
   }
   .info-box-number
   {
-  	font-size:24px;
+    font-size:24px;
   }
   .description-header
   {
-  	font-size:24px;
+    font-size:24px;
   }
   .content .row .col-md-12 .box .box-body .row .col-sm-3.col-xs-6 .description-block .description-header {
-  	font-size: 24px;
+    font-size: 24px;
   }
 
   .color-palette-set
   {
-  	text-transform: uppercase;
+    text-transform: uppercase;
   }
 
   .oncall{
@@ -193,7 +193,7 @@
                       <td>{{ user.answered }}</td>
                       <td>{{user.missed}}</td>
                       <td>{{user.talktime}}</td>
-                      <td>{{user.lastcall }}</td>
+                      <td>{{ user.lastcall }}</td>
                     </tr>
                     {% endfor %}
                   </tbody>
@@ -264,7 +264,7 @@
                 <!-- /.col -->
                 <div class="col-sm-6 col-md-4" style="padding:2px;">
                   <div class="color-palette-set">
-                    <div class="bg-black color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ all_calls }} </span><br />{% trans "All Calls" %}</div>
+                    <div class="bg-black color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ call.total_calls_in_db }} </span><br />{% trans "All Calls" %}</div>
                   </div>
                 </div>
                 <!-- /.col -->
