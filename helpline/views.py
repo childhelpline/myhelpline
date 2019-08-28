@@ -2054,7 +2054,7 @@ def case_form(request, form_name):
 
     data['users'] = trans_users
     data['enketo_url'] = settings.ENKETO_URL
-    data['base_domain'] = settings.BASE_DOMAIN
+    # data['base_domain'] = settings.BASE_DOMAIN
     data['data_url'] = url
     data['data_token'] = default_service_auth_token
     data['frm'] = form_name
@@ -2839,11 +2839,14 @@ def get_dashboard_stats(request, interval=None,wall=False):
     if len(recs) > 0:
         for row in recs:
             home_statistics.update({row['status_column']:row['case_count']})
-            if not wall and row['status_column'] != 'escalate':
-                home_statistics['total'] += row['case_count']
+            if not wall:
+                if row['status_column'] != 'escalate':
+                    home_statistics['total'] += row['case_count']
+                else:
+                    home_statistics['total'] += 0
+                _tot += row['case_count']
             else:
-                home_statistics['total'] += 0
-            _tot += row['case_count']
+                home_statistics['total'] += row['case_count']
 
     if not wall and (request.user.HelplineUser.hl_role.lower() == 'caseworker' or request.user.HelplineUser.hl_role.lower() == 'casemanager'):
         home_statistics['total_submissions'] = _tot
