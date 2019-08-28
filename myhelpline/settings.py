@@ -576,7 +576,7 @@ HOST_IP = get_ip()
 
 ENKETO_PROTOCOL = 'http'
 ENKETO_URL = ENKETO_PROTOCOL + "://" + HOST_IP + ':8005'
-HOST_URL = "http://" + HOST_IP
+HOST_URL = HOST_IP
 
 CALL_API_URL = "http://" + HOST_IP + ":90"
 
