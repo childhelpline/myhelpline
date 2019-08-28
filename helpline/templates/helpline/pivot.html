@@ -48,9 +48,7 @@
 <link rel='stylesheet' type='text/css' href='{{call_url}}/demo_rpt/RPT.css'>
 </head>
 <body style="font-size:12px; font-family:Helvetica,Arial,sans-serif; line-height:14px; padding:0; margin:0; color:black; background-color:white; ">
-<div>
-<div class='c w50'><input type='text' id='oo' class="ba gw x y w50"/></div><div class='aa c w05 ba' onclick="_rptshow();"><a href="#" class="x y">GO</a></div><div class='e'></div>
-</div>
+  
 <script src="{{call_url}}/demo_rpt/RPT.js"></script>
 <script>
 function _rptshow ()
@@ -202,6 +200,11 @@ max-width:300px;
         query_str += query_str != "" ? "&":""
         query_str += "xaxis=" + _val
       }
+
+      if($('#y_axis').val() == _val){
+        alert("Selected similar values for both axes, you will have X-Axis");
+        query_str = "xaxis=" + _val
+      }
     }else{
       if(_val != ""){
         query_str += "yaxis=" + _val
@@ -210,6 +213,11 @@ max-width:300px;
       if($('#x_axis').val() != ""){
         query_str += query_str != "" ? "&":""
         query_str += "xaxis=" + _val
+      }
+
+      if($('#x_axis').val() == _val){
+        alert("Selected similar values for both axes, you will have X-Axis");
+        query_str = "xaxis=" + _val
       }
     }
 

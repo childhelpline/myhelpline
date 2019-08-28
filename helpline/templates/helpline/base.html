@@ -593,7 +593,12 @@ input:checked + .slider:before {
           <ul class="treeview-menu">
             <li><a href="{% url 'general' 'cases' %}"><i class="fa fa-circle-o"></i>{% trans "Cases" %}
             </a></li>
-            {% if request.user.HelplineUser.hl_role == 'Casemanager'  and request.user.HelplineUser.hl_role == 'Caseworker' %}
+
+            {% if request.user.HelplineUser.hl_role == 'Supervisor' or request.user.HelplineUser.hl_role == 'Administrator' or request.user.HelplineUser.hl_role == 'Admin' %}
+            <li><a href="{% url 'pivot' %}"><i class="fa fa-circle-o"></i>{% trans "Pivot" %}
+            </a></li>
+            {% endif %}
+            {% if request.user.HelplineUser.hl_role != 'Casemanager'  and request.user.HelplineUser.hl_role != 'Caseworker' %}
             <li><a href="{% url 'dashboardreports' 'totalcalls' %}"><i class="fa fa-circle-o"></i>{% trans "Calls" %}
             </a></li>
             <li><a href="{% url 'general' 'sms' %}"><i class="fa fa-circle-o"></i>{% trans "SMS" %}
