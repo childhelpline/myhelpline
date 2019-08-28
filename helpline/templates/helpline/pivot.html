@@ -45,6 +45,37 @@
 {% endblock navbar_nav %}
 
 {% block content %}
+<link rel='stylesheet' type='text/css' href='{{call_url}}/demo_rpt/RPT.css'>
+</head>
+<body style="font-size:12px; font-family:Helvetica,Arial,sans-serif; line-height:14px; padding:0; margin:0; color:black; background-color:white; ">
+<div>
+<div class='c w50'><input type='text' id='oo' class="ba gw x y w50"/></div><div class='aa c w05 ba' onclick="_rptshow();"><a href="#" class="x y">GO</a></div><div class='e'></div>
+</div>
+<script src="{{call_url}}/demo_rpt/RPT.js"></script>
+<script>
+function _rptshow ()
+{
+        var p = document.getElementById ("vrpt");
+        var el = document.getElementById ("oo");
+        RPT.show (p, el.value);
+}
+window.onload = function()
+{ 
+  var intt = setInterval(function(){
+    $('.yy').addClass('row')
+    $('.b20').addClass('col-md-4')
+    $('.b40').addClass('col-md-8')
+    clearInterval(intt)
+  },200)
+
+  var p = document.getElementById ("vrpt");
+  RPT.init ();
+  RPT.show (p, "{{call_url}}/rpt/?xaxis=select_category");
+}
+
+
+</script>
+
 <style>
 div.scrollmenu {
   overflow: auto;
@@ -56,7 +87,7 @@ overflow: hidden;
 text-overflow: ellipsis;
 white-space: nowrap;
 max-width:300px;
-//display:inline-block;
+/*display:inline-block;*/
 }
 
 </style>
@@ -67,158 +98,125 @@ max-width:300px;
 </section>
 <!-- Main content -->
 <section class="content">
-  <div class="row">
-    <div class="col-md-12">
-      <div class="box">
-        <div class="box-header with-border">
-          <!--h3 class="box-title">Filter Parameters:</h3-->
+  <div class="box">
+    <div class="box-header with-border">
+      <div class="col-md-12 report-filters">
+        <div id="form_collapse" class="in" style="height: auto;">
+          <!-- Filter Form -->
+          <form action="#">
+            <!-- Date and time range -->
+            <script>
+              $(function() {
+                $('#datetimerange').daterangepicker({
+                 opens: 'left',
+                 timePicker: true,
+                 locale: {
+                  format: 'DD/MM/YYYY h:mm A'
+                }
 
-          <div class="col-md-12 report-filters">
-            {% load django_tables2 %}
-            <div id="form_collapse" class="in" style="height: auto;">
-              {% block filterform %}
-              <!-- Filter Form -->
-              <form action="">
-                <!-- Date and time range -->
-                <script>
-                  $(function() {
-                    $('#datetimerange').daterangepicker({
-                     opens: 'left',
-                     timePicker: true,
-                     locale: {
-                      format: 'DD/MM/YYYY h:mm A'
-                    }
-                  }, function(start, end, label) {
-                   console.log("A new date selection was made: " + start.format('M/DD hh:mm A') + ' to ' + end.format('M/DD hh:mm A'));
-                 });
-                  });
-                </script>
+              }, function(start, end, label) {
+               console.log("A new date selection was made: " + start.format('M/DD hh:mm A') + ' to ' + end.format('M/DD hh:mm A'));
+             });
+              });
+            </script>
 
-                <!-- <div class="form-group col-md-4" style="padding-left: 0px;">
-                    <label>{% trans "Select Column" %}:</label>
-                  <div class="input-group">
-                    <div class="input-group-addon">
-                      <i class="fa fa-calendar"></i>
-                    </div>
-                  </div><!-- /.input group ->
-                  <div class="input-group">
-                    <div class="input-group-addon">
-                      <i class="fa fa-calendar"></i>
-                    </div>
-                    <select id="field-options">
-                      {% for field in fields %}
-                      <option value="{{field.name}}">{{field.label}}</option>
-                      {% endfor%}
-                    </select>
-                  </div>
-                </div> --><!-- /.form group -->
-                <div class="form-group col-md-4" style="padding-left: 0px;">
-                    <label>{% trans "Choose Date and time Range" %}:</label>
-                  <div class="input-group">
-                    <div class="input-group-addon">
-                      <i class="fa fa-calendar"></i>
-                    </div>
-                    {{ form.datetime_range }}
-                  </div><!-- /.input group -->
-                </div><!-- /.form group -->
-                <div class="form-group col-md-4">
-                    <label>{% trans "Agent" %}:</label>
-                  <div class="input-group">
-                    <div class="input-group-addon">
-                      <i class="fa fa-users"></i>
-                    </div>
-                    {{ form.agent }}
-                  </div><!-- /.input group -->
-                </div><!-- /.form group -->
 
-                {{ form.queueid }}
-                <br>
-                <div class="form-group col-md-4">
-                  <div class="input-group pt-20">
-                    <input type="submit" value="Fetch Reports" id="total-calls-search-btn" class="btn btn-success btn-sm btn-flat">
-                  </div><!-- /.input group -->
+            <!-- <div class="form-group col-md-4" style="padding-left: 0px;">
+              <label>Choose Date and time Range:</label>
+              <div class="input-group">
+                <div class="input-group-addon">
+                  <i class="fa fa-calendar"></i>
                 </div>
-              </form>
-              <!-- End Filter Form -->
-            </div>
-            {% endblock filterform %}
-          </div>
-        </div>
-        <div class="box-body">
-          <div class="row">
-            <div class="table-responsive" style="padding: 10px;">
-                <table id="example1" class="table table-bordered table-striped">
-                  <thead>
-                    <tr>
-                      {% for field in fields %}
-                      <th>{{field.r_name}}</th>
-                      {% if forloop.last %}
-                      <th>Date Created</th>
-                      {% endif %}
-                      {% endfor %}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for dat in data %}
-                    <tr>
-                      {% for fieldx in fields %}
-                      {% if fieldx.repeater %}
-                      <td>
-                        {% with itx=dat.json|get_item:fieldx.rpath %}
-                        {% for r_item in itx %} 
-                        {{r_item | get_item:fieldx.item_path}} 
-                        {% endfor %} 
-                        {% endwith %}                 
-                      </td>
-                      {% elif 'select' in fieldx.type %}
-                      {% with val=dat.json|get_item:fieldx.item_path  %}
-                      <td>
-                        {{ fieldx.children | get_name:val |default:val}}                     
-                      </td>
-                      {% endwith %}
-                      {% else %}
-                      <td>{{dat.json | get_item:fieldx.item_path}}</td>
-                      {% endif %}
-                      {% if forloop.last %}
-                      <td>{{dat.date_created}}</td>
-                      {% endif %}
-                      {% endfor %}
-                    </tr>
+                {{ form.datetime_range }}
+              </div><!-- /.input group ->
+            </div><!-- /.form group --> 
+            <div class="form-group  col-md-4">
+              <label>Select X-Axis</label>
+              <div class="input-group">
+                <div class="input-group-addon">
+                  <i class="fa fa-exclamation-triangle"></i>
+                </div>
+                <div>
+                  <select id="x_axis" class="form-control _axis">
+                    {% for field in fields %}
+                    <option value="{{field.name}}">{{field.label}}</option>
                     {% endfor %}
-                  </tbody>
-                  <tfoot>
-                    <tr>
-                      {% for field in fields %}
-                      <th>{{field.r_name}}</th>
-                      {% if forloop.last %}
-                      <th>Date Created</th>
-                      {% endif %}
-                      {% endfor %}
-                    </tr>
-                  </tfoot>
-                </table>
+                  </select>
+                </div>
+              </div>
             </div>
-          <!-- /.col -->
-        </div>
-        <!-- /.row -->
-      </div>
-      <!-- ./box-body -->
-    </div>
-  </div>
-</section>
-<script type="text/javascript">
-  // function sendtoReportFactory(){
-  //   var reservationtime = document.getElementById("datetimerange").value;
-  //   var queueid = document.getElementById("id_queueid").value;
-  //   var agent = document.getElementById("agent").value;
-  //   var c = document.getElementById("showustheresultsnow");
-  //   var query = document.getElementById("navbar-search-input").value;
-  //   //c.innerHTML = '<div align="center">Loading Report.. ';
-  //   $("#showustheresultsnow").fadeIn("slow");
-  //   $("#showustheresultsnow").load("{ % url 'ajax_admin_report' report % }?datetime_range="+ encodeURIComponent(reservationtime) +'&sevc='+ encodeURIComponent(queueid) +'&agent='+ encodeURIComponent(agent)+'&q='+ encodeURIComponent(query));  
+            <div class="form-group  col-md-4">
+              <label>Select Y-Axis</label>
+              <div class="input-group">
+                <div class="input-group-addon">
+                  <i class="fa fa-exclamation-triangle"></i>
+                </div>
+                <div>
+                  <select id="y_axis" class="form-control _axis">
+                    {% for field in fields %}
+                    <option value="{{field.name}}">{{field.label}}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+            </div>
 
-  //   var cherud = {{ xform | safe}}
-  //   alert(cherud);
-  // }
-</script>
+            <!-- <div class="form-group col-md-4">
+              <div class="input-group" style="padding-top: 5px;">
+                <input type="submit" value="Fetch Reports" id="total-calls-search-btn" class="btn btn-success btn-md btn-flat" onclick="sendtoReportFactory();">
+              </div><!-- /.input group --
+            </div> -->
+          </form>
+          <!-- End Filter Form -->
+        </div>
+      </div>
+    </div>
+    <div class="box-body">
+      <div class="row">
+        <div class="col-md-12">
+          <div id='vrpt'></div>
+        </div>
+      </div>
+    </div>
+    <!-- /.row -->
+  </div>
+  <!-- ./box-body -->
+</section>
+
 {% endblock content %}
+{% block script_end %}
+<script type="text/javascript">
+  $('._axis').on('change',function(){
+    var _id = $(this).attr('id')
+    var _val = $(this).val()
+    var query_str = ""
+
+    var p = document.getElementById ("vrpt");
+    RPT.init ();
+
+    if(_id == 'x_axis'){
+      if(_val != ""){
+        query_str += "xaxis=" + _val
+      }
+      if($('#y_axis').val() != ""){
+        query_str += query_str != "" ? "&":""
+        query_str += "xaxis=" + _val
+      }
+    }else{
+      if(_val != ""){
+        query_str += "yaxis=" + _val
+      }
+
+      if($('#x_axis').val() != ""){
+        query_str += query_str != "" ? "&":""
+        query_str += "xaxis=" + _val
+      }
+    }
+
+    query_str = query_str == "" ? "" : "?" + query_str
+    RPT.show (p, "{{call_url}}/rpt/" + query_str);
+  })
+
+</script>
+<script src="{{call_url}}/demo_rpt/chart_2_8_0.js"></script>
+{% endblock script_end %}

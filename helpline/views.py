@@ -3323,6 +3323,93 @@ def form_drops(form_id):
             report['data'] = rec_rows
 
 def pivot(request):
+    # GET FIELDS
+
+    default_service = Service.objects.all().first()
+    default_service_xform = default_service.walkin_xform
+
+    def dictfetchall(cursor): 
+        "Returns all rows from a cursor as a dict" 
+        desc = cursor.description 
+        return [
+                dict(zip([col[0] for col in desc], row)) 
+                for row in cursor.fetchall() 
+        ]
+
+
+    ct = ContentType.objects.get_for_model(default_service_xform)
+    walkin_metadata = MetaData.objects.filter(content_type__pk=ct.id, object_id=default_service_xform.pk)
+        
+    _meta = {}
+    for _met in walkin_metadata:
+        _meta.update({str(_met.data_value):str(_met.data_file)})
+
+    rec = default_service_xform.json
+
+    prop_recs = yaml.load(str(rec))[u'children']
+
+    prop_choices = yaml.load(str(rec))[u'choices']
+    rec_rows = []
+    item_path = ''
+    level_path = {}
+
+    repeater = False
+    def fill_children(child,level_key,_child=False):
+        n = ''
+        other_headers = ['group','repeat']
+        ix = 0;
+        for rows in child:
+            if _child:
+                ix = _child
+            else:
+                ix += 1   
+
+            if rows.get('type',False) and rows.get('type',False) in other_headers:
+                repeater = True if rows.get('type',False) == 'repeat' else False
+                level_path.update({'repeater%s' %ix:repeater})
+
+                if level_key == "":
+                    level_path.update({ix:rows.get('name',"")})
+                else:
+                    if(level_path.get(ix,"") == ""):
+                        x_p = "%s/%s" %(level_key,rows.get('name',""))
+                    else:
+                        x_p = "%s/%s" %(level_path.get(ix,""),rows.get('name',""))
+                    level_path.update({ix:x_p}) 
+                
+                if(repeater):
+                    level_path.update({'rpath%s' %ix:level_path.get(ix,False)})
+
+                fill_children(rows.get('children',[]),level_path.get(ix,""),ix)                        
+            else:
+                if rows.get('name',False):
+                    n = rows.get('name','')
+
+                rows.update({'r_name':n.replace('_', ' ').capitalize()})
+                if level_key != "":
+                    n = "/%s" %n
+                item_path = "%s%s" %(str(level_key),str(n))
+                # rows.update({'item_path':item_path,'repeater':level_path.get('repeater%s'%ix,False),'rpath':level_path.get('rpath%s'%ix,False)})
+                rows.update({'item_path':item_path})
+                item_path = ''
+
+                if rows.get('itemset',False) and '.csv' in rows['itemset']:
+                    k_n = rows['itemset']
+                    fl_path = _meta.get(k_n,k_n)
+
+                    options = dict_from_csv(request,fl_path,default_service_xform.user.username) or []
+                    # rows.update({'children':options})
+                elif rows.get('itemset',False) and not '.csv' in rows['itemset']:
+                    options = prop_choices.get(rows.get('itemset',''),[])
+                    # rows.update({'children':options})
+                if (rows.get('type',False) and 'select one' in rows.get('type','').lower()):
+                    rec_rows.append(rows)
+
+    fill_children(prop_recs,"")
+
+    report = {'data':[],'call_url':settings.CALL_API_URL,'fields':rec_rows}
+    return render(request, 'helpline/pivot.html',report)
+def pivotx(request):
     report = {} 
     # Case statistics
 
