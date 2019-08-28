@@ -159,20 +159,16 @@ def home(request):
         'Authorization': 'Token %s' % (default_service_auth_token)
     }
 
-    stat = requests.get(url, headers=headers)
-    if(stat.status_code > 200):
-        stat = []
-    else:
-        stat = stat.json()
-    
+    stat = make_request(url, headers)
     
     forloop = 0
-    for dt in get_item(stat, 'data'):
-        t = [str(get_item(dt, '_submission_time')), get_item(dt, 'count')]
-        gtdata.append(t)
-        forloop += 1
-        if forloop == 14:
-            break
+    if get_item(stat, 'data'):
+        for dt in get_item(stat, 'data'):
+            t = [str(get_item(dt, '_submission_time')), get_item(dt, 'count')]
+            gtdata.append(t)
+            forloop += 1
+            if forloop == 14:
+                break
 
     stype = 'case_action'
 
@@ -188,37 +184,33 @@ def home(request):
     stype = 'reporter_district'
 
     #for case status 
-    status_data = requests.get(url, headers=headers)
-
-    if(status_data.status_code > 200):
-        status_data = []
-    else:
-        status_data = status_data.json()
-    
+    status_data = make_request(url,headers,{})
+   
 
     ic = 0
     othercount = 0
     oc = 0
     datas = get_item(status_data, 'data')
-    for dt in sorted(get_item(status_data, 'data'),reverse=True):#  status_data['data']:
-        lbl = dt[str(stype)]
-        if isinstance(lbl, list):
-            lbl = lbl[0] if len(lbl) > 0 and lbl[0] != 'null' else '' #"Others"
-        else:
-            lbl = lbl if len(lbl) > 0  and lbl != 'null' else '' # "Others"
-    
-        # col = color[ic]
-        if ic < 9 and lbl != 'Others' and lbl != None:
-            col = color[ic]
-            stdata.append({"label":str(lbl), "data":str(str(dt['count'])), "color":str(col)})
-            ic += 1
-        elif lbl != '' and  lbl != None:
-            othercount += dt['count']
-            oc = ic if oc == 0 else oc
-            ic += 1
+    if get_item(status_data, 'data'):
+        for dt in sorted(get_item(status_data, 'data'),reverse=True):#  status_data['data']:
+            lbl = dt[str(stype)]
+            if isinstance(lbl, list):
+                lbl = lbl[0] if len(lbl) > 0 and lbl[0] != 'null' else '' #"Others"
+            else:
+                lbl = lbl if len(lbl) > 0  and lbl != 'null' else '' # "Others"
         
-    col = color[oc]
-    stdata.append({"label":'Others', "data":str(othercount), "color":str(col)})
+            # col = color[ic]
+            if ic < 9 and lbl != 'Others' and lbl != None:
+                col = color[ic]
+                stdata.append({"label":str(lbl), "data":str(str(dt['count'])), "color":str(col)})
+                ic += 1
+            elif lbl != '' and  lbl != None:
+                othercount += dt['count']
+                oc = ic if oc == 0 else oc
+                ic += 1
+            
+        col = color[oc]
+        stdata.append({"label":'Others', "data":str(othercount), "color":str(col)})
 
     if request.user.HelplineUser.hl_role == 'Counsellor':
         url_qa = 'http://%s/ona/api/v1/data/%s?query={"case_owner":"%s"}' % (
@@ -232,12 +224,8 @@ def home(request):
             default_service_qa.pk
         )
 
-    qa_stats = requests.get(url_qa, headers=headers)
+    qa_stats = make_request(url_qa,headers) 
 
-    if(qa_stats.status_code > 200):
-        qa_stats = []
-    else:
-        qa_stats = qa_stats.json()
     
 
     stat_qa = 0;
@@ -975,81 +963,18 @@ def caseview(request, form_name, case_id):
     xform_det = default_service.walkin_xform
     request_string = ''
 
-    stat = requests.get(url + case_id + request_string, headers=headers)
-    if(stat.status_code > 200):
-        stat = []
-    else:
-        stat = stat.json()
+    _url = url + case_id + request_string
+    stat = make_request(_url,headers)
     
-
-    history = requests.get(url + case_id + '/history', headers=headers)
+    _url = url + case_id + '/history'
+    history = make_request(_url,headers)
     
-    if(history.status_code > 200):
-        history = []
-    else:
-        history = history.json()
-
-
     data['stat'] = stat
     data['history'] = history
     data['xform'] = default_service_xform
     data['kemcount'] = 0
     data['case_number'] = stat.get('case_number','')
     
-    # statrecords = []
-    # recordkeys = []
-    # history_rec = []
-
-    # ##brings up data only for existing records
-    # def get_records(recs):
-    #     return_obj = []
-    #     record = {}
-
-    #     for key, value in recs.items():
-    #         #if not (key.startswith('_') and key.endswith('_')):# str(key) == "_id":
-    #         key = str(key)
-    #         if key.find('/') != -1:
-    #             k = key.split('/')
-    #             l = len(k)
-    #             kk = str(k[l-1])
-    #         else:
-    #             kk = str(key)
-    #         if isinstance(value, dict) and len(value) >= 1:
-    #             record.update(get_records(value))
-    #         elif isinstance(value, list) and len(value) >= 1:
-    #             if isinstance(value[0], dict):
-    #                 record.update(get_records(value[0]))
-    #         else:
-    #             if not kk in recordkeys and not kk.endswith('ID') and str(value) != 'yes' \
-    #             and str(value) != 'no' and not (kk.startswith('_') and kk != '_id' and kk != '_submission_time'  \
-    #                 and kk != '_last_edited'):
-    #                 recordkeys.append(kk)
-    #             record.update({kk : str(value).capitalize()})
-    #     return record
-
-
-    # if isinstance(stat, dict) and len(stat) > 1:
-    #     statrecords.append(get_records(stat))
-
-    # for hist in history:
-    #     if isinstance(hist, dict) and len(hist) > 1:
-    #         history_rec.append(get_records(hist))
-
-    # if len(recordkeys) > 0:
-    #     recordkeys.append('Date Created')
-    # else:
-    #     recordkeys = False
-
-    # data = {
-    #     'stat':stat,
-    #     'statrecords':statrecords[0],
-    #     'recordkeys':recordkeys,
-    #     'history':history_rec,
-    #     'xform': default_service_xform,
-    #     'kemcount':0
-    # }
-
-
     htmltemplate = "helpline/instance.html"
 
     return render(request, htmltemplate, data)
@@ -1456,13 +1381,7 @@ def reports(request, report, casetype='Call'):
         else:
             calls_url = "%s/clk/cdr/" %(settings.CALL_API_URL)
         
-        call_data = requests.get(calls_url)
-
-        if(call_data.status_code > 200):
-            call_data = []
-        else:
-            call_data = call_data.json()
-        
+        call_data = make_request(calls_url)     
 
        
         if report in callreports:
@@ -1759,13 +1678,8 @@ def qa(request, report='analysed'):
             current_site,
             xform.pk
         )
-        result_data = requests.get(url,headers=headers)
-        
-        if(result_data.status_code > 200):
-            result_data = []
-        else:
-            result_data = result_data.json()
-        
+        result_data = make_request(url,headers)
+                
         # process data for preview
         statrecords = []
         recordkeys = []
@@ -1826,12 +1740,7 @@ def qa(request, report='analysed'):
 
         data['agents'] = agent_list
 
-        result_data = requests.get(call_url)
-
-        if(result_data.status_code > 200):
-            result_data = []
-        else:
-            result_data = result_data.json()
+        result_data = make_request(call_url)
         
         if(report == 'analysis'):
             htmltemplate = "helpline/nonanalysed.html"
@@ -2094,13 +2003,9 @@ def contact_search(request, search_string=None):
     headers = {
         'Authorization': 'Token %s' % (default_service_auth_token)
     }
-    call_data = requests.get("%s" %(request.GET.get('url')),headers=headers)
 
-    if(call_data.status_code > 200):
-        call_data = []
-    else:
-        call_data = call_data.json()
-     
+    _url = "%s" %(request.GET.get('url'))
+    call_data = make_request(_url,headers)
 
     return JsonResponse(call_data,safe=False)
 @login_required
@@ -2167,12 +2072,7 @@ def case_form(request, form_name):
         data['api_url'] = settings.CALL_API_URL + '/clk'
 
         # Query all logged in users based on id list
-        queue_list = requests.get('%s/clk/agent/' % settings.CALL_API_URL)
-        
-        if(queue_list.status_code > 200):
-            queue_list = []
-        else:
-            queue_list = queue_list.json()
+        queue_list = make_request('%s/clk/agent/' % settings.CALL_API_URL)
         
         users = User.objects.filter(HelplineUser__hl_status__exact='Available',HelplineUser__hl_role__exact='Counsellor').exclude(username__exact=request.user.username)
         
@@ -2403,24 +2303,15 @@ def case_edit(request, form_name, case_id):
     }
 
     uri = 'http://%s/ona/api/v1/data/%s/%s'% (current_site, default_service_xform.pk, case_id)
-    dat = requests.get(uri, headers=headers)
+    dat = make_request(uri,headers,{})
 
-    if(dat.status_code > 200):
-        dat = {}
-    else:
-        dat = dat.json()
     
     case_number = dat.get('case_number','')
 
     url = 'http://%s/ona/api/v1/data/%s/%s/enketo?return_url=http://%s/helpline/success/&format=json&d[owner_level]=Supervisor' \
     % (current_site, default_service_xform.pk, case_id, current_site)
 
-    req = requests.get(url, headers=headers)
-
-    if(req.status_code > 200):
-        req = {}
-    else:
-        req = req.json()
+    req = make_request(url,headers,{})
     
     return render(request,'helpline/case_form_edit.html', {'case':case_number, 'iframe_url':get_item(req, 'url'),\
         'owner_role':request.user.HelplineUser.hl_role})
@@ -2884,12 +2775,10 @@ def get_dashboard_stats(request, interval=None,wall=False):
 
     form_choices = yaml.load(default_service_xform.json)['choices']
 
-    form_details = requests.get('http://%s/ona/api/v1/forms/%s.json' % (current_site, default_service_xform.pk),headers=headers)
+    _url = 'http://%s/ona/api/v1/forms/%s.json' % (current_site, default_service_xform.pk)
 
-    if(form_details.status_code > 200):
-        form_details = {}
-    else:
-        form_details = form_details.json()
+    form_details = {"submission_count_for_today":0,"num_of_submissions":0}
+    form_details = make_request(_url,headers,form_details)
     
 
     # date time
@@ -2929,23 +2818,13 @@ def get_dashboard_stats(request, interval=None,wall=False):
     recs = []
 
     query_string += '?chan_ts_f=%s' % date_time.strftime('%Y-%m-%d') if query_string == '' else '&chan_ts_f=%s'% date_time.strftime('%Y-%m-%d')
-
     #Call stat
-    call_statistics = requests.get('%s/clk/stats/%s' %(settings.CALL_API_URL,query_string))
+    _url = '%s/clk/stats/%s' %(settings.CALL_API_URL,query_string)
 
-    if(call_statistics.status_code > 200):
-        call_statistics = []
-    else:
-        call_statistics = call_statistics.json()
+    call_statistics = make_request(_url,{},{})
+
+    all_calls = make_request('%s/clk/cdr/' %(settings.CALL_API_URL))
     
-    all_calls = requests.get('%s/clk/cdr/' %(settings.CALL_API_URL))
-
-    if(all_calls.status_code > 200):
-        all_calls = []
-    else:
-        all_calls = all_calls.json()
-
-
     home_statistics.update({'call':call_statistics})
     home_statistics.update({'all_calls':len(all_calls)})
 
@@ -2991,6 +2870,12 @@ def get_dashboard_stats(request, interval=None,wall=False):
     return home_statistics
 
 
+def make_request(url,headers={},return_item=[]):
+    try:
+        return_item = requests.get(url,headers=headers).json()
+    except Exception as e:
+        print("Error: %s " %e)
+    return return_item
 
 def get_dashboard_statsx(user, interval=None):
     """Stats which are displayed on the dashboard, returns a dict
@@ -3602,12 +3487,7 @@ def stat(request):
     # agent status
     url_agents = '%s/clk/agent/' %(settings.CALL_API_URL)
 
-    agent_status = requests.get(url_agents, headers=headers)
-
-    if(agent_status.status_code > 200):
-        agent_status = []
-    else:
-        agent_status = agent_status.json()
+    agent_status = make_request(url_agents,headers)
      
     dashboard_stats = get_dashboard_stats(request,None,True)
     week_dashboard_stats = get_dashboard_stats(request,'weekly',True)

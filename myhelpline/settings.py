@@ -576,7 +576,9 @@ HOST_IP = get_ip()
 
 ENKETO_PROTOCOL = 'http'
 ENKETO_URL = ENKETO_PROTOCOL + "://" + HOST_IP + ':8005'
-HOST_URL = HOST_IP + ':8000'
+HOST_URL = "http://" + HOST_IP
+
+CALL_API_URL = "http://" + HOST_IP + ":90"
 
 ENKETO_API_SURVEY_PATH = '/api/v2/survey'
 ENKETO_API_INSTANCE_PATH = '/api/v2/instance'
