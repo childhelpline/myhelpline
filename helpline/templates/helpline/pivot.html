@@ -48,7 +48,7 @@
 <link rel='stylesheet' type='text/css' href='{{call_url}}/demo_rpt/RPT.css'>
 </head>
 <body style="font-size:12px; font-family:Helvetica,Arial,sans-serif; line-height:14px; padding:0; margin:0; color:black; background-color:white; ">
-  
+
 <script src="{{call_url}}/demo_rpt/RPT.js"></script>
 <script>
 function _rptshow ()
@@ -198,7 +198,7 @@ max-width:300px;
       }
       if($('#y_axis').val() != ""){
         query_str += query_str != "" ? "&":""
-        query_str += "xaxis=" + _val
+        query_str += "yaxis=" + $('#y_axis').val()
       }
 
       if($('#y_axis').val() == _val){
@@ -212,7 +212,7 @@ max-width:300px;
 
       if($('#x_axis').val() != ""){
         query_str += query_str != "" ? "&":""
-        query_str += "xaxis=" + _val
+        query_str += "xaxis=" + $('#x_axis').val()
       }
 
       if($('#x_axis').val() == _val){
