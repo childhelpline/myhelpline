@@ -420,6 +420,14 @@ def manage_users(request,action=None,action_item=None):
         elif action == 'profile':
             template = 'profile'
             data['template'] = 'user'
+        elif action == 'reset':
+            
+            try:
+               action_user.set_password(action_user.username) 
+               action_user.save()
+               return HttpResponse("Successfully Reset password",status=status.HTTP_201_CREATED)
+            except Exception as e:
+                return HttpResponse(e,status=status.HTTP_501_NOT_IMPLEMENTED)
         elif action == 'edit':
             # user = User.objects.get(HelplineUser__hl_key__exact=action_item)
             profile = action_user.HelplineUser
@@ -535,14 +543,12 @@ def new_user(request):
                 user.HelplineUser.hl_case = 0
 
                 user.HelplineUser.hl_status = 'Unavailable'
-                user.HelplineUser.hl_jabber = "" # "%s@%s" % (user.username, settings.BASE_DOMAIN)
-                # user.HelplineUser.hl_pass = hashlib.md5("1234").hexdigest()
-
+                user.HelplineUser.hl_jabber = ""
                 user.HelplineUser.hl_role = "%s" % profile_form.cleaned_data.get('hl_role')
 
-                uploaded_file_url = ''                
+                uploaded_file_url = "%sblank-avatar.png" % settings.MEDIA_URL               
                 filename = ''
-                if request.FILES['hl_avatar']:
+                if request.FILES and request.FILES['hl_avatar']:
                     myfile = request.FILES['hl_avatar']
                     fs = FileSystemStorage()
                     filename = fs.save(myfile.name, myfile)
@@ -579,6 +585,9 @@ def new_user(request):
                 form = RegisterUserForm(request.POST)
                 profile_form = RegisterProfileForm(request.POST, request.FILES)
                 messages.append('Error saving user: %s' % (e))
+
+
+            print("%s Cheru: %s " %(uploaded_file_url, messages))
         else:
             # messages.error(request, "Error")
             messages.append("Invalid form")
@@ -2027,6 +2036,7 @@ def case_form(request, form_name):
     settings.ENKETO_PREVIEW_URL = urljoin(settings.ENKETO_URL, settings.ENKETO_API_SURVEY_PATH + '/preview')
     settings.ENKETO_API_INSTANCE_IFRAME_URL = settings.ENKETO_URL + "api/v2/instance/iframe"
 
+    print("Form name: %s " % default_service_xform.id_string)
     """
     Graph data
     """
@@ -2294,6 +2304,10 @@ def case_edit(request, form_name, case_id):
     default_service_xform = default_service.walkin_xform
     default_service_auth_token = default_service_xform.user.auth_token
     current_site = settings.HOST_URL # get_current_site(request)
+
+    settings.ENKETO_URL = settings.ENKETO_PROTOCOL + "://" + request.META.get('HTTP_HOST').split(":")[0] + ":8005" or settings.ENKETO_URL
+    settings.ENKETO_PREVIEW_URL = urljoin(settings.ENKETO_URL, settings.ENKETO_API_SURVEY_PATH + '/preview')
+    settings.ENKETO_API_INSTANCE_IFRAME_URL = settings.ENKETO_URL + "api/v2/instance/iframe"
 
     """
     Graph data
@@ -2877,7 +2891,7 @@ def make_request(url,headers={},return_item=[]):
     try:
         return_item = requests.get(url,headers=headers).json()
     except Exception as e:
-        print("Error: %s " %e)
+        print("%s Error: %s " %(url,e))
     return return_item
 
 def get_dashboard_statsx(user, interval=None):

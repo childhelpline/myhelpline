@@ -1223,7 +1223,7 @@ function get_submissions(phone,name,param=true){
       var url_str = !$(iframe).data('src').includes('?') ? '?d[case_number]=' + caseid + '':'&d[case_number]=' + caseid 
       url_str += '&&d[case_source]={{form_name}}&d[case_owner]={{request.user.username}}&d[owner_level]={{request.user.HelplineUser.hl_role}}'
       {% if form_name == 'call' %}
-        url_str += '&d[/Case_Form/reporter_details/reporter_phone]={{caller}}' 
+        url_str += '&d[/{{form_name}}/reporter_details/reporter_phone]={{caller}}' 
       {% endif %}
       if(!newreporter){
         selected_contact = selected_contact[0]
