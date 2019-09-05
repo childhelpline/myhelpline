@@ -172,7 +172,7 @@ def home(request):
 
     stype = 'case_action'
 
-    url = 'http://%s/ona/api/v1/charts/%s.json?field_name=reporter_district' \
+    url = 'http://%s/ona/api/v1/charts/%s.json?field_name=reporter_county' \
      %(current_site, default_service_xform.pk)
     color = ['#CD5C5C','#000000','#8A2BE2','#A52A2A','#DEB887','#ADD8E6','#F08080','#90EE90','#F0E68C','#FFB6C1', \
     '#5F9EA0','#7FFF00','#D2691E','#FF7F50','#6495ED','#FFF8DC','#DC143C','#00FFFF','#00008B','#008B8B','#B8860B','#A9A9A9', \
@@ -181,7 +181,7 @@ def home(request):
     '#F8F8FF','#FFD700','#DAA520','#808080','#ADFF2F','#F0FFF0','#FF69B4','#FFE4C4','#4B0082','#FFFFF0','#E6E6FA',\
     '#FFF0F5','#7CFC00','#FFFACD','#FAFAD2','#90EE90','#D3D3D3','#F0F8FF','#FAEBD7','#F0FFFF','#F5F5DC','#7FFFD4','#FFA07A'
     ]
-    stype = 'reporter_district'
+    stype = 'reporter_county'
 
     #for case status 
     status_data = make_request(url,headers,{})
@@ -2035,8 +2035,6 @@ def case_form(request, form_name):
     settings.ENKETO_URL = settings.ENKETO_PROTOCOL + "://" + request.META.get('HTTP_HOST').split(":")[0] + ":8005" or settings.ENKETO_URL
     settings.ENKETO_PREVIEW_URL = urljoin(settings.ENKETO_URL, settings.ENKETO_API_SURVEY_PATH + '/preview')
     settings.ENKETO_API_INSTANCE_IFRAME_URL = settings.ENKETO_URL + "api/v2/instance/iframe"
-
-    print("Form name: %s " % default_service_xform.id_string)
     """
     Graph data
     """
@@ -2303,12 +2301,12 @@ def case_edit(request, form_name, case_id):
     default_service = Service.objects.all().first()
     default_service_xform = default_service.walkin_xform
     default_service_auth_token = default_service_xform.user.auth_token
-    current_site = settings.HOST_URL # get_current_site(request)
-
+    current_site = request.META.get('HTTP_HOST').split(":")[0] + ":8000" #settings.HOST_URL # get_current_site(request)
+    
     settings.ENKETO_URL = settings.ENKETO_PROTOCOL + "://" + request.META.get('HTTP_HOST').split(":")[0] + ":8005" or settings.ENKETO_URL
     settings.ENKETO_PREVIEW_URL = urljoin(settings.ENKETO_URL, settings.ENKETO_API_SURVEY_PATH + '/preview')
     settings.ENKETO_API_INSTANCE_IFRAME_URL = settings.ENKETO_URL + "api/v2/instance/iframe"
-
+    
     """
     Graph data
     """
