@@ -187,7 +187,7 @@ unicodecsv==0.14.1
 Unidecode==1.0.22
 unittest2==1.1.0
 uritemplate==3.0.0
-urllib3==1.23
+urllib3==1.24.2
 uWSGI==2.0.17
 vine==1.1.4
 virtualenv==16.0.0
