@@ -131,7 +131,7 @@ pathlib2==2.3.2
 pbr==4.0.4
 pexpect==4.6.0
 pickleshare==0.7.5
-Pillow==5.1.0
+Pillow==6.2.0
 prompt-toolkit==1.0.15
 psycopg2==2.7.5
 psycopg2-binary==2.7.5
