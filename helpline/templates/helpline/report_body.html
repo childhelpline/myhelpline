@@ -163,6 +163,8 @@ max-width:300px;
                       </td>
                       <td>{{dat.json | get_item:'case_owner' | capfirst}}</td>
                       {% for fieldx in fields %}
+
+                        
                         {% if 'select' in fieldx.type %}
                           {% with val=dat.json|get_item:fieldx.item_path  %}
                           <td class="{% if 'priority' in fieldx.name %}{{ fieldx.children | get_name:val | lower }}{% endif %}">

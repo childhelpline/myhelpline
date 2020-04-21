@@ -1,6 +1,6 @@
 {% load i18n %}
 {% load staticfiles %}
-{% load notifications_tags %}
+<!-- {% load notifications_tags %} -->
 {% load humanize %}
 {% load crispy_forms_tags %}
 {% load avatar_tags %}
@@ -185,7 +185,7 @@ input:checked + .slider:before {
               <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                 <i class="fa fa-clock-o"></i>  <span id="clock">0:00 AM</span>
               </a>
-              <ul class="dropdown-menu">
+              <!-- <ul class="dropdown-menu">
                 <li class="header">
                   {% if request.user.HelplineUser.hl_status == 'Busy' %}
                   <a href="{% url 'queue_log' %}"><i class="fa fa-circle text-danger"></i> {% trans "Busy" %}</a>
@@ -200,7 +200,7 @@ input:checked + .slider:before {
                 </li>
                 <li class="footer">
                 </li>
-              </ul>
+              </ul> -->
             </li>
 
           <!-- <li class="dropdown messages-menu">
@@ -303,25 +303,17 @@ input:checked + .slider:before {
            <!-- Menu Body -->
            <li class="user-body">
             <div class="row">
-              {% if user.is_staff %}
               <div class="col-xs-4 text-center">
-                <a href="{% url "admin:index" %}">Admin</a>
+                <!-- <a href="{% url "admin:index" %}">Admin</a> -->
+                <a href="#" class="btn btn-sm btn-primary" data-backdrop="static" data-toggle="modal" data-target="#pss-modal"> Update Password</a>
               </div>
-              {% endif %}
-                <!--div class="col-xs-4 text-center">
-                  <!-- Rounded switch ->
-<label class="switch">
-  <input type="checkbox">
-  <span class="slider round"></span>
-</label>
-</div-->
-</div>
+            </div>
 <!-- /.row -->
 </li>
 <!-- Menu Footer-->
 <li class="user-footer">
   <div class="pull-left">
-    <a href="{% url "myaccount" %}" class="btn btn-default btn-flat">Profile</a>
+    <a href="{% url 'manageusers' 'edit' user.HelplineUser.hl_key %}" class="btn btn-default btn-flat">Profile</a>
   </div>
   <div class="pull-right">
     <a href="{% url 'logout' %}" onclick="leave_queue(this)" class="btn btn-default btn-flat">Sign out</a>
@@ -489,6 +481,14 @@ input:checked + .slider:before {
             </a>
             <ul class="treeview-menu">
               <li>
+                <a href="{% url 'mysources' 'safepal' %}">
+                  <i class="fa fa-circle-o"></i>
+                  <span>{% trans "Safepal" %}</span><span class="pull-right-container">
+                  <span class="label label-info pull-right">{{ home.email }}</span>
+                </span>
+                </a>
+              </li>
+              <li>
                 <a href="{% url 'mysources' 'email' %}">
                   <i class="fa fa-circle-o"></i>
                   <span>{% trans "Emails" %}</span><span class="pull-right-container">
@@ -567,7 +567,7 @@ input:checked + .slider:before {
             <i class="fa fa-tv"></i> <span>{% trans "Wall Board" %}</span>
           </a>
         </li>
-        <li class="treeview">
+        <!-- <li class="treeview">
           <a href="{% url 'adminreports' 'callsummaryreport' %}">
             <i class="fa fa-pie-chart"></i> <span>{% trans "Settings" %}</span>
             <span class="pull-right-container">
@@ -580,7 +580,7 @@ input:checked + .slider:before {
             <li><a href="{% url 'dashboardreports' 'answeredcalls' %}"><i class="fa fa-circle-o"></i>{% trans "Hot Desk" %}
             </a></li>
           </ul>
-        </li>
+        </li> -->
         {% endif %}
 
         <li class="treeview {% block treeview_reports %}{% endblock treeview_reports %}">
@@ -606,6 +606,8 @@ input:checked + .slider:before {
             <li><a href="{% url 'general' 'emails' %}"><i class="fa fa-circle-o"></i>{% trans "Emails" %}
             </a></li>
             <li><a href="{% url 'general' 'voicemails' %}"><i class="fa fa-circle-o"></i>{% trans "Voice Mail" %}
+            </a></li>
+            <li><a href="{% url 'dashboardreports' 'disposition' 'case' %}"><i class="fa fa-circle-o"></i>{% trans "Dispositions" %}
             </a></li>
             {% endif %}
             <!-- <li><a href="{% url 'dashboardreports' 'answeredcalls' %}"><i class="fa fa-circle-o"></i>{% trans "Answered Calls" %}
@@ -688,6 +690,41 @@ input:checked + .slider:before {
 
  </div>
  <!-- ./wrapper -->
+  <!-- COMPOSE MESSAGE MODAL -->
+  <div class="modal fade" id="pss-modal" tabindex="-1" role="dialog" aria-hidden="true">
+      <div class="modal-dialog">
+          <div class="modal-content">
+              <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                  <h4 class="modal-title"><i class="fa fa-envelope-o"></i> Update</h4>
+              </div>
+              <form id="frmUpdate" action="" method="post" enctype="multipart/form-data">
+                  <div class="modal-body">
+                      <div class="form-group">
+                          <div class="input-group">
+                              <span class="input-group-addon">Password:</span>
+                              <input name="txtPass" type="password" class="form-control" id="txtPass" placeholder="Password">
+                          </div>
+                      </div>
+                      <div class="form-group">
+                          <div class="input-group">
+                              <span class="input-group-addon">Confirm Password:</span>
+                              <input name="txtPassCon" type="password" class="form-control" id="txtPassCon" placeholder="Password">
+                          </div>
+                      </div>
+                      <div class="form-group">
+                                  
+                <div class="modal-footer clearfix">
+
+                      <button type="button" class="btn btn-danger" data-dismiss="modal"><i class="fa fa-times"></i> Discard</button>
+
+                      <button type="submit" id="updateUser" name="updateUser" class="btn btn-primary pull-left"><i class="fa fa-envelope"></i> Save</button>
+                  </div>
+                   {% csrf_token %} 
+              </form>
+          </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
 
  <!-- Bootstrap 3.3.6 -->
  <script src="{% static "bootstrap/dist/js/bootstrap.min.js" %}"></script>
@@ -737,6 +774,35 @@ input:checked + .slider:before {
  {% block javascripts %}{% endblock javascripts %}
 
  <script type="application/javascript">
+
+  $('#frmUpdate').submit(function(e){
+    var frm = $(this)
+    e.preventDefault();
+
+    if($('#txtPass').val() != $('#txtPassCon').val()){
+      alert("The password do not match, kindly correct")
+      return false;
+    }
+
+    $.ajax({url:'{% url 'manageusers' 'reset' user.HelplineUser.hl_key %}',method:'POST',data:frm.serialize()})
+    .success(function(response){
+      alert("Your passwod has been successfully updated.")
+      $('.close').click();
+    })
+    .error(function(response){
+      alert("Error updating password, try again!")
+    })
+
+  })
+
+  $('#txtPass, #txtPassCon').on('keyup', function () {
+    $('.insucc').remove()
+  if ($('#txtPass').val() == $('#txtPassCon').val()) {
+    $(this).html('<span style="color:red;" class="insucc">Passwords Matching</span>');
+  } else 
+    $(this).after('<span style="color:red;" class="insucc">Passwords Not Matching</span>');
+  });
+
   $(document).ready(function () {
             //getDataQueue(); //load data on page ready :)
             // setInterval(function () {
@@ -1218,7 +1284,8 @@ function get_submissions(phone,name,param=true){
     var caseid = ''
     $.get('/helpline/caseid/{{form_name}}',function(data){
       caseid = data
-      $('#id_case_number').html("CASE NUMBER: " + caseid)
+      $('#_case_number').html("CASE NUMBER: " + caseid)
+      $('#id_case_number').val(caseid)
       $('#caseid').val(caseid) //for display and case disposition
       var url_str = !$(iframe).data('src').includes('?') ? '?d[case_number]=' + caseid + '':'&d[case_number]=' + caseid 
       url_str += '&&d[case_source]={{form_name}}&d[case_owner]={{request.user.username}}&d[owner_level]={{request.user.HelplineUser.hl_role}}'

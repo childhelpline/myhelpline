@@ -197,9 +197,13 @@ audio{
       return false
      }
     /////try pass filled form data for records
-   {% if form_name == 'call' %}
-      var dispose_form = '#disposeDet';
+    var _frm = $('#disposeDet'); //document.getElementById('disposeDet')
+    _frm.append($('#caseid'))
+    _frm.append($('#case_source'));
 
+   {% if form_name == 'call' %}
+
+      var dispose_form = '#disposeDet';
         if($(param).val() == 'Transfer'){
           $.get('get_users')
           bootbox.prompt({title:'Select user',
@@ -225,7 +229,7 @@ audio{
               //   success: function(data) {
                 $.post("{% setting "CALL_API_URL" %}/clk/cdr/",{'cdr':'{{cdr}}','case':$('#caseid').val() != '' ? $('#caseid').val() : 'False','dispose':$(param).val(),'agent':'{{request.user.HelplineUser.hl_key | safe}}','add':transfer}, function(data){
                   /////save disposition details
-                  
+                  $("#disposeDet").append('cdr','{{cdr}}')
                   $.ajax({
                     url: "{% url 'save_disposition_form' %}",
                     type:"POST",
@@ -261,11 +265,14 @@ audio{
           // data: {'cdr':'{{cdr}}','case':$('#caseid').val() != '' ? $('#caseid').val() : 'False','dispose':$(param).val(),'agent':'{{request.user.HelplineUser.hl_key | safe}}'},
           // success: function(data) {
             /////save disposition details
-          $.post("{% setting "CALL_API_URL" %}/clk/cdr/",{'cdr':'{{cdr}}','case':$('#caseid').val() != '' ? $('#caseid').val() : 'False','dispose':$(param).val(),'agent':'{{request.user.HelplineUser.hl_key | safe}}'}, function(data){
+          //$.post("{% setting "CALL_API_URL" %}/clk/cdr/",{'cdr':'{{cdr}}','case':$('#caseid').val() != '' ? $('#caseid').val() : 'False','dispose':$(param).val(),'agent':'{{request.user.HelplineUser.hl_key | safe}}'}, function(data){
+            var _cdr = '<input type="hidden" id="cdr" value="{{cdr}}"/>';
+            _frm.append($('#cdr'))
+
             $.ajax({
               url: "{% url 'save_disposition_form' %}",
               type: "POST",
-              data: $("#disposeDet").serialize(),
+              data: _frm.serialize(),
               success: function(data) {
                 if (!(data['success'])) {
                   $(dispose_form).replaceWith(data['form_html']);
@@ -281,7 +288,7 @@ audio{
             });
 
             ///
-          })
+          //})
         }
 
         {% else %}
@@ -304,8 +311,6 @@ audio{
                 $("#error-message").html("Error");
               }
             });
-
-            ///
         {% endif %}
       }
 
@@ -323,8 +328,9 @@ audio{
         <!--button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button-->
         <!-- <a href="{% url 'dashboard_home' %}" class="close" style="color:#ffffff;"><span aria-hidden="true">&times;</span></a> -->
         <h4 class="modal-title" id="myModalLabel">{% trans "Form" %} > {{ form_name }} 
-          <span id="id_case_number">{{ case }}</span>
-          <input type="hidden" id="caseid" name="" placeholder="DO NOT DELETE, FOR CASEID TO SYSTEM" />
+          <span id="_case_number">{{ case }}</span>
+          <input type="hidden" id="caseid" value="{{cdr}}" name="case_numer" placeholder="DO NOT DELETE, FOR CASEID TO SYSTEM" />
+          <input type="hidden" id="case_source" name="case_source" value="{{frm}}" placeholder="DO NOT DELETE, FOR SOURCE TO SYSTEM" />
           {% if form_name == 'call' %}<span id="phone">Caller Number: {{ caller }}</span>{% endif %}
           <span id="editedBadge"></span>
           <span class="pull-right" id="formTimer" style="font-size: 24px; color: #fff; margin-right: 30px;">00:00:00</span>
@@ -428,7 +434,7 @@ audio{
                 function(data) {
                   /////save disposition details
                   var formData = new FormData()
-                  formData.append('case_numer',$('#caseid').val())
+                  formData.append('case_number',$('#caseid').val())
                   formData.append('disposition','Complete Call')
                   formData.append('csrfmiddlewaretoken', '{{ csrf_token }}')
                   $.ajax({
@@ -450,7 +456,7 @@ audio{
               {% else %}
                  /////save disposition details
                   var formData = new FormData()
-                  formData.append('case_numer',$('#caseid').val())
+                  formData.append('case_number',$('#caseid').val())
                   formData.append('disposition','Complete Call')
                   formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
                   $.ajax({
@@ -469,7 +475,9 @@ audio{
 
                   ///
               {% endif %}
-
+              // setInterval(function(){
+              //   document.location.href = '/helpline/'
+              // },50000)
               /////
               
             sessionStorage.setItem("on_case", 0);

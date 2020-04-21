@@ -81,7 +81,7 @@
                      opens: 'left',
                      timePicker: true,
                      locale: {
-                      format: 'MM/DD/YYYY h:mm A'
+                      format: 'DD/MM/YYYY h:mm A'
                     }
 
                   }, function(start, end, label) {
@@ -119,6 +119,89 @@
           <div class="row">
             <div class="col-md-12">
               <div class="data-table-data table table-responsive">
+                <fields>{{fields}}</fields>
+                <table id="example1" class="table table-bordered table-striped dataTable">
+                  {% if fields %}
+                  <thead>
+                    <tr>
+                      <th>Case Number</th>
+                      <th>Case Owner</th>
+                      {% for field in fields %}
+                      {% if field.name != 'case_owner' and field.name != 'case_number'  %}
+                      <th>{{field.r_name}}</th>
+                      {% endif %}
+                      {% if forloop.last %}
+                      <th>Date Created</th>
+                      {% endif %}
+                      {% endfor %}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for dat in data %}
+                    <tr>
+                      <td>
+                        {% with caseid=dat.json|get_item:'_id' %}
+                        {{dat.json | get_item:'case_number' }}
+                        {% endwith %}                 
+                      </td>
+                      <td>{{dat.json | get_item:'case_owner' | capfirst}}</td>
+                      {% for fieldx in fields %}
+                        {% if fieldx.repeater %}
+                          {% with val=dat.json|get_item:fieldx.rpath  %}
+                          {% if 'select' in fieldx.type %}
+                            {% with valx=val.0|get_item:fieldx.item_path  %}
+                            <td>
+                              {{ fieldx.children|get_name:valx }}                      
+                            </td>
+                            {% endwith %} 
+                          {% else %} 
+                            <td>
+                              {{val.0|get_item:fieldx.item_path}}                     
+                            </td>
+                          {% endif %}
+                          {% endwith %}
+                        {% else %}
+                          {% if 'select' in fieldx.type %}
+                            {% with val=dat.json|get_item:fieldx.item_path  %}
+                            <td class="{% if 'priority' in fieldx.name %}{{ val | lower }}{% endif %}">
+                              {{ fieldx.children | get_name:val }}                      
+                            </td>
+                            {% endwith %}
+                          {% elif fieldx.name != 'case_number' and fieldx.name != 'case_owner' %}
+                            <td>{{dat.json | get_item:fieldx.item_path}}</td>   
+                          {% endif %}
+                          {% if forloop.last %}
+                            <td>{{dat.date_created}}</td>
+                          {% endif %}
+                        {% endif %}
+                      {% endfor %}
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <th>Case Number</th>
+                      <th>Case Owner</th>
+                      {% for field in fields %}
+                      {% if field.name != 'case_owner' and field.name != 'case_number'  %}
+                      <th>{{field.r_name}}</th>
+                      {% endif %}
+                      {% if forloop.last %}
+                      <th>Date Created</th>
+                      {% endif %}
+                      {% endfor %}
+                    </tr>
+                  </tfooter>
+                  {% else %}
+                  <thead>
+                    <tr>
+                      <th style="display: none;"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                  {% endif %}
+                </table><!-- CDCD
                 <table id="example1" class="table table-bordered table-striped dataTable">
                   {% if recordkeys %}
                   <thead>
@@ -133,7 +216,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    {% for records in statrecords %}
+                    {% for records in data %}
                     <tr>
                       <td>{{ forloop.counter }}. </td>
                       <td>{{  records | get_item:'case_number' }}</td>
@@ -174,7 +257,7 @@
                   <tbody>
                   </tbody>
                   {% endif %}
-                </table>
+                </table> -->
               </div>
               <div style="clear: both;"></div>
             </div>

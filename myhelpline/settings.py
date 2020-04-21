@@ -62,7 +62,7 @@ DEFAULT_TEMP_TOKEN_EXPIRY_TIME = 21600  # 6 hours
 SECRET_KEY = 'CHANGE_ME!!!'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = []
 
@@ -161,6 +161,9 @@ REST_FRAMEWORK = {
         'rest_framework_jsonp.renderers.JSONPRenderer',
         'rest_framework_csv.renderers.CSVRenderer',
     ),
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework.parsers.JSONParser',
+    ]
 }
 
 SWAGGER_SETTINGS = {
@@ -576,9 +579,9 @@ HOST_IP = get_ip()
 
 ENKETO_PROTOCOL = 'http'
 ENKETO_URL = ENKETO_PROTOCOL + "://" + HOST_IP + ':8005'
-HOST_URL = HOST_IP
+HOST_URL = HOST_IP + ":8000"
 
-CALL_API_URL = "http://" + HOST_IP + ":90"
+CALL_API_URL = 'http://192.168.8.200:90' # "http://" + HOST_IP + ":90"
 
 ENKETO_API_SURVEY_PATH = '/api/v2/survey'
 ENKETO_API_INSTANCE_PATH = '/api/v2/instance'
@@ -643,7 +646,7 @@ DEFAULT_SERVICE = 'Inbound'
 
 # Default dispositions.
 DISPOSITION_CHOICES = (
-    ('--', 'Dispose'),
+    ('--', '-- Select One --'),
     ('Feedback', 'Feedback'),
     ('Inquiry', 'Inquiry'),
     ('Complaint', 'Complaint'),
@@ -668,6 +671,7 @@ SITE_ID = 1
 
 # EMAIL_BACKEND = "mailer.backend.DbBackend"
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
 
 # Email will be sent to Help Desk Emails on Escalation.
 HELPDESK_EMAILS = []
@@ -694,6 +698,12 @@ HELPLINE_SPOOL_DIR = ''
 TESTING_MODE = False
 
 SLAVE_DATABASES = []
+
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'mail.bitz-itc.com'
+EMAIL_HOST_USER = 'henry.kemboi@bitz-itc.com'
+EMAIL_HOST_PASSWORD = '1350kemchen'
+EMAIL_PORT = 587
 
 try:
     from myhelpline.localsettings import *

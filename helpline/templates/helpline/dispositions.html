@@ -77,7 +77,7 @@ div.scrollmenu {
                      opens: 'left',
                      timePicker: true,
                      locale: {
-                      format: 'MM/DD/YYYY h:mm A'
+                      format: 'DD/MM/YYYY h:mm A'
                     }
                   }, function(start, end, label) {
                    console.log("A new date selection was made: " + start.format('M/DD hh:mm A') + ' to ' + end.format('M/DD hh:mm A'));
@@ -140,8 +140,20 @@ div.scrollmenu {
               <!-- /.box -->
 
             </div>
-            <div class="scrollmenu col-md-6">
-              <!-- LINE CHART -->
+            <div class="col-md-6">
+              <div>
+              {% for ds in d_data %}
+                <span style="min-width:19%;color:#fff;background-color: {{ds.color}};float:left;padding:3px 4px !important;margin:2px 1px;">{{ds.label}}</span>
+              {% endfor %} 
+              </div>
+              <div style="clear: left;"><label class="lbl lbl-success">Keys</label></div>          
+            </div>
+
+            <div class="col-md-12" style="margin-bottom: 20px; padding-bottom:50px;">
+              <div class="pull-right" style="height: 10px;"><audio id="qa_audio" controls ></audio> </div>
+            </div>
+            <!-- <div class="scrollmenu col-md-6">
+              <!-- LINE CHART ->
               <div class="box box-info">
                 <div class="box-header with-border">
                   <h3 class="box-title">Disposition Trend</h3>
@@ -157,38 +169,53 @@ div.scrollmenu {
                     <canvas id="lineChart" style="height:250px"></canvas>
                   </div>
                 </div>
-                <!-- /.box-body -->
+                <!-- /.box-body ->
               </div>
-              <!-- /.box -->
-            </div>
+              <!-- /.box ->
+            </div> -->
           </div>
         </div>
+        <div class="clearfix"></div>
         <div class="box-body">
           <div class="row">
-            
             <div class="scrollmenu col-md-12">
                 <div>
-                 
                   <table id="example1" class="table datatable">
                     <thead>
                       <th>#</th>
                       <!-- <th>Case ID</th>-->
                       <th>Case Number</th>
+                      <th>Agent</th>
                       <th>Source</th>
                       <th>Description</th>
                       <th>Date</th>
+                      <th>Listen</th>
                     </thead>
-                  {% for rep in report_data %}
-                    <tr>
-                      <td>{{ forloop.counter}}.</td>
-                      <!-- <td>{{rep.caseid | default:''}}</td> -->
+                    <tbody>
+                      {% for rep in report_data %}
+                        <tr>
+                          <td>{{ forloop.counter}}.</td>
+                          <!-- <td>{{rep.caseid | default:''}}</td> -->
 
-                      <td>{{rep.case_number | safe}}</td>
-                      <td>{{rep.case_source}}</td>
-                      <td>{{rep.case_disposition}}</td>
-                      <td>{{rep.case_time}}</td>
-                    </tr>
-                  {% endfor %}
+                          <td>{{rep.case_number | safe}}</td>
+                          <td>{{agents | get_item:rep.case_agent}}</td>
+                          <td>{{rep.case_source}}</td>
+                          <td>{{rep.case_disposition}}</td>
+                          <td>{{rep.case_time}}</td>
+                          <th><button class="listen" data-listen="{{rep.case_cdr}}" onclick="listen(this)"><i class="fa fa-volume-up"></i> Listen</button></th>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                    <tfoot>
+                      <th>#</th>
+                      <!-- <th>Case ID</th>-->
+                      <th>Case Number</th>
+                      <th>Agent</th>
+                      <th>Source</th>
+                      <th>Description</th>
+                      <th>Date</th>
+                      <th>Listen</th>
+                    </tfoot>
                     
                   </table>
                 </div>
@@ -277,8 +304,8 @@ div.scrollmenu {
       responsive: true
     };
 
-    var lineChartCanvas = $("#lineChart").get(0).getContext("2d");
-    var lineChart = new Chart(lineChartCanvas);
+    // var lineChartCanvas = $("#lineChart").get(0).getContext("2d");
+    // var lineChart = new Chart(lineChartCanvas);
 
     var lineData = {
       labels: ["January", "February", "March", "April", "May", "June", "July"],
@@ -305,8 +332,8 @@ div.scrollmenu {
         }
       ]
     };
-    lineChartOptions.datasetFill = false;
-    lineChart.Line(lineData, lineChartOptions); 
+    // lineChartOptions.datasetFill = false;
+    // lineChart.Line(lineData, lineChartOptions); 
 
 
        /*
@@ -391,6 +418,16 @@ div.scrollmenu {
      * DONUT CHART
      * -----------
      */
+
+     ////listen
+     var listen = function(ev){
+        var audi = document.getElementById('qa_audio')
+        if($(ev).data('listen') != ''){
+          audi.setAttribute('src', '{% setting 'CALL_API_URL' %}/clk/cdr/?media=' + $(ev).data('listen'));
+          audi.play();
+        }
+
+       }
 
 </script>
 {% endblock script_end  %}

@@ -1,0 +1,92 @@
+{% extends 'helpline/base.html' %}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block box %}
+{% endblock box %}
+{% block navbar_nav %}
+
+{% endblock navbar_nav %}
+
+{% block content %}
+
+    <!-- Main content -->
+    <section class="content">
+      <div class="row">
+        <!-- /.col -->
+        <div class="col-md-12">
+          <div class="box box-primary">
+            <div class="box-header with-border">
+              <h3 class="box-title">Inbox</h3>
+              <!-- /.box-tools -->
+            </div>
+            <!-- /.box-header -->
+            <div class="box-body no-padding">
+              <div class="table-responsive mailbox-messages">
+              	<table class="table table-bordered table-striped dataTable" id="example1">
+              		<thead class="hidden">
+                    <th>#</th>
+                    <th>SP Number</th>
+                    <th>Name</th>
+                    <th>Gender</th>
+                    <th>Phone</th>
+                    <th>DOB</th>
+                    <th>Case Location</th>
+                    <th>Incident Type</th>
+                    <th>CHL Number</th>
+                    <th>Status</th>
+                    <th>Incident Date</th>
+                    <th>Post Date</th>
+                    <th>Action</th>
+              		</thead>
+              		<tbody>
+              			{% for mess in data_messages %}
+              			<tr>
+              				<td>{{forloop.counter}}.</td>
+              				<td><a href="">{{ mess.unique_case_number }}</a></td>
+                      <td>{{ mess.survivor_name }}</td>
+                      <td>{{ mess.survivor_gender }}</td>
+                      <td>{{ mess.survivor_contact_phone_number }}</td>
+                      <td>{{ mess.survivor_date_of_birth }}</td>
+                      <td>{{ mess.incident_location }}</td>
+                      <td>{{ mess.incident_type }}</td>
+                      <td>{{ mess.chl_case_id }}</td>
+                      <td>{{ mess.chl_status }}</td>
+                      <td>{{ mess.incident_date_and_time }}</td>
+                      <td>{{ mess.chl_time }}</td>
+                      <td>Create Case</td>
+              			</tr>
+              			{% endfor %}
+              		</tbody>
+                  <tfoot>
+                    <tr>
+                      <th>#</th>
+                      <th>SP Number</th>
+                      <th>Name</th>
+                      <th>Gender</th>
+                      <th>Phone</th>
+                      <th>DOB</th>
+                      <th>Case Location</th>
+                      <th>Incident Type</th>
+                      <th>CHL Number</th>
+                      <th>Status</th>
+                      <th>Incident Date</th>
+                      <th>Post Date</th>
+                      <th>Action</th>
+                    </tr>
+                  </tfoot>
+              	</table>
+                <!-- /.table -->
+              </div>
+              <!-- /.mail-box-messages -->
+            </div>
+            <!-- /.box-body -->
+          </div>
+          <!-- /. box -->
+        </div>
+        <!-- /.col -->
+      </div>
+      <!-- /.row -->
+    </section>
+    <!-- /.content -->
+{% endblock %}

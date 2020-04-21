@@ -11,6 +11,11 @@ router.register(r'helplinecases', views.HelplineCaseViewSet)
 router.register(r'caseworkers', views.CaseWorkerViewSet)
 router.register(r'casemanagers', views.CaseManagerViewSet)
 router.register(r'supervisors', views.SupervisorViewSet)
+router.register(r'regions', views.RegionsViewSet)
+router.register(r'districts', views.DistrictsViewSet)
+router.register(r'wards', views.WardsViewSet)
+router.register(r'villages', views.VillagesViewSet)
+router.register(r'safepal', views.SafePalViewSet,base_name="safepal_cases")
 router.register(r'cdrlist',views.MainCdrViewSet, base_name='MainCdr')
 
 urlpatterns = [

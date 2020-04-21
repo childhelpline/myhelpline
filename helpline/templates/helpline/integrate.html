@@ -1,0 +1,189 @@
+{% extends 'helpline/base.html' %}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block box %}
+{% endblock box %}
+{% block treeview_reports %}active{% endblock treeview_reports %}
+
+{% block navbar_nav %}
+<li class="dropdown messages-menu">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+    <i class="fa fa-bookmark"></i>{% trans "Average Talk Time" %}: {{ dashboard_stats.att.hours }}:{{ dashboard_stats.att.min }}:{{ dashboard_stats.att.seconds }}
+  </a>
+</li>
+<!-- Messages: style can be found in dropdown.less-->
+<li class="dropdown messages-menu">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+    <i class="fa fa-bookmark"></i>{% trans "Average Wait Time" %}: {{ dashboard_stats.awt.hours }}:{{ dashboard_stats.awt.min }}:{{ dashboard_stats.awt.seconds }}
+  </a>
+</li>
+
+<!-- Messages: style can be found in dropdown.less-->
+<li class="dropdown messages-menu">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+    <i class="fa fa-clock-o"></i>  <span id="clock">0:00 AM</span>
+  </a>
+  <ul class="dropdown-menu">
+    <li class="header">
+      {% if request.user.chlusers.chlstatus == 'Busy' %}
+      <a href="{% url 'queue_log' %}"><i class="fa fa-circle text-danger"></i> {% trans "Busy" %}</a>
+      {% elif request.user.chlusers.chlstatus == 'Idle' %}
+      <a href="{% url 'queue_log' %}"><i class="fa fa-exclamation-triangle text-warning"></i> {% trans "Idle" %}</a>
+      {% elif request.user.chlusers.chlstatus == 'Available' %}
+      <a href="{% url 'queue_log' %}"><i class="fa fa-circle text-success"></i> {% trans "Online" %}</a>
+      {% elif request.user.chlusers.chlstatus == 'OnCall' %}
+      <a href="{% url 'queue_log' %}"><i class="fa fa-circle text-danger"></i> {% trans "OnCall" %}</a>
+      {% endif %}
+      <span id="durations"></span>
+    </li>
+    <li class="footer">
+    </li>
+  </ul>
+</li>
+
+{% endblock navbar_nav %}
+
+{% block content %}
+</head>
+<body style="font-size:12px; font-family:Helvetica,Arial,sans-serif; line-height:14px; padding:0; margin:0; color:black; background-color:white; ">
+
+<section class="content-header">
+  <h1>
+    {% trans "REPORT" %} <i class="fa fa-angle-right"></i> {{ title }}
+  </h1>
+</section>
+<!-- Main content -->
+<section class="content">
+  <div class="box">
+    <div class="box-header with-border">
+      <div class="col-md-12 report-filters">
+        <div id="form_collapse" class="in" style="height: auto;">
+          <h4>Integration Test</h4>
+        </div>
+      </div>
+    </div>
+    <div class="box-body">
+      <div class="row">
+        <div class="col-md-12 table-responsive">
+          Cheru:  {{data}}
+          <!-- <table class="table datatable table-stripped">
+            <thead>
+              <tr>
+                <th></th><th></th><th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for record in records %}
+              <tr>
+                {% for k,field in record.items %}
+                <td>{{k}}:{{field}}</td>
+                {% endfor %}
+                <!-- <td>{{forloop.counter}}</td><td>{{record}}</td> ->
+                }
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table> -->
+        </div>
+        <div class="col-md-12 table-responsive">
+          <h3>Query: </h3>
+          <!-- <table class="table datatable table-stripped">
+            <tbody>
+              <tr>
+                <td>Child Object:<br/>{{child}}</td>
+                <td>Location Object:<br/>{{token}}{{register}}</td>
+              </tr>
+              <tr>
+                <td>Guardian Object:<br/>{{parent}}</td>
+                <td>Other Object:<br/>{{other_details}}</td>
+              </tr>
+              <tr>
+                <td>Follow Ups Object:<br/>{{follow_ups}}</td>
+                <td>&nbsp;</td>
+              </tr>
+              <tr>
+                <td colspan="2">Guardian Object:<br/>{{cases}}</td>
+              </tr>
+            </tbody>
+          </table> -->
+          <!-- <div>{{fields}}</div> -->
+          <!-- <table class="table datatable table-stripped">
+            <thead>
+              <tr>
+                <th></th><th></th><th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- {% for record in records %} ->
+              <tr>
+                {% for k,field in case %}
+                <td>{{k}}:{{field}}</td>
+                {% endfor %}
+                <!-- <td>{{forloop.counter}}</td><td>{{record}}</td> ->
+                }
+              </tr>
+              <!-- {% endfor %} ->
+            </tbody>
+          </table> -->
+        </div> 
+        
+        <div class="col-md-6">
+          <!-- <table id="example1" class="table datatable table-stripped">
+            <thead>
+              <tr>
+                <th>#</th><th>Item ID</th><th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for cat in categories %}
+              <tr>
+                <td>{{forloop.counter}}.</td><td>{{cat.item_id}}</td><td>{{cat.item_description}}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table> -->
+        </div>
+
+        <div class="col-md-6">
+          Categories
+          <!-- <table class="table datatable table-stripped">
+            <thead>
+              <tr>
+                <th>#</th><th>Category</th><th>Name</th><th>Label</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for choice in choices.subcategory %}
+              <tr>
+                <td>{{forloop.counter}}.</td><td>{{choice.category}}</td><td>{{choice.name}}</td><td>{{choice.label}}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="col-md-6">
+          <h3>Locatons</h3>
+          <table id="example11" class="table table-bordered table-striped dataTable">
+            <thead>
+              <tr>
+                <th>#</th><th>ID</th><th>CODE</th><th>Name</th><th>Parent</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for location in locations %}
+              <tr>
+                <td>{{forloop.counter}}.</td><td>{{location.area_id}}</td><td>{{location.area_type_id}}</td><td>{{location.area_name}}</td><td>{{location.parent_area_id}}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>  -->
+        </div>
+      </div>
+    </div>
+    <!-- /.row -->
+  </div>
+  <!-- ./box-body -->
+</section>
+
+{% endblock content %}

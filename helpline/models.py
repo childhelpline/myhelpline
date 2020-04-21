@@ -926,6 +926,71 @@ class Cases(models.Model):
     case_source = models.CharField(max_length = 20, editable=False)
     case_time   = models.DateTimeField(auto_now_add=True)
     case_disposition = models.CharField(max_length = 100,blank=True, null=True)
+    case_cdr = models.CharField(max_length = 100,blank=True, null=True)
+    case_agent = models.IntegerField(blank=True, null=True)
+    case_id = models.CharField(max_length = 100,blank=True, null=True)
+    case_push_status = models.IntegerField(blank=True, null=True)
+
+
+# FOR CSEMA
+class Locations(models.Model):
+    """model for hierarchical locations"""
+    region_name = models.CharField(max_length = 100)
+    region_uid = models.CharField(max_length = 100)
+    district_name = models.CharField(max_length = 100)
+    district_uid =models.CharField(max_length = 100)
+    ward_name = models.CharField(max_length = 100)
+    ward_uid = models.CharField(max_length = 100)
+    village_name = models.CharField(max_length = 100)
+    village_uid = models.CharField(max_length = 100)
+    update_date = models.DateTimeField(auto_now_add=True)
+
+# FOR SAUTI
+class UCDateTimeField(models.fields.DateTimeField):
+    def pre_save(self, model_instance, add):
+        if self.auto_now or (self.auto_now_add and add):
+            value = datetime.datetime.now()
+            setattr(model_instance, self.attname, value)
+            return value
+        else:
+            value = getattr(model_instance, self.attname)
+            if not isinstance(value, datetime):
+                # assume that the value is a timestamp if it is not a datetime
+                value = datetime.fromtimestamp(int(value))
+                # an exception might be better than an assumption
+                setattr(model_instance, self.attname, value)
+            return super(UCDateTimeField, self).pre_save(model_instance, add)
+
+class SafePal(models.Model):
+    incident_report_id = models.IntegerField(blank=True, null=True)
+    survivor_name = models.CharField(blank=True, max_length = 50)
+    survivor_gender = models.CharField(blank=True,  max_length = 50)
+    survivor_contact_phone_number = models.CharField(blank=True, null=True, max_length = 50)
+    survivor_contact_email = models.CharField(blank=True, null=True, max_length = 50)
+    survivor_date_of_birth = models.DateField(blank=True, null=True)
+    unique_case_number = models.CharField(blank=True, null=True, max_length = 50)
+    incident_location = models.CharField(blank=True, null=True, max_length = 50)
+    incident_date_and_time = models.DateTimeField(blank=True, null=True)# UCDateTimeField()
+    incident_type = models.CharField(blank=True, null=True, max_length = 50)
+    incident_description = models.TextField(blank=True, null=True, max_length = 50)
+    incident_reported_by = models.CharField(blank=True, null=True, max_length = 50)
+    number_of_perpetrators = models.IntegerField(blank=True, null=True)
+    perpetrator_name = models.CharField(blank=True, null=True, max_length = 50)
+    perpetrator_gender = models.CharField(blank=True, null=True, max_length = 50)
+    perpetrator_estimated_age = models.IntegerField(blank=True, null=True)
+    perpetrator_relationship = models.CharField(blank=True, null=True, max_length = 50)
+    perpetrator_location = models.CharField(blank=True, null=True, max_length=50)
+    date_of_interview_with_cso = models.DateTimeField(blank=True, null=True)
+    chl_status = models.CharField(max_length=50,default="UNREAD")
+    chl_case_id = models.IntegerField(blank=True, null=True)
+    chl_time = models.DateTimeField(auto_now_add=True,editable=False)
+    chl_user = models.ForeignKey(
+            User,
+            on_delete=models.CASCADE,
+            blank=True, null=True
+        )
+
+
 
 def login_user(sender, request, user, **kwargs):
     user.HelplineUser.hl_status = 'Available'

@@ -14,7 +14,8 @@ import dpath
 
 import imaplib,smtplib
 import email
-from django.core.mail import send_mail
+from django.core import mail
+
 import operator
 
 from celery import Celery
@@ -26,6 +27,8 @@ import numbers
 from future.moves.urllib.parse import urljoin
 
 from datetime import timedelta, datetime, date, time as datetime_time
+import pytz
+import csv
 
 # from nameparser import HumanName
 import requests
@@ -39,11 +42,13 @@ from django.http import (HttpResponse, HttpResponseBadRequest,
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
 from django.template.context_processors import csrf
-from django.template.loader import render_to_string
-from django.db.models import (Avg,Count)
+from django.template.loader import render_to_string,get_template
+from django.template import Context
+from django.db.models import (Avg,Count,DateField)
+from django.db.models.functions import Extract,Cast
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.db.models import Q
+from django.db.models import Q,F
 from django.db.models import Sum
 from django.contrib.auth.views import login as django_login
 from django.contrib.auth.views import logout as django_logout
@@ -91,10 +96,10 @@ from onadata.libs.utils.viewer_tools import enketo_url, get_form, get_form_url
 from onadata.apps.main.models import MetaData, UserProfile
 
 from helpline.models import Report, HelplineUser,\
-        Schedule, Case, Postcode,\
+        Schedule, Case, Postcode,SafePal,\
         Service, Hotdesk, Category, Clock,\
         MainCDR, Recorder, Address, Contact,\
-        Messaging, Emails, SMSCDR, Cases
+        Messaging, Emails, SMSCDR, Cases, Locations 
 
 from django.db.models import Prefetch
 from django.contrib.contenttypes.models import ContentType
@@ -105,13 +110,15 @@ from helpline.forms import QueueLogForm,\
 
 import json
 import yaml 
+from django.core.serializers.json import DjangoJSONEncoder
 from django.template.defaulttags import register
 from onadata.apps.logger.models import Instance, XForm
 
 from onadata.libs.utils.chart_tools import build_chart_data
 from onadata.libs.utils.user_auth import (get_xform_and_perms, has_permission,
                                           helper_auth_helper)
-from api.serializers import SmsSerializer
+from api.serializers import SmsSerializer,LocationsSerializer
+from dhis2 import Api
 
 def success(request):
     return render(request, 'helpline/success.html')
@@ -122,17 +129,11 @@ def home(request):
 
     template = 'home'
 
-    if not get_dashboard_stats(request):
-        message = "Please Configure Service and assign forms"
-        return redirect('/ona/%s?message=%s' %(request.user,message))
-    else:
-        home_statistics = get_dashboard_stats(request)
-
     status_count = get_status_count()
-    case_search_form = CaseSearchForm()
-    queue_form = QueueLogForm(request.POST)
-    queue_pause_form = QueuePauseForm()
-    queues = get_data_queues()
+    # case_search_form = CaseSearchForm()
+    # queue_form = QueueLogForm(request.POST)
+    # queue_pause_form = QueuePauseForm()
+    # queues = get_data_queues()
 
     default_service = Service.objects.all().first()
 
@@ -142,6 +143,9 @@ def home(request):
         response = redirect('/ona/%s' % request.user.username)
         return response
 
+    home_statistics = get_dashboard_stats(request)
+
+
     default_service_qa = default_service.qa_xform
     default_service_auth_token = default_service_xform.user.auth_token
     current_site = settings.HOST_URL # get_current_site(request)
@@ -149,26 +153,21 @@ def home(request):
     gtdata = []
     stdata = []
     
-    url = 'http://%s/ona/api/v1/charts/%s.json?field_name=_submission_time&limit=14' % (
-        current_site,
-        default_service_xform.pk
-    )
+    # url = 'http://%s/ona/api/v1/charts/%s.json?field_name=_submission_time&limit=14&&sort={"_submission_time":-1}' % (
+    #     current_site,
+    #     default_service_xform.pk
+    # )
 
     # Set headers
     headers = {
         'Authorization': 'Token %s' % (default_service_auth_token)
     }
-
-    stat = make_request(url, headers)
+    # statistics for the last 14 days
+    stat = Instance.objects.all().annotate(_submission_time=Cast('date_created',DateField())).values('_submission_time').annotate(count=Count('id')).order_by('-_submission_time')[:14]
     
-    forloop = 0
-    if get_item(stat, 'data'):
-        for dt in get_item(stat, 'data'):
-            t = [str(get_item(dt, '_submission_time')), get_item(dt, 'count')]
-            gtdata.append(t)
-            forloop += 1
-            if forloop == 14:
-                break
+    for dt in reversed(stat):
+        t = [str(get_item(dt, '_submission_time')), get_item(dt, 'count')]
+        gtdata.append(t)
 
     stype = 'case_action'
 
@@ -226,6 +225,7 @@ def home(request):
 
     qa_stats = make_request(url_qa,headers) 
 
+
     
 
     stat_qa = 0;
@@ -247,7 +247,7 @@ def home(request):
                 {
                    'att': '',
                    'awt': '',
-                   'case_search_form': case_search_form,
+                   #    'case_search_form': case_search_form,
                    'status_count': status_count,
                    'gdata': gtdata,
                    'dt': stdata,
@@ -302,6 +302,97 @@ def sync_sms(request):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     else:
         return JsonResponse({'status':400,'message':'INVALID REQUEST'})
+
+@api_view(['GET'])
+def locations(request):
+    # fetch call report
+    today = datetime.now()
+
+    start_date = today - relativedelta(months=1)
+    month_name = start_date.strftime('%B')
+    month = int(start_date.strftime('%-m'))
+    _year = int(start_date.strftime('%Y'))
+
+    drange = calendar.monthrange(_year,month)
+
+    _start_date = '%s-%s-01' % (start_date.strftime('%Y'),start_date.strftime('%m'))
+    end_date = '%s-%s-%s' % (start_date.strftime('%Y'),start_date.strftime('%m'),drange[1])
+
+    datetime_range = '%sto%s' %(_start_date,end_date)
+
+    url = "%s/clk/cdr/?chan_ts_f=%s" % ('http://192.168.8.200:90',datetime_range)
+
+    calls = make_request(url)
+
+    if(len(calls) > 0):
+        _keys = calls[0].keys() or []
+    else:
+        _keys = []
+
+    userlist = User.objects.filter(is_active=True).select_related('HelplineUser').exclude(HelplineUser=None).values(label=F('HelplineUser__hl_key'),name=F('username'))
+
+    for call in calls:
+        call['agent'] = get_name(userlist,call['agent']) or call['agent']
+
+
+    call_csv = '%s_csema_call_report.csv' % month_name
+    case_csv = '%s_csema_case_report.csv' % month_name
+
+    with open(call_csv, mode='w') as csv_file:
+        writer = csv.DictWriter(csv_file, fieldnames=_keys)
+        writer.writeheader()
+        for call in calls:
+            writer.writerow(call)
+
+    # Process Case Report
+    default_service = Service.objects.all().first()
+    default_service_xform = default_service.walkin_xform
+    default_service_auth_token =  default_service_xform.user.auth_token
+
+    headers = {
+        'Authorization': 'Token %s' % (default_service_auth_token)
+    }
+
+    url = 'http://192.168.8.200/?query=date_created_month=1&date_created_year=2020'
+    cases = make_request(url,headers)
+    cispositions = Instance.objects.all().values()[:30] # Cases.objects.all().values().order_by('-id')[:14]
+    dispositions = json.dumps(list(cispositions),cls=DjangoJSONEncoder)    
+    fields = [str(f.get_attname()) for f in Instance._meta.fields]
+
+    mail_body = "Dear Sir/Madan , \n  Find the monthly report for last month as attahed. Regards, \n\n NB: This is a system generated mail, do not reply."
+
+    html_body = get_template('helpline/mail_template.html')
+    report = Context({
+              'name':month_name,
+              'text':mail_body
+                })
+    html_content = html_body.render({
+              'name':month_name,
+              'text':mail_body
+                })
+
+    with open(case_csv, mode='w') as csv_file:
+        writer = csv.DictWriter(csv_file, fieldnames=fields)
+        writer.writeheader()
+        for case in cispositions:
+            writer.writerow(case)
+
+    try:
+        with mail.get_connection() as connection:
+       	    el =  mail.EmailMultiAlternatives(
+                "Monthly CSEMA Report",mail_body, "henry.kemboi@bitz-itc.com", ["kemboicheru@gmail.com"],
+                connection=connection
+            )
+            el.attach_file(case_csv)
+            el.attach_file(call_csv)
+	    el.attach_alternative(html_content,'text/html')
+            el.send()
+    except Exception as e:
+        print("Error: %s " % e)
+
+    return HttpResponse('{"status":"OK","messaeg":"Sent"}', content_type="application/json",status=status.HTTP_200_OK)
+
+
 
 def sync_emails(request):
     message = {'message':'', 'count':0}
@@ -423,9 +514,14 @@ def manage_users(request,action=None,action_item=None):
         elif action == 'reset':
             
             try:
-               action_user.set_password(action_user.username) 
-               action_user.save()
-               return HttpResponse("Successfully Reset password",status=status.HTTP_201_CREATED)
+                if request.is_ajax():
+                    new_pass=request.POST.get('txtPass') or action_user.username
+                else:
+                    new_pass = action_user.username
+                    
+                action_user.set_password(new_pass) 
+                action_user.save()
+                return HttpResponse("Successfully Reset password",status=status.HTTP_201_CREATED)
             except Exception as e:
                 return HttpResponse(e,status=status.HTTP_501_NOT_IMPLEMENTED)
         elif action == 'edit':
@@ -503,17 +599,20 @@ def increment_case_number():
         return 100001
     else:
         return int(case.case_number) + int(1)
-def get_case_number(case_source):
+def get_case_number(case_source,agent):
     case = Cases()
     caseid = increment_case_number()
     case.case_number = caseid
     case.case_source = case_source
+    case.case_agent = agent
+
     case.save()
     return caseid
 
 @login_required
 def case_number(request, case_source):
-    caseid = get_case_number(case_source)
+    agent = request.user.HelplineUser.hl_key
+    caseid = get_case_number(case_source,agent)
     return HttpResponse(caseid)
 @login_required
 def available_users(request):
@@ -586,8 +685,6 @@ def new_user(request):
                 profile_form = RegisterProfileForm(request.POST, request.FILES)
                 messages.append('Error saving user: %s' % (e))
 
-
-            print("%s Cheru: %s " %(uploaded_file_url, messages))
         else:
             # messages.error(request, "Error")
             messages.append("Invalid form")
@@ -837,16 +934,24 @@ def faq(request):
     return render(request, 'helpline/callform.html')
 
 @register.filter
-def get_name(arr,name):
+def get_name(arr,name,label='label'):
     ret_val = ''
     if(isinstance(arr,list)) and name != '':
         for ar in arr:
             if ar.get('name',"")==name:
-                ret_val = ar.get('label',"")
+                ret_val = ar.get(label,"")
     elif(isinstance(arr,dict)):
         ret_val = arr.get(name,'')
     return ret_val
 
+@register.filter
+def break_name(name,splitter="_"):
+    ret_val = name.split("/")
+    if name[:1] != "_":
+        ret_val = ret_val[len(ret_val) -1].replace("_"," ").title()
+    else:
+        ret_val = False
+    return ret_val
 @register.filter
 def get_item(dictionary, key):
     if isinstance(dictionary,dict):
@@ -855,7 +960,21 @@ def get_item(dictionary, key):
         dic = yaml.load(dictionary)
         return dic.get(key, "")
     else:
-        return None
+        return ""
+
+@register.filter
+def get_object(dictionary, key,val):
+    ret_val = []
+
+    if isinstance(dictionary,dict):
+        for dic in dictionary.items():
+            if str(dic[key]) == val:
+                ret_val = dic
+    elif isinstance(dictionary,list):
+        for dic in dictionary:
+            if str(dic[key]).lower() == str(val).lower():
+                ret_val = dic
+    return ret_val
 
 @register.filter
 def split(str_val, key):
@@ -879,7 +998,6 @@ def timestamp(value):
 @login_required
 def caseview(request, form_name, case_id):
     """View case or submission information"""
-
     default_service = Service.objects.all().first()
     default_service_xform = default_service.walkin_xform
     default_service_auth_token =  default_service_xform.user.auth_token
@@ -889,6 +1007,7 @@ def caseview(request, form_name, case_id):
     walkin_metadata = MetaData.objects.filter(content_type__pk=ct.id, object_id=default_service_xform.pk)
     
     _meta = {}
+    data = {}
     for _met in walkin_metadata:
         _meta.update({str(_met.data_value):str(_met.data_file)})
 
@@ -903,17 +1022,16 @@ def caseview(request, form_name, case_id):
     }
 
 
-    data = {}
     rec = default_service_xform.json
     prop_recs = yaml.load(str(rec))[u'children']
     prop_choices = yaml.load(str(rec))[u'choices']
+    
+    data['choices'] = prop_choices
 
-    data['fld'] = yaml.load(str(rec))[u'children']
     rec_rows = []
     item_path = ''
     level_path = {}
 
-    repeater = False
     def fill_children(child,level_key,_child=False):
         n = ''
         other_headers = ['group','repeat']
@@ -926,7 +1044,6 @@ def caseview(request, form_name, case_id):
 
             if rows.get('type',False) and rows.get('type',False) in other_headers:
                 repeater = True if rows.get('type',False) == 'repeat' else False
-                level_path.update({'repeater%s' %ix:repeater})
 
                 if level_key == "":
                     level_path.update({ix:rows.get('name',"")})
@@ -935,12 +1052,20 @@ def caseview(request, form_name, case_id):
                         x_p = "%s/%s" %(level_key,rows.get('name',""))
                     else:
                         x_p = "%s/%s" %(level_path.get(ix,""),rows.get('name',""))
-                    level_path.update({ix:x_p}) 
-                
+                    level_path.update({ix:x_p})
+
+                if level_key == "":
+                    _k = '%s'%rows.get("name","")
+                else:
+                    _k = '%s/%s' %(level_key,rows.get("name",""))
+                level_path.update({'repeater%s' %_k:repeater})
+
                 if(repeater):
                     level_path.update({'rpath%s' %ix:level_path.get(ix,False)})
-
-                fill_children(rows.get('children',[]),level_path.get(ix,""),ix)                        
+                    __rows = {'item_path':_k,'repeater':True,'r_name':rows.get("name").replace('_', ' ').capitalize(),'rpath':_k}
+                    rec_rows.append(__rows)
+                else:
+                    fill_children(rows.get('children',[]),level_path.get(ix,""),ix)                        
             else:
                 if rows.get('name',False):
                     n = rows.get('name','')
@@ -949,18 +1074,19 @@ def caseview(request, form_name, case_id):
                 if level_key != "":
                     n = "/%s" %n
                 item_path = "%s%s" %(str(level_key),str(n))
-                rows.update({'item_path':item_path,'repeater':level_path.get('repeater%s'%ix,False),'rpath':level_path.get('rpath%s'%ix,False)})
+
+                rows.update({'item_path':item_path,'repeater':level_path.get('repeater%s'%level_key,False),'rpath':level_path.get('rpath%s'%ix,False)})
                 item_path = ''
 
                 if rows.get('itemset',False) and '.csv' in rows['itemset']:
                     k_n = rows['itemset']
                     fl_path = _meta.get(k_n,k_n)
+
                     options = dict_from_csv(request,fl_path,default_service_xform.user.username) or []
                     rows.update({'children':options})
                 elif rows.get('itemset',False) and not '.csv' in rows['itemset']:
                     options = prop_choices.get(rows.get('itemset',''),[])
                     rows.update({'children':options})
-
                 rec_rows.append(rows)
 
     fill_children(prop_recs,"")
@@ -973,6 +1099,7 @@ def caseview(request, form_name, case_id):
     request_string = ''
 
     _url = url + case_id + request_string
+
     stat = make_request(_url,headers)
     
     _url = url + case_id + '/history'
@@ -1030,7 +1157,9 @@ def general_reports(request, report='cases'):
     if agent != '' and agent > 0:
         agent = User.objects.get(pk=agent)
         agent = agent.username
-    
+    else:
+        agent = request.user.username
+        
     dashboard_stats = get_dashboard_stats(request)
     report_title = {report: _(str(report).capitalize() + " Reports")}
 
@@ -1144,26 +1273,26 @@ def general_reports(request, report='cases'):
                     dict(zip([col[0] for col in desc], row)) 
                     for row in cursor.fetchall() 
             ]
-        def dict_from_csv(csv_file,form_user):
-            file_path = str('%s/%s' %(settings.MEDIA_ROOT,csv_file))
+        # def dict_from_csv(csv_file,form_user):
+        #     file_path = str('%s/%s' %(settings.MEDIA_ROOT,csv_file))
 
-            if(os.path.isfile(file_path)):
-                file_path = open(file_path, mode='r')
+        #     if(os.path.isfile(file_path)):
+        #         file_path = open(file_path, mode='r')
 
-                with  file_path as csv_file:
-                    csv_reader = csv.reader(csv_file,delimiter=',', quotechar='"')
+        #         with  file_path as csv_file:
+        #             csv_reader = csv.reader(csv_file,delimiter=',', quotechar='"')
 
-                    return dict((rows[0],rows[1]) for rows in csv_reader)
-            else:
-                url= str("http://%s/api/v1/%s" %(current_site,csv_file))
-                webpage = urllib.urlopen(url)
-                datareader = csv.DictReader(webpage)
+        #             return dict((rows[0],rows[1]) for rows in csv_reader)
+        #     else:
+        #         url= str("http://%s/api/v1/%s" %(current_site,csv_file))
+        #         webpage = urllib.urlopen(url)
+        #         datareader = csv.DictReader(webpage)
 
-                #Creating empty list to be inserted.
-                data = []
-                for row in datareader:
-                    data.append(row)
-                return data
+        #         #Creating empty list to be inserted.
+        #         data = []
+        #         for row in datareader:
+        #             data.append(row)
+        #         return data
 
         rec = default_service_xform.json
         prop_recs = yaml.load(str(rec))[u'children']
@@ -1185,7 +1314,6 @@ def general_reports(request, report='cases'):
 
                 if rows.get('type',False) and rows.get('type',False) in other_headers:
                     repeater = True if rows.get('type',False) == 'repeat' else False
-                    level_path.update({'repeater%s' %ix:repeater})
 
                     if level_key == "":
                         level_path.update({ix:rows.get('name',"")})
@@ -1194,12 +1322,20 @@ def general_reports(request, report='cases'):
                             x_p = "%s/%s" %(level_key,rows.get('name',""))
                         else:
                             x_p = "%s/%s" %(level_path.get(ix,""),rows.get('name',""))
-                        level_path.update({ix:x_p}) 
-                    
+                        level_path.update({ix:x_p})
+
+                    if level_key == "":
+                        _k = '%s'%rows.get("name","")
+                    else:
+                        _k = '%s/%s' %(level_key,rows.get("name",""))
+                    level_path.update({'repeater%s' %_k:repeater})
+
                     if(repeater):
                         level_path.update({'rpath%s' %ix:level_path.get(ix,False)})
-
-                    fill_children(rows.get('children',[]),level_path.get(ix,""),ix)                        
+                        __rows = {'item_path':_k,'repeater':True,'r_name':rows.get("name").replace('_', ' ').capitalize(),'rpath':_k}
+                        rec_rows.append(__rows)
+                    # else:
+                    fill_children(rows.get('children',[]),level_path.get(ix,""),ix)                       
                 else:
                     if rows.get('name',False):
                         n = rows.get('name','')
@@ -1208,13 +1344,14 @@ def general_reports(request, report='cases'):
                     if level_key != "":
                         n = "/%s" %n
                     item_path = "%s%s" %(str(level_key),str(n))
-                    rows.update({'item_path':item_path,'repeater':level_path.get('repeater%s'%ix,False),'rpath':level_path.get('rpath%s'%ix,False)})
+                    rows.update({'item_path':item_path,'repeater':level_path.get('repeater%s'%level_key,False),'rpath':level_path.get('rpath%s'%ix,False)})
                     item_path = ''
 
                     if rows.get('itemset',False) and '.csv' in rows['itemset']:
                         k_n = rows['itemset']
                         fl_path = _meta.get(k_n,k_n)
-                        options = dict_from_csv(fl_path,default_service_xform.user.username) or []
+
+                        options = dict_from_csv(request,fl_path,default_service_xform.user.username) or []
                         rows.update({'children':options})
                     elif rows.get('itemset',False) and not '.csv' in rows['itemset']:
                         options = prop_choices.get(rows.get('itemset',''),[])
@@ -1232,14 +1369,11 @@ def general_reports(request, report='cases'):
         recs = ''
         # get data 
         with connection.cursor() as cursor:
-                # query = "SELECT date_created,json from logger_instance where xform_id = '%s' \
-                # %s " %(str(default_service_xform.pk),request_string)
                 query = "SELECT date_created,json from logger_instance where xform_id = '{0}' {1}".format(default_service_xform.pk,request_string) # %(str(default_service_xform.pk),request_string)
                 cursor.execute(query)
                 recs = dictfetchall(cursor)
 
-        data['data'] = recs # yaml.load(str(rec[0]['json']))
-        htmltemplate = 'helpline/pivot.html'
+        data['data'] = recs 
 
 
     
@@ -1249,7 +1383,6 @@ def general_reports(request, report='cases'):
         data['report_data'] = filter(lambda _call_data: _call_data['voicemail'], call_data)
     elif htmltemplate == '':
         htmltemplate = "helpline/report_body.html"
-
     return render(request, htmltemplate, data)
 
 def namedtuplefetchall(cursor):
@@ -1268,9 +1401,13 @@ def dict_from_csv(request,csv_file,form_user):
         file_path = open(file_path, mode='r')
 
         with  file_path as csv_file:
-            csv_reader = csv.reader(csv_file,delimiter=',', quotechar='"')
-
-            return dict((rows[0],rows[1]) for rows in csv_reader)
+            csv_reader = csv.DictReader(csv_file,delimiter=',', quotechar='"')
+            data = []
+            for row in csv_reader:
+                data.append(row)
+            return data
+            # return dict((k,v) for k,v in csv_reader)
+            # return dict((rows[0],rows[1]) for rows in csv_reader)
     else:
         url= str("http://%s/api/v1/%s" %(current_site,csv_file))
         webpage = urllib.urlopen(url)
@@ -1289,6 +1426,13 @@ def reports(request, report, casetype='Call'):
     
     agent = request.GET.get("agent") or ''
 
+
+    agents = User.objects.filter().only("username", "HelplineUser__hl_key").exclude(HelplineUser=None).select_related('HelplineUser')
+    
+    agent_list = {}
+    map(lambda x: agent_list.update({x.HelplineUser.hl_key:str(x.username)}), agents)
+
+
     category = request.GET.get("category", "")
     form = ReportFilterForm(request.GET)
 
@@ -1306,7 +1450,8 @@ def reports(request, report, casetype='Call'):
             'form': form,
             'datetime_range': datetime_range,
             'home': home_statistics,
-            'query': query
+            'query': query,
+            'agents':agent_list
         }
     case_start = '';
     case_end = ''
@@ -1400,25 +1545,21 @@ def reports(request, report, casetype='Call'):
             # data['report_data'] = call_data
             htmltemplate = "helpline/voicemails.html"
 
-        agents = User.objects.filter().only("username", "HelplineUser__hl_key").exclude(HelplineUser=None).select_related('HelplineUser')
-        
-        agent_list = {}
-        agents = map(lambda x: agent_list.update({'%s'%x.HelplineUser.hl_key:str(x.username)}), agents)
-
-        data['agents'] = agent_list
         data['report_data'] = call_data
         data['urls'] = calls_url
     else:
+        htmltemplate = ''
         """Report processing and rendering"""
         default_service = Service.objects.all().first()
         default_service_xform = default_service.walkin_xform
         default_service_auth_token = default_service_xform.user.auth_token
-        current_site = settings.HOST_URL # get_current_site(request)
+        current_site = settings.HOST_URL
 
         ct = ContentType.objects.get_for_model(default_service_xform)
         walkin_metadata = MetaData.objects.filter(content_type__pk=ct.id, object_id=default_service_xform.pk)
         
         _meta = {}
+        _agent = False
         for _met in walkin_metadata:
             _meta.update({str(_met.data_value):str(_met.data_file)})
 
@@ -1426,8 +1567,8 @@ def reports(request, report, casetype='Call'):
         data['xform'] = default_service_xform
 
         if agent != '' and agent > 0:
-            agent = User.objects.get(pk=agent)
-            agent = agent.username
+            _agent = User.objects.get(pk=agent)
+            agent = _agent.username
         elif request.user.HelplineUser.hl_role.lower() == 'counsellor':
             agent = request.user.username
 
@@ -1489,12 +1630,26 @@ def reports(request, report, casetype='Call'):
             if request.user.HelplineUser.hl_role.lower() == 'casemanager':
                 request_string += " and json->>'case_owner' = '{0}' or json->>'case_actions/escalate_casemanager'='{0}'".format(username)
 
-        htmltemplate = ''
-        # report = {}
-
         if report == 'disposition':
-            dispositions = Cases.objects.all().filter(case_number__gt=0,case_source="walkin")
-            chart_data = Cases.objects.all().exclude(case_source='').exclude(case_disposition=None).filter(case_number__gt=0).values('case_disposition').annotate(case_count=Count('case_number'))
+            tzone = pytz.timezone("Africa/Nairobi")
+            start_dates,end_dates = [datetime_range.split("-")[0],datetime_range.split("-")[1]]
+            dt_str = {}
+
+            if start_dates == end_dates:
+                _st = datetime.strptime(start_dates,'%Y/%m/%d')
+                dt_str['case_time__gte']= datetime.strftime(_st,'%Y-%m-%d')
+            else:
+                _st = datetime.strptime(start_dates,'%Y/%m/%d')
+                _nd = datetime.strptime(end_dates,'%Y/%m/%d')
+
+                dt_str['case_time__gte']= tzone.localize(_st)
+                dt_str['case_time__lte']= tzone.localize(_nd)
+
+            if(_agent):
+                dt_str['case_agent'] = _agent.HelplineUser.hl_key
+
+            dispositions = Cases.objects.filter(**dt_str)
+            chart_data = Cases.objects.all().filter(**dt_str).values('case_disposition').annotate(case_count=Count('case_number'))
             
             d_data = []
             color = ['#CD5C5C','#000000','#8A2BE2','#A52A2A','#DEB887','#ADD8E6','#F08080','#90EE90','#F0E68C','#FFB6C1', \
@@ -2305,7 +2460,7 @@ def case_edit(request, form_name, case_id):
     
     settings.ENKETO_URL = settings.ENKETO_PROTOCOL + "://" + request.META.get('HTTP_HOST').split(":")[0] + ":8005" or settings.ENKETO_URL
     settings.ENKETO_PREVIEW_URL = urljoin(settings.ENKETO_URL, settings.ENKETO_API_SURVEY_PATH + '/preview')
-    settings.ENKETO_API_INSTANCE_IFRAME_URL = settings.ENKETO_URL + "api/v2/instance/iframe"
+    settings.ENKETO_API_INSTANCE_IFRAME_URL = settings.ENKETO_URL + "/api/v2/instance/iframe"
     
     """
     Graph data
@@ -2316,16 +2471,26 @@ def case_edit(request, form_name, case_id):
 
     uri = 'http://%s/ona/api/v1/data/%s/%s'% (current_site, default_service_xform.pk, case_id)
     dat = make_request(uri,headers,{})
-
     
     case_number = dat.get('case_number','')
 
-    url = 'http://%s/ona/api/v1/data/%s/%s/enketo?return_url=http://%s/helpline/success/&format=json&d[owner_level]=Supervisor' \
-    % (current_site, default_service_xform.pk, case_id, current_site)
+    headers =  {'auth':(settings.ENKETO_API_TOKEN,'')}
 
-    req = make_request(url,headers,{})
-    
-    return render(request,'helpline/case_form_edit.html', {'case':case_number, 'iframe_url':get_item(req, 'url'),\
+    form_url = get_form_url(request, default_service_xform.user.username, settings.ENKETO_PROTOCOL)
+
+    instance = default_service_xform.instances.filter(pk__exact=case_id)
+
+    data = {
+      'server_url': form_url,
+      'form_id': default_service_xform.id_string,
+      'instance': instance[0].xml,
+      'instance_id': instance[0].uuid,
+      'return_url': current_site + "/helpline/success/"
+    }
+
+    req = requests.post(settings.ENKETO_API_INSTANCE_IFRAME_URL, data=data, auth=(settings.ENKETO_API_TOKEN, '')).json()
+
+    return render(request,'helpline/case_form_edit.html', {'case':case_number, 'iframe_url':get_item(req, 'edit_url'),\
         'owner_role':request.user.HelplineUser.hl_role})
 
 class DashboardTable(tables.Table):
@@ -2594,21 +2759,41 @@ def save_disposition_form(request):
     status = False
     try:
         form = DispositionForm(request.POST or None)
-        case_num = request.POST.get('case_number') or '0'
-        if form.is_valid():
-            if case_num != '0':
-                case = Cases.objects.get(case_number=form.cleaned_data['case_number'])
+
+        if form.is_valid() or request.is_ajax():
+
+            if request.is_ajax():
+                case_num=request.POST.get('case_number')
+                disp=request.POST.get('disposition')
+                source=request.POST.get('case_source')
+                cdr = request.POST.get('case_numer')
+            else:
+                case_num=form.cleaned_data['case_number'] or None
+                disp=form.cleaned_data['disposition'] or None
+                source=form.cleaned_data['case_source'] or None
+                cdr=form.cleaned_data['case_numer'] or None
+
+            if case_num != None and case_num != '0':
+                case = Cases.objects.get(case_number=case_num)
                 ctx = {}
                 ctx.update(csrf(request))
                 form_html = render_crispy_form(form, context=ctx)
             else:
                 case = Cases()
-                status_message = 'Complete Case'
-            case.case_disposition = form.cleaned_data['disposition']
+                case.case_source = source
+                # status_message = 'Complete Case'
+
+            case.case_disposition = disp
+            case.case_cdr = cdr
+            case.case_agent = request.user.HelplineUser.hl_key
             case.save()
+
             request.user.HelplineUser.hl_status = 'Available'
             request.user.HelplineUser.save()
             status = True
+
+            if(disp == 'Complete Call') and case_num > 0:
+                send_external(request,case_num)
         else:
             status = False
             status_message = 'Error: Invalid form'
@@ -2787,11 +2972,6 @@ def get_dashboard_stats(request, interval=None,wall=False):
 
     form_choices = yaml.load(default_service_xform.json)['choices']
 
-    _url = 'http://%s/ona/api/v1/forms/%s.json' % (current_site, default_service_xform.pk)
-
-    form_details = {"submission_count_for_today":0,"num_of_submissions":0}
-    form_details = make_request(_url,headers,form_details)
-    
 
     # date time
     midnight_datetime = datetime.combine(
@@ -2808,9 +2988,10 @@ def get_dashboard_stats(request, interval=None,wall=False):
         request_string += " and CAST(date_created AS DATE) = '{0}'".format(date_time.strftime('%Y-%m-%d'))
         r_string = " and CAST(date_created AS DATE) = '{0}'".format(date_time.strftime('%Y-%m-%d'))
 
-
     home_statistics = {'all_calls':0,'high_priority':0,'escalate':0,'closed':0,'pending':0,'total':0,'call_stat':'',\
-    'midnight': midnight,'midnight_string': midnight_string,'now_string': now_string,'today':form_details['submission_count_for_today'],"total_submissions":form_details['num_of_submissions']}
+    'midnight': midnight,'midnight_string': midnight_string,'now_string': now_string,\
+'today':default_service_xform.submission_count_for_today,\
+"total_submissions":default_service_xform.num_of_submissions}
     
     # SMS stats
     home_statistics['total_sms'] = SMSCDR.objects.filter(sms_time__date=datetime.today()).count()
@@ -2834,11 +3015,10 @@ def get_dashboard_stats(request, interval=None,wall=False):
     _url = '%s/clk/stats/%s' %(settings.CALL_API_URL,query_string)
 
     call_statistics = make_request(_url,{},{})
-
-    all_calls = make_request('%s/clk/cdr/' %(settings.CALL_API_URL))
+    # all_calls = make_request('%s/clk/cdr/' %(settings.CALL_API_URL))
     
     home_statistics.update({'call':call_statistics})
-    home_statistics.update({'all_calls':len(all_calls)})
+    # home_statistics.update({'all_calls':len(all_calls)})
 
     #CASE STATS
     with connection.cursor() as cursor:
@@ -2860,7 +3040,7 @@ def get_dashboard_stats(request, interval=None,wall=False):
             else:
                 home_statistics['total'] += row['case_count']
 
-    if not wall and (request.user.HelplineUser.hl_role.lower() == 'caseworker' or request.user.HelplineUser.hl_role.lower() == 'casemanager'):
+    if (request.user.HelplineUser.hl_role.lower() == 'caseworker' or request.user.HelplineUser.hl_role.lower() == 'casemanager'):
         home_statistics['total_submissions'] = _tot
 
         #CASE STATS WITH PRIORITY
@@ -2884,10 +3064,9 @@ def get_dashboard_stats(request, interval=None,wall=False):
 
     return home_statistics
 
-
-def make_request(url,headers={},return_item=[]):
+def make_request(url,headers={},return_item=[],data={}):
     try:
-        return_item = requests.get(url,headers=headers).json()
+        return_item = requests.get(url,headers=headers,data=data).json()
     except Exception as e:
         print("%s Error: %s " %(url,e))
     return return_item
@@ -3413,7 +3592,6 @@ def pivot(request):
                     # rows.update({'children':options})
                 elif rows.get('itemset',False) and not '.csv' in rows['itemset']:
                     options = prop_choices.get(rows.get('itemset',''),[])
-                    # rows.update({'children':options})
                 if (rows.get('type',False) and 'select one' in rows.get('type','').lower()):
                     rec_rows.append(rows)
 
@@ -3421,6 +3599,833 @@ def pivot(request):
 
     report = {'data':[],'call_url':settings.CALL_API_URL,'fields':rec_rows}
     return render(request, 'helpline/pivot.html',report)
+
+
+def send_external_clk(request,case_number=112444):
+    default_service = Service.objects.all().first()
+    default_service_xform = default_service.walkin_xform
+
+    ct = ContentType.objects.get_for_model(default_service_xform)
+    walkin_metadata = MetaData.objects.filter(content_type__pk=ct.id, object_id=default_service_xform.pk)
+
+    _meta = {}
+    data = {}
+    for _met in walkin_metadata:
+        _meta.update({str(_met.data_value):str(_met.data_file)})
+    recs = ''
+
+
+    ####################################################################
+    def dictfetchall(cursor): 
+        "Returns all rows from a cursor as a dict" 
+        desc = cursor.description 
+        return [
+                dict(zip([col[0] for col in desc], row)) 
+                for row in cursor.fetchall() 
+        ]
+
+    rec = default_service_xform.json
+
+    prop_recs = yaml.load(str(rec))[u'children']
+
+    prop_choices = yaml.load(str(rec))[u'choices']
+    rec_rows = []
+    item_path = ''
+    level_path = {}
+
+    repeater = False
+
+    def fill_children(child,level_key,_child=False):
+        n = ''
+        other_headers = ['group','repeat']
+        ix = 0;
+        for rows in child:
+            if _child:
+                ix = _child
+            else:
+                ix += 1   
+
+            if rows.get('type',False) and rows.get('type',False) in other_headers:
+                repeater = True if rows.get('type',False) == 'repeat' else False
+                level_path.update({'repeater%s' %ix:repeater})
+
+                if level_key == "":
+                    level_path.update({ix:rows.get('name',"")})
+                else:
+                    if(level_path.get(ix,"") == ""):
+                        x_p = "%s/%s" %(level_key,rows.get('name',""))
+                    else:
+                        x_p = "%s/%s" %(level_path.get(ix,""),rows.get('name',""))
+                    level_path.update({ix:x_p}) 
+                
+                if(repeater):
+                    level_path.update({'rpath%s' %ix:level_path.get(ix,False)})
+
+                fill_children(rows.get('children',[]),level_path.get(ix,""),ix)                        
+            else:
+                if rows.get('name',False):
+                    n = rows.get('name','')
+
+                rows.update({'r_name':n.replace('_', ' ').capitalize()})
+                if level_key != "":
+                    n = "/%s" %n
+                item_path = "%s%s" %(str(level_key),str(n))
+                rows.update({'item_path':item_path,'repeater':level_path.get('repeater%s'%ix,False),'rpath':level_path.get('rpath%s'%ix,False)})
+                item_path = ''
+
+                if rows.get('itemset',False) and '.csv' in rows['itemset']:
+                    k_n = rows['itemset']
+                    fl_path = _meta.get(k_n,k_n)
+                    options = dict_from_csv(request,fl_path,default_service_xform.user.username) or []
+                    rows.update({'children':options})
+                elif rows.get('itemset',False) and not '.csv' in rows['itemset']:
+                    options = prop_choices.get(rows.get('itemset',''),[])
+                    rows.update({'children':options})
+
+                # if (rows.get('type',False) and rows.get('type',False) == 'hidden') or (rows.get('bind',False) and rows['bind'].get('required',False) and str(rows['bind']['required']).lower() == 'yes') and not rows['repeater'] or rows.get('name','') == 'reporter_phone' or  rows.get('name','') == 'reporter_county':
+                rec_rows.append(rows)
+
+    fill_children(prop_recs,"")
+    data['fields'] = rec_rows
+
+    recs = ''
+    ####################################################################
+
+    with connection.cursor() as cursor:
+        query = "SELECT json from logger_instance where xform_id = '{0}' AND json->>'case_number' = '{1}'".format(default_service_xform.pk,case_number)
+        # query = "SELECT json from logger_instance where xform_id = '{0}' AND id=3120".format(default_service_xform.pk,case_number)
+        cursor.execute(query)
+        recs = dictfetchall(cursor)
+
+
+    instance = recs[0][u'json'] # yaml.load(str(recs[0]))[u'json']
+    # _locations = dict_from_csv(request,fl_paths.get('reporter_county',fl_paths.get('client_county',"")),default_service_xform.user.username)
+    
+    # Build push objects
+    # BIO DATA - Child
+    if instance.get('case_category/if_client',False) and instance.get('case_category/if_client').lower() == 'yes':
+        f_name = get_name(rec_rows,'name','item_path')
+        o_names = get_name(rec_rows,'other_names','item_path')
+        sex = get_name(rec_rows,'sex','item_path')
+        dob = False
+        c_tribe = get_name(rec_rows,'reporter_tribe','item_path')
+
+
+
+        c_county = get_name(rec_rows,'reporter_county','item_path')
+        c_scounty = get_name(rec_rows,'reporter_sub_county','item_path')
+        c_ward = get_name(rec_rows,'reporter_sub_ward','item_path')
+        c_location = get_name(rec_rows,'reporter_location','item_path')
+        _locations = get_name(rec_rows,'reporter_county','children')
+    else:
+        f_name = get_name(rec_rows,'client_name','item_path')
+        o_names = get_name(rec_rows,'other_client_name','item_path')
+        sex = get_name(rec_rows,'client_sex','item_path')
+        dob = get_name(rec_rows,'client_dob','item_path')
+        c_tribe = get_name(rec_rows,'client_tribe','item_path')
+
+
+        c_county = get_name(rec_rows,'client_county','item_path')
+        c_scounty = get_name(rec_rows,'client_sub_county','item_path')
+        c_ward = get_name(rec_rows,'client_ward','item_path')
+        c_location = get_name(rec_rows,'client_location','item_path')
+        _locations = get_name(rec_rows,'client_county','children')
+
+    _age_y = get_name(rec_rows,'client_age','item_path')
+    _age_m = get_name(rec_rows,'client_month_age','item_path')
+
+    _name = instance.get(f_name,"").split(" ")
+    _dob = instance.get(dob,False) if dob else False
+
+    _child = {'first_name':_name[0] if len(_name) >= 1 else "",'second_name':_name[1] if len(_name) >= 2 else "",'other_names':str(instance.get(o_names,"")),'sex':str(instance.get(sex,"")),'dob':str(_dob)}
+    
+
+    # Guardian Details
+    g_name = c_location = get_name(rec_rows,'guardian_name','item_path')
+    g_name = _name = instance.get(g_name,"").split(" ")
+
+    _parent = {'first_name':g_name[0] if len(g_name) >= 1 else "",'second_name':g_name[1] if len(g_name) >= 2 else "",'other_names':'','sex':'','dob':''}
+
+    # Location Details
+    _location = {'county':instance.get(c_county,""),'sub_county':instance.get(c_scounty,""),'ward':instance.get(c_ward,""),'location':instance.get(c_location,"")}
+
+    # Other Details
+    _other_details = {'given_name':'','tribe':instance.get(c_tribe,"") if c_tribe else "",'country':'','religion':'','guardian_relationship':''}
+
+    # Case Details
+
+    _c_name = get_name(rec_rows,'name','item_path')
+    _c_o_names = get_name(rec_rows,'other_names','item_path')
+    _c_sex = get_name(rec_rows,'sex','item_path')
+
+    _c_dob = False
+    _c_tribe = get_name(rec_rows,'reporter_tribe','item_path')
+    _c_phone = get_name(rec_rows,'reporter_phone','item_path')
+
+    _c_county = get_name(rec_rows,'reporter_county','item_path')
+    _c_scounty = get_name(rec_rows,'reporter_sub_county','item_path')
+    _c_ward = get_name(rec_rows,'reporter_sub_ward','item_path')
+    _c_location = get_name(rec_rows,'reporter_location','item_path')
+    _c_landmark = get_name(rec_rows,'nearest_landmark','item_path')
+
+    _c_economic_status = get_name(rec_rows,'household_head_occupation','item_path')
+    _c_household_type = get_name(rec_rows,'household_type','item_path')
+
+    _c_perpetrator_known = get_name(rec_rows,'perpetrator_known','item_path')
+    _c_perpetrator_relationship = get_name(rec_rows,'perpetrator_relationship','item_path')
+    _c_perpetrator_name = get_name(rec_rows,'perpetrator_name','item_path')
+
+    _c_perpetrator_name = instance.get(_c_perpetrator_name,"").split(" ")
+
+    _c_category = get_name(rec_rows,'select_subcategory','item_path')
+    _categories = get_name(rec_rows,'select_subcategory','children')
+
+
+    _c_case_priority = get_name(rec_rows,'case_priority','item_path')
+
+    _c_disability = get_name(rec_rows,'client_disabled','item_path')
+    _c_narrative = get_name(rec_rows,'case_narrative','item_path')
+
+    
+    _c_name = instance.get(_c_name,"").split(" ")
+
+    _perpetrator = []
+    if instance.get(_c_perpetrator_known,False) and instance.get(_c_perpetrator_known,"").lower() == 'yes':
+        _perpetrator = instance.get('perpetrator_details/perpetrator',[])[0]
+
+
+    case_category = get_name(get_object(_categories,'name',str(instance.get(_c_category,""))),'list_code')
+
+    if not _dob:
+        today = datetime.now()
+        _dob = today - relativedelta(years=instance.get(_age_y,0),months=instance.get(_age_m,0))
+        _dob = _dob.strftime('%Y-%m-%d')
+
+    headers = {
+        'Authorization': 'Token %s ' % settings.CPIMS_API_TOKEN
+    }
+
+    urll = settings.CPIMS_URL + 'settings/?field_name=sex_id'
+    _sexes = make_request(urll,headers)
+
+    data = {
+            "county": get_name(get_object(_locations,'name',_location.get('county',"")),'list_code'), 
+            "constituency": "001", 
+            "case_category": str(case_category),
+            "child_dob": str(_dob), 
+            "perpetrator": "PKNW",
+            "child_first_name":str(_name[0]) if len(_name) >= 1 else "", 
+            "child_surname": str(_name[1]) if len(_name) >= 2 else "",
+            "case_landmark": str(instance.get(_c_landmark,"")),
+            "case_narration": str(instance.get(_c_narrative,"")), 
+            "child_sex": str(get_name(get_object(_sexes,'item_description',str(instance.get(sex,""))),'item_id')),
+            "reporter_first_name": str(_c_name[0]) if len(_c_name) >= 1 else "", 
+            "reporter_surname": str(_c_name[1]) if len(_c_name) >= 2 else str(instance.get(_c_o_names,"")),
+            "reporter_telephone": str(instance.get(_c_phone)),
+            "reporter_county": str(get_name(get_object(_locations,'name',instance.get(_c_county)),'list_code')), # str(instance.get(_c_county)),
+            "reporter_sub_county": str(get_name(get_object(_locations,'name',instance.get(_c_scounty)),'list_code')), # str(instance.get(_c_scounty)),
+            "case_reporter": "CRSF", 
+            "organization_unit": "Helpline",
+            "hh_economic_status":'UINC', 
+            "family_status": "FSUK",
+            "mental_condition": "MNRM", 
+            "physical_condition": str(instance.get(_c_disability,"")),
+            "other_condition": "CHNM", 
+            "risk_level":'RLMD', # instance.get(_c_case_priority,""),
+            "case_date": str(instance.get('_submission_time')).split('T')[0],
+            "perpetrators": [{"relationship": str(instance.get(_c_perpetrator_relationship,"")), "first_name": str(_c_perpetrator_name[0]) if len(_c_perpetrator_name) >= 1 else "",
+                              "surname": _c_perpetrator_name[1] if len(_c_perpetrator_name) >= 2 else "", "sex": "SMAL"}],
+            "caregivers": [{"relationship": "CGPM", "first_name": str(g_name[0]) if len(g_name) >= 1 else "",
+                            "surname": str(g_name[1]) if len(g_name) >= 2 else "", "sex": "SMAL"}],
+            "case_details": [{'category': str(case_category),
+                              'place_of_event': 'PEHF',
+                          'date_of_event': str(instance.get('_submission_time')).split('T')[0],
+                          'nature_of_event': 'OOEV'}]}
+
+    
+    def _push(url,_obj,head,caseid):
+        response = requests.post(url,json=_obj,headers=head)
+
+        if(response.status_code == 201):
+            case = Cases.objects.get(case_number=caseid)
+            vv = json.loads(response.content)
+            case.case_push_status = 1
+            case.case_id = vv.get('case_id')
+            case.save()
+            return response
+        else:
+            _push(settings.CPIMS_URL + "crs/",_obj,head,caseid)
+
+    dd = _push(settings.CPIMS_URL + "crs/",data,headers,case_number)
+    return HttpResponse("%s \nData Retrieved %s " % (data,dd),status=status.HTTP_201_CREATED)
+ #    # get categories
+
+ #    ur = 'https://test.cpims.net/api/v1/settings/?field_name=case_category_id'
+ #    cats = make_request(ur,headers)
+
+ #    data['categories'] = cats
+
+
+ #    # get locations
+ #    ur = 'https://test.cpims.net/api/v1/geo/'
+ #    data['locations'] = make_request(ur,headers)
+    
+    # return HttpResponse("Data Retrieved ",status=status.HTTP_201_CREATED)
+    # return render(request, 'helpline/integrate.html',m)
+def send_external_ug(request,case_number=100042):
+    default_service = Service.objects.all().first()
+    default_service_xform = default_service.walkin_xform
+
+    ct = ContentType.objects.get_for_model(default_service_xform)
+    walkin_metadata = MetaData.objects.filter(content_type__pk=ct.id, object_id=default_service_xform.pk)
+
+    _meta = {}
+    data = {}
+    for _met in walkin_metadata:
+        _meta.update({str(_met.data_value):str(_met.data_file)})
+    recs = ''
+    
+    headers = {
+        'content-type': "application/x-www-form-urlencoded"
+    }
+
+    request_data = {'grant_type':'password','username':'henry.kemboi@bitz-itc.com','password':'Ug@nd@cr@n3s'}
+    url = 'http://nsr.mglsd.go.ug:20190/connect/token'
+
+    dd = requests.post(url,headers=headers,data=request_data).json()
+    token = dd.get("access_token","")
+    data['token'] = token
+
+    ####################################################################
+    def dictfetchall(cursor): 
+        "Returns all rows from a cursor as a dict" 
+        desc = cursor.description 
+        return [
+                dict(zip([col[0] for col in desc], row)) 
+                for row in cursor.fetchall() 
+        ]
+
+    rec = default_service_xform.json
+
+    prop_recs = yaml.load(str(rec))[u'children']
+
+    prop_choices = yaml.load(str(rec))[u'choices']
+    rec_rows = []
+    item_path = ''
+    level_path = {}
+
+    repeater = False
+    def fill_children(child,level_key,_child=False):
+        n = ''
+        other_headers = ['group','repeat']
+        ix = 0;
+        for rows in child:
+            if _child:
+                ix = _child
+            else:
+                ix += 1   
+
+            if rows.get('type',False) and rows.get('type',False) in other_headers:
+                repeater = True if rows.get('type',False) == 'repeat' else False
+                level_path.update({'repeater%s' %ix:repeater})
+
+                if level_key == "":
+                    level_path.update({ix:rows.get('name',"")})
+                else:
+                    if(level_path.get(ix,"") == ""):
+                        x_p = "%s/%s" %(level_key,rows.get('name',""))
+                    else:
+                        x_p = "%s/%s" %(level_path.get(ix,""),rows.get('name',""))
+                    level_path.update({ix:x_p}) 
+                
+                if(repeater):
+                    level_path.update({'rpath%s' %ix:level_path.get(ix,False)})
+
+                fill_children(rows.get('children',[]),level_path.get(ix,""),ix)                        
+            else:
+                if rows.get('name',False):
+                    n = rows.get('name','')
+
+                rows.update({'r_name':n.replace('_', ' ').capitalize()})
+                if level_key != "":
+                    n = "/%s" %n
+                item_path = "%s%s" %(str(level_key),str(n))
+                rows.update({'item_path':item_path,'repeater':level_path.get('repeater%s'%ix,False),'rpath':level_path.get('rpath%s'%ix,False)})
+                item_path = ''
+
+                if rows.get('itemset',False) and '.csv' in rows['itemset']:
+                    k_n = rows['itemset']
+                    fl_path = _meta.get(k_n,k_n)
+
+                    options = dict_from_csv(request,fl_path,default_service_xform.user.username) or []
+                    rows.update({'children':options})
+                elif rows.get('itemset',False) and not '.csv' in rows['itemset']:
+                    options = prop_choices.get(rows.get('itemset',''),[])
+                    rows.update({'children':options})
+                rec_rows.append(rows)
+
+    fill_children(prop_recs,"")
+    data['fields'] = rec_rows
+
+    recs = ''
+    ####################################################################
+
+    with connection.cursor() as cursor:
+        query = "SELECT json from logger_instance where xform_id = '{0}' AND json->>'case_number' = '{1}'".format(default_service_xform.pk,case_number)
+        cursor.execute(query)
+        recs = dictfetchall(cursor)
+
+    instance = recs[0][u'json'] 
+    
+    # Build push objects
+    # BIO DATA - Child
+    # r_phone = get_name(rec_rows,'reporter_phone','item_path')
+    if instance.get('case_category/if_client',False) and instance.get('case_category/if_client').lower() == 'yes':
+        f_name = get_name(rec_rows,'name','item_path')
+        o_names = get_name(rec_rows,'other_names','item_path')
+        sex = get_name(rec_rows,'sex','item_path')
+        c_tribe = get_name(rec_rows,'reporter_tribe','item_path')
+        c_village = get_name(rec_rows,'reporter_village','item_path')
+        c_idnumber = get_name(rec_rows,'id_number','item_path')
+    else:
+        f_name = get_name(rec_rows,'client_name','item_path')
+        o_names = get_name(rec_rows,'other_client_name','item_path')
+        sex = get_name(rec_rows,'client_sex','item_path')
+        c_tribe = get_name(rec_rows,'client_tribe','item_path')
+        c_village = get_name(rec_rows,'client_village','item_path')
+        c_idnumber = False
+
+    dob = get_name(rec_rows,'client_dob','item_path')
+    _name = instance.get(f_name,"").split(" ")
+
+
+    _child = {
+
+                "programmeCode":"UCHL",
+                "beneficiaryNumber": str(case_number),
+                "villageCode": str(instance.get(c_village,"12501030001002")),
+                "enrolmentDate": str(instance.get('_submission_time',"")).split('T')[0],
+                "registrationDate": str(instance.get('_submission_time',"")).split('T')[0],
+                "identityNumber":  str(instance.get(c_idnumber,"")),
+                "firstName": str(_name[0]) if len(_name) >= 1 else "",
+                "middleName":str(instance.get(o_names,"")),
+                "lastName": str(_name[1]) if len(_name) >= 2 else "Unknown", 
+                "dateOfBirth":str(instance.get(dob,"2019-10-24")),
+                "gender": str(instance.get(sex,""))[:1].upper()
+            }
+
+    head = {
+                'Authorization':'Bearer %s' % token,
+                'Content-Type':'application/json',
+                'Accept':'application/json'
+            }
+    url = 'http://nsr.mglsd.go.ug:20190/api/v1/IndividualBeneficiaries'
+
+    def _push(url,_obj,head,caseid):
+        register = requests.post(url,json=_obj,headers=head)
+
+        if(register.status_code == 200):
+            case = Cases.objects.get(case_number=caseid)
+            case.case_push_status = 1
+            case.save()
+            return HttpResponse({'success':True})
+        else:
+            _push(url,_obj,head,caseid)
+
+    return _push(url,_child,head,case_number)
+def send_external(request,case_number=100042):
+    default_service = Service.objects.all().first()
+    default_service_xform = default_service.walkin_xform
+
+    # Link up the dhis system server
+    dhis_api = Api(settings.DHIS_LINK, settings.DHIS_NAME,settings.DHIS_PASSWORD)
+
+    ct = ContentType.objects.get_for_model(default_service_xform)
+    walkin_metadata = MetaData.objects.filter(content_type__pk=ct.id, object_id=default_service_xform.pk)
+
+    _meta = {}
+    data = {}
+    for _met in walkin_metadata:
+        _meta.update({str(_met.data_value):str(_met.data_file)})
+    recs = ''
+    
+    
+    ''' GET CASE SEQUENCE ID'''
+    # get_dhis_sequence_id = dhis_api.get('%s/trackedEntityAttributes/%s/generate?' %(dhis_api.version_int,settings.DHIS_ID)).json()
+    get_dhis_sequence_id = dhis_api.get('trackedEntityAttributes/%s/generate' %(settings.DHIS_ID)).json()
+    dhis_sequence_id = get_dhis_sequence_id.get('value',False)
+
+    enrollment_uuid = dhis_api.get('system/id').json() 
+    events_uuid = dhis_api.get('system/id').json()  
+    entity_instance_uuid = dhis_api.get('system/id').json() 
+
+    enrollment_uuid = str(enrollment_uuid.get('codes')[0])
+    events_uuid = str(events_uuid.get('codes')[0])
+    entity_instance_id = str(entity_instance_uuid.get('codes')[0])
+
+    ####################################################################
+    def dictfetchall(cursor): 
+        "Returns all rows from a cursor as a dict" 
+        desc = cursor.description 
+        return [
+                dict(zip([col[0] for col in desc], row)) 
+                for row in cursor.fetchall() 
+        ]
+
+    rec = default_service_xform.json
+
+    prop_recs = yaml.load(str(rec))[u'children']
+
+    prop_choices = yaml.load(str(rec))[u'choices']
+    rec_rows = []
+    item_path = ''
+    level_path = {}
+
+    repeater = False
+    def fill_children(child,level_key,_child=False):
+        n = ''
+        other_headers = ['group','repeat']
+        ix = 0;
+        for rows in child:
+            if _child:
+                ix = _child
+            else:
+                ix += 1   
+
+            if rows.get('type',False) and rows.get('type',False) in other_headers:
+                repeater = True if rows.get('type',False) == 'repeat' else False
+                level_path.update({'repeater%s' %ix:repeater})
+
+                if level_key == "":
+                    level_path.update({ix:rows.get('name',"")})
+                else:
+                    if(level_path.get(ix,"") == ""):
+                        x_p = "%s/%s" %(level_key,rows.get('name',""))
+                    else:
+                        x_p = "%s/%s" %(level_path.get(ix,""),rows.get('name',""))
+                    level_path.update({ix:x_p}) 
+                
+                if(repeater):
+                    level_path.update({'rpath%s' %ix:level_path.get(ix,False)})
+
+                fill_children(rows.get('children',[]),level_path.get(ix,""),ix)                        
+            else:
+                if rows.get('name',False):
+                    n = rows.get('name','')
+
+                rows.update({'r_name':n.replace('_', ' ').capitalize()})
+                if level_key != "":
+                    n = "/%s" %n
+                item_path = "%s%s" %(str(level_key),str(n))
+                rows.update({'item_path':item_path,'repeater':level_path.get('repeater%s'%ix,False),'rpath':level_path.get('rpath%s'%ix,False)})
+                item_path = ''
+
+                if rows.get('itemset',False) and '.csv' in rows['itemset']:
+                    k_n = rows['itemset']
+                    fl_path = _meta.get(k_n,k_n)
+
+                    options = dict_from_csv(request,fl_path,default_service_xform.user.username) or []
+                    rows.update({'children':options})
+                elif rows.get('itemset',False) and not '.csv' in rows['itemset']:
+                    options = prop_choices.get(rows.get('itemset',''),[])
+                    rows.update({'children':options})
+                rec_rows.append(rows)
+
+    fill_children(prop_recs,"")
+    data['fields'] = rec_rows
+
+    recs = ''
+    ####################################################################
+
+    with connection.cursor() as cursor:
+        query = "SELECT json from logger_instance where xform_id = '{0}' AND json->>'case_number' = '{1}'".format(default_service_xform.pk,case_number)
+        cursor.execute(query)
+        recs = dictfetchall(cursor)
+
+    instance = recs[0][u'json'] 
+    
+    # Build push objects
+    # BIO DATA - Child
+    # r_phone = get_name(rec_rows,'reporter_phone','item_path')
+    if instance.get('case_category/if_client',False) and instance.get('case_category/if_client').lower() == 'yes':
+        f_name = get_name(rec_rows,'name','item_path')
+        sex = get_name(rec_rows,'sex','item_path')
+        c_ward = get_name(rec_rows,'reporter_sub_ward','item_path')
+        _locations = get_name(rec_rows,'reporter_sub_ward','children')
+        age_group = False
+    else:
+        f_name = get_name(rec_rows,'client_name','item_path')
+        sex = get_name(rec_rows,'client_sex','item_path')
+        c_ward = get_name(rec_rows,'client_ward','item_path')
+        age_group = get_name(rec_rows,'age_group','item_path')
+        _locations = get_name(rec_rows,'client_ward','children')
+
+
+    _name = instance.get(f_name,"").split(" ")
+
+    _s_category = get_name(rec_rows,'select_category','item_path')
+    _s_scategory = get_name(rec_rows,'select_subcategory','item_path')
+
+    _s_household_type = get_name(rec_rows,'household_type','item_path')
+    _s_household_types = get_name(rec_rows,'household_type','children')
+
+
+    _s_school = get_name(rec_rows,'attending_school','item_path')
+
+    _s_school_level = str(instance.get(_s_school,""))
+    _s_school = _s_school_level
+    if(_s_school_level.lower() == "yes"):
+        _s_school_level = get_name(rec_rows,'school_level','item_path')
+        _s_school_level = str(instance.get(_s_school_level,""))
+
+    _household_type = str(instance.get(_s_household_type,False))
+    if_parents = 1 if _household_type == 'both_parent' else ""
+    parents_other   = _household_type if _household_type != 'both_parent' else ""
+
+    # perpetrator details
+    perp_path = get_name(rec_rows,'perpetrator_known','item_path') or ""
+    perpetrator = instance.get(perp_path,"No")
+    perpetrator_relationship = ""
+    if(perpetrator.lower() == 'yes'):
+        _perpetrator = get_name(rec_rows,'perpetrator_relationship','rpath')
+        perpetrator_relationshipx = get_name(rec_rows,'perpetrator_relationship','item_path')
+
+        perpetrator = instance.get(_perpetrator)[0] or []
+        perpetrator_relationship = perpetrator.get(perpetrator_relationshipx,False)
+
+    client_ward = str(instance.get(c_ward,False))
+    client_ward_name = get_name(client_ward,'label')
+    _dhis_ward = dhis_api.get('organisationUnits.json?paging=false&filter=name:like:Kahe&filter=level:eq:4&rootJunction=AND&fields=id,name,level').json()
+    other_family = ['brother','sister','uncle','aunt','nephew','niece']
+    _obj = [
+            {# File Number
+            "dataElement":'MZbRqIcFB6A',
+            "value":""
+            },
+            {# Client Sex
+            "dataElement":'ls8e4DEVcUa',
+            "value":str(instance.get(sex,""))
+            },
+            {# Client Ward
+            "dataElement":'Myf4A0vBEUV',
+            "value":client_ward or ""
+            },
+            {# Client DOB
+            "dataElement":'KODuQBppu7r',
+            "value":""
+            },
+            {# Client Age
+            "dataElement":'SCU9tMs0Mu5',
+            "value":0
+            },
+            {# If parents alive
+            "dataElement":'huNQvqcbMSF',
+            "value":if_parents
+            },
+            {# Other parental circumstances
+            "dataElement":'Hx8oyEnKzQL',
+            "value":get_name(_s_household_types,parents_other)
+            },
+            {# Guardian (Who the child lives with)
+            "dataElement":'UqqacwCfynI',
+            "value":get_name(_s_household_types,_household_type)
+            },
+            {# Education
+            "dataElement":'WBbHaZZqe94',
+            "value":_s_school_level
+            },
+            {# Education Other
+            "dataElement":'aPS8Ktw61QQ',
+            "value":_s_school
+            },
+            {# Previous protection concerns
+            "dataElement":'tvAUwW6DX68',
+            "value":""
+            },
+            {# Number of cases the child in engaged in
+            "dataElement":'BucPl0T7olj',
+            "value":0
+            },
+            { # Perpetrator relationship - Father
+            "dataElement":'se4aiYRihLD',
+            "value": 1 if perpetrator_relationship.lower() == 'father' else ""
+            },
+            {# Perpetrator relationship - Mother
+            "dataElement":'C4S9B1xXYdq',
+            "value": 1 if perpetrator_relationship.lower() == 'mother' else ""
+            },
+            {# Perpetrator relationship - Both Parents
+            "dataElement":'W7lPzVD10Ba',
+            "value":""
+            },
+            {# Perpetrator relationship - Other (Primary Caregiver/Guardian(s))
+            "dataElement":'YL4kgTCgmC2',
+            "value":""
+            },
+            {# Perpetrator relationship - Other (Family Member(s))
+            "dataElement":'BTNF4THtht5',
+            "value": 1 if perpetrator_relationship.lower() in other_family else ""
+            },
+            {# Perpetrator relationship - Neighbour(s)
+            "dataElement":'NM9Km6UIMEg',
+            "value": 1 if perpetrator_relationship.lower() == 'neighbor' else ""
+            },
+            {# Perpetrator relationship - Friend(s)
+            "dataElement":'MEvBJrPZgme',
+            "value":""
+            },
+            {# Perpetrator relationship - Teacher(s)
+            "dataElement":'IdhJHJTdDea',
+            "value": 1 if perpetrator_relationship.lower() == 'teacher' else ""
+            },
+            {# Perpetrator relationship - Health Worker(s)
+            "dataElement":'dDS5J9NBBaz',
+            "value":""
+            },
+            {# Perpetrator relationship - Other (Humanitarian Worker(s))
+            "dataElement":'zdXoNWqhipk',
+            "value":""
+            },
+            {# Perpetrator relationship - Police or armed services officer
+            "dataElement":'GTe35CvlH4X',
+            "value":""
+            },
+            {# Perpetrator relationship - Security Guards
+            "dataElement":'GFDIEs53XPi',
+            "value":""
+            },
+            {# Perpetrator relationship - Religious Leader
+            "dataElement":'nkFYos4lh1a',
+            "value":""
+            },
+            {# Perpetrator relationship - Employer
+            "dataElement":'zqp5gZeOQjh',
+            "value":""
+            },
+            {# Perpetrator relationship - Other(s) in Position of Authority
+            "dataElement":'JrpvTAxHe0t',
+            "value": 1 if perpetrator_relationship.lower() == 'lga' else ""
+            },
+            {# Perpetrator relationship - Tourist(s)
+            "dataElement":'FQWBRLlyXS2',
+            "value":""
+            },
+            {# Perpetrator relationship - Commercial Drivers
+            "dataElement":'HbQH0RBU0GJ',
+            "value":""
+            },
+            {# Perpetrator relationship - Stranger(s)
+            "dataElement":'m0ArkUmddCE',
+            "value":""
+            },
+            {# Perpetrator relationship - Other Perpetrator
+            "dataElement":'F4qp5kK8DZz',
+            "value": 1 if perpetrator_relationship.lower() == 'other' else ""
+            },
+            {# Perpetrator relationship - Unknown/Not recorded
+            "dataElement":'kfCTgAz2QGg',
+            "value": 1 if perpetrator_relationship.lower() == '' else ""
+            },
+            {# if VANE (Violence Agains Children)
+            "dataElement":'bQ6or6vFvcV',
+            "value":1 if str(instance.get(_s_category,"")) == 1 else ''
+            },
+            {# if CICL (Child in conflict with the law)
+            "dataElement":'QfVJ0jVSlOm',
+            "value":1 if str(instance.get(_s_scategory,"")) == 53 else ''
+            },
+            {# if Crime Against a person
+            "dataElement":'UJAIU3HHsNO',
+            "value":''
+            },
+            {# if Crime Against Property
+            "dataElement":'oOG4YuQBAka',
+            "value":''
+            },
+            {# if Crime Against Morality
+            "dataElement":'qdtJcfuwRr2',
+            "value":''
+            },
+            {# if Other offences
+            "dataElement":'FGw12muyeyz',
+            "value": str(instance.get(_s_category,False)) if str(instance.get(_s_category,False)) != 1 and str(instance.get(_s_category,False)) != 53 else ''
+            } 
+        ]
+    _child = {
+              "orgUnit": "m6UTruihEDP",
+              "trackedEntityInstance": entity_instance_id,
+              "trackedEntityType": "kUwbnCkgWop",
+              "programOwners": [
+                {
+                  "ownerOrgUnit": "m6UTruihEDP",
+                  "program": "scuEVbHZYAn",
+                  "trackedEntityInstance": "BA89CrbCGrT"
+                }
+              ],
+              "enrollments": [
+                {
+                  "orgUnit": "m6UTruihEDP",
+                  "program": "scuEVbHZYAn",
+                  "trackedEntityInstance": entity_instance_id,
+                  "enrollment": enrollment_uuid,
+                  "trackedEntityType": "kUwbnCkgWop",
+                  "orgUnitName": "Bangata",
+                  "events": [
+                    {
+                      "program": "scuEVbHZYAn",
+                      "event": events_uuid,
+                      "programStage": "ZlpJBcR1afm",
+                      "orgUnit": "m6UTruihEDP",
+                      "trackedEntityInstance": entity_instance_id,
+                      "enrollment": enrollment_uuid,
+                      "orgUnitName": "Bangata",
+                      "eventDate": "2019-09-09T00:00:00.000",
+                      "attributeCategoryOptions": "ePX5OPZ3wxl",
+                      "attributeOptionCombo": "uGIJ6IdkP7Q",
+                      "dataValues": _obj,
+                      "notes": [],
+                      "relationships": []
+                    }
+                  ]
+                }
+              ],
+              "relationships": [],
+              "attributes": [
+                            {
+                             
+                              "code": "source of referral",
+                              "displayName": "Source of Referral",
+                              "valueType": "TEXT",
+                              "attribute": "PWtN9HWqOMt",
+                              "value": "Child Helpline"
+                            },
+                            {
+                              "code": "case number",
+                              "displayName": "Case Sequence No.",
+                              "valueType": "TEXT",
+                              "attribute": "A8BLuHG0EPt",
+                              "value": str(dhis_sequence_id)
+                            },
+                            {
+                              "displayName": "Area/Place of Incidence",
+                              "valueType": "ORGANISATION_UNIT",
+                              "attribute": "xgfWXoiIkpT",
+                              "value": "aXJNZqxdqnq"
+                            }
+                          ]
+
+            }
+
+    response = dhis_api.post('trackedEntityInstances',json=_child)
+
+    if(response.status_code == 200):
+        case = Cases.objects.get(case_number=case_number)
+        case.case_push_status = 1
+        case.case_id = dhis_sequence_id
+        case.save()
+
+    return HttpResponse(response)
+
 def pivotx(request):
     report = {} 
     # Case statistics
@@ -3573,7 +4578,6 @@ def stat(request):
     """Display statistics for the wall board"""
 
     # Case statistics
-
     default_service = Service.objects.all().first()
     default_service_xform = default_service.walkin_xform
 
@@ -3581,30 +4585,35 @@ def stat(request):
     default_service_auth_token = default_service_xform.user.auth_token
     current_site = settings.HOST_URL # get_current_site(request)
 
+
+    from_details = {"token":default_service_auth_token,"formid":default_service_xform.pk,'service':{'walkin':default_service_xform,'qa':default_service_qa}}
+    
     # Graph data
     headers = {
         'Authorization': 'Token %s' % (default_service_auth_token)
     }
 
     # agent status
-    url_agents = '%s/clk/agent/' %(settings.CALL_API_URL)
-
-    agent_status = make_request(url_agents,headers)
+    # url_agents = '%s/clk/agent/' %(settings.CALL_API_URL)
+    url_agents = 'http://192.168.8.200:90/clk/agent/'
+    agent_status = {} # make_request(url_agents,headers)
      
-    dashboard_stats = get_dashboard_stats(request,None,True)
-    week_dashboard_stats = get_dashboard_stats(request,'weekly',True)
-
-    userlist = User.objects.filter(is_active=True,HelplineUser__hl_role='Counsellor').exclude(HelplineUser__hl_status='Unavailable').exclude(HelplineUser__hl_status='Offline').select_related('HelplineUser')
+    dashboard_stats = wall_stats(request,from_details)# get_dashboard_stats(request,None,True)
+    week_dashboard_stats = {} # get_dashboard_stats(request,'weekly',True)
     
+    userlist = User.objects.filter(is_active=True,HelplineUser__hl_role='Counsellor').exclude(HelplineUser__hl_status='Unavailable').exclude(HelplineUser__hl_status='Offline').select_related('HelplineUser')
+   
     def get_queue_status(agent_id):
         ret_val = {} #      {'status':'','last_call':'','answered_calls':0}
-        for ag in agent_status:
-            if str(ag['agent']) == str(agent_id):
-                ret_val['status'] = str(ag['status'])
-                ret_val['lastcall'] = str(ag['lastcall'])
-                ret_val['answered']=ag['answered']
-                ret_val['missed']=ag['missed']
-                ret_val['talktime']=ag['talktime']
+
+        if(isinstance(agent_status,dict)):
+            for ag in agent_status:
+                if str(ag['agent']) == str(agent_id):
+                    ret_val['status'] = str(ag['status'])
+                    ret_val['lastcall'] = str(ag['lastcall'])
+                    ret_val['answered']=ag['answered']
+                    ret_val['missed']=ag['missed']
+                    ret_val['talktime']=ag['talktime']
         return ret_val
 
     agent_status_x = []
@@ -3673,6 +4682,8 @@ def sources(request, source=None,itemid=None):
         #     email.email_body      = 
         #     email.email_subject   = 
         #     email.email_date      = date.now()
+    if source == 'safepal':
+        data_messages = SafePal.objects.all()
 
     if itemid != None:
         data_messages = item.objects.get(pk=itemid) # (Emails,pk=itemid)
@@ -3682,6 +4693,87 @@ def sources(request, source=None,itemid=None):
     return render(request, template, {'data_messages':data_messages,'message':message,'home':home_statistics})
 
 
+
+def wall_stats(request, service):
+
+
+    request_string = ''
+    query_string = ''
+
+    username = ''
+
+    current_site = settings.HOST_URL # get_current_site(request)
+    # Set headers
+    headers = {
+        'Authorization': 'Token %s' % (service['token'])
+    }
+
+    walkin_form = service['service']['walkin'];
+
+    form_details = yaml.load(walkin_form.json)
+    form_choices = form_details['choices']
+    form_details = XForm.objects.get(pk=service['formid'])
+    
+    # date time
+    midnight_datetime = datetime.combine(
+            date.today(), datetime_time.min)
+    midnight = calendar.timegm(midnight_datetime.timetuple())
+
+    midnight_string = datetime.combine(
+        date.today(), datetime_time.min).strftime('%d/%m/%Y %I:%M %p')
+    now_string = timezone.now().strftime('%d/%m/%Y %I:%M %p')
+
+    date_time = datetime.now()
+    
+    request_string += " and CAST(date_created AS DATE) = '{0}'".format(date_time.strftime('%Y-%m-%d'))
+    r_string = " and CAST(date_created AS DATE) = '{0}'".format(date_time.strftime('%Y-%m-%d'))
+
+    home_statistics = {'all_calls':0,'high_priority':0,'escalate':0,'closed':0,'pending':0,'total':0,'call_stat':'',\
+    'midnight': midnight,'midnight_string': midnight_string,'now_string': now_string,\
+    'today':walkin_form.submission_count_for_today, "total_submissions":walkin_form.num_of_submissions}
+    
+    # SMS stats
+    home_statistics['total_sms'] = SMSCDR.objects.filter(sms_time__date=datetime.today()).count()
+    # Email stats
+    home_statistics['email'] = Emails.objects.filter(email_time__date=datetime.today()).count()
+    rst = request_string
+    
+    recs = []
+
+    query_string += '?chan_ts_f=%s' % date_time.strftime('%Y-%m-%d') if query_string == '' else '&chan_ts_f=%s'% date_time.strftime('%Y-%m-%d')
+    #Call stat
+    _url = '%s/clk/stats/%s' %(settings.CALL_API_URL,query_string)
+
+    call_statistics = make_request(_url,{},{})
+
+    home_statistics.update({'call':call_statistics})
+
+    #CASE STATS
+    with connection.cursor() as cursor:
+        query = "SELECT CAST(COUNT(json->>'case_actions/case_action') AS INTEGER) case_count,json->>'case_actions/case_action' as status_column from logger_instance \
+         where xform_id = '%s' %s GROUP BY json->>'case_actions/case_action'" %(str(service['formid']),request_string)
+        cursor.execute(query)
+        recs = dictfetchall(cursor)
+
+    _tot = 0
+    if len(recs) > 0:
+        for row in recs:
+            home_statistics.update({row['status_column']:row['case_count']})
+            if not wall:
+                if row['status_column'] != 'escalate':
+                    home_statistics['total'] += row['case_count']
+                else:
+                    home_statistics['total'] += 0
+                _tot += row['case_count']
+            else:
+                home_statistics['total'] += row['case_count']
+
+    if(request.user.HelplineUser.hl_role.lower() == 'caseworker' or request.user.HelplineUser.hl_role.lower() == 'casemanager'):
+        home_statistics['total_submissions'] = _tot
+
+
+    return home_statistics
+    
 def get_data_queues(queue=None):
     data = {} # backend.get_data_queues()
     if queue is not None:

@@ -564,9 +564,9 @@
             <input id="active-form" type="checkbox"{% if xform.downloadable %} checked=""{% endif %} data-url="{% url "xform-edit" content_user.username xform.id_string %}" />
           </div>
           <br/>
-          <label>{% trans "Delete Form" %}&nbsp;</label>
+        <!--   <label>{% trans "Delete Form" %}&nbsp;</label>
         <div class="input">
-          <!-- DELETE -->
+          <!-- DELETE ->
           <div id="delete-{{ xform.id_string }}" class="modal hide fade">
               <form action="{% url "delete-xform" username=user.username id_string=xform.id_string %}" method="post">
               {% csrf_token %}
@@ -586,7 +586,7 @@
           <a data-toggle="modal" href="#delete-{{ xform.id_string }}" data-backdrop="true" data-keyboard="true" class="btn btn-small btn-danger">
               {% trans "Delete" %}
           </a>
-        </div>
+        </div> -->
         </div>
         <br />
         <div>

@@ -1,0 +1,232 @@
+{% extends 'helpline/base.html' %}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block box %}
+{% endblock box %}
+{% block treeview_reports %}active{% endblock treeview_reports %}
+
+{% block navbar_nav %}
+<li class="dropdown messages-menu">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+    <i class="fa fa-bookmark"></i>{% trans "Average Talk Time" %}: {{ dashboard_stats.att.hours }}:{{ dashboard_stats.att.min }}:{{ dashboard_stats.att.seconds }}
+  </a>
+</li>
+<!-- Messages: style can be found in dropdown.less-->
+<li class="dropdown messages-menu">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+    <i class="fa fa-bookmark"></i>{% trans "Average Wait Time" %}: {{ dashboard_stats.awt.hours }}:{{ dashboard_stats.awt.min }}:{{ dashboard_stats.awt.seconds }}
+  </a>
+</li>
+
+<!-- Messages: style can be found in dropdown.less-->
+<li class="dropdown messages-menu">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+    <i class="fa fa-clock-o"></i>  <span id="clock">0:00 AM</span>
+  </a>
+  <ul class="dropdown-menu">
+    <li class="header">
+      {% if request.user.chlusers.chlstatus == 'Busy' %}
+      <a href="{% url 'queue_log' %}"><i class="fa fa-circle text-danger"></i> {% trans "Busy" %}</a>
+      {% elif request.user.chlusers.chlstatus == 'Idle' %}
+      <a href="{% url 'queue_log' %}"><i class="fa fa-exclamation-triangle text-warning"></i> {% trans "Idle" %}</a>
+      {% elif request.user.chlusers.chlstatus == 'Available' %}
+      <a href="{% url 'queue_log' %}"><i class="fa fa-circle text-success"></i> {% trans "Online" %}</a>
+      {% elif request.user.chlusers.chlstatus == 'OnCall' %}
+      <a href="{% url 'queue_log' %}"><i class="fa fa-circle text-danger"></i> {% trans "OnCall" %}</a>
+      {% endif %}
+      <span id="durations"></span>
+    </li>
+    <li class="footer">
+    </li>
+  </ul>
+</li>
+
+{% endblock navbar_nav %}
+
+{% block content %}
+<style>
+div.scrollmenu {
+  overflow: auto;
+  white-space: nowrap;
+}
+</style>
+<section class="content-header">
+  <h1>
+    {% trans "REPORT" %} <i class="fa fa-angle-right"></i> {{ title }}
+  </h1>
+</section>
+<!-- Main content -->
+<section class="content">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="box">
+        <div class="box-header with-border">
+          <!--h3 class="box-title">Filter Parameters:</h3-->
+
+          <div class="col-md-12 report-filters">
+            {% load django_tables2 %}
+            <div id="form_collapse" class="in" style="height: auto;">
+              {% block filterform %}
+              <!-- Filter Form -->
+              <form action="">
+                <!-- Date and time range -->
+                <script>
+                  $(function() {
+                    $('#datetimerange').daterangepicker({
+                     opens: 'left',
+                     timePicker: true,
+                     locale: {
+                      format: 'DD/MM/YYYY h:mm A'
+                    }
+                  }, function(start, end, label) {
+                   console.log("A new date selection was made: " + start.format('M/DD hh:mm A') + ' to ' + end.format('M/DD hh:mm A'));
+                 });
+                  });
+                </script>
+                <div class="form-group col-md-4" style="padding-left: 0px;">
+                    <label>{% trans "Choose Date and time Range" %}:</label>
+                  <div class="input-group">
+                    <div class="input-group-addon">
+                      <i class="fa fa-calendar"></i>
+                    </div>
+                    {{ form.datetime_range }}
+                  </div><!-- /.input group -->
+                </div><!-- /.form group -->
+                <div class="form-group col-md-4">
+                    <label>{% trans "Agent" %}:</label>
+                  <div class="input-group">
+                    <div class="input-group-addon">
+                      <i class="fa fa-users"></i>
+                    </div>
+                    {{ form.agent }}
+                  </div><!-- /.input group -->
+                </div><!-- /.form group -->
+
+                {{ form.queueid }}
+                <br>
+                <div class="form-group col-md-4">
+                  <div class="input-group pt-20">
+                    <input type="submit" value="Fetch Reports" id="total-calls-search-btn" class="btn btn-success btn-sm btn-flat">
+                  </div><!-- /.input group -->
+                </div>
+              </form>
+              <!-- End Filter Form -->
+            </div>
+            {% endblock filterform %}
+          </div>
+        </div>
+        <div class="box-body">
+          <div class="row">
+            <!-- <div class="scrollmenu col-md-6">
+              <!-- LINE CHART ->
+              <div class="box box-info">
+                <div class="box-header with-border">
+                  <h3 class="box-title">Disposition Trend</h3>
+
+                  <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
+                    </button>
+                    <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+                  </div>
+                </div>
+                <div class="box-body">
+                  <div class="chart">
+                    <canvas id="lineChart" style="height:250px"></canvas>
+                  </div>
+                </div>
+                <!-- /.box-body ->
+              </div>
+              <!-- /.box ->
+            </div> -->
+          </div>
+        </div>
+        <div class="clearfix"></div>
+        <div class="box-body">
+          <div class="row">
+            <div class="scrollmenu col-md-12">
+                <div>
+                  <table id="example1" class="table datatable">
+              		<thead>
+              			<tr>
+              				<th>#</th>
+		                    <th>SP Number</th>
+		                    <th>Name</th>
+		                    <th>Gender</th>
+		                    <th>Phone</th>
+		                    <th>DOB</th>
+		                    <th>Case Location</th>
+		                    <th>Incident Type</th>
+		                    <th>CHL Number</th>
+		                    <th>Status</th>
+		                    <th>Incident Date</th>
+		                    <th>Post Date</th>
+		                    <th>Action</th>
+		                </tr>
+              		</thead>
+              		<tbody>
+              			{% for mess in data_messages %}
+              			<tr>
+              				<td>{{forloop.counter}}.</td>
+              				<td><a href="">{{ mess.unique_case_number }}</a></td>
+		                    <td>{{ mess.survivor_name }}</td>
+		                    <td>{{ mess.survivor_gender }}</td>
+		                    <td>{{ mess.survivor_contact_phone_number }}</td>
+		                    <td>{{ mess.survivor_date_of_birth }}</td>
+		                    <td>{{ mess.incident_location }}</td>
+		                    <td>{{ mess.incident_type }}</td>
+		                    <td>{{ mess.chl_case_id }}</td>
+		                    <td>{{ mess.chl_status }}</td>
+		                    <td>{{ mess.incident_date_and_time }}</td>
+		                    <td>{{ mess.chl_time }}</td>
+		                    <td>Create Case</td>
+              			</tr>
+              			{% endfor %}
+              		</tbody>
+                  <tfoot>
+                    <tr>
+                      <th>#</th>
+                      <th>SP Number</th>
+                      <th>Name</th>
+                      <th>Gender</th>
+                      <th>Phone</th>
+                      <th>DOB</th>
+                      <th>Case Location</th>
+                      <th>Incident Type</th>
+                      <th>CHL Number</th>
+                      <th>Status</th>
+                      <th>Incident Date</th>
+                      <th>Post Date</th>
+                      <th>Action</th>
+                    </tr>
+                  </tfoot>
+                    
+                  </table>
+                </div>
+              <!--div id="showustheresultsnow">
+                <div class="col-md-4">
+                  {% for format in table.export_formats %}
+                  <a class="btn btn-app"  href="{% querystring '_export'=format %}">
+                    <i class="fa fa-save"></i> <strong>{% trans "Export" %} .{{ format }}</strong>
+                  </a>
+                  {% endfor %}
+                </div>
+                {% if table %}
+                {% render_table table %}
+                {% endif %}
+              </div>
+            </div-->
+          </div>
+          <!-- /.col -->
+        </div>
+        <!-- /.row -->
+      </div>
+      <!-- ./box-body -->
+    </div>
+  </div>
+</section>
+
+
+{% endblock content %}
+{% block script_end %}
+{% endblock script_end  %}
