@@ -17,6 +17,8 @@ croniter==0.3.24
 datapackage==1.2.6
 decorator==4.3.0
 defusedxml==0.5.0
+dhis==0.1.2
+dhis2.py==2.0.2
 dict2xml==1.6
 Django==1.11.15
 django-activity-stream==0.6.5
@@ -32,8 +34,10 @@ django-countries==5.3.1
 django-crispy-forms==1.7.2
 django-debug-toolbar==1.9.1
 -e git+https://github.com/onaio/django-digest.git@eb85c7ae19d70d4690eeb20983e94b9fde8ab8c2#egg=django_digest
+django-excel==0.0.10
 django-filter==1.1.0
 django-genericadmin==0.7.0
+django-graphos==0.3.41
 django-guardian==1.4.9
 django-helpdesk==0.2.8
 -e git+https://github.com/Kirembu/django-helpline-faq.git@4cd9ef3aa310833bf2fe1cfb9bdc8c67913ab27f#egg=django_helpline_faq
@@ -109,7 +113,9 @@ kombu==4.2.1
 librabbitmq==2.0.0
 linear-tsv==1.1.0
 linecache2==1.0.0
+lml==0.0.9
 lockfile==0.12.2
+logzero==1.5.0
 lxml==4.2.2
 Markdown==2.6.11
 markdown2==2.3.5
@@ -132,6 +138,7 @@ pbr==4.0.4
 pexpect==4.6.0
 pickleshare==0.7.5
 Pillow==5.1.0
+pkg-resources==0.0.0
 prompt-toolkit==1.0.15
 psycopg2==2.7.5
 psycopg2-binary==2.7.5
@@ -141,6 +148,9 @@ pyasn1==0.4.3
 pyasn1-modules==0.2.1
 pycall==2.2
 pycodestyle==2.3.1
+pyexcel==0.5.14
+pyexcel-io==0.5.18
+pyexcel-webio==0.1.4
 pyflakes==1.6.0
 -e git+https://github.com/onaio/floip-py.git@3bbf5c76b34ec49c438a3099ab848870514d1e50#egg=pyfloip
 Pygments==2.2.0
@@ -161,7 +171,7 @@ PyYAML==3.13
 raven==6.9.0
 recaptcha-client==1.0.6
 redis==2.10.6
-requests==2.19.1
+requests==2.22.0
 rfc3986==1.1.0
 rq==0.12.0
 rq-scheduler==0.8.3
@@ -180,6 +190,7 @@ stevedore==1.28.0
 tableschema==1.1.0
 tablib==0.12.1
 tabulator==1.14.0
+texttable==1.6.1
 traceback2==1.4.0
 traitlets==4.3.2
 typing==3.6.4
