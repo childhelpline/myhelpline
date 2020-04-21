@@ -219,7 +219,7 @@
                 <!-- /.col -->
                 <div class="col-sm-6 col-md-4" style="padding:2px;">
                   <div class="color-palette-set">
-                    <div class="bg-black color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ call.queued }} </span><br />{% trans "Queued Calls" %}</div>
+                    <div class="bg-black color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ call.queued | default: 0}} </span><br />{% trans "Queued Calls" %}</div>
                   </div>
                 </div>
                 <!-- /.col -->
@@ -262,7 +262,7 @@
                 <!-- /.col -->
                 <div class="col-sm-6 col-md-4" style="padding:2px;">
                   <div class="color-palette-set">
-                    <div class="bg-black color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ call.total_calls_in_db }} </span><br />{% trans "All Calls" %}</div>
+                    <div class="bg-black color-palette" align="center" style="border-radius:5px; padding-right:5px; padding-bottom:5px;"><span style="font-size:50px; font-weight:800;">{{ call.total_calls_in_db | default:0}} </span><br />{% trans "All Calls" %}</div>
                   </div>
                 </div>
                 <!-- /.col -->
