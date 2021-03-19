@@ -95,7 +95,7 @@ iptools==0.6.1
 isodate==0.6.0
 itsdangerous==0.24
 jdcal==1.4
-Jinja2==2.10
+Jinja2==2.11.3
 jsonfield==0.9.23
 jsonlines==1.2.0
 jsonpickle==0.9.6
