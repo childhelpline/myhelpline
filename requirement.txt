@@ -156,7 +156,7 @@ requests==2.19.1
 rfc3986==1.1.0
 rq==0.12.0
 rq-scheduler==0.8.3
-rsa==3.4.2
+rsa==4.1
 savReaderWriter==3.4.2
 simplejson==3.15.0
 six==1.11.0
