@@ -35,7 +35,7 @@ django-debug-toolbar==1.9.1
 django-filter==1.1.0
 django-genericadmin==0.7.0
 django-guardian==1.4.9
-django-helpdesk==0.2.8
+django-helpdesk==0.3.2
 -e git+https://github.com/Kirembu/django-helpline-faq.git@4cd9ef3aa310833bf2fe1cfb9bdc8c67913ab27f#egg=django_helpline_faq
 django-jsonfield==1.0.1
 django-jsonview==1.2.0
