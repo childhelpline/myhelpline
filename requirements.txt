@@ -94,7 +94,7 @@ ijson==2.3
 imagesize==1.0.0
 inflection==0.3.1
 iptools==0.6.1
-ipython==5.8.0
+ipython==7.16.3
 ipython-genutils==0.2.0
 isodate==0.6.0
 itsdangerous==0.24
